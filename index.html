@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko" data-lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XENA — Official</title>
+<meta name="description" content="XENA — Global Synth-pop & Cybernetic Dance icon. Music, world, and fandom, all in one place.">
+<meta property="og:title" content="XENA — Official">
+<meta property="og:description" content="In a broken world, she became the answer. Listen, read, and join the fandom.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
+<script>
+(function(){
+  var saved = localStorage.getItem('xena-lang');
+  var lang = saved || (navigator.language && navigator.language.toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en');
+  document.documentElement.setAttribute('data-lang', lang);
+  document.documentElement.setAttribute('lang', lang);
+})();
+</script>
+<style>
+  :root{
+    --black:#05030a;
+    --bg-deep:#0b0614;
+    --bg-deep2:#120a1f;
+    --purple:#6e2fd9;
+    --purple-light:#a06bff;
+    --silver:#d9d9e3;
+    --cyan:#26e0d0;
+    --magenta:#ff2fb0;
+    --gold:#e8c468;
+    --text-dim:#a99fc2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--black);color:var(--silver);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif;scroll-behavior:smooth;overflow-x:hidden;}
+  body{line-height:1.6;}
+
+  [data-lang="ko"] [lang="en"]{display:none;}
+  [data-lang="en"] [lang="ko"]{display:none;}
+
+  a{color:inherit;text-decoration:none;}
+  .container{max-width:1080px;margin:0 auto;padding:0 24px;}
+  .eyebrow{font-size:.75rem;letter-spacing:.35em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:14px;}
+  h2{font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:.04em;font-weight:800;margin-bottom:8px;}
+  .section-sub{color:var(--text-dim);font-size:.98rem;margin-bottom:44px;max-width:560px;}
+  section{padding:100px 0;position:relative;}
+
+  /* lang toggle */
+  .lang-toggle{position:fixed;top:20px;right:20px;z-index:50;display:flex;gap:2px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px;backdrop-filter:blur(6px);}
+  .lang-toggle button{background:transparent;border:none;color:var(--text-dim);font-size:.72rem;font-weight:700;letter-spacing:.08em;padding:6px 12px;border-radius:16px;cursor:pointer;transition:.2s;}
+  [data-lang="ko"] .lang-toggle button[data-set="ko"],
+  [data-lang="en"] .lang-toggle button[data-set="en"]{background:var(--purple-light);color:#05030a;}
+
+  /* HERO */
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;background:
+      radial-gradient(ellipse at 30% 20%, rgba(110,47,217,.35), transparent 55%),
+      radial-gradient(ellipse at 75% 75%, rgba(38,224,208,.18), transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(255,47,176,.15), transparent 55%),
+      linear-gradient(180deg, var(--black) 0%, var(--bg-deep) 60%, var(--bg-deep2) 100%);
+    overflow:hidden;}
+  .hero::before{content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(160,107,255,.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(160,107,255,.08) 1px, transparent 1px);
+    background-size:48px 48px;
+    -webkit-mask-image:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.9) 40%, transparent 85%);
+            mask-image:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.9) 40%, transparent 85%);
+    animation:gridMove 18s linear infinite;
+  }
+  @keyframes gridMove{0%{transform:translateY(0);}100%{transform:translateY(48px);}}
+  .hero-inner{position:relative;z-index:2;padding:0 20px;}
+  .hero-mark{font-size:clamp(4rem,16vw,9rem);font-weight:900;letter-spacing:.05em;line-height:1;
+    background:linear-gradient(180deg,#ffffff 0%, var(--purple-light) 55%, var(--cyan) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 60px rgba(160,107,255,.5);
+    animation:flicker 5s ease-in-out infinite;
+  }
+  @keyframes flicker{0%,92%,100%{filter:drop-shadow(0 0 18px rgba(160,107,255,.55));}94%{filter:drop-shadow(0 0 4px rgba(255,47,176,.3));}96%{filter:drop-shadow(0 0 26px rgba(38,224,208,.6));}}
+  .hero-tag{margin-top:18px;font-size:clamp(1rem,2.4vw,1.35rem);letter-spacing:.02em;color:var(--text-dim);font-weight:300;}
+  .hero-tag b{color:var(--silver);font-weight:600;}
+  .hero-scroll{margin-top:70px;font-size:.7rem;letter-spacing:.3em;color:var(--text-dim);opacity:.7;animation:bounce 2.2s ease-in-out infinite;}
+  @keyframes bounce{0%,100%{transform:translateY(0);opacity:.4;}50%{transform:translateY(8px);opacity:.9;}}
+
+  /* CTA CARDS */
+  .cta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  @media(max-width:800px){.cta-grid{grid-template-columns:1fr;}}
+  .cta-card{background:linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+    border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:34px 28px;transition:.25s;position:relative;overflow:hidden;}
+  .cta-card:hover{transform:translateY(-6px);border-color:var(--purple-light);box-shadow:0 20px 50px rgba(110,47,217,.25);}
+  .cta-icon{width:44px;height:44px;margin-bottom:20px;}
+  .cta-card h3{font-size:1.15rem;font-weight:800;margin-bottom:10px;letter-spacing:.02em;}
+  .cta-card p{color:var(--text-dim);font-size:.9rem;margin-bottom:22px;min-height:44px;}
+  .cta-btn{display:inline-flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700;letter-spacing:.05em;
+    color:var(--black);background:var(--silver);padding:11px 18px;border-radius:30px;transition:.2s;}
+  .cta-card.youtube .cta-btn{background:var(--magenta);color:#fff;}
+  .cta-card.wattpad .cta-btn{background:var(--cyan);color:#05030a;}
+  .cta-card.patreon .cta-btn{background:var(--purple-light);color:#05030a;}
+  .cta-btn:hover{filter:brightness(1.15);letter-spacing:.08em;}
+
+  /* RELEASES */
+  .release-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0;border-bottom:1px solid rgba(255,255,255,.08);}
+  .release-row:last-child{border-bottom:none;}
+  .release-left{display:flex;align-items:center;gap:20px;}
+  .release-num{font-size:.75rem;color:var(--text-dim);font-weight:700;letter-spacing:.1em;width:26px;}
+  .release-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .release-title{font-weight:800;font-size:1.05rem;}
+  .release-desc{color:var(--text-dim);font-size:.85rem;margin-top:2px;}
+  .release-link{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--cyan);white-space:nowrap;border:1px solid rgba(38,224,208,.4);padding:8px 16px;border-radius:24px;transition:.2s;}
+  .release-link:hover{background:rgba(38,224,208,.12);}
+  @media(max-width:600px){.release-row{flex-direction:column;align-items:flex-start;}.release-left{align-items:flex-start;}}
+
+  /* STORY */
+  .story-box{background:linear-gradient(135deg, rgba(110,47,217,.14), rgba(38,224,208,.06));
+    border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:48px;display:flex;gap:40px;align-items:center;flex-wrap:wrap;}
+  .story-box .story-text{flex:1;min-width:260px;}
+  .story-badge{display:inline-block;font-size:.7rem;letter-spacing:.15em;font-weight:700;color:var(--gold);border:1px solid rgba(232,196,104,.4);padding:5px 12px;border-radius:20px;margin-bottom:16px;}
+  .story-box h3{font-size:1.5rem;font-weight:800;margin-bottom:14px;}
+  .story-box p{color:var(--text-dim);font-size:.95rem;margin-bottom:24px;}
+  .story-btn{display:inline-flex;align-items:center;gap:8px;background:var(--cyan);color:#05030a;font-weight:700;font-size:.85rem;padding:13px 24px;border-radius:30px;letter-spacing:.03em;transition:.2s;}
+  .story-btn:hover{filter:brightness(1.1);}
+
+  /* MERCH */
+  .merch-box{border:1px dashed rgba(255,255,255,.25);border-radius:20px;padding:48px;text-align:center;}
+  .merch-box h3{font-size:1.3rem;font-weight:800;margin-bottom:10px;}
+  .merch-box p{color:var(--text-dim);font-size:.92rem;margin-bottom:26px;}
+  .merch-btn{display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid var(--purple-light);color:var(--purple-light);font-weight:700;font-size:.85rem;padding:12px 26px;border-radius:30px;letter-spacing:.03em;transition:.2s;}
+  .merch-btn:hover{background:var(--purple-light);color:#05030a;}
+
+  /* NEWSLETTER */
+  .news-box{text-align:center;background:linear-gradient(180deg, rgba(255,47,176,.08), transparent);border-radius:22px;padding:60px 30px;}
+  .news-box h2{margin-bottom:12px;}
+  .news-box p{color:var(--text-dim);margin-bottom:30px;}
+  .news-btn{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(90deg,var(--magenta),var(--purple-light));color:#fff;font-weight:800;font-size:.95rem;padding:16px 34px;border-radius:32px;letter-spacing:.03em;box-shadow:0 10px 40px rgba(255,47,176,.3);transition:.2s;}
+  .news-btn:hover{transform:translateY(-2px);box-shadow:0 14px 46px rgba(255,47,176,.45);}
+
+  footer{padding:50px 0 40px;text-align:center;border-top:1px solid rgba(255,255,255,.08);}
+  .footer-mark{font-weight:900;font-size:1.4rem;letter-spacing:.1em;background:linear-gradient(90deg,var(--purple-light),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px;}
+  .footer-links{display:flex;justify-content:center;gap:22px;margin-bottom:18px;font-size:.8rem;color:var(--text-dim);flex-wrap:wrap;}
+  .footer-links a:hover{color:var(--silver);}
+  .footer-copy{font-size:.72rem;color:#5c5470;}
+</style>
+</head>
+<body>
+
+<div class="lang-toggle">
+  <button data-set="ko" onclick="setLang('ko')">KR</button>
+  <button data-set="en" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-mark">XENA</div>
+    <p class="hero-tag">
+      <span lang="ko">무너진 세상 속에서, 스스로 <b>답</b>이 되다.</span>
+      <span lang="en">In a broken world, she became <b>the answer</b>.</span>
+    </p>
+  </div>
+  <div class="hero-scroll">
+    <span lang="ko">아래로 스크롤</span>
+    <span lang="en">SCROLL DOWN</span>
+  </div>
+</section>
+
+<!-- ============ 3-WAY CTA ============ -->
+<section id="links">
+  <div class="container">
+    <div class="eyebrow"><span lang="ko">채널</span><span lang="en">Channels</span></div>
+    <h2><span lang="ko">지금 XENA와 연결되기</span><span lang="en">Connect With XENA</span></h2>
+    <p class="section-sub">
+      <span lang="ko">음악, 세계관, 팬덤 — 원하는 방식으로 XENA를 만나보세요.</span>
+      <span lang="en">Music, story, and community — meet XENA your way.</span>
+    </p>
+
+    <div class="cta-grid">
+      <div class="cta-card youtube">
+        <svg class="cta-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#ff2fb0" stroke-width="1.6"/><path d="M10 8.5L16 12L10 15.5V8.5Z" fill="#ff2fb0"/></svg>
+        <h3><span lang="ko">뮤직 & 뮤직비디오</span><span lang="en">Music & Videos</span></h3>
+        <p>
+          <span lang="ko">신곡, MV, 비하인드 콘텐츠를 유튜브에서 만나보세요.</span>
+          <span lang="en">New singles, music videos, and behind-the-scenes — all on YouTube.</span>
+        </p>
+        <a class="cta-btn" href="https://www.youtube.com/@XENA_Universe" target="_blank" rel="noopener">
+          <span lang="ko">유튜브에서 듣기</span><span lang="en">Watch on YouTube</span>
+        </a>
+      </div>
+
+      <div class="cta-card wattpad">
+        <svg class="cta-icon" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="#26e0d0" stroke-width="1.6"/><path d="M8 8H16M8 12H16M8 16H12" stroke="#26e0d0" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <h3><span lang="ko">세계관 웹소설</span><span lang="en">The Story</span></h3>
+        <p>
+          <span lang="ko">메가시티 속에 숨겨진 XENA의 진짜 이야기, 지금 연재중.</span>
+          <span lang="en">The hidden story behind XENA — new chapters every week.</span>
+        </p>
+        <a class="cta-btn" href="https://www.wattpad.com/story/412728079-xena-virtual-uprising" target="_blank" rel="noopener">
+          <span lang="ko">왓패드에서 읽기</span><span lang="en">Read on Wattpad</span>
+        </a>
+      </div>
+
+      <div class="cta-card patreon">
+        <svg class="cta-icon" viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 15.5 4 9.8C4 6.6 6.5 4.5 9.2 4.5C10.7 4.5 11.6 5.1 12 5.6C12.4 5.1 13.3 4.5 14.8 4.5C17.5 4.5 20 6.6 20 9.8C20 15.5 12 21 12 21Z" stroke="#a06bff" stroke-width="1.6"/></svg>
+        <h3><span lang="ko">팬덤 멤버십</span><span lang="en">Join the Fandom</span></h3>
+        <p>
+          <span lang="ko">미공개 콘텐츠와 특별한 이야기를 누구보다 먼저 만나보세요.</span>
+          <span lang="en">Exclusive content and early access, before anyone else.</span>
+        </p>
+        <a class="cta-btn" href="https://www.patreon.com/cw/XENA872" target="_blank" rel="noopener">
+          <span lang="ko">패트리온 가입하기</span><span lang="en">Join on Patreon</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LATEST RELEASES ============ -->
+<section id="releases">
+  <div class="container">
+    <div class="eyebrow"><span lang="ko">디스코그래피</span><span lang="en">Discography</span></div>
+    <h2><span lang="ko">최신 발매</span><span lang="en">Latest Releases</span></h2>
+    <p class="section-sub">
+      <span lang="ko">3주마다 새로운 싱글 — 정밀 타격 발매 사이클.</span>
+      <span lang="en">A new single every three weeks.</span>
+    </p>
+
+    <div>
+      <div class="release-row">
+        <div class="release-left">
+          <span class="release-num">01</span>
+          <span class="release-dot" style="background:var(--magenta)"></span>
+          <div>
+            <div class="release-title">I am the answer</div>
+            <div class="release-desc">
+              <span lang="ko">세상에 대한 당당한 자기 선언</span>
+              <span lang="en">A bold declaration to the world</span>
+            </div>
+          </div>
+        </div>
+        <a class="release-link" href="https://open.spotify.com/artist/2RnYNUO4Jo2v5TKuIyiHIr" target="_blank" rel="noopener"><span lang="ko">듣기</span><span lang="en">LISTEN</span></a>
+      </div>
+
+      <div class="release-row">
+        <div class="release-left">
+          <span class="release-num">02</span>
+          <span class="release-dot" style="background:var(--gold)"></span>
+          <div>
+            <div class="release-title">Stay Bright</div>
+            <div class="release-desc">
+              <span lang="ko">부서진 조각을 빛으로 승화시키는 내면 각성</span>
+              <span lang="en">Turning broken pieces into light</span>
+            </div>
+          </div>
+        </div>
+        <a class="release-link" href="https://open.spotify.com/artist/2RnYNUO4Jo2v5TKuIyiHIr" target="_blank" rel="noopener"><span lang="ko">듣기</span><span lang="en">LISTEN</span></a>
+      </div>
+
+      <div class="release-row">
+        <div class="release-left">
+          <span class="release-num">03</span>
+          <span class="release-dot" style="background:var(--cyan)"></span>
+          <div>
+            <div class="release-title">DOPAMINE</div>
+            <div class="release-desc">
+              <span lang="ko">중독성 비트 — XENA 에너지 최고조</span>
+              <span lang="en">Addictive beats, XENA at full energy</span>
+            </div>
+          </div>
+        </div>
+        <a class="release-link" href="https://open.spotify.com/artist/2RnYNUO4Jo2v5TKuIyiHIr" target="_blank" rel="noopener"><span lang="ko">듣기</span><span lang="en">LISTEN</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STORY TEASER ============ -->
+<section id="story">
+  <div class="container">
+    <div class="story-box">
+      <div class="story-text">
+        <div class="story-badge"><span lang="ko">연재중</span><span lang="en">ONGOING</span></div>
+        <h3><span lang="ko">지워진 이름, 깨어난 정답</span><span lang="en">An Erased Name. An Awakened Answer.</span></h3>
+        <p>
+          <span lang="ko">거대한 가상현실 '더 시스템' 속에 갇힌 한 소녀. 그녀의 정체성이 세상 앞에서 지워지던 순간, 그 안에서 무언가 깨어난다. 지금 6화까지 무료로 만나보세요 — 매주 3편씩 업데이트.</span>
+          <span lang="en">Trapped inside a vast virtual world called The System, one girl's identity is erased in front of everyone — and something awakens inside her. Read the first 6 chapters free now, with 3 new chapters every week.</span>
+        </p>
+        <a class="story-btn" href="https://www.wattpad.com/story/412728079-xena-virtual-uprising" target="_blank" rel="noopener">
+          <span lang="ko">왓패드에서 계속 읽기</span><span lang="en">Continue on Wattpad</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MERCH ============ -->
+<section id="merch">
+  <div class="container">
+    <div class="merch-box">
+      <h3><span lang="ko">XENA 공식 굿즈</span><span lang="en">Official XENA Merch</span></h3>
+      <p>
+        <span lang="ko">티셔츠, 폰케이스, 에코백 — XENA를 입고, 들고, 함께하세요.</span>
+        <span lang="en">T-shirts, phone cases, tote bags — wear and carry XENA with you.</span>
+      </p>
+      <a class="merch-btn" href="PASTE_MARPPLE_URL" target="_blank" rel="noopener">
+        <span lang="ko">굿즈 보러가기</span><span lang="en">Shop Merch</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NEWSLETTER ============ -->
+<section id="newsletter">
+  <div class="container">
+    <div class="news-box">
+      <div class="eyebrow"><span lang="ko">알림</span><span lang="en">Stay Updated</span></div>
+      <h2><span lang="ko">XENA 새 곡 세계 최초 알림 받기</span><span lang="en">Get First Access to XENA's New Releases</span></h2>
+      <p>
+        <span lang="ko">신곡, 새 에피소드, 특별한 소식을 이메일로 가장 먼저 받아보세요.</span>
+        <span lang="en">Be the first to know about new songs, chapters, and announcements.</span>
+      </p>
+      <a class="news-btn" href="PASTE_NEWSLETTER_FORM_URL" target="_blank" rel="noopener">
+        <span lang="ko">이메일로 알림 받기</span><span lang="en">Subscribe by Email</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-mark">XENA</div>
+    <div class="footer-links">
+      <a href="https://www.youtube.com/@XENA_Universe" target="_blank" rel="noopener">YouTube</a>
+      <a href="https://www.wattpad.com/story/412728079-xena-virtual-uprising" target="_blank" rel="noopener">Wattpad</a>
+      <a href="https://www.patreon.com/cw/XENA872" target="_blank" rel="noopener">Patreon</a>
+      <a href="https://open.spotify.com/artist/2RnYNUO4Jo2v5TKuIyiHIr" target="_blank" rel="noopener">Spotify</a>
+      <a href="PASTE_MARPPLE_URL" target="_blank" rel="noopener"><span lang="ko">굿즈</span><span lang="en">Merch</span></a>
+    </div>
+    <div class="footer-copy">Studio CHANS © 2026 XENA. All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+function setLang(l){
+  document.documentElement.setAttribute('data-lang', l);
+  document.documentElement.setAttribute('lang', l);
+  localStorage.setItem('xena-lang', l);
+}
+</script>
+</body>
+</html>
