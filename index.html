@@ -38,17 +38,53 @@
   [data-lang="en"] [lang="ko"]{display:none;}
 
   a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;}
   .container{max-width:1080px;margin:0 auto;padding:0 24px;}
   .eyebrow{font-size:.75rem;letter-spacing:.35em;text-transform:uppercase;color:var(--cyan);font-weight:700;margin-bottom:14px;}
-  h2{font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:.04em;font-weight:800;margin-bottom:8px;}
+  h2{font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:.04em;font-weight:800;margin-bottom:8px;text-wrap:balance;}
   .section-sub{color:var(--text-dim);font-size:.98rem;margin-bottom:44px;max-width:560px;}
   section{padding:100px 0;position:relative;}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;}
+
+  /* SCROLL REVEAL */
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){
+    .reveal{opacity:1;transform:none;transition:none;}
+    .hero-mark,.hero-scroll,.hero::before{animation:none !important;}
+  }
+
+  /* SCROLL PROGRESS */
+  .scroll-progress{position:fixed;top:0;left:0;width:100%;height:3px;background:rgba(255,255,255,.06);z-index:70;}
+  .scroll-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--magenta),var(--purple-light),var(--cyan));}
 
   /* lang toggle */
-  .lang-toggle{position:fixed;top:20px;right:20px;z-index:50;display:flex;gap:2px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px;backdrop-filter:blur(6px);}
+  .lang-toggle{position:fixed;top:20px;left:20px;z-index:60;display:flex;gap:2px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px;backdrop-filter:blur(6px);}
   .lang-toggle button{background:transparent;border:none;color:var(--text-dim);font-size:.72rem;font-weight:700;letter-spacing:.08em;padding:6px 12px;border-radius:16px;cursor:pointer;transition:.2s;}
   [data-lang="ko"] .lang-toggle button[data-set="ko"],
   [data-lang="en"] .lang-toggle button[data-set="en"]{background:var(--purple-light);color:#05030a;}
+
+  /* SIDE DOCK */
+  .side-dock{position:fixed;top:50%;right:18px;transform:translateY(-50%);z-index:60;display:flex;flex-direction:column;gap:9px;padding:9px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:30px;backdrop-filter:blur(10px);}
+  .dock-item{position:relative;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);transition:.2s;}
+  .dock-item svg{width:18px;height:18px;stroke:var(--text-dim);transition:.2s;}
+  .dock-item:hover{transform:scale(1.1);background:rgba(255,255,255,.09);}
+  .dock-item.yt:hover{border-color:var(--magenta);}.dock-item.yt:hover svg{stroke:var(--magenta);}
+  .dock-item.wp:hover{border-color:var(--cyan);}.dock-item.wp:hover svg{stroke:var(--cyan);}
+  .dock-item.pt:hover{border-color:var(--purple-light);}.dock-item.pt:hover svg{stroke:var(--purple-light);}
+  .dock-item.sp:hover{border-color:var(--gold);}.dock-item.sp:hover svg{stroke:var(--gold);}
+  .dock-item.shop:hover{border-color:var(--silver);}.dock-item.shop:hover svg{stroke:var(--silver);}
+  .dock-tip{position:absolute;right:50px;top:50%;transform:translateY(-50%);white-space:nowrap;background:rgba(10,6,18,.95);
+    border:1px solid rgba(255,255,255,.15);padding:6px 12px;border-radius:8px;font-size:.72rem;font-weight:600;letter-spacing:.02em;
+    opacity:0;pointer-events:none;transition:.2s;}
+  .dock-item:hover .dock-tip{opacity:1;}
+  @media(max-width:800px){
+    .side-dock{top:auto;bottom:16px;right:50%;transform:translateX(50%);flex-direction:row;border-radius:28px;padding:8px;}
+    .dock-tip{display:none;}
+    .lang-toggle{top:14px;left:14px;}
+  }
 
   /* HERO */
   .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;background:
@@ -66,6 +102,7 @@
             mask-image:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.9) 40%, transparent 85%);
     animation:gridMove 18s linear infinite;
   }
+  .hero-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;}
   @keyframes gridMove{0%{transform:translateY(0);}100%{transform:translateY(48px);}}
   .hero-inner{position:relative;z-index:2;padding:0 20px;}
   .hero-mark{font-size:clamp(4rem,16vw,9rem);font-weight:900;letter-spacing:.05em;line-height:1;
@@ -77,7 +114,7 @@
   @keyframes flicker{0%,92%,100%{filter:drop-shadow(0 0 18px rgba(160,107,255,.55));}94%{filter:drop-shadow(0 0 4px rgba(255,47,176,.3));}96%{filter:drop-shadow(0 0 26px rgba(38,224,208,.6));}}
   .hero-tag{margin-top:18px;font-size:clamp(1rem,2.4vw,1.35rem);letter-spacing:.02em;color:var(--text-dim);font-weight:300;}
   .hero-tag b{color:var(--silver);font-weight:600;}
-  .hero-scroll{margin-top:70px;font-size:.7rem;letter-spacing:.3em;color:var(--text-dim);opacity:.7;animation:bounce 2.2s ease-in-out infinite;}
+  .hero-scroll{position:relative;z-index:2;margin-top:70px;font-size:.7rem;letter-spacing:.3em;color:var(--text-dim);opacity:.7;animation:bounce 2.2s ease-in-out infinite;}
   @keyframes bounce{0%,100%{transform:translateY(0);opacity:.4;}50%{transform:translateY(8px);opacity:.9;}}
 
   /* CTA CARDS */
@@ -94,13 +131,13 @@
   .cta-card.youtube .cta-btn{background:var(--magenta);color:#fff;}
   .cta-card.wattpad .cta-btn{background:var(--cyan);color:#05030a;}
   .cta-card.patreon .cta-btn{background:var(--purple-light);color:#05030a;}
-  .cta-btn:hover{filter:brightness(1.15);letter-spacing:.08em;}
+  .cta-btn:hover,.cta-btn:focus-visible{filter:brightness(1.15);letter-spacing:.08em;}
 
   /* RELEASES */
   .release-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0;border-bottom:1px solid rgba(255,255,255,.08);}
   .release-row:last-child{border-bottom:none;}
   .release-left{display:flex;align-items:center;gap:20px;}
-  .release-num{font-size:.75rem;color:var(--text-dim);font-weight:700;letter-spacing:.1em;width:26px;}
+  .release-num{font-size:.75rem;color:var(--text-dim);font-weight:700;letter-spacing:.1em;width:26px;font-variant-numeric:tabular-nums;}
   .release-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
   .release-title{font-weight:800;font-size:1.05rem;}
   .release-desc{color:var(--text-dim);font-size:.85rem;margin-top:2px;}
@@ -113,10 +150,45 @@
     border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:48px;display:flex;gap:40px;align-items:center;flex-wrap:wrap;}
   .story-box .story-text{flex:1;min-width:260px;}
   .story-badge{display:inline-block;font-size:.7rem;letter-spacing:.15em;font-weight:700;color:var(--gold);border:1px solid rgba(232,196,104,.4);padding:5px 12px;border-radius:20px;margin-bottom:16px;}
-  .story-box h3{font-size:1.5rem;font-weight:800;margin-bottom:14px;}
+  .story-box h3{font-size:1.5rem;font-weight:800;margin-bottom:14px;text-wrap:balance;}
   .story-box p{color:var(--text-dim);font-size:.95rem;margin-bottom:24px;}
   .story-btn{display:inline-flex;align-items:center;gap:8px;background:var(--cyan);color:#05030a;font-weight:700;font-size:.85rem;padding:13px 24px;border-radius:30px;letter-spacing:.03em;transition:.2s;}
   .story-btn:hover{filter:brightness(1.1);}
+
+  /* GALLERY */
+  .gallery-tabs{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+  .gallery-tab{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:var(--text-dim);
+    font-size:.78rem;font-weight:700;letter-spacing:.03em;padding:9px 18px;border-radius:24px;cursor:pointer;transition:.2s;}
+  .gallery-tab:hover{border-color:rgba(255,255,255,.3);color:var(--silver);}
+  .gallery-tab.active{background:var(--silver);color:var(--black);border-color:var(--silver);}
+  .gallery-tab.active[data-filter="answer"]{background:var(--magenta);border-color:var(--magenta);color:#fff;}
+  .gallery-tab.active[data-filter="bright"]{background:var(--gold);border-color:var(--gold);color:#05030a;}
+  .gallery-tab.active[data-filter="dopamine"]{background:var(--cyan);border-color:var(--cyan);color:#05030a;}
+  .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:140px;gap:14px;}
+  .gallery-tile.gallery-hide{display:none;}
+  .gallery-tile{position:relative;border:none;border-radius:16px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:8px;color:var(--text-dim);transition:.25s;padding:0;}
+  .gallery-tile:hover{transform:scale(1.02);box-shadow:0 16px 40px rgba(0,0,0,.4);}
+  .gallery-tile img{width:100%;height:100%;object-fit:cover;display:block;}
+  .gallery-tile .ph-icon{font-size:1.4rem;opacity:.6;}
+  .gallery-tile .ph-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;opacity:.55;}
+  .gallery-tile.g1{grid-column:span 2;grid-row:span 2;background:linear-gradient(150deg, rgba(110,47,217,.35), rgba(38,224,208,.12));}
+  .gallery-tile.g2{background:linear-gradient(150deg, rgba(255,47,176,.28), rgba(5,3,10,.4));}
+  .gallery-tile.g3{grid-row:span 2;background:linear-gradient(200deg, rgba(38,224,208,.28), rgba(5,3,10,.4));}
+  .gallery-tile.g4{background:linear-gradient(150deg, rgba(232,196,104,.22), rgba(5,3,10,.4));}
+  .gallery-tile.g5{grid-column:span 2;background:linear-gradient(150deg, rgba(110,47,217,.2), rgba(255,47,176,.18));}
+  .gallery-tile.g6{background:linear-gradient(150deg, rgba(38,224,208,.2), rgba(110,47,217,.18));}
+  @media(max-width:700px){
+    .gallery-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:120px;}
+    .gallery-tile{grid-column:span 1 !important;grid-row:span 1 !important;}
+  }
+  .lightbox{position:fixed;inset:0;background:rgba(3,1,7,.92);z-index:100;display:none;align-items:center;justify-content:center;padding:30px;backdrop-filter:blur(6px);}
+  .lightbox.open{display:flex;}
+  .lightbox-inner{position:relative;max-width:720px;width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:30px;text-align:center;}
+  .lightbox-content{min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-dim);}
+  .lightbox-content img{max-width:100%;border-radius:12px;}
+  .lightbox-close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;background:var(--silver);color:var(--black);
+    border:none;font-size:1rem;font-weight:700;cursor:pointer;}
 
   /* MERCH */
   .merch-box{border:1px dashed rgba(255,255,255,.25);border-radius:20px;padding:48px;text-align:center;}
@@ -141,13 +213,41 @@
 </head>
 <body>
 
+<div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
+
 <div class="lang-toggle">
   <button data-set="ko" onclick="setLang('ko')">KR</button>
   <button data-set="en" onclick="setLang('en')">EN</button>
 </div>
 
+<!-- ============ SIDE DOCK (스크롤 고정 바로가기) ============ -->
+<nav class="side-dock" aria-label="Quick links">
+  <a class="dock-item yt" href="https://www.youtube.com/@XENA_Universe" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke-width="1.6"/><path d="M10 8.5L16 12L10 15.5V8.5Z" fill="currentColor" stroke="none"/></svg>
+    <span class="dock-tip">YouTube</span>
+  </a>
+  <a class="dock-item wp" href="https://www.wattpad.com/story/412728079-xena-virtual-uprising" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke-width="1.6"/><path d="M8 8H16M8 12H16M8 16H12" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <span class="dock-tip">Wattpad</span>
+  </a>
+  <a class="dock-item pt" href="https://www.patreon.com/cw/XENA872" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 4 15.5 4 9.8C4 6.6 6.5 4.5 9.2 4.5C10.7 4.5 11.6 5.1 12 5.6C12.4 5.1 13.3 4.5 14.8 4.5C17.5 4.5 20 6.6 20 9.8C20 15.5 12 21 12 21Z" stroke-width="1.6"/></svg>
+    <span class="dock-tip">Patreon</span>
+  </a>
+  <a class="dock-item sp" href="https://open.spotify.com/artist/2RnYNUO4Jo2v5TKuIyiHIr" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke-width="1.6"/><path d="M7 15C9 13 15 13 17 15" stroke-width="1.6" stroke-linecap="round"/><path d="M8 12C10 10.5 14 10.5 16 12" stroke-width="1.6" stroke-linecap="round"/><path d="M9.5 9.5C10.8 8.7 13.2 8.7 14.5 9.5" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <span class="dock-tip">Spotify</span>
+  </a>
+  <a class="dock-item shop" href="PASTE_MARPPLE_URL" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none"><path d="M6 8H18L17 20H7L6 8Z" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 8V6C9 4.3 10.3 3 12 3C13.7 3 15 4.3 15 6V8" stroke-width="1.6"/></svg>
+    <span class="dock-tip"><span lang="ko">굿즈</span><span lang="en">Shop</span></span>
+  </a>
+  <!-- 게임(TCG) 버튼: Phase 3 온라인 카드게임 출시 후 여기에 dock-item 추가 -->
+</nav>
+
 <!-- ============ HERO ============ -->
 <section class="hero">
+  <canvas class="hero-canvas" id="heroCanvas"></canvas>
   <div class="hero-inner">
     <div class="hero-mark">XENA</div>
     <p class="hero-tag">
@@ -163,7 +263,7 @@
 
 <!-- ============ 3-WAY CTA ============ -->
 <section id="links">
-  <div class="container">
+  <div class="container reveal">
     <div class="eyebrow"><span lang="ko">채널</span><span lang="en">Channels</span></div>
     <h2><span lang="ko">지금 XENA와 연결되기</span><span lang="en">Connect With XENA</span></h2>
     <p class="section-sub">
@@ -213,7 +313,7 @@
 
 <!-- ============ LATEST RELEASES ============ -->
 <section id="releases">
-  <div class="container">
+  <div class="container reveal">
     <div class="eyebrow"><span lang="ko">디스코그래피</span><span lang="en">Discography</span></div>
     <h2><span lang="ko">최신 발매</span><span lang="en">Latest Releases</span></h2>
     <p class="section-sub">
@@ -272,7 +372,7 @@
 
 <!-- ============ STORY TEASER ============ -->
 <section id="story">
-  <div class="container">
+  <div class="container reveal">
     <div class="story-box">
       <div class="story-text">
         <div class="story-badge"><span lang="ko">연재중</span><span lang="en">ONGOING</span></div>
@@ -289,9 +389,58 @@
   </div>
 </section>
 
+<!-- ============ GALLERY ============ -->
+<!-- 실사진 도착하면: 아래 button.gallery-tile 내부를 <img src="images/파일명.jpg" alt="설명"> 하나로 교체하면 됩니다. onclick(openLightbox)/data-caption 구조는 그대로 유지. -->
+<section id="gallery">
+  <div class="container reveal">
+    <div class="eyebrow"><span lang="ko">비주얼</span><span lang="en">Visuals</span></div>
+    <h2><span lang="ko">제나 갤러리</span><span lang="en">XENA Gallery</span></h2>
+    <p class="section-sub">
+      <span lang="ko">공연, 스튜디오, 그리고 그녀의 일상. 곧 더 많은 사진으로 채워질 공간입니다.</span>
+      <span lang="en">Stage, studio, and everyday moments. More photos coming soon.</span>
+    </p>
+
+    <div class="gallery-tabs" role="tablist">
+      <button class="gallery-tab active" data-filter="all" onclick="filterGallery('all', this)">
+        <span lang="ko">전체</span><span lang="en">All</span>
+      </button>
+      <button class="gallery-tab" data-filter="answer" onclick="filterGallery('answer', this)">I am the answer</button>
+      <button class="gallery-tab" data-filter="bright" onclick="filterGallery('bright', this)">Stay Bright</button>
+      <button class="gallery-tab" data-filter="dopamine" onclick="filterGallery('dopamine', this)">DOPAMINE</button>
+    </div>
+
+    <div class="gallery-grid" id="galleryGrid">
+      <button class="gallery-tile g1" data-track="answer" onclick="openLightbox(this)" data-caption="I am the answer — Stage / Performance">
+        <span class="ph-icon">✧</span>
+        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
+      </button>
+      <button class="gallery-tile g2" data-track="answer" onclick="openLightbox(this)" data-caption="I am the answer — Studio CHANS">
+        <span class="ph-icon">✧</span>
+        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
+      </button>
+      <button class="gallery-tile g3" data-track="bright" onclick="openLightbox(this)" data-caption="Stay Bright — Album Art">
+        <span class="ph-icon">✧</span>
+        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
+      </button>
+      <button class="gallery-tile g4" data-track="bright" onclick="openLightbox(this)" data-caption="Stay Bright — Ethereal Mode">
+        <span class="ph-icon">✧</span>
+        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
+      </button>
+      <button class="gallery-tile g5" data-track="dopamine" onclick="openLightbox(this)" data-caption="DOPAMINE — MV Behind the Scenes">
+        <span class="ph-icon">✧</span>
+        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
+      </button>
+      <button class="gallery-tile g6" data-track="dopamine" onclick="openLightbox(this)" data-caption="DOPAMINE — Performance Energy">
+        <span class="ph-icon">✧</span>
+        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
+      </button>
+    </div>
+  </div>
+</section>
+
 <!-- ============ MERCH ============ -->
 <section id="merch">
-  <div class="container">
+  <div class="container reveal">
     <div class="merch-box">
       <h3><span lang="ko">XENA 공식 굿즈</span><span lang="en">Official XENA Merch</span></h3>
       <p>
@@ -307,7 +456,7 @@
 
 <!-- ============ NEWSLETTER ============ -->
 <section id="newsletter">
-  <div class="container">
+  <div class="container reveal">
     <div class="news-box">
       <div class="eyebrow"><span lang="ko">알림</span><span lang="en">Stay Updated</span></div>
       <h2><span lang="ko">XENA 새 곡 세계 최초 알림 받기</span><span lang="en">Get First Access to XENA's New Releases</span></h2>
@@ -315,7 +464,7 @@
         <span lang="ko">신곡, 새 에피소드, 특별한 소식을 이메일로 가장 먼저 받아보세요.</span>
         <span lang="en">Be the first to know about new songs, chapters, and announcements.</span>
       </p>
-      <a class="news-btn" href="PASTE_NEWSLETTER_FORM_URL" target="_blank" rel="noopener">
+      <a class="news-btn" href="https://forms.gle/3BfAm228Gs3yFF9b6" target="_blank" rel="noopener">
         <span lang="ko">이메일로 알림 받기</span><span lang="en">Subscribe by Email</span>
       </a>
     </div>
@@ -337,12 +486,111 @@
   </div>
 </footer>
 
+<!-- ============ LIGHTBOX (갤러리 확대보기) ============ -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
+    <div class="lightbox-content" id="lightboxContent"></div>
+  </div>
+</div>
+
 <script>
 function setLang(l){
   document.documentElement.setAttribute('data-lang', l);
   document.documentElement.setAttribute('lang', l);
   localStorage.setItem('xena-lang', l);
 }
+
+function filterGallery(track, btn){
+  document.querySelectorAll('.gallery-tab').forEach(function(t){ t.classList.remove('active'); });
+  btn.classList.add('active');
+  document.querySelectorAll('#galleryGrid .gallery-tile').forEach(function(tile){
+    var show = (track === 'all' || tile.getAttribute('data-track') === track);
+    tile.classList.toggle('gallery-hide', !show);
+  });
+}
+
+function openLightbox(el){
+  var content = document.getElementById('lightboxContent');
+  content.innerHTML = el.innerHTML + '<div style="margin-top:14px;font-size:.8rem;letter-spacing:.05em;color:var(--text-dim)">' + (el.getAttribute('data-caption')||'') + '</div>';
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightbox(e){
+  if(e.target.id === 'lightbox' || e.target.classList.contains('lightbox-close')){
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') document.getElementById('lightbox').classList.remove('open');
+});
+
+/* scroll progress bar */
+(function(){
+  var bar = document.getElementById('scrollBar');
+  function update(){
+    var h = document.documentElement;
+    var scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
+    bar.style.width = (scrolled || 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  update();
+})();
+
+/* scroll reveal */
+document.addEventListener('DOMContentLoaded', function(){
+  var els = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){ entry.target.classList.add('in'); io.unobserve(entry.target); }
+      });
+    }, {threshold:.15});
+    els.forEach(function(el){ io.observe(el); });
+  } else {
+    els.forEach(function(el){ el.classList.add('in'); });
+  }
+});
+
+/* hero ambient particle field */
+(function(){
+  var canvas = document.getElementById('heroCanvas');
+  if(!canvas || !canvas.getContext) return;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ctx = canvas.getContext('2d');
+  var w, h, particles = [];
+  function resize(){
+    w = canvas.width = canvas.offsetWidth;
+    h = canvas.height = canvas.offsetHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  var count = Math.max(20, Math.min(55, Math.floor(w / 22)));
+  for(var i = 0; i < count; i++){
+    particles.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.6 + 0.5,
+      speed: Math.random() * 0.35 + 0.08,
+      cyan: Math.random() > 0.5,
+      alpha: Math.random() * 0.5 + 0.15
+    });
+  }
+  function draw(){
+    ctx.clearRect(0, 0, w, h);
+    particles.forEach(function(p){
+      ctx.beginPath();
+      ctx.fillStyle = (p.cyan ? 'rgba(38,224,208,' : 'rgba(160,107,255,') + p.alpha + ')';
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      p.y -= p.speed;
+      if(p.y < -5){ p.y = h + 5; p.x = Math.random() * w; }
+    });
+    if(!reduceMotion) requestAnimationFrame(draw);
+  }
+  draw();
+})();
 </script>
 </body>
 </html>
