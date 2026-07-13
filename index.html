@@ -32,7 +32,21 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{background:var(--black);color:var(--silver);font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif;scroll-behavior:smooth;overflow-x:hidden;}
-  body{line-height:1.6;}
+  body{line-height:1.6;position:relative;}
+
+  /* AMBIENT CYBERPUNK BACKDROP (스크롤 전체에 걸쳐 은은하게 유지) */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse at 12% 15%, rgba(110,47,217,.16), transparent 42%),
+      radial-gradient(ellipse at 88% 25%, rgba(38,224,208,.13), transparent 42%),
+      radial-gradient(ellipse at 25% 85%, rgba(255,47,176,.12), transparent 45%),
+      radial-gradient(ellipse at 80% 90%, rgba(232,196,104,.08), transparent 45%),
+      linear-gradient(rgba(160,107,255,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(160,107,255,.06) 1px, transparent 1px);
+    background-size:auto,auto,auto,auto,54px 54px,54px 54px;
+  }
+  section{z-index:1;}
+  footer{position:relative;z-index:1;}
 
   [data-lang="ko"] [lang="en"]{display:none;}
   [data-lang="en"] [lang="ko"]{display:none;}
@@ -87,13 +101,18 @@
   }
 
   /* HERO */
-  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;background:
-      radial-gradient(ellipse at 30% 20%, rgba(110,47,217,.35), transparent 55%),
-      radial-gradient(ellipse at 75% 75%, rgba(38,224,208,.18), transparent 50%),
-      radial-gradient(ellipse at 50% 100%, rgba(255,47,176,.15), transparent 55%),
-      linear-gradient(180deg, var(--black) 0%, var(--bg-deep) 60%, var(--bg-deep2) 100%);
-    overflow:hidden;}
-  .hero::before{content:"";position:absolute;inset:0;
+  .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;
+    background:var(--black);overflow:hidden;}
+  .hero-bg-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;z-index:0;
+    filter:saturate(.85) brightness(.55) contrast(1.05);}
+  .hero::after{content:"";position:absolute;inset:0;z-index:1;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(110,47,217,.4), transparent 55%),
+      radial-gradient(ellipse at 75% 75%, rgba(38,224,208,.2), transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(255,47,176,.18), transparent 55%),
+      linear-gradient(180deg, rgba(5,3,10,.62) 0%, rgba(9,5,16,.52) 45%, rgba(14,8,24,.78) 75%, rgba(18,10,31,.94) 100%);
+  }
+  .hero::before{content:"";position:absolute;inset:0;z-index:2;
     background-image:
       linear-gradient(rgba(160,107,255,.08) 1px, transparent 1px),
       linear-gradient(90deg, rgba(160,107,255,.08) 1px, transparent 1px);
@@ -102,9 +121,9 @@
             mask-image:linear-gradient(180deg, transparent 0%, rgba(0,0,0,.9) 40%, transparent 85%);
     animation:gridMove 18s linear infinite;
   }
-  .hero-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+  .hero-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;}
   @keyframes gridMove{0%{transform:translateY(0);}100%{transform:translateY(48px);}}
-  .hero-inner{position:relative;z-index:2;padding:0 20px;}
+  .hero-inner{position:relative;z-index:4;padding:0 20px;}
   .hero-mark{font-size:clamp(4rem,16vw,9rem);font-weight:900;letter-spacing:.05em;line-height:1;
     background:linear-gradient(180deg,#ffffff 0%, var(--purple-light) 55%, var(--cyan) 100%);
     -webkit-background-clip:text;background-clip:text;color:transparent;
@@ -114,7 +133,7 @@
   @keyframes flicker{0%,92%,100%{filter:drop-shadow(0 0 18px rgba(160,107,255,.55));}94%{filter:drop-shadow(0 0 4px rgba(255,47,176,.3));}96%{filter:drop-shadow(0 0 26px rgba(38,224,208,.6));}}
   .hero-tag{margin-top:18px;font-size:clamp(1rem,2.4vw,1.35rem);letter-spacing:.02em;color:var(--text-dim);font-weight:300;}
   .hero-tag b{color:var(--silver);font-weight:600;}
-  .hero-scroll{position:relative;z-index:2;margin-top:70px;font-size:.7rem;letter-spacing:.3em;color:var(--text-dim);opacity:.7;animation:bounce 2.2s ease-in-out infinite;}
+  .hero-scroll{position:relative;z-index:4;margin-top:70px;font-size:.7rem;letter-spacing:.3em;color:var(--text-dim);opacity:.7;animation:bounce 2.2s ease-in-out infinite;}
   @keyframes bounce{0%,100%{transform:translateY(0);opacity:.4;}50%{transform:translateY(8px);opacity:.9;}}
 
   /* CTA CARDS */
@@ -156,39 +175,37 @@
   .story-btn:hover{filter:brightness(1.1);}
 
   /* GALLERY */
-  .gallery-tabs{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
-  .gallery-tab{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:var(--text-dim);
-    font-size:.78rem;font-weight:700;letter-spacing:.03em;padding:9px 18px;border-radius:24px;cursor:pointer;transition:.2s;}
-  .gallery-tab:hover{border-color:rgba(255,255,255,.3);color:var(--silver);}
-  .gallery-tab.active{background:var(--silver);color:var(--black);border-color:var(--silver);}
-  .gallery-tab.active[data-filter="answer"]{background:var(--magenta);border-color:var(--magenta);color:#fff;}
-  .gallery-tab.active[data-filter="bright"]{background:var(--gold);border-color:var(--gold);color:#05030a;}
-  .gallery-tab.active[data-filter="dopamine"]{background:var(--cyan);border-color:var(--cyan);color:#05030a;}
-  .gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:140px;gap:14px;}
-  .gallery-tile.gallery-hide{display:none;}
-  .gallery-tile{position:relative;border:none;border-radius:16px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:8px;color:var(--text-dim);transition:.25s;padding:0;}
-  .gallery-tile:hover{transform:scale(1.02);box-shadow:0 16px 40px rgba(0,0,0,.4);}
-  .gallery-tile img{width:100%;height:100%;object-fit:cover;display:block;}
-  .gallery-tile .ph-icon{font-size:1.4rem;opacity:.6;}
-  .gallery-tile .ph-label{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;opacity:.55;}
-  .gallery-tile.g1{grid-column:span 2;grid-row:span 2;background:linear-gradient(150deg, rgba(110,47,217,.35), rgba(38,224,208,.12));}
-  .gallery-tile.g2{background:linear-gradient(150deg, rgba(255,47,176,.28), rgba(5,3,10,.4));}
-  .gallery-tile.g3{grid-row:span 2;background:linear-gradient(200deg, rgba(38,224,208,.28), rgba(5,3,10,.4));}
-  .gallery-tile.g4{background:linear-gradient(150deg, rgba(232,196,104,.22), rgba(5,3,10,.4));}
-  .gallery-tile.g5{grid-column:span 2;background:linear-gradient(150deg, rgba(110,47,217,.2), rgba(255,47,176,.18));}
-  .gallery-tile.g6{background:linear-gradient(150deg, rgba(38,224,208,.2), rgba(110,47,217,.18));}
-  @media(max-width:700px){
-    .gallery-grid{grid-template-columns:repeat(2,1fr);grid-auto-rows:120px;}
-    .gallery-tile{grid-column:span 1 !important;grid-row:span 1 !important;}
-  }
+  .gallery-covers{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .cover-card{position:relative;border:none;border-radius:18px;overflow:hidden;cursor:pointer;aspect-ratio:3/4;padding:0;
+    background:rgba(255,255,255,.03);transition:transform .25s,box-shadow .25s;}
+  .cover-card:hover{transform:translateY(-6px);box-shadow:0 26px 55px rgba(0,0,0,.5);}
+  .cover-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease;}
+  .cover-card:hover img{transform:scale(1.06);}
+  .cover-scrim{position:absolute;inset:0;background:linear-gradient(180deg, transparent 35%, rgba(3,1,7,.92) 100%);}
+  .cover-info{position:absolute;left:22px;right:22px;bottom:20px;text-align:left;color:var(--silver);}
+  .cover-title{display:block;font-weight:800;font-size:1.2rem;margin-bottom:5px;}
+  .cover-count{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.05em;color:var(--text-dim);}
+  @media(max-width:800px){.gallery-covers{grid-template-columns:1fr;}}
+
   .lightbox{position:fixed;inset:0;background:rgba(3,1,7,.92);z-index:100;display:none;align-items:center;justify-content:center;padding:30px;backdrop-filter:blur(6px);}
   .lightbox.open{display:flex;}
   .lightbox-inner{position:relative;max-width:720px;width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:30px;text-align:center;}
   .lightbox-content{min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-dim);}
-  .lightbox-content img{max-width:100%;border-radius:12px;}
+  .lightbox-content img{max-width:100%;max-height:60vh;border-radius:12px;}
   .lightbox-close{position:absolute;top:-14px;right:-14px;width:36px;height:36px;border-radius:50%;background:var(--silver);color:var(--black);
-    border:none;font-size:1rem;font-weight:700;cursor:pointer;}
+    border:none;font-size:1rem;font-weight:700;cursor:pointer;z-index:2;}
+  .lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:var(--silver);font-size:1.3rem;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+  .lightbox-nav:hover{background:rgba(255,255,255,.18);}
+  .lightbox-prev{left:-56px;}
+  .lightbox-next{right:-56px;}
+  .lightbox-counter{margin-top:14px;font-size:.72rem;letter-spacing:.08em;color:var(--text-dim);font-variant-numeric:tabular-nums;}
+  @media(max-width:760px){
+    .lightbox-inner{padding:20px;}
+    .lightbox-prev{left:2px;}
+    .lightbox-next{right:2px;}
+  }
 
   /* MERCH */
   .merch-box{border:1px dashed rgba(255,255,255,.25);border-radius:20px;padding:48px;text-align:center;}
@@ -247,6 +264,7 @@
 
 <!-- ============ HERO ============ -->
 <section class="hero">
+  <img class="hero-bg-photo" src="images/gallery/hero-bg.jpg" alt="" aria-hidden="true">
   <canvas class="hero-canvas" id="heroCanvas"></canvas>
   <div class="hero-inner">
     <div class="hero-mark">XENA</div>
@@ -390,49 +408,39 @@
 </section>
 
 <!-- ============ GALLERY ============ -->
-<!-- 실사진 도착하면: 아래 button.gallery-tile 내부를 <img src="images/파일명.jpg" alt="설명"> 하나로 교체하면 됩니다. onclick(openLightbox)/data-caption 구조는 그대로 유지. -->
 <section id="gallery">
   <div class="container reveal">
     <div class="eyebrow"><span lang="ko">비주얼</span><span lang="en">Visuals</span></div>
     <h2><span lang="ko">제나 갤러리</span><span lang="en">XENA Gallery</span></h2>
     <p class="section-sub">
-      <span lang="ko">공연, 스튜디오, 그리고 그녀의 일상. 곧 더 많은 사진으로 채워질 공간입니다.</span>
-      <span lang="en">Stage, studio, and everyday moments. More photos coming soon.</span>
+      <span lang="ko">공연, 스튜디오, 그리고 그녀의 일상 — 트랙별로 만나보세요.</span>
+      <span lang="en">Stage, studio, and everyday moments — browse by track.</span>
     </p>
 
-    <div class="gallery-tabs" role="tablist">
-      <button class="gallery-tab active" data-filter="all" onclick="filterGallery('all', this)">
-        <span lang="ko">전체</span><span lang="en">All</span>
+    <div class="gallery-covers">
+      <button class="cover-card" onclick="openGallery('answer')">
+        <img src="images/gallery/answer-1.jpg" alt="I am the answer">
+        <span class="cover-scrim"></span>
+        <span class="cover-info">
+          <span class="cover-title">I am the answer</span>
+          <span class="cover-count"><span lang="ko">사진 10장 보기</span><span lang="en">View 10 Photos</span></span>
+        </span>
       </button>
-      <button class="gallery-tab" data-filter="answer" onclick="filterGallery('answer', this)">I am the answer</button>
-      <button class="gallery-tab" data-filter="bright" onclick="filterGallery('bright', this)">Stay Bright</button>
-      <button class="gallery-tab" data-filter="dopamine" onclick="filterGallery('dopamine', this)">DOPAMINE</button>
-    </div>
-
-    <div class="gallery-grid" id="galleryGrid">
-      <button class="gallery-tile g1" data-track="answer" onclick="openLightbox(this)" data-caption="I am the answer — Stage / Performance">
-        <span class="ph-icon">✧</span>
-        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
+      <button class="cover-card" onclick="openGallery('bright')">
+        <img src="images/gallery/bright-3.jpg" alt="Stay Bright">
+        <span class="cover-scrim"></span>
+        <span class="cover-info">
+          <span class="cover-title">Stay Bright</span>
+          <span class="cover-count"><span lang="ko">사진 10장 보기</span><span lang="en">View 10 Photos</span></span>
+        </span>
       </button>
-      <button class="gallery-tile g2" data-track="answer" onclick="openLightbox(this)" data-caption="I am the answer — Studio CHANS">
-        <span class="ph-icon">✧</span>
-        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
-      </button>
-      <button class="gallery-tile g3" data-track="bright" onclick="openLightbox(this)" data-caption="Stay Bright — Album Art">
-        <span class="ph-icon">✧</span>
-        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
-      </button>
-      <button class="gallery-tile g4" data-track="bright" onclick="openLightbox(this)" data-caption="Stay Bright — Ethereal Mode">
-        <span class="ph-icon">✧</span>
-        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
-      </button>
-      <button class="gallery-tile g5" data-track="dopamine" onclick="openLightbox(this)" data-caption="DOPAMINE — MV Behind the Scenes">
-        <span class="ph-icon">✧</span>
-        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
-      </button>
-      <button class="gallery-tile g6" data-track="dopamine" onclick="openLightbox(this)" data-caption="DOPAMINE — Performance Energy">
-        <span class="ph-icon">✧</span>
-        <span class="ph-label"><span lang="ko">사진 준비중</span><span lang="en">Coming Soon</span></span>
+      <button class="cover-card" onclick="openGallery('dopamine')">
+        <img src="images/gallery/dopamine-2.jpg" alt="DOPAMINE">
+        <span class="cover-scrim"></span>
+        <span class="cover-info">
+          <span class="cover-title">DOPAMINE</span>
+          <span class="cover-count"><span lang="ko">사진 10장 보기</span><span lang="en">View 10 Photos</span></span>
+        </span>
       </button>
     </div>
   </div>
@@ -464,7 +472,7 @@
         <span lang="ko">신곡, 새 에피소드, 특별한 소식을 이메일로 가장 먼저 받아보세요.</span>
         <span lang="en">Be the first to know about new songs, chapters, and announcements.</span>
       </p>
-      <a class="news-btn" href="https://forms.gle/3BfAm228Gs3yFF9b6" target="_blank" rel="noopener">
+      <a class="news-btn" href="https://forms.gle/3BfAm228Gs3yFF9b6">
         <span lang="ko">이메일로 알림 받기</span><span lang="en">Subscribe by Email</span>
       </a>
     </div>
@@ -490,7 +498,10 @@
 <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
   <div class="lightbox-inner">
     <button class="lightbox-close" onclick="closeLightbox(event)">✕</button>
+    <button class="lightbox-nav lightbox-prev" onclick="prevSlide(event)" aria-label="Previous">‹</button>
+    <button class="lightbox-nav lightbox-next" onclick="nextSlide(event)" aria-label="Next">›</button>
     <div class="lightbox-content" id="lightboxContent"></div>
+    <div class="lightbox-counter" id="lightboxCounter"></div>
   </div>
 </div>
 
@@ -501,20 +512,69 @@ function setLang(l){
   localStorage.setItem('xena-lang', l);
 }
 
-function filterGallery(track, btn){
-  document.querySelectorAll('.gallery-tab').forEach(function(t){ t.classList.remove('active'); });
-  btn.classList.add('active');
-  document.querySelectorAll('#galleryGrid .gallery-tile').forEach(function(tile){
-    var show = (track === 'all' || tile.getAttribute('data-track') === track);
-    tile.classList.toggle('gallery-hide', !show);
-  });
-}
+var GALLERY = {
+  answer: [
+    {src:'images/gallery/answer-1.jpg', caption:'I am the answer — The Strike'},
+    {src:'images/gallery/answer-2.jpg', caption:'I am the answer — Breaking the Line'},
+    {src:'images/gallery/answer-3.jpg', caption:'I am the answer — The Declaration'},
+    {src:'images/gallery/answer-4.jpg', caption:'I am the answer — Under Observation'},
+    {src:'images/gallery/answer-5.jpg', caption:"I am the answer — The Answer's Gaze"},
+    {src:'images/gallery/answer-6.jpg', caption:'I am the answer'},
+    {src:'images/gallery/answer-7.jpg', caption:'I am the answer — Rooftop Pursuit'},
+    {src:'images/gallery/answer-8.jpg', caption:'I am the answer — Electric Surge'},
+    {src:'images/gallery/answer-9.jpg', caption:'I am the answer — The Approach'},
+    {src:'images/gallery/answer-10.jpg', caption:'I am the answer — Code: XENA'}
+  ],
+  bright: [
+    {src:'images/gallery/bright-3.jpg', caption:'Stay Bright'},
+    {src:'images/gallery/bright-1.jpg', caption:'Stay Bright — Turned to Light'},
+    {src:'images/gallery/bright-2.jpg', caption:'Stay Bright — Golden Hour'},
+    {src:'images/gallery/bright-4.jpg', caption:'Stay Bright — The Impact'},
+    {src:'images/gallery/bright-5.jpg', caption:'Stay Bright Mode'},
+    {src:'images/gallery/bright-6.jpg', caption:'Stay Bright — Broken Pieces'},
+    {src:'images/gallery/bright-7.jpg', caption:'Stay Bright — City of Gold'},
+    {src:'images/gallery/bright-8.jpg', caption:'Stay Bright — Ascension'},
+    {src:'images/gallery/bright-9.jpg', caption:'Stay Bright — Crystal Skyline'},
+    {src:'images/gallery/bright-10.jpg', caption:'Stay Bright — Shield of Light'}
+  ],
+  dopamine: [
+    {src:'images/gallery/dopamine-2.jpg', caption:'DOPAMINE — Sound Wave Clash'},
+    {src:'images/gallery/dopamine-1.jpg', caption:'DOPAMINE Smile'},
+    {src:'images/gallery/dopamine-3.jpg', caption:'DOPAMINE — Smile in the Rain'},
+    {src:'images/gallery/dopamine-4.jpg', caption:'DOPAMINE — Kneeling Resolve'},
+    {src:'images/gallery/dopamine-5.jpg', caption:'DOPAMINE — Fractured Selves'},
+    {src:'images/gallery/dopamine-6.jpg', caption:'DOPAMINE — Mirror'},
+    {src:'images/gallery/dopamine-7.jpg', caption:'DOPAMINE — Rival Strike'},
+    {src:'images/gallery/dopamine-8.jpg', caption:'DOPAMINE — Neon Standoff'},
+    {src:'images/gallery/dopamine-9.jpg', caption:'DOPAMINE — Rooftop Chase'},
+    {src:'images/gallery/dopamine-10.jpg', caption:'DOPAMINE — Night Ride'}
+  ]
+};
+var currentTrack = null, currentIndex = 0;
 
-function openLightbox(el){
-  var content = document.getElementById('lightboxContent');
-  content.innerHTML = el.innerHTML + '<div style="margin-top:14px;font-size:.8rem;letter-spacing:.05em;color:var(--text-dim)">' + (el.getAttribute('data-caption')||'') + '</div>';
+function openGallery(track){
+  currentTrack = track;
+  currentIndex = 0;
+  renderSlide();
   document.getElementById('lightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+function renderSlide(){
+  var item = GALLERY[currentTrack][currentIndex];
+  document.getElementById('lightboxContent').innerHTML =
+    '<img src="' + item.src + '" alt="' + item.caption + '">' +
+    '<div style="margin-top:4px;font-size:.8rem;letter-spacing:.05em;color:var(--text-dim)">' + item.caption + '</div>';
+  document.getElementById('lightboxCounter').textContent = (currentIndex + 1) + ' / ' + GALLERY[currentTrack].length;
+}
+function nextSlide(e){
+  if(e) e.stopPropagation();
+  currentIndex = (currentIndex + 1) % GALLERY[currentTrack].length;
+  renderSlide();
+}
+function prevSlide(e){
+  if(e) e.stopPropagation();
+  currentIndex = (currentIndex - 1 + GALLERY[currentTrack].length) % GALLERY[currentTrack].length;
+  renderSlide();
 }
 function closeLightbox(e){
   if(e.target.id === 'lightbox' || e.target.classList.contains('lightbox-close')){
@@ -523,7 +583,11 @@ function closeLightbox(e){
   }
 }
 document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape') document.getElementById('lightbox').classList.remove('open');
+  var lb = document.getElementById('lightbox');
+  if(!lb.classList.contains('open')) return;
+  if(e.key === 'Escape'){ lb.classList.remove('open'); document.body.style.overflow = ''; }
+  if(e.key === 'ArrowRight') nextSlide();
+  if(e.key === 'ArrowLeft') prevSlide();
 });
 
 /* scroll progress bar */
@@ -552,6 +616,27 @@ document.addEventListener('DOMContentLoaded', function(){
     els.forEach(function(el){ el.classList.add('in'); });
   }
 });
+
+/* 3D tilt interaction on cards */
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (window.matchMedia('(hover: none)').matches) return;
+  function attachTilt(selector, intensity){
+    document.querySelectorAll(selector).forEach(function(el){
+      el.addEventListener('mousemove', function(e){
+        var r = el.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - 0.5;
+        var y = (e.clientY - r.top) / r.height - 0.5;
+        el.style.transform = 'perspective(700px) rotateX(' + (-y * intensity) + 'deg) rotateY(' + (x * intensity) + 'deg) translateY(-4px)';
+      });
+      el.addEventListener('mouseleave', function(){
+        el.style.transform = '';
+      });
+    });
+  }
+  attachTilt('.cta-card', 7);
+  attachTilt('.cover-card', 5);
+})();
 
 /* hero ambient particle field */
 (function(){
