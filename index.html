@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-lang="ko">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +12,7 @@
 <script>
 (function(){
   var saved = localStorage.getItem('xena-lang');
-  var lang = saved || (navigator.language && navigator.language.toLowerCase().indexOf('ko') === 0 ? 'ko' : 'en');
+  var lang = saved || 'en';
   document.documentElement.setAttribute('data-lang', lang);
   document.documentElement.setAttribute('lang', lang);
 })();
@@ -168,7 +168,7 @@
   @keyframes bounce{0%,100%{transform:translateY(0);opacity:.35;}50%{transform:translateY(8px);opacity:.8;}}
 
   /* CTA CARDS — glassmorphism */
-  .cta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .cta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;}
   @media(max-width:800px){.cta-grid{grid-template-columns:1fr;}}
   .cta-card{background:linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008));
     backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);
@@ -200,6 +200,9 @@
   .cta-card.wattpad .cta-btn{background:rgba(63,224,255,.9);color:#04141a;box-shadow:0 4px 24px rgba(63,224,255,.2);}
   .cta-card.patreon .cta-btn{background:rgba(160,107,255,.9);color:#0d0620;box-shadow:0 4px 24px rgba(160,107,255,.22);}
   .cta-btn:hover,.cta-btn:focus-visible{letter-spacing:.07em;}
+  .cta-btn.soon{background:rgba(255,255,255,.05);color:var(--text-dim);box-shadow:none;cursor:default;font-family:var(--font-mono);font-weight:500;}
+  .cta-btn.soon::before,.cta-btn.soon::after{display:none;}
+  .cta-btn.soon:hover{transform:none;letter-spacing:.05em;}
 
   /* RELEASES */
   .release-row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 0;border-bottom:1px solid rgba(255,255,255,.08);}
@@ -385,6 +388,18 @@
         <a class="cta-btn" href="https://www.patreon.com/cw/XENA872" target="_blank" rel="noopener">
           <span lang="ko">패트리온 가입하기</span><span lang="en">Join on Patreon</span>
         </a>
+      </div>
+
+      <div class="cta-card game">
+        <svg class="cta-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="11" rx="4" stroke="#e8c468" stroke-width="1.6"/><circle cx="8.5" cy="12.5" r="1.3" fill="#e8c468"/><circle cx="16" cy="11" r="1.1" fill="#e8c468"/><circle cx="16" cy="14" r="1.1" fill="#e8c468"/></svg>
+        <h3><span lang="ko">웹게임</span><span lang="en">Web Game</span></h3>
+        <p>
+          <span lang="ko">XENA의 세계를 직접 플레이하는 브라우저 게임을 준비 중이에요.</span>
+          <span lang="en">A browser game to explore XENA's world — currently in the works.</span>
+        </p>
+        <span class="cta-btn soon">
+          <span lang="ko">출시 예정</span><span lang="en">Coming Soon</span>
+        </span>
       </div>
     </div>
   </div>
