@@ -106,6 +106,7 @@
   .dock-item.pt:hover{border-color:rgba(160,107,255,.5);box-shadow:0 0 22px rgba(160,107,255,.3);}.dock-item.pt:hover svg{stroke:var(--purple-light);}
   .dock-item.sp:hover{border-color:rgba(232,196,104,.5);box-shadow:0 0 22px rgba(232,196,104,.28);}.dock-item.sp:hover svg{stroke:var(--gold);}
   .dock-item.shop:hover{border-color:rgba(230,230,238,.5);box-shadow:0 0 22px rgba(230,230,238,.2);}.dock-item.shop:hover svg{stroke:var(--silver);}
+  .dock-item.game:hover{border-color:rgba(63,224,255,.5);box-shadow:0 0 22px rgba(63,224,255,.3);}.dock-item.game:hover svg{stroke:var(--cyan);}
   .dock-tip{font-family:var(--font-mono);position:absolute;right:50px;top:50%;transform:translateY(-50%);white-space:nowrap;background:rgba(6,6,10,.85);backdrop-filter:blur(10px);
     border:1px solid var(--hair);padding:6px 12px;border-radius:8px;font-size:.68rem;font-weight:500;letter-spacing:.04em;
     opacity:0;pointer-events:none;transition:.3s ease;}
@@ -386,7 +387,10 @@
     <svg viewBox="0 0 24 24" fill="none"><path d="M6 8H18L17 20H7L6 8Z" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 8V6C9 4.3 10.3 3 12 3C13.7 3 15 4.3 15 6V8" stroke-width="1.6"/></svg>
     <span class="dock-tip"><span lang="ko">굿즈</span><span lang="en">Shop</span></span>
   </a>
-  <!-- 게임(TCG) 버튼: Phase 3 온라인 카드게임 출시 후 여기에 dock-item 추가 -->
+  <a class="dock-item game" href="game/" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="11" rx="4" stroke-width="1.6"/><path d="M8 10.5V14.5M6 12.5H10" stroke-width="1.6" stroke-linecap="round"/><circle cx="15.5" cy="11.5" r="1" fill="currentColor" stroke="none"/><circle cx="17.5" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
+    <span class="dock-tip"><span lang="ko">게임</span><span lang="en">Game</span></span>
+  </a>
 </nav>
 
 <!-- ============ HERO ============ -->
@@ -456,14 +460,14 @@
 
       <div class="cta-card game">
         <svg class="cta-icon" viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="11" rx="4" stroke="#e8c468" stroke-width="1.6"/><circle cx="8.5" cy="12.5" r="1.3" fill="#e8c468"/><circle cx="16" cy="11" r="1.1" fill="#e8c468"/><circle cx="16" cy="14" r="1.1" fill="#e8c468"/></svg>
-        <h3><span lang="ko">웹게임</span><span lang="en">Web Game</span></h3>
+        <h3>OVERRIDE GRID</h3>
         <p>
-          <span lang="ko">XENA의 세계를 직접 플레이하는 브라우저 게임을 준비 중이에요.</span>
-          <span lang="en">A browser game to explore XENA's world — currently in the works.</span>
+          <span lang="ko">XENA 세계관의 사이버펑크 전략 체스 — 브라우저에서 바로 무료 플레이.</span>
+          <span lang="en">A cyberpunk strategy chess set in XENA's world — play free in your browser.</span>
         </p>
-        <span class="cta-btn soon">
-          <span lang="ko">출시 예정</span><span lang="en">Coming Soon</span>
-        </span>
+        <a class="cta-btn" style="background:rgba(232,196,104,.9);color:#1a1206;box-shadow:0 4px 24px rgba(232,196,104,.2);" href="game/" target="_blank" rel="noopener">
+          <span lang="ko">지금 플레이</span><span lang="en">PLAY NOW</span>
+        </a>
       </div>
     </div>
   </div>
@@ -654,6 +658,7 @@
       <a href="https://www.patreon.com/cw/XENA872" target="_blank" rel="noopener">Patreon</a>
       <a href="https://open.spotify.com/artist/2RnYNUO4Jo2v5TKuIyiHIr" target="_blank" rel="noopener">Spotify</a>
       <a href="https://marpple.shop/kr/xenauniverse" target="_blank" rel="noopener"><span lang="ko">굿즈</span><span lang="en">Merch</span></a>
+      <a href="game/" target="_blank" rel="noopener"><span lang="ko">게임</span><span lang="en">Game</span></a>
     </div>
     <div class="footer-copy">Studio CHANS © 2026 XENA. All rights reserved.</div>
   </div>
