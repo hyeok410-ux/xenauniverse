@@ -154,16 +154,22 @@
   #dustGL{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
   @keyframes gridMove{0%{transform:translateY(0);}100%{transform:translateY(48px);}}
   .hero-inner{position:relative;z-index:5;padding:0 20px;}
-  .hero-mark{font-family:var(--font-sans);font-size:clamp(4rem,16vw,9rem);font-weight:700;letter-spacing:.04em;line-height:1;
-    background:linear-gradient(180deg,#ffffff 0%, var(--purple-light) 58%, var(--cyan) 100%);
+  /* XENA 로고 — 메탈 크롬 + 네온 림 + 3D 압출 + 마우스 반응 틸트 */
+  .hero-mark{font-family:var(--font-sans);font-size:clamp(4rem,16vw,9.5rem);font-weight:800;letter-spacing:.05em;line-height:1;
+    background:linear-gradient(168deg,#ffffff 0%,#f2f4fa 12%,#c9cfde 27%,#ffffff 42%,#aeb5c7 56%,#f7f9ff 70%,#d8dcea 84%,#ffffff 100%);
+    background-size:200% 200%;background-position:0% 0%;
     -webkit-background-clip:text;background-clip:text;color:transparent;
-    text-shadow:0 0 10px rgba(160,107,255,.35), 0 0 46px rgba(160,107,255,.28), 0 0 100px rgba(63,224,255,.16);
-    animation:breathe 6s ease-in-out infinite;
+    text-shadow:
+      0 2px 0 rgba(26,22,40,.9), 0 4px 0 rgba(22,18,34,.85), 0 6px 0 rgba(18,14,28,.8),
+      0 8px 0 rgba(13,10,21,.75), 0 11px 2px rgba(8,6,14,.6), 0 16px 30px rgba(0,0,0,.85),
+      0 0 26px rgba(63,224,255,.32), 0 0 60px rgba(255,47,176,.2), 0 0 110px rgba(160,107,255,.3);
+    animation:chromeSheen 5.5s ease-in-out infinite;
+    transform-style:preserve-3d;will-change:transform;transition:transform .18s ease-out;
   }
   .hero-mark span{display:inline-block;}
-  @keyframes breathe{
-    0%,100%{text-shadow:0 0 10px rgba(160,107,255,.35), 0 0 46px rgba(160,107,255,.28), 0 0 100px rgba(63,224,255,.16);}
-    50%{text-shadow:0 0 14px rgba(160,107,255,.45), 0 0 60px rgba(63,224,255,.32), 0 0 130px rgba(232,196,104,.14);}
+  @keyframes chromeSheen{
+    0%,100%{background-position:0% 0%;}
+    50%{background-position:100% 100%;}
   }
   .hero-tag{margin-top:22px;font-size:clamp(1rem,2.4vw,1.35rem);letter-spacing:.01em;color:var(--text-dim);font-weight:300;line-height:1.7;}
   .hero-tag b{color:var(--silver);font-weight:500;}
@@ -212,6 +218,9 @@
   .release-row:last-child{border-bottom:none;}
   .release-left{display:flex;align-items:center;gap:20px;}
   .release-num{font-family:var(--font-mono);font-size:.72rem;color:var(--text-dim);font-weight:500;letter-spacing:.1em;width:26px;font-variant-numeric:tabular-nums;}
+  .release-cover{width:54px;height:54px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid var(--hair);
+    box-shadow:0 4px 16px rgba(0,0,0,.55), 0 0 18px rgba(160,107,255,.16);transition:.35s ease;}
+  .release-row:hover .release-cover{transform:scale(1.06);box-shadow:0 6px 20px rgba(0,0,0,.6), 0 0 26px rgba(63,224,255,.25);}
   .release-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;box-shadow:0 0 12px currentColor;}
   .release-title{font-family:var(--font-sans);font-weight:600;font-size:1.05rem;letter-spacing:.01em;}
   .release-desc{color:var(--text-dim);font-weight:300;font-size:.85rem;margin-top:2px;}
@@ -294,32 +303,41 @@
   .photo-band-text .big{font-family:var(--font-sans);font-weight:700;font-size:clamp(1.5rem,4.6vw,2.8rem);letter-spacing:.02em;line-height:1.35;
     text-shadow:0 4px 40px rgba(0,0,0,.9), 0 0 60px rgba(160,107,255,.18);text-wrap:balance;}
 
-  /* MUSIC PLAYER — 하단 고정 플레이어 */
-  .player{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;align-items:center;gap:14px;
-    padding:10px 18px calc(10px + env(safe-area-inset-bottom));
-    background:rgba(4,4,7,.8);border-top:1px solid var(--hair);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);}
-  .player-cover{width:46px;height:46px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--hair);
-    box-shadow:0 0 20px rgba(160,107,255,.15);}
-  .player-meta{min-width:0;margin-right:auto;line-height:1.4;}
+  /* MUSIC PLAYER — 하단 고정, 풀와이드 사운드 비주얼라이저 */
+  .player{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;align-items:center;gap:16px;
+    padding:10px 20px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, rgba(10,10,16,.72), rgba(3,3,6,.88));
+    border-top:1px solid rgba(160,107,255,.22);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);
+    box-shadow:0 -14px 50px rgba(0,0,0,.6), 0 -1px 22px rgba(160,107,255,.12);}
+  .player::before{content:"";position:absolute;left:0;right:0;top:-1px;height:1px;
+    background:linear-gradient(90deg, transparent, rgba(63,224,255,.7) 30%, rgba(255,47,176,.7) 70%, transparent);
+    filter:blur(.4px);animation:playerEdge 6s linear infinite;background-size:200% 100%;}
+  @keyframes playerEdge{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+  .player-cover{width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,.14);
+    box-shadow:0 4px 18px rgba(0,0,0,.6), 0 0 24px rgba(160,107,255,.25);}
+  .player-meta{min-width:0;width:170px;flex-shrink:0;line-height:1.4;}
   .player-title{font-size:.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .player-sub{font-family:var(--font-mono);font-size:.6rem;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase;}
-  .player-track{flex:1 1 auto;max-width:420px;display:flex;align-items:center;gap:10px;}
-  .player-bar{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.1);cursor:pointer;position:relative;overflow:hidden;}
-  .player-bar-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,var(--purple-light),var(--cyan));
-    box-shadow:0 0 10px rgba(63,224,255,.5);}
+  .player-track{flex:1 1 auto;display:flex;align-items:center;gap:12px;min-width:0;}
+  .player-bar{flex:1;height:34px;cursor:pointer;position:relative;min-width:0;}
+  .player-bar canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .player-bar-fill{position:absolute;left:0;bottom:0;height:2px;width:0%;background:linear-gradient(90deg,var(--purple-light),var(--cyan),var(--magenta));
+    box-shadow:0 0 12px rgba(63,224,255,.7), 0 0 26px rgba(255,47,176,.4);border-radius:1px;}
   .player-time{font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);font-variant-numeric:tabular-nums;white-space:nowrap;}
   .player-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--silver);
     cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.3s ease;flex-shrink:0;}
   .player-btn svg{width:15px;height:15px;fill:var(--silver);stroke:none;}
   .player-btn:hover{border-color:rgba(63,224,255,.5);box-shadow:0 0 18px rgba(63,224,255,.22);}
-  .player-btn.play{width:46px;height:46px;background:rgba(160,107,255,.16);border-color:rgba(160,107,255,.45);box-shadow:0 0 22px rgba(160,107,255,.2);}
+  .player-btn.play{width:48px;height:48px;background:radial-gradient(circle at 35% 30%, rgba(200,160,255,.3), rgba(160,107,255,.14));
+    border-color:rgba(160,107,255,.55);box-shadow:0 0 26px rgba(160,107,255,.3), inset 0 1px 0 rgba(255,255,255,.18);}
   .player-spotify{display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--hair);flex-shrink:0;transition:.3s ease;}
   .player-spotify svg{width:16px;height:16px;stroke:var(--text-dim);}
   .player-spotify:hover{border-color:rgba(232,196,104,.5);box-shadow:0 0 18px rgba(232,196,104,.2);}
   .player-spotify:hover svg{stroke:var(--gold);}
   @media(max-width:800px){
     .player{bottom:calc(64px + env(safe-area-inset-bottom));padding:8px 12px;gap:10px;}
-    .player-track{max-width:none;}
+    .player-meta{width:auto;flex-shrink:1;}
+    .player-bar{height:26px;}
     .player-time{display:none;}
     .player-spotify{display:none;}
   }
@@ -465,7 +483,7 @@
       <div class="release-row">
         <div class="release-left">
           <span class="release-num">01</span>
-          <span class="release-dot" style="background:var(--magenta)"></span>
+          <img class="release-cover" src="images/gallery/cover-answer.jpg" alt="I am the answer album cover">
           <div>
             <div class="release-title">I am the answer</div>
             <div class="release-desc">
@@ -480,7 +498,7 @@
       <div class="release-row">
         <div class="release-left">
           <span class="release-num">02</span>
-          <span class="release-dot" style="background:var(--gold)"></span>
+          <img class="release-cover" src="images/gallery/cover-bright.jpg" alt="Stay Bright album cover">
           <div>
             <div class="release-title">Stay Bright</div>
             <div class="release-desc">
@@ -495,7 +513,7 @@
       <div class="release-row">
         <div class="release-left">
           <span class="release-num">03</span>
-          <span class="release-dot" style="background:var(--cyan)"></span>
+          <img class="release-cover" src="images/gallery/cover-dopamine.jpg" alt="DOPAMINE album cover">
           <div>
             <div class="release-title">DOPAMINE</div>
             <div class="release-desc">
@@ -553,7 +571,7 @@
 
     <div class="gallery-covers">
       <button class="cover-card" onclick="openGallery('answer')">
-        <img src="images/gallery/answer-1.jpg" alt="I am the answer">
+        <img src="images/gallery/answer-5.jpg" alt="I am the answer">
         <span class="cover-scrim"></span>
         <span class="cover-info">
           <span class="cover-title">I am the answer</span>
@@ -561,7 +579,7 @@
         </span>
       </button>
       <button class="cover-card" onclick="openGallery('bright')">
-        <img src="images/gallery/bright-3.jpg" alt="Stay Bright">
+        <img src="images/gallery/bright-1.jpg" alt="Stay Bright">
         <span class="cover-scrim"></span>
         <span class="cover-info">
           <span class="cover-title">Stay Bright</span>
@@ -569,7 +587,7 @@
         </span>
       </button>
       <button class="cover-card" onclick="openGallery('dopamine')">
-        <img src="images/gallery/dopamine-2.jpg" alt="DOPAMINE">
+        <img src="images/gallery/dopamine-3.jpg" alt="DOPAMINE">
         <span class="cover-scrim"></span>
         <span class="cover-info">
           <span class="cover-title">DOPAMINE</span>
@@ -650,7 +668,10 @@
   </div>
   <div class="player-track">
     <span class="player-time" id="pCur">0:00</span>
-    <div class="player-bar" id="pBar"><div class="player-bar-fill" id="pFill"></div></div>
+    <div class="player-bar" id="pBar">
+      <canvas id="pViz" aria-hidden="true"></canvas>
+      <div class="player-bar-fill" id="pFill"></div>
+    </div>
     <span class="player-time" id="pDur">0:00</span>
   </div>
   <button class="player-btn" id="pPrev" aria-label="Previous track">
@@ -698,40 +719,40 @@ function setLang(l){
 
 var GALLERY = {
   answer: [
-    {src:'images/gallery/answer-1.jpg', caption:'I am the answer — The Strike'},
-    {src:'images/gallery/answer-2.jpg', caption:'I am the answer — Breaking the Line'},
-    {src:'images/gallery/answer-3.jpg', caption:'I am the answer — The Declaration'},
-    {src:'images/gallery/answer-4.jpg', caption:'I am the answer — Under Observation'},
     {src:'images/gallery/answer-5.jpg', caption:"I am the answer — The Answer's Gaze"},
+    {src:'images/gallery/answer-3.jpg', caption:'I am the answer — The Declaration'},
+    {src:'images/gallery/answer-1.jpg', caption:'I am the answer — The Strike'},
     {src:'images/gallery/answer-6.jpg', caption:'I am the answer'},
+    {src:'images/gallery/answer-2.jpg', caption:'I am the answer — Breaking the Line'},
+    {src:'images/gallery/answer-4.jpg', caption:'I am the answer — Under Observation'},
     {src:'images/gallery/answer-7.jpg', caption:'I am the answer — Rooftop Pursuit'},
     {src:'images/gallery/answer-8.jpg', caption:'I am the answer — Electric Surge'},
     {src:'images/gallery/answer-9.jpg', caption:'I am the answer — The Approach'},
     {src:'images/gallery/answer-10.jpg', caption:'I am the answer — Code: XENA'}
   ],
   bright: [
-    {src:'images/gallery/bright-3.jpg', caption:'Stay Bright'},
     {src:'images/gallery/bright-1.jpg', caption:'Stay Bright — Turned to Light'},
     {src:'images/gallery/bright-2.jpg', caption:'Stay Bright — Golden Hour'},
-    {src:'images/gallery/bright-4.jpg', caption:'Stay Bright — The Impact'},
     {src:'images/gallery/bright-5.jpg', caption:'Stay Bright Mode'},
+    {src:'images/gallery/bright-4.jpg', caption:'Stay Bright — The Impact'},
     {src:'images/gallery/bright-6.jpg', caption:'Stay Bright — Broken Pieces'},
     {src:'images/gallery/bright-7.jpg', caption:'Stay Bright — City of Gold'},
     {src:'images/gallery/bright-8.jpg', caption:'Stay Bright — Ascension'},
     {src:'images/gallery/bright-9.jpg', caption:'Stay Bright — Crystal Skyline'},
-    {src:'images/gallery/bright-10.jpg', caption:'Stay Bright — Shield of Light'}
+    {src:'images/gallery/bright-10.jpg', caption:'Stay Bright — Shield of Light'},
+    {src:'images/gallery/bright-3.jpg', caption:'Stay Bright — Code Red'}
   ],
   dopamine: [
-    {src:'images/gallery/dopamine-2.jpg', caption:'DOPAMINE — Sound Wave Clash'},
-    {src:'images/gallery/dopamine-1.jpg', caption:'DOPAMINE Smile'},
     {src:'images/gallery/dopamine-3.jpg', caption:'DOPAMINE — Smile in the Rain'},
-    {src:'images/gallery/dopamine-4.jpg', caption:'DOPAMINE — Kneeling Resolve'},
-    {src:'images/gallery/dopamine-5.jpg', caption:'DOPAMINE — Fractured Selves'},
-    {src:'images/gallery/dopamine-6.jpg', caption:'DOPAMINE — Mirror'},
-    {src:'images/gallery/dopamine-7.jpg', caption:'DOPAMINE — Rival Strike'},
-    {src:'images/gallery/dopamine-8.jpg', caption:'DOPAMINE — Neon Standoff'},
+    {src:'images/gallery/dopamine-1.jpg', caption:'DOPAMINE Smile'},
+    {src:'images/gallery/dopamine-10.jpg', caption:'DOPAMINE — Night Ride'},
+    {src:'images/gallery/dopamine-4.jpg', caption:'DOPAMINE — Sweet Poison'},
     {src:'images/gallery/dopamine-9.jpg', caption:'DOPAMINE — Rooftop Chase'},
-    {src:'images/gallery/dopamine-10.jpg', caption:'DOPAMINE — Night Ride'}
+    {src:'images/gallery/dopamine-8.jpg', caption:'DOPAMINE — Neon Standoff'},
+    {src:'images/gallery/dopamine-6.jpg', caption:'DOPAMINE — Mirror'},
+    {src:'images/gallery/dopamine-5.jpg', caption:'DOPAMINE — Fractured Selves'},
+    {src:'images/gallery/dopamine-7.jpg', caption:'DOPAMINE — Aerial Assault'},
+    {src:'images/gallery/dopamine-2.jpg', caption:'DOPAMINE — Sound Wave Clash'}
   ]
 };
 var currentTrack = null, currentIndex = 0;
@@ -814,6 +835,11 @@ document.addEventListener('DOMContentLoaded', function(){
       gsap.from(mark.querySelectorAll('span'), {y:50, opacity:0, filter:'blur(14px)', duration:1.1, stagger:.09, ease:'power3.out', delay:.2});
       gsap.from('.hero-tag', {y:20, opacity:0, duration:1, ease:'power2.out', delay:1.1});
       gsap.from('.hero-scroll', {opacity:0, duration:1, ease:'power2.out', delay:1.6});
+      /* 어떤 환경에서든 인트로가 끊겨도 로고는 반드시 보이게 (안전장치) */
+      setTimeout(function(){
+        gsap.set(mark.querySelectorAll('span'), {clearProps:'all'});
+        gsap.set('.hero-tag,.hero-scroll', {clearProps:'all'});
+      }, 3400);
     }
   }
 
@@ -1059,7 +1085,25 @@ document.addEventListener('DOMContentLoaded', function(){
     elCur.textContent = '0:00';
     if(autoplay) play();
   }
+  /* Web Audio 그래프 — 사운드 반응 비주얼라이저용 (첫 재생 클릭 때 생성) */
+  var actx = null, analyser = null, freqData = null;
+  function ensureAudioGraph(){
+    if(actx || !(window.AudioContext || window.webkitAudioContext)) return;
+    try{
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      var srcNode = actx.createMediaElementSource(audio);
+      analyser = actx.createAnalyser();
+      analyser.fftSize = 128;
+      analyser.smoothingTimeConstant = 0.78;
+      srcNode.connect(analyser);
+      analyser.connect(actx.destination);
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+    }catch(e){ actx = null; analyser = null; }
+  }
+
   function play(){
+    ensureAudioGraph();
+    if(actx && actx.state === 'suspended') actx.resume();
     audio.play().then(function(){
       icoPlay.innerHTML = '<path d="' + PAUSE_PATH + '"/>';
     }).catch(function(){ /* 파일 없거나 자동재생 차단 시 무시 */ });
@@ -1089,6 +1133,114 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   load(0, false);
+
+  /* 네온 사운드 비주얼라이저 + 전기 스파크 */
+  (function(){
+    var canvas = document.getElementById('pViz');
+    if(!canvas || !canvas.getContext) return;
+    var ctx = canvas.getContext('2d');
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w, h;
+    function resize(){
+      var r = canvas.parentElement.getBoundingClientRect();
+      w = Math.max(10, r.width); h = Math.max(10, r.height);
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var sparks = [];
+
+    function draw(){
+      ctx.clearRect(0, 0, w, h);
+      var progress = audio.duration ? audio.currentTime / audio.duration : 0;
+      var playing = !audio.paused && !audio.ended;
+      var n = 56;
+      var gap = 2;
+      var bw = (w - (n - 1) * gap) / n;
+      var mid = h / 2;
+      var bass = 0;
+
+      for(var i = 0; i < n; i++){
+        var v;
+        if(playing && analyser && freqData){
+          if(i === 0) analyser.getByteFrequencyData(freqData);
+          v = freqData[Math.floor(i / n * freqData.length * 0.82)] / 255;
+        } else {
+          /* 정지 상태 — 잔잔한 대기 파형 */
+          v = 0.08 + 0.05 * Math.sin(Date.now() / 900 + i * 0.55);
+        }
+        if(i < 6) bass += v / 6;
+        var bh = Math.max(2, v * (h - 6));
+        var x = i * (bw + gap);
+        var done = (x + bw / 2) / w <= progress;
+        var grad = ctx.createLinearGradient(0, mid - bh / 2, 0, mid + bh / 2);
+        if(done){
+          grad.addColorStop(0, 'rgba(63,224,255,.95)');
+          grad.addColorStop(.5, 'rgba(160,107,255,.95)');
+          grad.addColorStop(1, 'rgba(255,47,176,.9)');
+          ctx.shadowColor = 'rgba(160,107,255,.8)';
+          ctx.shadowBlur = 8;
+        } else {
+          grad.addColorStop(0, 'rgba(255,255,255,.16)');
+          grad.addColorStop(1, 'rgba(255,255,255,.08)');
+          ctx.shadowBlur = 0;
+        }
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, mid - bh / 2, bw, bh);
+      }
+      ctx.shadowBlur = 0;
+
+      /* 진행 헤드 — 에너지 코어 + 베이스 반응 스파크 */
+      if(audio.duration){
+        var px = progress * w;
+        var core = ctx.createRadialGradient(px, mid, 0, px, mid, 10);
+        core.addColorStop(0, 'rgba(255,255,255,.95)');
+        core.addColorStop(.35, 'rgba(63,224,255,.7)');
+        core.addColorStop(1, 'transparent');
+        ctx.fillStyle = core;
+        ctx.beginPath(); ctx.arc(px, mid, 10, 0, Math.PI * 2); ctx.fill();
+
+        if(playing && !reduceMotion && bass > 0.55 && sparks.length < 14){
+          for(var s = 0; s < 3; s++){
+            sparks.push({x:px, y:mid, vx:(Math.random()-.5)*3.2, vy:(Math.random()-.7)*2.6,
+              life:1, mag:Math.random() > .5});
+          }
+        }
+      }
+      for(var j = sparks.length - 1; j >= 0; j--){
+        var sp = sparks[j];
+        sp.x += sp.vx; sp.y += sp.vy; sp.vy += 0.06; sp.life -= 0.045;
+        if(sp.life <= 0){ sparks.splice(j, 1); continue; }
+        ctx.strokeStyle = (sp.mag ? 'rgba(255,47,176,' : 'rgba(63,224,255,') + sp.life * .9 + ')';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(sp.x, sp.y);
+        ctx.lineTo(sp.x - sp.vx * 2.2, sp.y - sp.vy * 2.2);
+        ctx.stroke();
+      }
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+})();
+
+/* XENA 로고 — 마우스 반응 3D 틸트 */
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (window.matchMedia('(hover: none)').matches) return;
+  var hero = document.querySelector('.hero');
+  var mark = document.getElementById('heroMark');
+  if(!hero || !mark) return;
+  hero.addEventListener('mousemove', function(e){
+    var r = hero.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width - 0.5;
+    var y = (e.clientY - r.top) / r.height - 0.5;
+    mark.style.transform = 'perspective(800px) rotateX(' + (-y * 9) + 'deg) rotateY(' + (x * 11) + 'deg)';
+  });
+  hero.addEventListener('mouseleave', function(){ mark.style.transform = ''; });
 })();
 </script>
 </body>
