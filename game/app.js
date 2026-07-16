@@ -1333,6 +1333,47 @@
   }
 
   function exitGame() { clearInterval(timer); replayMode = false; promotionChoices = []; screen = "setup"; state = null; result = null; renderSetup(); }
+
+  // ── 관리자 전용 잠금 해제 (대표님 개인 브라우저에서만 사용) ──
+  // 코드를 바꾸고 싶으면 아래 문자열만 원하는 값으로 수정하면 됩니다.
+  const ADMIN_CODE = "xenaadmin";
+  let adminKeyBuffer = "";
+
+  function unlockEverything() {
+    credits = 999999;
+    shards = 999999;
+    owned = Object.keys(G.PACKS);
+    cosmeticOwned = SHOP_ITEMS.map((item) => item.id);
+    codexOwned = CODEX_CARDS.map((card) => card.id);
+    saveMeta();
+    showAdminToast(language === "en" ? "ADMIN UNLOCK — everything granted" : "관리자 해제 — 전부 지급됨");
+    refreshCurrentScreen();
+  }
+
+  function showAdminToast(message) {
+    const el = document.createElement("div");
+    el.className = "admin-toast";
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.classList.add("show"), 10);
+    setTimeout(() => { el.classList.remove("show"); setTimeout(() => el.remove(), 400); }, 2200);
+  }
+
+  function refreshCurrentScreen() {
+    if (screen === "store") renderStore();
+    else if (screen === "codex") renderCodex();
+    else if (screen === "units") renderMyUnits();
+    else if (screen === "online") renderOnlineLobby();
+    else if (screen === "game") renderGame();
+    else renderSetup();
+  }
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key.length !== 1) return;
+    adminKeyBuffer = (adminKeyBuffer + event.key.toLowerCase()).slice(-ADMIN_CODE.length);
+    if (adminKeyBuffer === ADMIN_CODE) { adminKeyBuffer = ""; unlockEverything(); }
+  });
+
   const launchParams = new URLSearchParams(window.location.search);
   saveMeta();
   if (launchParams.get("screen") === "store") renderStore();
@@ -1341,4 +1382,5 @@
   else if (launchParams.get("demo") === "1") startGame();
   else renderSetup();
   if (launchParams.get("account") === "1") setTimeout(openAccount, 0);
+  if (launchParams.get("admin") === ADMIN_CODE) setTimeout(unlockEverything, 0);
 })();
