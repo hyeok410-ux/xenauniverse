@@ -1,0 +1,1246 @@
+(function () {
+  "use strict";
+  const G = window.OverrideGrid;
+  const app = document.getElementById("app");
+  function showFatalError() {
+    if (document.querySelector(".fatal-overlay")) return;
+    document.body.insertAdjacentHTML("beforeend", `<div class="fatal-overlay"><section><small>PROTOTYPE RECOVERY</small><h2>게임을 다시 불러와 주세요</h2><p>일시적인 실행 오류가 감지되었습니다. 저장된 시그널과 보유 상품은 브라우저에 유지됩니다.</p><button class="primary" data-reload-game>새로고침</button></section></div>`);
+    document.querySelector("[data-reload-game]")?.addEventListener("click", () => window.location.reload());
+  }
+  window.addEventListener("error", (event) => { if (event.error) showFatalError(); });
+  window.addEventListener("unhandledrejection", showFatalError);
+  const glyph = { signal: "S", bastion: "B", vector: "V", glitch: "G", leader: "L", catalyst: "C" };
+  const skillNames = {
+    cyanShift: { ko: ["시안 시프트", "인접 아군과 위치 교환"], en: ["Cyan Shift", "Swap with an adjacent ally"] },
+    override: { ko: ["오버라이드", "빈 L자 칸으로 이동"], en: ["Override", "Move to an empty L-square"] },
+    systemLock: { ko: ["시스템 락", "적 하나를 다음 턴 고정"], en: ["System Lock", "Lock one enemy for its next turn"] },
+    publicErasure: { ko: ["공개 삭제", "인접 시그널 제거"], en: ["Public Erasure", "Erase an adjacent Signal"] },
+  };
+  const I18N = {
+    ko: {
+      store: "상점", play: "게임으로", owned: "보유 팩", locked: "잠김 팩", mode: "대전 모드", ai: ["AI 대전", "난이도를 골라 연습"], local: ["2인 대전", "같은 화면에서 교대"], online: ["온라인 대전", "서버 연결 준비 중"], event: ["일일 이벤트", "하루 3단계 변칙 파편"], difficulty: "AI 난이도", victory: "승리", dailyClaimed: "오늘의 접속 보상 수령 완료", dailyReward: "접속 보상 · 시그널 크레딧 200", dailyReset: "뉴욕 자정 기준으로 갱신됩니다.", claim: "받기", claimed: "수령 완료", timePreview: "랭크별 제한시간 미리보기", rankReady: "온라인 랭크 준비 상태", rankNote: "매칭 서버 연결 전에는 AI·2인 대전으로 규칙과 덱을 연습합니다.", start: "시작", starterStart: "무료 스타터 확정 후 시작", buy: "구매", reset: "테스트 데이터 초기화", eventTitle: "오늘의 변칙 이벤트", complete: "완료", inProgress: "진행 중", rewardsClaimed: "보상 수령", selectUnit: "캐릭터를 선택하세요", opponentUnit: "상대 유닛을 확인 중입니다.", captured: "포획된 아군", none: "없음", firstMove: "첫 수를 선택하세요.", player: "플레이어", opponent: "AI 상대", playerOne: "플레이어 1", playerTwo: "플레이어 2", turn: "차례", move: "수", thinking: "AI가 수를 계산 중", cinematic: "전투 연출 실행 중", exit: "팩 선택으로", replay: "리플레이", previous: "이전", next: "다음", leave: "나가기", draw: "무승부", win: "승리", defeat: "패배", onlineLobby: "온라인 링크", onlineTitle: "온라인 대전 준비", onlineNote: "초대 코드 방과 일반 매칭을 위한 연결 구조를 준비했습니다. 서버 연결 전에는 실제 상대 매칭이 열리지 않습니다.", quickMatch: "일반 매칭", createRoom: "초대 방 만들기", joinRoom: "초대 코드 입장", serverOffline: "서버 연결 대기", storeTitle: "오버라이드 상점", cosmetics: "코스메틱", shardStore: "변칙 파편", equip: "장착", equipped: "장착 중", purchase: "구매", checkoutReady: "결제 준비", noPower: "모든 스킨과 보드는 전투 능력치에 영향을 주지 않습니다.", paymentNotice: "결제 완료 재화 지급은 결제 웹훅과 서버 장부로 1회 검증되어야 합니다. 클라이언트만으로 지급하지 않습니다.", connection: "온라인 연결", language: "EN"
+    },
+    en: {
+      store: "Store", play: "Play", owned: "Owned pack", locked: "Locked pack", mode: "Match mode", ai: ["AI Match", "Practice with a chosen difficulty"], local: ["Local Match", "Pass the screen between players"], online: ["Online Match", "Server connection in preparation"], event: ["Daily Event", "Three anomaly trials each day"], difficulty: "AI difficulty", victory: "Victory", dailyClaimed: "Daily login reward already claimed", dailyReward: "Daily login reward · 200 Signal Credits", dailyReset: "Resets at New York midnight.", claim: "Claim", claimed: "Claimed", timePreview: "Rank time controls", rankReady: "Online rank readiness", rankNote: "Practice rules and decks in AI or local matches until matchmaking is connected.", start: "Start", starterStart: "Confirm free starter and play", buy: "Buy", reset: "Reset test data", eventTitle: "Today's Anomaly Event", complete: "Complete", inProgress: "In progress", rewardsClaimed: "Reward claimed", selectUnit: "Select a character.", opponentUnit: "Viewing an opponent unit.", captured: "Captured allies", none: "None", firstMove: "Choose your first move.", player: "PLAYER", opponent: "AI OPPONENT", playerOne: "PLAYER 1", playerTwo: "PLAYER 2", turn: "turn", move: "move", thinking: "AI is calculating", cinematic: "Combat sequence in progress", exit: "Pack Select", replay: "Replay", previous: "Previous", next: "Next", leave: "Leave", draw: "Draw", win: "Victory", defeat: "Defeat", onlineLobby: "ONLINE LINK", onlineTitle: "Online Match Preparation", onlineNote: "The connection contract for invite rooms and casual matchmaking is ready. Live opponent matching opens when the game server is connected.", quickMatch: "Casual Match", createRoom: "Create Invite Room", joinRoom: "Join by Code", serverOffline: "Waiting for server connection", storeTitle: "Override Store", cosmetics: "Cosmetics", shardStore: "Anomaly Shards", equip: "Equip", equipped: "Equipped", purchase: "Purchase", checkoutReady: "Checkout Setup", noPower: "Every skin and board is purely cosmetic and never changes combat power.", paymentNotice: "Purchased currency must be granted once through a payment webhook and server ledger. The client never grants it.", connection: "Online Connection", language: "KO"
+    }
+  };
+  const ASSET_ROOTS = {
+    card: "./assets/cards/",
+    portrait: "./assets/portraits/",
+    skin: "./assets/skins/",
+    effect: "./assets/effects/",
+    board: "./assets/boards/",
+    emote: "./assets/emotes/",
+    ui: "./assets/ui/",
+  };
+  const CARD_ART_ROOT = ASSET_ROOTS.card;
+  const PORTRAIT_ART_ROOT = ASSET_ROOTS.portrait;
+  function assetSrc(root, file) {
+    const optimized = root !== "card" && /\.png$/i.test(file) ? file.replace(/\.png$/i, ".webp") : file;
+    return (ASSET_ROOTS[root] || CARD_ART_ROOT) + optimized;
+  }
+  const CARD_ART = {
+    "XENA": "Track1_Card01_XENA_front_KR_v4_anomaly_layout.png",
+    "XENA-OVERRIDE": "Track1_Card14_XENA_OVERRIDE_front_KR_v1.png",
+    "NIX-09": "Track1_Card02_NIX09_front_KR_v2.png",
+    "LYRA": "Track1_Card03_LYRA_front_KR_v1.png",
+    "NOVA": "Track1_Card04_NOVA_front_KR_v1.png",
+    "ECHO": "Track1_Card05_ECHO_front_KR_v1.png",
+    "SOVRAN": "Track1_Card06_SOVRAN_front_KR_v1.png",
+    "ARCHITECT-MAN": "Track1_Card07_ARCHITECT_MAN_front_KR_v1.png",
+    "HUNTER": "Track1_Card10_HUNTER_front_KR_v1.png",
+    "DRAGOON": "Track1_Card11_DRAGOON_front_KR_v1.png",
+    "MOTHERSHIP": "Track1_Card12_MOTHERSHIP_front_KR_v1.png",
+    "BAEK": "Track2_Card05_BAEK_front_KR_v1.png",
+    "PALE-GOLD GUARDIAN": "Track1_Card07_ARCHITECT_MAN_front_KR_v1.png",
+    "FIRST WHISTLER": "Track1_Card13_ERASED_CITIZEN_front_KR_v1.png",
+    "JIN": "Track1_Card02_NIX09_front_KR_v2.png",
+    "NAYUN'S MOTHER": "Track1_Card03_LYRA_front_KR_v1.png",
+    "DANCER": "Track1_Card04_NOVA_front_KR_v1.png",
+    "LUCID-5": "Track1_Card05_ECHO_front_KR_v1.png",
+    "LUCID-6": "Track2_Card05_BAEK_front_KR_v1.png",
+    "CLONE-01": "Track1_Card08_CLEANSE_TEAM_CLONE_front_KR_v1.png",
+    "CLONE-02": "Track1_Card06_SOVRAN_front_KR_v1.png",
+    "DRONE-01": "Track1_Card09_SYSTEM_DRONE_front_KR_v1.png",
+    "DRONE-02": "Track1_Card11_DRAGOON_front_KR_v1.png",
+    "MOOD+ WORKER": "Track1_Card12_MOTHERSHIP_front_KR_v1.png",
+    "SHADOW WATCHER": "Track1_Card10_HUNTER_front_KR_v1.png",
+    "PALE-GOLD GUARDIAN": "Track1_Card07_ARCHITECT_MAN_front_KR_v1.png",
+  };
+  const PORTRAIT_CROP = {
+    "XENA": { scale: 2.75, shift: "62%" },
+    "NIX-09": { scale: 2.7, shift: "56%" },
+    "LYRA": { scale: 2.7, shift: "52%" },
+    "NOVA": { scale: 2.7, shift: "52%" },
+    "ECHO": { scale: 2.7, shift: "52%" },
+    "BAEK": { scale: 2.6, shift: "45%" },
+    "FIRST WHISTLER": { scale: 2.7, shift: "44%" },
+    "JIN": { scale: 1.28, shift: "0%" },
+    "NAYUN'S MOTHER": { scale: 1.2, shift: "0%" },
+    "DANCER": { scale: 1.16, shift: "0%" },
+    "LUCID-5": { scale: 1.18, shift: "0%" },
+    "LUCID-6": { scale: 1.16, shift: "0%" },
+    "CLONE-01": { scale: 2.65, shift: "48%" },
+    "CLONE-02": { scale: 1.16, shift: "0%" },
+    "DRONE-01": { scale: 2.6, shift: "47%" },
+    "DRONE-02": { scale: 1.12, shift: "0%" },
+    "MOOD+ WORKER": { scale: 1.18, shift: "0%" },
+    "SHADOW WATCHER": { scale: 1.14, shift: "0%" },
+    "PALE-GOLD GUARDIAN": { scale: 1.1, shift: "0%" },
+  };
+  const PORTRAIT_ART = {
+    "XENA": "portrait_xena_base_v1.png",
+    "BAEK": "portrait_baek_base_v1.png",
+    "LYRA": "portrait_lyra_base_v1.png",
+    "NIX-09": "portrait_nix09_base_v1.png",
+    "ECHO": "portrait_echo_base_v1.png",
+    "NOVA": "portrait_nova_base_v1.png",
+    "FIRST WHISTLER": "portrait_first_whistler_base_v1.png",
+    "SOVRAN": "portrait_sovran_base_v1.png",
+    "ARCHITECT-MAN": "portrait_architect_man_base_v1.png",
+    "CLONE-01": "portrait_clone_01_base_v1.png",
+    "DRONE-01": "portrait_drone_01_base_v1.png",
+    "HUNTER": "portrait_hunter_base_v1.png",
+    "DRAGOON": "portrait_dragoon_base_v1.png",
+    "MOTHERSHIP": "portrait_mothership_base_v1.png",
+    "JIN": "jin_v1.png",
+    "NAYUN'S MOTHER": "nayun_mother_v1.png",
+    "DANCER": "bleeding_foot_dancer_v1.png",
+    "LUCID-5": "lucid_5_v1.png",
+    "LUCID-6": "lucid_6_v1.png",
+    "CLONE-02": "clone_02_v1.png",
+    "DRONE-02": "drone_02_v1.png",
+    "MOOD+ WORKER": "mood_worker_v1.png",
+    "SHADOW WATCHER": "shadow_watcher_v1.png",
+    "PALE-GOLD GUARDIAN": "pale_gold_guardian_v1.png",
+  };
+  const ROLE_INFO = {
+    signal: ["시그널", "전진 · 회수 승급"],
+    bastion: ["바스티온", "직선 전선 압박"],
+    vector: ["벡터", "대각선 침투"],
+    glitch: ["글리치", "L자 도약"],
+    leader: ["리더", "체크메이트의 핵심"],
+    catalyst: ["캐털리스트", "포획 시 리더 각성"],
+  };
+  const ROLE_LABEL = {
+    signal: "시그널 · 폰",
+    bastion: "바스티온 · 룩",
+    vector: "벡터 · 비숍",
+    glitch: "글리치 · 나이트",
+    leader: "리더",
+    catalyst: "캐털리스트 · 트리거",
+  };
+  const ROLE_INFO_EN = {
+    signal: ["SIGNAL", "Advance · recovery promotion"],
+    bastion: ["BASTION", "Straight-line pressure"],
+    vector: ["VECTOR", "Diagonal infiltration"],
+    glitch: ["GLITCH", "L-jump"],
+    leader: ["LEADER", "The checkmate core"],
+    catalyst: ["CATALYST", "Captured catalyst awakens the leader"],
+  };
+  const ROLE_LABEL_EN = {
+    signal: "SIGNAL · PAWN", bastion: "BASTION · ROOK", vector: "VECTOR · BISHOP", glitch: "GLITCH · KNIGHT", leader: "LEADER", catalyst: "CATALYST · TRIGGER",
+  };
+  const TIME_RULES = {
+    beginner: { label: "TRACE · SIGNAL", seconds: 600, note: "초보 10분" },
+    standard: { label: "LUCID · REBEL", seconds: 480, note: "표준 8분" },
+    override: { label: "OVERRIDE", seconds: 420, note: "상위 7분" },
+    elite: { label: "SOVEREIGN · ANOMALY", seconds: 360, note: "최상위 6분" },
+  };
+  const MODES = {
+    ai: { label: "AI 대전", note: "난이도를 골라 연습" },
+    local: { label: "2인 대전", note: "같은 화면에서 교대" },
+    online: { label: "온라인 대전", note: "서버 연결 준비 중" },
+    event: { label: "일일 이벤트", note: "하루 3단계 변칙 파편" },
+  };
+  const DIFFICULTIES = {
+    easy: { label: "쉬움", credits: 20, loss: 5, description: "기본 수 읽기" },
+    normal: { label: "보통", credits: 35, loss: 7, description: "2수 탐색" },
+    hard: { label: "어려움", credits: 55, loss: 10, description: "3수 탐색" },
+  };
+  const EVENT_REWARDS = {
+    easy: { credits: 100, shards: 2 },
+    normal: { credits: 180, shards: 5 },
+    hard: { credits: 300, shards: 10 },
+  };
+  const CODEX_CARDS = [
+    { id: "unit-xena", character: "XENA", name: "제나", pack: "xena", faction: "REBEL MEMORY", role: "leader", rarity: "HERO", art: CARD_ART.XENA, credit: 2400 },
+    { id: "unit-baek", character: "BAEK", name: "백", pack: "xena", faction: "REBEL MEMORY", role: "bastion", rarity: "EPIC", art: CARD_ART.BAEK, credit: 1800 },
+    { id: "unit-lyra", character: "LYRA", name: "라이라", pack: "xena", faction: "REBEL MEMORY", role: "vector", rarity: "LEGACY", art: CARD_ART.LYRA, credit: 1250 },
+    { id: "unit-nix09", character: "NIX-09", name: "NIX-09", pack: "xena", faction: "REBEL MEMORY", role: "catalyst", rarity: "SECRET", art: CARD_ART["NIX-09"], credit: 2200 },
+    { id: "unit-echo", character: "ECHO", name: "에코", pack: "xena", faction: "REBEL MEMORY", role: "vector", rarity: "LEGACY", art: CARD_ART.ECHO, credit: 1250 },
+    { id: "unit-nova", character: "NOVA", name: "노바", pack: "xena", faction: "REBEL MEMORY", role: "glitch", rarity: "LEGACY", art: CARD_ART.NOVA, credit: 1450 },
+    { id: "unit-first-whistler", character: "FIRST WHISTLER", name: "첫 휘파람", pack: "xena", faction: "REBEL MEMORY", role: "signal", rarity: "SACRIFICE", art: CARD_ART["FIRST WHISTLER"], credit: 460 },
+    { id: "unit-jin", character: "JIN", name: "진", pack: "xena", faction: "REBEL MEMORY", role: "signal", rarity: "RARE", art: "jin_v1.png", artRoot: "portrait", credit: 680 },
+    { id: "unit-nayun-mother", character: "NAYUN'S MOTHER", name: "나윤의 어머니", pack: "xena", faction: "REBEL MEMORY", role: "signal", rarity: "RARE", art: "nayun_mother_v1.png", artRoot: "portrait", credit: 680 },
+    { id: "unit-dancer", character: "DANCER", name: "피 흘리는 발의 무희", pack: "xena", faction: "REBEL MEMORY", role: "signal", rarity: "RARE", art: "bleeding_foot_dancer_v1.png", artRoot: "portrait", credit: 680 },
+    { id: "unit-lucid5", character: "LUCID-5", name: "루시드-5", pack: "xena", faction: "REBEL MEMORY", role: "signal", rarity: "UNCOMMON", art: "lucid_5_v1.png", artRoot: "portrait", credit: 520 },
+    { id: "unit-lucid6", character: "LUCID-6", name: "루시드-6", pack: "xena", faction: "REBEL MEMORY", role: "signal", rarity: "UNCOMMON", art: "lucid_6_v1.png", artRoot: "portrait", credit: 520 },
+    { id: "unit-sovran", character: "SOVRAN", name: "소브란", pack: "sovran", faction: "SYSTEM DOMINION", role: "leader", rarity: "BOSS", art: CARD_ART.SOVRAN, credit: 2400 },
+    { id: "unit-dragoon", character: "DRAGOON", name: "세 다리 드라군", pack: "sovran", faction: "SYSTEM DOMINION", role: "bastion", rarity: "EPIC", art: CARD_ART.DRAGOON, credit: 1800 },
+    { id: "unit-architect", character: "ARCHITECT-MAN", name: "설계자-남자", pack: "sovran", faction: "SYSTEM DOMINION", role: "vector", rarity: "EPIC", art: CARD_ART["ARCHITECT-MAN"], credit: 1700 },
+    { id: "unit-mothership", character: "MOTHERSHIP", name: "모선", pack: "sovran", faction: "SYSTEM DOMINION", role: "catalyst", rarity: "BOSS", art: CARD_ART.MOTHERSHIP, credit: 2200 },
+    { id: "unit-pale-guardian", character: "PALE-GOLD GUARDIAN", name: "창백한 금빛 수호자", pack: "sovran", faction: "SYSTEM DOMINION", role: "vector", rarity: "EPIC", art: "pale_gold_guardian_v1.png", artRoot: "portrait", credit: 1700 },
+    { id: "unit-hunter", character: "HUNTER", name: "세 다리 헌터", pack: "sovran", faction: "SYSTEM DOMINION", role: "glitch", rarity: "RARE", art: CARD_ART.HUNTER, credit: 920 },
+    { id: "unit-clone1", character: "CLONE-01", name: "정화팀 클론-01", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "UNCOMMON", art: CARD_ART["CLONE-01"], credit: 520 },
+    { id: "unit-clone2", character: "CLONE-02", name: "정화팀 클론-02", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "UNCOMMON", art: "clone_02_v1.png", artRoot: "portrait", credit: 520 },
+    { id: "unit-drone1", character: "DRONE-01", name: "시스템 드론-01", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "UNCOMMON", art: CARD_ART["DRONE-01"], credit: 520 },
+    { id: "unit-drone2", character: "DRONE-02", name: "시스템 드론-02", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "UNCOMMON", art: "drone_02_v1.png", artRoot: "portrait", credit: 520 },
+    { id: "unit-mood-worker", character: "MOOD+ WORKER", name: "무드 플러스 작업자", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "RARE", art: "mood_worker_v1.png", artRoot: "portrait", credit: 680 },
+    { id: "unit-shadow-watcher", character: "SHADOW WATCHER", name: "그림자 감시자", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "RARE", art: "shadow_watcher_v1.png", artRoot: "portrait", credit: 680 },
+  ];
+  const LEGACY_CODEX_MAP = {
+    "t1-001": "unit-xena", "t1-002": "unit-nix09", "t1-003": "unit-lyra", "t1-004": "unit-nova",
+    "t1-005": "unit-echo", "t1-006": "unit-sovran", "t1-007": "unit-architect", "t1-008": "unit-clone1",
+    "t1-009": "unit-drone1", "t1-010": "unit-hunter", "t1-011": "unit-dragoon", "t1-012": "unit-mothership",
+    "t1-013": "unit-first-whistler",
+  };
+  const SHOP_ITEMS = [
+    { id: "cyan-xena", name: "XENA · Cyan Sovereign", kind: "skin", role: "캐릭터 스킨", tier: "SOVEREIGN", targetCharacter: "XENA", credit: 8000, artRoot: "skin", art: "skin_xena_cyan_sovereign_v1.png", description: "시안 왕관광과 기계 장갑으로 재구성된 제나 전용 스킨" },
+    { id: "white-xena", name: "XENA · White Ethereal", kind: "skin", role: "캐릭터 스킨", tier: "EPIC", targetCharacter: "XENA", shards: 260, artRoot: "skin", art: "skin_xena_white_ethereal_v1.png", description: "백색 신호광과 유령 주파수를 두른 제나 전용 스킨" },
+    { id: "black-xena", name: "XENA · Black Signal", kind: "skin", role: "캐릭터 스킨", tier: "EPIC", targetCharacter: "XENA", credit: 7000, artRoot: "skin", art: "skin_xena_black_signal_v1.png", description: "검은 신호 잠입 장비를 착용한 제나 전용 스킨" },
+    { id: "violet-xena", name: "XENA · Violet Pulse", kind: "skin", role: "캐릭터 스킨", tier: "LEGACY", targetCharacter: "XENA", credit: 6500, artRoot: "skin", art: "skin_xena_violet_pulse_v1.png", description: "보랏빛 주파수 코어가 점등된 제나 전용 스킨" },
+    { id: "override-xena", name: "XENA · Override Form", kind: "skin", role: "캐릭터 스킨", tier: "OVERRIDE", targetCharacter: "XENA", shards: 420, artRoot: "portrait", art: "xena_override_v1.png", description: "캐털리스트 링크가 끊어진 뒤 각성한 오버라이드 외형" },
+    { id: "crimson-sovran", name: "SOVRAN · Crimson Sovereign", kind: "skin", role: "캐릭터 스킨", tier: "SOVEREIGN", targetCharacter: "SOVRAN", credit: 8000, artRoot: "skin", art: "skin_sovran_crimson_sovereign_v1.png", description: "크림슨 심판 회로가 활성화된 소브란 전용 스킨" },
+    { id: "eclipse-sovran", name: "SOVRAN · Eclipse Judgment", kind: "skin", role: "캐릭터 스킨", tier: "BOSS", targetCharacter: "SOVRAN", shards: 300, artRoot: "skin", art: "skin_sovran_eclipse_judgment_v1.png", description: "일식의 판결장을 펼치는 소브란 전용 스킨" },
+    { id: "override-sovran", name: "SOVRAN · Override Form", kind: "skin", role: "캐릭터 스킨", tier: "OVERRIDE", targetCharacter: "SOVRAN", shards: 420, artRoot: "portrait", art: "sovran_override_v1.png", description: "캐털리스트 상실 뒤 폭주한 소브란 각성 외형" },
+    { id: "memory-nix09", name: "NIX-09 · Memory Awake", kind: "skin", role: "캐릭터 스킨", tier: "SECRET", targetCharacter: "NIX-09", shards: 220, artRoot: "skin", art: "skin_nix09_memory_awake_v1.png", description: "봉인된 기억 신호가 깨어난 NIX-09 스킨" },
+    { id: "ghost-lyra", name: "LYRA · Ghost Protocol", kind: "skin", role: "캐릭터 스킨", tier: "LEGACY", targetCharacter: "LYRA", credit: 5200, artRoot: "skin", art: "skin_lyra_ghost_protocol_v1.png", description: "고스트 프로토콜로 재현된 라이라 전용 스킨" },
+    { id: "oracle-echo", name: "ECHO · Frequency Oracle", kind: "skin", role: "캐릭터 스킨", tier: "LEGACY", targetCharacter: "ECHO", credit: 5200, artRoot: "skin", art: "skin_echo_frequency_oracle_v1.png", description: "전장의 주파수를 예측하는 에코 전용 스킨" },
+    { id: "legacy-nova", name: "NOVA · Legacy Flame", kind: "skin", role: "캐릭터 스킨", tier: "LEGACY", targetCharacter: "NOVA", shards: 260, artRoot: "skin", art: "skin_nova_legacy_flame_v1.png", description: "기억의 불꽃이 타오르는 노바 전용 스킨" },
+    { id: "red-architect", name: "ARCHITECT · Red Consent", kind: "skin", role: "캐릭터 스킨", tier: "EPIC", targetCharacter: "ARCHITECT-MAN", credit: 6200, artRoot: "skin", art: "skin_architect_red_consent_v1.png", description: "붉은 동의의 칼날을 든 설계자 전용 스킨" },
+    { id: "scanner-hunter", name: "HUNTER · White Scanner", kind: "skin", role: "캐릭터 스킨", tier: "RARE", targetCharacter: "HUNTER", credit: 4200, artRoot: "skin", art: "skin_hunter_white_scanner_v1.png", description: "백색 감시 센서로 개조된 헌터 전용 스킨" },
+    { id: "siege-dragoon", name: "DRAGOON · Siege Core", kind: "skin", role: "캐릭터 스킨", tier: "EPIC", targetCharacter: "DRAGOON", credit: 6200, artRoot: "skin", art: "skin_dragoon_siege_core_v1.png", description: "공성 코어가 개방된 드라군 전용 스킨" },
+    { id: "fx-cyan-slash", name: "Cyan Blade Trail", kind: "effect", role: "공격 이펙트", tier: "EPIC", credit: 3600, effectStyle: "slash", effectColor: 0x37eef5, artRoot: "effect", art: "fx_cyan_blade_trail_v1.png", description: "이동·포획 시 시안 칼날 궤적을 적용" },
+    { id: "fx-memory-ring", name: "Memory Ring", kind: "effect", role: "공격 이펙트", tier: "EPIC", credit: 3400, effectStyle: "memory", effectColor: 0xa77bff, artRoot: "effect", art: "fx_memory_ring_v1.png", description: "이동·포획 시 기억 링 파동을 적용" },
+    { id: "fx-sky-verdict", name: "Sky Verdict", kind: "effect", role: "공격 이펙트", tier: "BOSS", shards: 180, effectStyle: "sky", effectColor: 0xff315f, artRoot: "effect", art: "fx_sky_verdict_v1.png", description: "붉은 하늘의 판결이 목표 지점에 낙하" },
+    { id: "fx-frequency", name: "Frequency Pulse", kind: "effect", role: "공격 이펙트", tier: "RARE", credit: 3200, effectStyle: "frequency", effectColor: 0x4ce9ff, artRoot: "effect", art: "fx_frequency_pulse_v1.png", description: "전장을 스캔하는 주파수 파동을 적용" },
+    { id: "fx-glitch-fracture", name: "Glitch Fracture", kind: "effect", role: "공격 이펙트", tier: "EPIC", credit: 3900, effectStyle: "glitch", effectColor: 0xff4fbd, artRoot: "effect", art: "fx_glitch_fracture_v1.png", description: "공간이 깨지는 글리치 균열 포획 효과" },
+    { id: "fx-soul-recovery", name: "Soul Recovery", kind: "effect", role: "공격 이펙트", tier: "LEGACY", shards: 160, effectStyle: "recovery", effectColor: 0xb7ff3c, artRoot: "effect", art: "fx_soul_recovery_v1.png", description: "회수 승급과 이동에 영혼 신호를 소환" },
+    { id: "fx-system-lock", name: "System Lock", kind: "effect", role: "공격 이펙트", tier: "BOSS", shards: 180, effectStyle: "lock", effectColor: 0xffd66b, artRoot: "effect", art: "fx_system_lock_v1.png", description: "목표를 시스템 격자에 봉쇄하는 효과" },
+    { id: "fx-rainbow-override", name: "Rainbow Override", kind: "effect", role: "공격 이펙트", tier: "OVERRIDE", shards: 360, effectStyle: "override", effectColor: 0xd88cff, artRoot: "effect", art: "fx_rainbow_override_v1.png", description: "오버라이드 스펙트럼이 전장을 가르는 최상위 효과" },
+    { id: "sector-nine", name: "Sector Nine Board", kind: "board", role: "전장", tier: "EPIC", credit: 12000, artRoot: "board", art: "board_sector_nine_v1.png", description: "시안·보랏빛 신호벽으로 둘러싸인 섹터 나인 전장" },
+    { id: "echo-grid", name: "Echo Grid Board", kind: "board", role: "전장", tier: "EPIC", credit: 10500, artRoot: "board", art: "board_echo_grid_v1.png", description: "주파수 스캔 라인이 흐르는 에코 전장" },
+    { id: "dragoon-core", name: "Dragoon Core Board", kind: "board", role: "전장", tier: "EPIC", credit: 11000, artRoot: "board", art: "board_dragoon_core_v1.png", description: "중장갑 경보등으로 점등된 드라군 코어 전장" },
+    { id: "mothership-sky", name: "Mothership Sky Board", kind: "board", role: "전장", tier: "BOSS", shards: 300, artRoot: "board", art: "board_mothership_sky_v1.png", description: "상공의 보랏빛 폭격 항로가 열린 모선 전장" },
+    { id: "emote-signal", name: "Signal Emote Pack", kind: "emote", role: "이모트", tier: "RARE", credit: 3000, artRoot: "emote", art: "emote_good_game_v1.png", description: "좋은 수·오버라이드·존중·압박·좋은 게임 이모트 5종" },
+  ];
+  const SHOP_DETAILS = {
+    "cyan-xena": { role: "캐릭터 스킨", tier: "SOVEREIGN", order: 8 },
+    "crimson-sovran": { role: "캐릭터 스킨", tier: "SOVEREIGN", order: 8 },
+    "override-xena": { role: "캐릭터 스킨", tier: "OVERRIDE", order: 9 },
+    "sector-nine": { role: "전장", tier: "EPIC", order: 1 },
+    "emote-signal": { role: "이모트", tier: "RARE", order: 0 },
+    "echo-grid": { role: "전장", tier: "EPIC", order: 1 },
+    "legacy-nova": { role: "캐릭터 스킨", tier: "LEGACY", order: 8 },
+    "dragoon-core": { role: "전장", tier: "EPIC", order: 1 },
+    "mothership-sky": { role: "전장", tier: "BOSS", order: 1 },
+    "fx-cyan-slash": { role: "공격 이펙트", tier: "EPIC", order: 6 },
+    "fx-memory-ring": { role: "공격 이펙트", tier: "EPIC", order: 6 },
+    "fx-sky-verdict": { role: "공격 이펙트", tier: "BOSS", order: 7 },
+    "fx-frequency": { role: "공격 이펙트", tier: "RARE", order: 6 },
+  };
+  const PAYMENT_PRODUCTS = [
+    { id: "AS_120", name: "Anomaly Shards 120", amount: 120, price: "₩1,500" },
+    { id: "AS_650", name: "Anomaly Shards 700", amount: 700, price: "₩7,500" },
+    { id: "AS_1400", name: "Anomaly Shards 1,600", amount: 1600, price: "₩15,000" },
+  ];
+  const EMOTES = {
+    signal: { mark: "◇", ko: "좋은 수", en: "Good move", art: "emote_good_move_v1.png" },
+    override: { mark: "!", ko: "오버라이드", en: "Override", art: "emote_override_v1.png" },
+    respect: { mark: "+", ko: "존중", en: "Respect", art: "emote_respect_v1.png" },
+    pressure: { mark: "//", ko: "압박", en: "Pressure", art: "emote_pressure_v1.png" },
+    gg: { mark: "GG", ko: "좋은 게임", en: "Good game", art: "emote_good_game_v1.png" },
+  };
+  const FREE_EMOTES = new Set(["signal", "override", "respect"]);
+  const FORMATION_SLOTS = [
+    { key: "bastion", role: "bastion", label: "바스티온 · 룩" },
+    { key: "vector1", role: "vector", label: "벡터 A · 비숍" },
+    { key: "catalyst", role: "catalyst", label: "캐털리스트 · 트리거" },
+    { key: "leader", role: "leader", label: "리더" },
+    { key: "vector2", role: "vector", label: "벡터 B · 비숍" },
+    { key: "glitch", role: "glitch", label: "글리치 · 나이트" },
+    ...Array.from({ length: 6 }, (_, index) => ({ key: `signal${index + 1}`, role: "signal", label: `시그널 ${index + 1} · 폰` })),
+  ];
+
+  function defaultLineup(packId) {
+    const pack = G.PACKS[packId];
+    return {
+      bastion: pack.back.bastion,
+      vector1: pack.back.vector1,
+      catalyst: pack.back.catalyst,
+      leader: pack.back.leader,
+      vector2: pack.back.vector2,
+      glitch: pack.back.glitch,
+      ...Object.fromEntries(pack.signals.map((character, index) => [`signal${index + 1}`, character])),
+    };
+  }
+
+  function normalizedLineups(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const result = {};
+    for (const packId of ["xena", "sovran"]) {
+      const fallback = defaultLineup(packId);
+      result[packId] = {};
+      const used = new Set();
+      for (const slot of FORMATION_SLOTS) {
+        const character = source[packId] && source[packId][slot.key];
+        const unit = CODEX_CARDS.find((card) => card.character === character && card.role === slot.role);
+        const candidates = [
+          unit && character,
+          fallback[slot.key],
+          ...CODEX_CARDS.filter((card) => card.pack === packId && card.role === slot.role).map((card) => card.character),
+          ...CODEX_CARDS.filter((card) => card.role === slot.role).map((card) => card.character),
+        ].filter(Boolean);
+        const uniqueCharacter = candidates.find((candidate) => !used.has(candidate));
+        result[packId][slot.key] = uniqueCharacter || fallback[slot.key];
+        used.add(result[packId][slot.key]);
+      }
+    }
+    return result;
+  }
+
+  const storage = {
+    available: true,
+    get(key) {
+      try { return window.localStorage.getItem(key); }
+      catch (_) { this.available = false; return null; }
+    },
+    set(key, value) {
+      try { window.localStorage.setItem(key, value); }
+      catch (_) { this.available = false; }
+    },
+    remove(key) {
+      try { window.localStorage.removeItem(key); }
+      catch (_) { this.available = false; }
+    },
+  };
+
+  function safeJson(value, fallback) {
+    try { return value ? JSON.parse(value) : fallback; }
+    catch (_) { return fallback; }
+  }
+
+  function storedArray(key) {
+    const value = safeJson(storage.get(key), []);
+    return Array.isArray(value) ? [...new Set(value.filter((item) => typeof item === "string"))] : [];
+  }
+
+  function createGuestProfile() {
+    const bytes = new Uint8Array(4);
+    if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(bytes);
+    else for (let i = 0; i < bytes.length; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+    const code = Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("").toUpperCase();
+    return { id: `XG-${code.slice(0, 4)}-${code.slice(4)}`, nickname: `SIGNAL-${code.slice(-4)}`, createdAt: new Date().toISOString() };
+  }
+
+  let screen = "setup";
+  let profile = safeJson(storage.get("og_profile"), null) || createGuestProfile();
+  let committedStarter = storage.get("og_starter");
+  let chosen = committedStarter || "xena";
+  let owned = storedArray("og_owned");
+  if (!owned.length && committedStarter) owned = [committedStarter];
+  let credits = Math.max(0, Number(storage.get("og_credits") || 0) || 0);
+  let shards = Math.max(0, Number(storage.get("og_shards") || 0) || 0);
+  let timeRule = storage.get("og_time_rule") || "beginner";
+  let gameMode = storage.get("og_game_mode") || "ai";
+  let language = storage.get("og_language") || "ko";
+  let aiDifficulty = storage.get("og_ai_difficulty") || "normal";
+  let eventDifficulty = "easy";
+  let eventClaims = safeJson(storage.get("og_event_claims"), {}) || {};
+  let gridRating = Math.max(0, Number(storage.get("og_grid_rating") || 0) || 0);
+  let cosmeticOwned = storedArray("og_cosmetics");
+  const storedBoard = storage.get("og_active_board") || storage.get("og_active_cosmetic") || "";
+  let activeBoard = SHOP_ITEMS.some((item) => item.id === storedBoard && item.kind === "board") ? storedBoard : "";
+  let unitLineups = normalizedLineups(safeJson(storage.get("og_unit_lineups"), {}));
+  let unitSkins = safeJson(storage.get("og_unit_skins"), {}) || {};
+  const legacyActiveSkin = SHOP_ITEMS.find((item) => item.id === storedBoard && item.kind === "skin" && cosmeticOwned.includes(item.id));
+  if (legacyActiveSkin && !unitSkins[legacyActiveSkin.targetCharacter]) unitSkins[legacyActiveSkin.targetCharacter] = legacyActiveSkin.id;
+  let unitEffects = safeJson(storage.get("og_unit_effects"), {}) || {};
+  let selectedUnitSlot = null;
+  let lineupPack = committedStarter || "xena";
+  let dailyLogin = safeJson(storage.get("og_daily_login"), {}) || {};
+  let codexOwned = [...new Set(storedArray("og_codex_owned").map((id) => LEGACY_CODEX_MAP[id] || id).filter((id) => CODEX_CARDS.some((card) => card.id === id)))];
+  let showcase = null;
+  let state = null;
+  let selected = null;
+  let selectedSkill = null;
+  let legal = [];
+  let playerColor = "white";
+  let thinking = false;
+  let result = null;
+  let lastVisualMove = null;
+  let cinematicAction = null;
+  let visualNonce = 0;
+  let animating = false;
+  let snapshots = [];
+  let lastReplay = [];
+  let replayMode = false;
+  let replayIndex = 0;
+  let clocks = { white: 300, black: 300 };
+  let timer = null;
+  let emoteFeed = [];
+  let emoteNonce = 0;
+  let promotionChoices = [];
+
+  function saveMeta() {
+    storage.set("og_profile", JSON.stringify(profile));
+    if (committedStarter) storage.set("og_starter", committedStarter);
+    else storage.remove("og_starter");
+    storage.set("og_owned", JSON.stringify(owned));
+    storage.set("og_credits", String(credits));
+    storage.set("og_shards", String(shards));
+    storage.set("og_time_rule", timeRule);
+    storage.set("og_game_mode", gameMode);
+    storage.set("og_language", language);
+    storage.set("og_ai_difficulty", aiDifficulty);
+    storage.set("og_event_claims", JSON.stringify(eventClaims));
+    storage.set("og_grid_rating", String(gridRating));
+    storage.set("og_cosmetics", JSON.stringify(cosmeticOwned));
+    storage.set("og_active_board", activeBoard);
+    storage.set("og_active_cosmetic", activeBoard);
+    storage.set("og_unit_lineups", JSON.stringify(unitLineups));
+    storage.set("og_unit_skins", JSON.stringify(unitSkins));
+    storage.set("og_unit_effects", JSON.stringify(unitEffects));
+    storage.set("og_daily_login", JSON.stringify(dailyLogin));
+    storage.set("og_codex_owned", JSON.stringify(codexOwned));
+  }
+
+  function t(key) {
+    return I18N[language][key] || I18N.ko[key] || key;
+  }
+
+  function skillText(key, index) {
+    return skillNames[key][language][index];
+  }
+
+  function modeText(id, index) {
+    return t(id)[index];
+  }
+
+  function roleInfo(type) {
+    return language === "en" ? ROLE_INFO_EN[type] : ROLE_INFO[type];
+  }
+
+  function roleLabel(type) {
+    return language === "en" ? ROLE_LABEL_EN[type] : ROLE_LABEL[type];
+  }
+
+  function brandMarkup() {
+    return `<div class="brand">XENA: <b>OVERRIDE GRID</b><span class="prototype-badge">WEB PROTOTYPE</span></div>`;
+  }
+
+  function wallet() {
+    const creditLabel = language === "en" ? "Signal" : "시그널";
+    const shardLabel = language === "en" ? "Anomaly Shards" : "변칙 파편";
+    return `<div class="wallet"><span class="currency-pill"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${creditLabel} <strong>${credits.toLocaleString()}</strong></span><span class="currency-pill"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${shardLabel} <strong>${shards}</strong></span><span class="rank-pill">${rankLabel()} <strong>${gridRating} GR</strong></span><button class="wallet-store profile-button" data-open-account>${profile.nickname}<small>${storage.available ? "DEVICE SAVE" : "TEMP SESSION"}</small></button><button class="wallet-store" data-open-language>${t("language")}</button><button class="wallet-store" data-open-codex>도감</button><button class="wallet-store" data-open-units>${language === "en" ? "MY UNITS" : "내 유닛"}</button><button class="wallet-store" data-open-store>${t("store")}</button></div>`;
+  }
+
+  function encodeBackup(data) {
+    const bytes = new TextEncoder().encode(JSON.stringify(data));
+    let binary = "";
+    bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+    return btoa(binary);
+  }
+
+  function decodeBackup(value) {
+    const binary = atob(value.replace(/\s/g, ""));
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }
+
+  function backupCode() {
+    return encodeBackup({
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      profile,
+      data: { committedStarter, owned, credits, shards, timeRule, gameMode, language, aiDifficulty, eventClaims, gridRating, cosmeticOwned, activeBoard, unitLineups, unitSkins, unitEffects, dailyLogin, codexOwned },
+    });
+  }
+
+  function refreshCurrentScreen() {
+    if (screen === "store") renderStore();
+    else if (screen === "codex") renderCodex();
+    else if (screen === "units") renderMyUnits();
+    else if (screen === "online") renderOnlineLobby();
+    else if (screen === "game") renderGame();
+    else renderSetup();
+  }
+
+  function restoreBackup(value) {
+    const payload = decodeBackup(value);
+    if (!payload || payload.version !== 1 || !payload.data) throw new Error("UNSUPPORTED_SAVE");
+    const data = payload.data;
+    const restoredProfile = payload.profile || {};
+    profile = {
+      id: String(restoredProfile.id || profile.id).replace(/[^A-Z0-9-]/gi, "").slice(0, 24) || profile.id,
+      nickname: String(restoredProfile.nickname || profile.nickname).replace(/[^A-Z0-9-]/gi, "").slice(0, 20) || profile.nickname,
+      createdAt: restoredProfile.createdAt || profile.createdAt,
+    };
+    committedStarter = ["xena", "sovran"].includes(data.committedStarter) ? data.committedStarter : null;
+    chosen = committedStarter || "xena";
+    owned = Array.isArray(data.owned) ? [...new Set(data.owned.filter((id) => ["xena", "sovran"].includes(id)))] : [];
+    credits = Math.max(0, Number(data.credits) || 0);
+    shards = Math.max(0, Number(data.shards) || 0);
+    timeRule = TIME_RULES[data.timeRule] ? data.timeRule : "beginner";
+    gameMode = MODES[data.gameMode] ? data.gameMode : "ai";
+    language = data.language === "en" ? "en" : "ko";
+    aiDifficulty = DIFFICULTIES[data.aiDifficulty] ? data.aiDifficulty : "normal";
+    eventClaims = data.eventClaims && typeof data.eventClaims === "object" ? data.eventClaims : {};
+    gridRating = Math.max(0, Number(data.gridRating) || 0);
+    cosmeticOwned = Array.isArray(data.cosmeticOwned) ? [...new Set(data.cosmeticOwned.filter((id) => SHOP_ITEMS.some((item) => item.id === id)))] : [];
+    const restoredBoard = data.activeBoard || data.activeCosmetic || "";
+    activeBoard = cosmeticOwned.includes(restoredBoard) && SHOP_ITEMS.some((item) => item.id === restoredBoard && item.kind === "board") ? restoredBoard : "";
+    unitLineups = normalizedLineups(data.unitLineups);
+    unitSkins = data.unitSkins && typeof data.unitSkins === "object" ? data.unitSkins : {};
+    unitEffects = data.unitEffects && typeof data.unitEffects === "object" ? data.unitEffects : {};
+    dailyLogin = data.dailyLogin && typeof data.dailyLogin === "object" ? data.dailyLogin : {};
+    codexOwned = Array.isArray(data.codexOwned) ? [...new Set(data.codexOwned.filter((id) => CODEX_CARDS.some((card) => card.id === id)))] : [];
+    saveMeta();
+  }
+
+  function accountMarkup() {
+    const localLabel = storage.available ? (language === "en" ? "Saved on this device" : "이 기기에 저장 중") : (language === "en" ? "Temporary session" : "임시 세션");
+    return `<div class="account-overlay" data-close-account><section class="account-modal" role="dialog" aria-modal="true" aria-label="Prototype profile" data-account-panel><button class="showcase-close" data-close-account aria-label="닫기">×</button><small>WEB PROTOTYPE PROFILE</small><h2>${profile.nickname}</h2><div class="profile-id"><span>${localLabel}</span><b>${profile.id}</b></div><p>${language === "en" ? "Signals and owned items are stored in this browser. Use the save code to continue on another device. Secure login and cloud sync are in preparation." : "시그널과 보유 상품은 현재 이 브라우저에 저장됩니다. 다른 기기에서는 아래 저장 코드를 복구하세요. 정식 로그인과 클라우드 동기화는 준비 중입니다."}</p><label>${language === "en" ? "SAVE / RESTORE CODE" : "저장·복구 코드"}<textarea data-account-code spellcheck="false"></textarea></label><div class="account-actions"><button class="secondary" data-copy-save>${language === "en" ? "Copy save code" : "저장 코드 복사"}</button><button class="primary" data-restore-save ${screen === "game" ? "disabled" : ""}>${language === "en" ? "Restore on this device" : "이 기기에 복구"}</button></div><span class="account-warning">${language === "en" ? "Prototype data can be reset when browser storage is cleared. Real-money payments remain disabled." : "브라우저 데이터를 삭제하면 체험판 기록이 사라질 수 있습니다. 실제 결제는 비활성화 상태입니다."}</span></section></div>`;
+  }
+
+  function openAccount() {
+    document.querySelector(".account-overlay")?.remove();
+    document.body.insertAdjacentHTML("beforeend", accountMarkup());
+    const overlay = document.querySelector(".account-overlay");
+    const textarea = overlay.querySelector("[data-account-code]");
+    textarea.value = backupCode();
+    overlay.querySelectorAll("[data-close-account]").forEach((element) => element.addEventListener("click", (event) => {
+      if (event.target === element || event.target.closest(".showcase-close")) overlay.remove();
+    }));
+    overlay.querySelector("[data-copy-save]").addEventListener("click", async (event) => {
+      textarea.select();
+      try { await navigator.clipboard.writeText(textarea.value); }
+      catch (_) { document.execCommand("copy"); }
+      event.currentTarget.textContent = language === "en" ? "Copied" : "복사 완료";
+    });
+    const restore = overlay.querySelector("[data-restore-save]");
+    if (restore) restore.addEventListener("click", () => {
+      try {
+        restoreBackup(textarea.value.trim());
+        overlay.remove();
+        refreshCurrentScreen();
+      } catch (_) {
+        alert(language === "en" ? "This save code is invalid." : "저장 코드를 확인해주세요.");
+      }
+    });
+  }
+
+  function rankLabel() {
+    if (gridRating >= 800) return "OVERRIDE";
+    if (gridRating >= 450) return "REBEL";
+    if (gridRating >= 200) return "LUCID";
+    if (gridRating >= 80) return "SIGNAL";
+    return "TRACE IV";
+  }
+
+  function todayKey() {
+    const parts = new Intl.DateTimeFormat("en", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  }
+
+  function dailyEvent() {
+    const key = todayKey();
+    if (!eventClaims[key]) eventClaims = { [key]: { easy: false, normal: false, hard: false, bonus: false } };
+    return eventClaims[key];
+  }
+
+  function hasDailyLogin() {
+    return dailyLogin.date === todayKey();
+  }
+
+  function claimDailyLogin() {
+    if (hasDailyLogin()) return;
+    dailyLogin = { date: todayKey() };
+    credits += 200;
+    saveMeta();
+  }
+
+  function bindStoreButton() {
+    document.querySelectorAll("[data-open-account]").forEach((button) => button.addEventListener("click", openAccount));
+    document.querySelectorAll("[data-open-store]").forEach((button) => button.addEventListener("click", renderStore));
+    document.querySelectorAll("[data-open-codex]").forEach((button) => button.addEventListener("click", renderCodex));
+    document.querySelectorAll("[data-open-units]").forEach((button) => button.addEventListener("click", renderMyUnits));
+    document.querySelectorAll("[data-open-language]").forEach((languageButton) => languageButton.addEventListener("click", () => {
+      language = language === "ko" ? "en" : "ko";
+      saveMeta();
+      if (screen === "store") renderStore();
+      else if (screen === "codex") renderCodex();
+      else if (screen === "units") renderMyUnits();
+      else if (screen === "game") renderGame();
+      else renderSetup();
+    }));
+  }
+
+  function canControl(color) {
+    return !replayMode && !thinking && !animating && (gameMode === "local" ? color === state.turn : color === playerColor);
+  }
+
+  function renderSetup() {
+    applyCosmeticTheme();
+    const card = (id) => {
+      const pack = G.PACKS[id];
+      const isOwned = owned.includes(id);
+      return `<button class="pack ${id} ${chosen === id ? "selected" : ""}" data-pack="${id}">
+        <small>${isOwned ? t("owned") : t("locked")}</small><div class="leader-mark">${id === "xena" ? "X" : "S"}</div>
+        <h2>${pack.leaderName}</h2><p>${pack.name}</p>
+        ${isOwned ? "" : `<span class="lock">${language === "en" ? "Unlock for 2,400 Signal Credits" : "시그널 크레딧 2,400으로 해금"}</span>`}
+      </button>`;
+    };
+    app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
+      <section class="setup"><div class="demo-banner"><b>${language === "en" ? "FREE WEB PROTOTYPE" : "무료 웹 체험판"}</b><span>${language === "en" ? "AI and local matches are open. Online play, login sync and payments are in preparation." : "AI·로컬 대전을 먼저 공개합니다. 온라인 대전·로그인 동기화·결제는 준비 중입니다."}</span></div><h1>CHOOSE YOUR <span>FIRST SIGNAL</span></h1>
+      <p class="lead">${language === "en" ? "Choose one starter pack. Every piece follows the same chess rules; each leader changes the skills and combat presentation." : "스타터 팩 하나를 선택하세요. 모든 말은 같은 체스 규칙을 따르며 리더의 기술과 전장 연출만 달라집니다."}</p>
+      <div class="pack-grid">${card("xena")}${card("sovran")}</div>
+      <div class="mode-control"><small>${t("mode")}</small><div class="mode-options">${Object.entries(MODES).map(([id]) => `<button class="mode-option ${gameMode === id ? "active" : ""}" data-mode="${id}"><b>${modeText(id, 0)}</b><span>${modeText(id, 1)}</span></button>`).join("")}</div></div>
+      ${gameMode === "ai" ? `<div class="difficulty-control"><small>${t("difficulty")}</small><div class="mode-options">${Object.entries(DIFFICULTIES).map(([id, difficulty]) => `<button class="mode-option ${aiDifficulty === id ? "active" : ""}" data-difficulty="${id}"><b>${language === "en" ? ({ easy: "Easy", normal: "Normal", hard: "Hard" })[id] : difficulty.label}</b><span>${language === "en" ? ({ easy: "Basic board reading", normal: "Two-ply search", hard: "Three-ply search" })[id] : difficulty.description} · ${t("victory")} ${difficulty.credits}</span></button>`).join("")}</div></div>` : ""}
+      ${gameMode === "event" ? eventMarkup() : ""}
+      <div class="daily-login"><div><small>NEW YORK DAILY SIGNAL</small><b>${hasDailyLogin() ? t("dailyClaimed") : t("dailyReward")}</b><span>${t("dailyReset")}</span></div><button class="secondary" id="daily-login" ${hasDailyLogin() ? "disabled" : ""}>${hasDailyLogin() ? t("claimed") : t("claim")}</button></div>
+      <div class="time-control"><small>${t("timePreview")}</small><div class="time-options">${Object.entries(TIME_RULES).map(([id, rule]) => `<button class="time-option ${timeRule === id ? "active" : ""}" data-time-rule="${id}"><b>${language === "en" ? rule.note.replace("초보", "Beginner").replace("표준", "Standard").replace("상위", "Advanced").replace("최상위", "Elite").replace("분", " min") : rule.note}</b><span>${rule.label}</span></button>`).join("")}</div></div>
+      <div class="rank-status"><small>${t("rankReady")}</small><b>${rankLabel()} · ${gridRating} GR</b><span>${t("rankNote")}</span></div>
+      <div class="actions"><button class="primary" id="start" ${owned.includes(chosen) || !committedStarter ? "" : "disabled"}>${committedStarter ? `${modeText(gameMode, 0)} ${t("start")}` : t("starterStart")}</button>
+      ${committedStarter && !owned.includes(chosen) ? `<button class="secondary" id="buy">2,400 ${language === "en" ? "Credits" : "크레딧"} ${t("buy")}</button>` : ""}
+      ${new URLSearchParams(window.location.search).get("debug") === "1" ? `<button class="secondary" id="reset">${t("reset")}</button>` : ""}</div></section></div>`;
+    app.querySelectorAll("[data-pack]").forEach((button) => button.addEventListener("click", () => { chosen = button.dataset.pack; renderSetup(); }));
+    app.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => { gameMode = button.dataset.mode; saveMeta(); renderSetup(); }));
+    app.querySelectorAll("[data-difficulty]").forEach((button) => button.addEventListener("click", () => { aiDifficulty = button.dataset.difficulty; saveMeta(); renderSetup(); }));
+    app.querySelectorAll("[data-event-difficulty]").forEach((button) => button.addEventListener("click", () => { eventDifficulty = button.dataset.eventDifficulty; renderSetup(); }));
+    app.querySelectorAll("[data-time-rule]").forEach((button) => button.addEventListener("click", () => { timeRule = button.dataset.timeRule; saveMeta(); renderSetup(); }));
+    bindStoreButton();
+    const dailyButton = document.getElementById("daily-login");
+    if (dailyButton) dailyButton.addEventListener("click", () => { claimDailyLogin(); renderSetup(); });
+    document.getElementById("start").addEventListener("click", startGame);
+    const buy = document.getElementById("buy");
+    if (buy) buy.addEventListener("click", () => {
+      if (credits < 2400) return alert(`크레딧이 ${2400 - credits} 부족합니다.`);
+      credits -= 2400; owned.push(chosen); saveMeta(); renderSetup();
+    });
+    const reset = document.getElementById("reset");
+    if (reset) reset.addEventListener("click", () => {
+      ["og_starter", "og_owned", "og_credits", "og_shards", "og_event_claims", "og_grid_rating", "og_cosmetics", "og_active_cosmetic", "og_active_board", "og_unit_lineups", "og_unit_skins", "og_unit_effects", "og_daily_login", "og_codex_owned"].forEach((key) => storage.remove(key));
+      committedStarter = null; chosen = "xena"; owned = []; credits = 0; shards = 0; eventClaims = {}; gridRating = 0; cosmeticOwned = []; activeBoard = ""; unitLineups = normalizedLineups({}); unitSkins = {}; unitEffects = {}; dailyLogin = {}; codexOwned = []; showcase = null; saveMeta(); renderSetup();
+    });
+  }
+
+  function eventMarkup() {
+    const claimed = dailyEvent();
+    const complete = claimed.easy && claimed.normal && claimed.hard;
+    return `<div class="event-control"><div><small>${t("eventTitle")}</small><b>${language === "en" ? "Complete all 3 trials" : "3단계 완주"} ${complete ? t("complete") : t("inProgress")}</b></div><div class="event-options">${Object.entries(EVENT_REWARDS).map(([id, reward]) => `<button class="event-option ${eventDifficulty === id ? "active" : ""}" data-event-difficulty="${id}"><b>${language === "en" ? ({ easy: "Easy", normal: "Normal", hard: "Hard" })[id] : DIFFICULTIES[id].label}</b><span>${claimed[id] ? t("rewardsClaimed") : `${language === "en" ? "Credits" : "크레딧"} +${reward.credits} · ${language === "en" ? "Shards" : "파편"} +${reward.shards}`}</span></button>`).join("")}</div><span>${language === "en" ? "Complete all trials for +500 Credits · +3 Anomaly Shards" : "세 난이도를 모두 이기면 보너스 크레딧 +500 · 변칙 파편 +3"}</span></div>`;
+  }
+
+  function cosmeticPrice(item) {
+    return item.credit ? `${language === "en" ? "Signal" : "시그널"} ${item.credit.toLocaleString()}` : `${language === "en" ? "Anomaly Shards" : "변칙 파편"} ${item.shards}`;
+  }
+
+  function shopDetails(item) {
+    const legacy = SHOP_DETAILS[item.id] || {};
+    return { role: item.role || legacy.role || item.kind, tier: item.tier || legacy.tier || "STANDARD", order: item.order || legacy.order || 0 };
+  }
+
+  function itemArtSrc(item) {
+    if (item.character && PORTRAIT_ART[item.character]) return assetSrc("portrait", PORTRAIT_ART[item.character]);
+    return assetSrc(item.artRoot || "card", item.art);
+  }
+
+  function shopArtSrc(item) {
+    return itemArtSrc(item);
+  }
+
+  function applyCosmeticTheme() {
+    document.body.dataset.cosmetic = activeBoard;
+  }
+
+  function unitForCharacter(character) {
+    return CODEX_CARDS.find((card) => card.character === character);
+  }
+
+  function characterArtSrc(character) {
+    const skinId = unitSkins[character];
+    const skin = SHOP_ITEMS.find((item) => item.id === skinId && item.kind === "skin" && item.targetCharacter === character && cosmeticOwned.includes(item.id));
+    if (skin) return itemArtSrc(skin);
+    const unit = unitForCharacter(character);
+    return unit ? itemArtSrc(unit) : CARD_ART_ROOT + (CARD_ART[character] || CARD_ART.XENA);
+  }
+
+  function portraitCropFor(character) {
+    const skinId = unitSkins[character];
+    const skin = SHOP_ITEMS.find((item) => item.id === skinId && item.kind === "skin" && item.targetCharacter === character && cosmeticOwned.includes(item.id));
+    if (skin && (skin.artRoot === "portrait" || skin.artRoot === "skin")) return { scale: 1.04, shift: "0%" };
+    if (PORTRAIT_ART[character]) return { scale: 1.04, shift: "0%" };
+    return PORTRAIT_CROP[character] || { scale: 2.85, shift: "0%" };
+  }
+
+  function unitPortraitMarkup(character, className) {
+    const crop = portraitCropFor(character);
+    return `<span class="unit-portrait ${className || ""}" style="--face-scale:${crop.scale};--face-shift:${crop.shift}"><img src="${characterArtSrc(character)}" alt="${character}"></span>`;
+  }
+
+  function storeItemActive(item) {
+    if (item.kind === "board") return activeBoard === item.id;
+    if (item.kind === "skin") return Object.values(unitSkins).includes(item.id);
+    if (item.kind === "effect") return Object.values(unitEffects).some((setting) => setting && setting.id === item.id && setting.enabled !== false);
+    return false;
+  }
+
+  function buyCosmetic(id) {
+    const item = SHOP_ITEMS.find((entry) => entry.id === id);
+    if (!item || cosmeticOwned.includes(id)) return;
+    if (item.credit && credits < item.credit) return alert(`시그널 크레딧이 ${item.credit - credits} 부족합니다.`);
+    if (item.shards && shards < item.shards) return alert(`변칙 파편이 ${item.shards - shards} 부족합니다.`);
+    if (item.credit) credits -= item.credit;
+    if (item.shards) shards -= item.shards;
+    cosmeticOwned.push(id);
+    if (item.kind === "board") activeBoard = id;
+    saveMeta();
+    renderStore();
+  }
+
+  function startCheckout(productId) {
+    const checkoutUrl = window.XenaCheckoutUrls && window.XenaCheckoutUrls[productId];
+    if (checkoutUrl) window.location.assign(checkoutUrl);
+    else alert("결제 연결 준비 중입니다. 운영 서버에 Stripe Checkout URL과 웹훅 장부를 연결하면 이 상품이 즉시 활성화됩니다.");
+  }
+
+  function ownsCodexCard(card) {
+    return codexOwned.includes(card.id) || Boolean(card.pack && owned.includes(card.pack));
+  }
+
+  function buyCodexCard(id) {
+    const card = CODEX_CARDS.find((entry) => entry.id === id);
+    if (!card || ownsCodexCard(card)) return;
+    if (credits < card.credit) return alert(`시그널이 ${card.credit - credits} 부족합니다.`);
+    credits -= card.credit;
+    codexOwned.push(card.id);
+    showcase = null;
+    saveMeta();
+    renderCodex();
+  }
+
+  function showcaseMarkup(item, source) {
+    const isCodex = source === "codex";
+    const ownedItem = isCodex ? ownsCodexCard(item) : cosmeticOwned.includes(item.id);
+    const price = isCodex ? `시그널 ${item.credit.toLocaleString()}` : cosmeticPrice(item);
+    const details = isCodex ? null : shopDetails(item);
+    const description = isCodex ? `${item.faction} · ${roleLabel(item.role)} · ${item.rarity}` : `${details.role} · ${details.tier} · ${item.description}`;
+    let action;
+    if (isCodex) action = ownedItem ? `<button class="secondary" data-go-my-units>내 유닛에서 장착</button>` : `<button class="primary" data-modal-buy-card="${item.id}">${price}로 해금</button>`;
+    else if (!ownedItem) action = `<button class="primary" data-modal-buy-cosmetic="${item.id}">${t("purchase")} · ${price}</button>`;
+    else if (item.kind === "board") action = `<button class="secondary" data-modal-equip="${item.id}" ${activeBoard === item.id ? "disabled" : ""}>${activeBoard === item.id ? t("equipped") : t("equip")}</button>`;
+    else if (item.kind === "skin" || item.kind === "effect") action = `<button class="secondary" data-go-my-units>내 유닛에서 설정</button>`;
+    else action = `<span class="showcase-owned">보유 중 · 자동 활성화</span>`;
+    return `<div class="showcase-overlay" data-close-showcase><section class="showcase-modal kind-${item.kind || "unit"}" role="dialog" aria-modal="true" aria-label="${item.name}" data-showcase-panel><button class="showcase-close" data-close-showcase aria-label="닫기">×</button><div class="showcase-radiance"></div><div class="showcase-art"><img src="${itemArtSrc(item)}" alt="${item.name}"></div><div class="showcase-copy"><small>${isCodex ? "SIGNAL ARCHIVE" : `${details.role} · ${details.tier}`}</small><h2>${item.name}</h2><p>${description}</p><b>${ownedItem ? "OWNED" : price}</b><div class="showcase-action">${action}</div></div></section></div>`;
+  }
+
+  function renderStore() {
+    clearInterval(timer); screen = "store"; applyCosmeticTheme();
+    const cosmeticCard = (item) => {
+      const ownedItem = cosmeticOwned.includes(item.id);
+      const selected = storeItemActive(item);
+      const details = shopDetails(item);
+      const ownedAction = item.kind === "board"
+        ? `<button class="secondary" data-equip="${item.id}" ${selected ? "disabled" : ""}>${selected ? t("equipped") : t("equip")}</button>`
+        : item.kind === "skin" || item.kind === "effect"
+          ? `<button class="secondary" data-go-my-units>${language === "en" ? "SET IN MY UNITS" : "내 유닛에서 설정"}</button>`
+          : `<button class="secondary" disabled>${language === "en" ? "ACTIVE" : "자동 활성화"}</button>`;
+      return `<article class="shop-card kind-${item.kind} ${ownedItem ? "owned" : ""} ${selected ? "equipped" : ""}"><button class="shop-visual" data-preview-shop="${item.id}" aria-label="${item.name} 자세히 보기"><img class="shop-art" src="${shopArtSrc(item)}" alt="${item.name}"><span>VIEW</span>${ownedItem ? `<b class="owned-ribbon">${language === "en" ? "OWNED" : "보유 중"}</b>` : ""}</button><div class="shop-copy"><small>${details.role} · ${details.tier}</small><h2>${item.name}</h2><p>${item.description}</p><b>${ownedItem ? (language === "en" ? "OWNED" : "보유 중") : cosmeticPrice(item)}</b><div class="shop-card-actions">${ownedItem ? ownedAction : `<button class="primary" data-buy-cosmetic="${item.id}">${t("purchase")}</button>`}</div></div></article>`;
+    };
+    const paymentCard = (item) => `<article class="shop-card payment-card coming-soon"><small>ANOMALY SHARD · COMING SOON</small><h2>${item.name}</h2><p>${language === "en" ? "Secure account ledger and checkout are in preparation" : "계정 장부와 안전 결제 연동을 준비 중입니다"}</p><b>${item.price}</b><div class="shop-card-actions"><button class="primary" disabled>${language === "en" ? "PAYMENT IN PREPARATION" : "결제 준비 중"}</button></div></article>`;
+    const section = (title, note, items) => `<section class="store-section"><div class="section-title"><h2>${title}</h2><span>${note}</span></div><div class="shop-grid">${items.map(cosmeticCard).join("")}</div></section>`;
+    app.innerHTML = `<div class="shell store-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="store-page"><div class="store-heading"><div><small>COSMETIC ARMORY · WEB PROTOTYPE</small><h1>OVERRIDE <span>STORE</span></h1><p>전투 캐릭터는 도감에서 해금합니다. 상점은 능력치에 영향을 주지 않는 스킨·공격 이펙트·전장·이모트만 판매합니다.</p></div><button class="secondary" id="back-to-setup">${t("play")}</button></div><div class="store-guide"><b>도감</b><span>새 캐릭터 해금</span><b>내 유닛</b><span>캐릭터·스킨·이펙트 장착</span><b>상점</b><span>외형과 연출 구매</span></div>${section("캐릭터 스킨", "같은 캐릭터의 의상과 초상을 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "skin"))}${section("공격 이펙트", "보유 후 내 유닛에서 캐릭터별로 적용하거나 끌 수 있습니다.", SHOP_ITEMS.filter((item) => item.kind === "effect"))}${section("전장·이모트", "보드 테마는 즉시 장착하고 이모트 팩은 자동 활성화됩니다.", SHOP_ITEMS.filter((item) => item.kind === "board" || item.kind === "emote"))}<section class="store-section"><div class="section-title"><h2>${t("shardStore")}</h2><span>상품 미리보기 · 안전 결제는 준비 중</span></div><div class="shop-grid payment-grid">${PAYMENT_PRODUCTS.map(paymentCard).join("")}</div></section><p class="store-notice">${t("paymentNotice")}</p></section></div>`;
+    if (showcase && showcase.source === "store") {
+      const item = SHOP_ITEMS.find((entry) => entry.id === showcase.id);
+      if (item) app.insertAdjacentHTML("beforeend", showcaseMarkup(item, "store"));
+    }
+    bindStoreButton();
+    document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
+    app.querySelectorAll("[data-buy-cosmetic]").forEach((button) => button.addEventListener("click", () => buyCosmetic(button.dataset.buyCosmetic)));
+    app.querySelectorAll("[data-equip]").forEach((button) => button.addEventListener("click", () => { activeBoard = button.dataset.equip; saveMeta(); renderStore(); }));
+    app.querySelectorAll("[data-go-my-units]").forEach((button) => button.addEventListener("click", () => { showcase = null; renderMyUnits(); }));
+    app.querySelectorAll("[data-preview-shop]").forEach((button) => button.addEventListener("click", () => { showcase = { source: "store", id: button.dataset.previewShop }; renderStore(); }));
+    app.querySelectorAll("[data-close-showcase]").forEach((element) => element.addEventListener("click", (event) => { if (event.target === element || event.target.closest("[data-close-showcase]")) { showcase = null; renderStore(); } }));
+    app.querySelectorAll("[data-modal-buy-cosmetic]").forEach((button) => button.addEventListener("click", () => buyCosmetic(button.dataset.modalBuyCosmetic)));
+    app.querySelectorAll("[data-modal-equip]").forEach((button) => button.addEventListener("click", () => { activeBoard = button.dataset.modalEquip; showcase = null; saveMeta(); renderStore(); }));
+  }
+
+  function renderCodex() {
+    clearInterval(timer); screen = "codex"; applyCosmeticTheme();
+    const unlocked = CODEX_CARDS.filter(ownsCodexCard).length;
+    const entry = (card) => {
+      const isOwned = ownsCodexCard(card);
+      return `<button class="codex-entry ${isOwned ? "owned" : "locked"}" data-preview-codex="${card.id}"><span class="codex-art"><img src="${itemArtSrc(card)}" alt="${card.name}"></span><span class="codex-meta"><small>${card.faction} · ${card.rarity}</small><b>${card.name}</b><em>${roleLabel(card.role)}</em><span>${isOwned ? "보유 중" : `시그널 ${card.credit.toLocaleString()}`}</span></span></button>`;
+    };
+    const factionGroup = (packId, title) => `<section class="codex-faction"><div class="section-title"><h2>${title}</h2><span>${owned.includes(packId) ? "팩 보유 · 12명 자동 해금" : "미보유 캐릭터는 개별 해금 가능"}</span></div><div class="codex-grid">${CODEX_CARDS.filter((card) => card.pack === packId).map(entry).join("")}</div></section>`;
+    app.innerHTML = `<div class="shell codex-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="codex-page"><div class="store-heading"><div><small>ALL CHARACTER ARCHIVE · WEB PROTOTYPE</small><h1>UNIT <span>CODEX</span></h1><p>현재 게임의 모든 캐릭터를 확인하고 해금하는 곳입니다. 보유 캐릭터는 컬러, 미보유 캐릭터는 무채색으로 표시됩니다.</p></div><div class="header-actions"><button class="primary" data-open-units>내 유닛</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><div class="codex-progress"><span>전체 캐릭터 컬렉션</span><b>${unlocked} / ${CODEX_CARDS.length} 보유</b></div>${factionGroup("xena", "XENA · REBEL MEMORY")}${factionGroup("sovran", "SOVRAN · SYSTEM DOMINION")}</section></div>`;
+    if (showcase && showcase.source === "codex") {
+      const card = CODEX_CARDS.find((entry) => entry.id === showcase.id);
+      if (card) app.insertAdjacentHTML("beforeend", showcaseMarkup(card, "codex"));
+    }
+    bindStoreButton();
+    document.getElementById("back-to-setup").addEventListener("click", () => { showcase = null; screen = "setup"; renderSetup(); });
+    app.querySelectorAll("[data-preview-codex]").forEach((button) => button.addEventListener("click", () => { showcase = { source: "codex", id: button.dataset.previewCodex }; renderCodex(); }));
+    app.querySelectorAll("[data-close-showcase]").forEach((element) => element.addEventListener("click", (event) => { if (event.target === element || event.target.closest("[data-close-showcase]")) { showcase = null; renderCodex(); } }));
+    app.querySelectorAll("[data-modal-buy-card]").forEach((button) => button.addEventListener("click", () => buyCodexCard(button.dataset.modalBuyCard)));
+    app.querySelectorAll("[data-go-my-units]").forEach((button) => button.addEventListener("click", () => { showcase = null; renderMyUnits(); }));
+  }
+
+  function renderMyUnits() {
+    clearInterval(timer); screen = "units"; showcase = null; applyCosmeticTheme();
+    if (!committedStarter && !owned.length) {
+      app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>내 <span>유닛</span></h1><p>보유 캐릭터를 같은 직업 슬롯에 장착하고, 캐릭터별 스킨과 공격 이펙트를 설정합니다.</p></div><div class="header-actions"><button class="secondary" data-open-codex>도감</button><button class="secondary" data-open-store>상점</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><section class="loadout-empty"><small>STARTER REQUIRED</small><h2>스타터 팩을 먼저 확정해 주세요</h2><p>첫 대전을 시작하면 선택한 진영의 12명이 자동으로 해금됩니다. 이후 이곳에서 같은 직업의 보유 캐릭터를 교체하고 스킨과 공격 이펙트를 설정할 수 있습니다.</p><button class="primary" id="choose-starter">스타터 선택으로 이동</button></section></section></div>`;
+      bindStoreButton();
+      app.querySelectorAll("#back-to-setup, #choose-starter").forEach((button) => button.addEventListener("click", () => { screen = "setup"; renderSetup(); }));
+      return;
+    }
+    const availablePacks = owned.length ? owned : [chosen];
+    if (!availablePacks.includes(lineupPack)) lineupPack = availablePacks[0];
+    if (!selectedUnitSlot) selectedUnitSlot = "leader";
+    const slot = FORMATION_SLOTS.find((entry) => entry.key === selectedUnitSlot) || FORMATION_SLOTS[3];
+    const selectedCharacter = unitLineups[lineupPack][slot.key];
+    const selectedUnit = unitForCharacter(selectedCharacter);
+    const deployedElsewhere = new Set(Object.entries(unitLineups[lineupPack]).filter(([key]) => key !== slot.key).map(([, character]) => character));
+    const candidates = CODEX_CARDS.filter((card) => card.role === slot.role && ownsCodexCard(card) && !deployedElsewhere.has(card.character));
+    const skinItems = SHOP_ITEMS.filter((item) => item.kind === "skin" && item.targetCharacter === selectedCharacter);
+    const effectItems = SHOP_ITEMS.filter((item) => item.kind === "effect");
+    const effectSetting = unitEffects[selectedCharacter] || { id: "", enabled: false };
+    const slotCard = (entry) => {
+      const character = unitLineups[lineupPack][entry.key];
+      const unit = unitForCharacter(character);
+      return `<button class="formation-slot ${entry.key === slot.key ? "selected" : ""}" data-unit-slot="${entry.key}">${unitPortraitMarkup(character)}<span><small>${entry.label}</small><b>${unit ? unit.name : character}</b></span></button>`;
+    };
+    const choiceCard = (unit) => `<button class="unit-choice ${unit.character === selectedCharacter ? "selected" : ""}" data-equip-character="${unit.character}">${unitPortraitMarkup(unit.character)}<span><b>${unit.name}</b><small>${unit.faction}</small></span></button>`;
+    const skinChoice = (item) => `<button class="appearance-choice ${unitSkins[selectedCharacter] === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-skin="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
+    const effectChoice = (item) => `<button class="appearance-choice ${effectSetting.id === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-effect="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
+    app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>내 <span>유닛</span></h1><p>보유 캐릭터를 같은 직업 슬롯에 장착하고, 캐릭터별 스킨과 공격 이펙트를 설정합니다.</p></div><div class="header-actions"><button class="secondary" data-open-codex>도감</button><button class="secondary" data-open-store>상점</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><div class="loadout-pack-tabs">${availablePacks.map((packId) => `<button class="${lineupPack === packId ? "active" : ""}" data-lineup-pack="${packId}">${G.PACKS[packId].leaderName} · ${G.PACKS[packId].name}</button>`).join("")}</div><div class="units-layout"><section><div class="section-title"><h2>12 UNIT FORMATION</h2><span>동일 캐릭터는 한 자리만 편성 가능</span></div><div class="formation-grid">${FORMATION_SLOTS.map(slotCard).join("")}</div></section><aside class="unit-config"><div class="selected-unit-hero">${unitPortraitMarkup(selectedCharacter, "hero-portrait")}<div><small>${slot.label}</small><h2>${selectedUnit ? selectedUnit.name : selectedCharacter}</h2><span>${selectedUnit ? selectedUnit.faction : ""}</span></div></div><div class="config-block"><div class="section-title"><h3>캐릭터 교체</h3><span>같은 직업 중 현재 편성되지 않은 보유 캐릭터만 표시</span></div><div class="unit-choice-grid">${candidates.map(choiceCard).join("")}</div></div><div class="config-block"><div class="section-title"><h3>스킨</h3><span>상점에서 구매한 전용 외형</span></div><div class="appearance-grid"><button class="appearance-choice ${unitSkins[selectedCharacter] ? "" : "selected"}" data-apply-skin=""><span><b>기본 외형</b><small>보유</small></span></button>${skinItems.map(skinChoice).join("")}</div></div><div class="config-block"><div class="section-title"><h3>공격 이펙트</h3><label class="effect-toggle"><input type="checkbox" data-toggle-effect ${effectSetting.id && effectSetting.enabled !== false ? "checked" : ""} ${effectSetting.id ? "" : "disabled"}><span>효과 ${effectSetting.enabled !== false && effectSetting.id ? "ON" : "OFF"}</span></label></div><div class="appearance-grid"><button class="appearance-choice ${effectSetting.id ? "" : "selected"}" data-apply-effect=""><span><b>캐릭터 기본 효과</b><small>기본</small></span></button>${effectItems.map(effectChoice).join("")}</div></div></aside></div></section></div>`;
+    bindStoreButton();
+    document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
+    app.querySelectorAll("[data-lineup-pack]").forEach((button) => button.addEventListener("click", () => { lineupPack = button.dataset.lineupPack; selectedUnitSlot = "leader"; renderMyUnits(); }));
+    app.querySelectorAll("[data-unit-slot]").forEach((button) => button.addEventListener("click", () => { selectedUnitSlot = button.dataset.unitSlot; renderMyUnits(); }));
+    app.querySelectorAll("[data-equip-character]").forEach((button) => button.addEventListener("click", () => {
+      const character = button.dataset.equipCharacter;
+      const unit = unitForCharacter(character);
+      const duplicate = Object.entries(unitLineups[lineupPack]).some(([key, deployed]) => key !== slot.key && deployed === character);
+      if (!unit || unit.role !== slot.role || !ownsCodexCard(unit) || duplicate) return;
+      unitLineups[lineupPack][slot.key] = character;
+      saveMeta();
+      renderMyUnits();
+    }));
+    app.querySelectorAll("[data-apply-skin]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.applySkin; if (id) unitSkins[selectedCharacter] = id; else delete unitSkins[selectedCharacter]; saveMeta(); renderMyUnits(); }));
+    app.querySelectorAll("[data-apply-effect]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.applyEffect; if (id) unitEffects[selectedCharacter] = { id, enabled: true }; else delete unitEffects[selectedCharacter]; saveMeta(); renderMyUnits(); }));
+    const toggle = app.querySelector("[data-toggle-effect]");
+    if (toggle) toggle.addEventListener("change", () => { if (unitEffects[selectedCharacter]) unitEffects[selectedCharacter].enabled = toggle.checked; saveMeta(); renderMyUnits(); });
+  }
+
+  function renderOnlineLobby() {
+    clearInterval(timer); screen = "online"; applyCosmeticTheme();
+    const online = window.OverrideGridOnline ? window.OverrideGridOnline.snapshot() : { status: "offline" };
+    const statusText = online.status === "connected" ? "CONNECTED" : online.status === "connecting" ? "CONNECTING" : t("serverOffline");
+    app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="online-page"><div class="online-heading"><small>${t("onlineLobby")} · COMING SOON</small><h1>${t("onlineTitle")}</h1><p>${t("onlineNote")}</p></div><div class="online-status ${online.status}"><span>${t("connection")}</span><b>${statusText}</b><small>${online.lastError || "WebSocket matchmaking contract ready"}</small></div><div class="online-actions"><button class="primary" disabled>${t("quickMatch")} · 준비 중</button><button class="secondary" disabled>${t("createRoom")} · 준비 중</button><button class="secondary" disabled>${t("joinRoom")} · 준비 중</button></div><div class="online-contract"><div><b>01</b><span>Match queue</span></div><div><b>02</b><span>Server validates every move</span></div><div><b>03</b><span>Rewards settle in the ledger</span></div></div><button class="secondary" id="back-to-setup">${t("play")}</button></section></div>`;
+    bindStoreButton();
+    document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
+  }
+
+  function startGame() {
+    if (!committedStarter) {
+      committedStarter = chosen;
+      owned = [chosen];
+      saveMeta();
+    }
+    if (gameMode === "online") return renderOnlineLobby();
+    screen = "game"; result = null; selected = null; selectedSkill = null; thinking = false; promotionChoices = [];
+    replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
+    const enemy = chosen === "xena" ? "sovran" : "xena";
+    state = G.createInitialState({ whitePack: chosen, blackPack: enemy });
+    applyLineupToState(state, "white", chosen);
+    if (gameMode === "local" && owned.includes(enemy)) applyLineupToState(state, "black", enemy);
+    const awakenPreview = new URLSearchParams(window.location.search).get("awaken");
+    if (awakenPreview === "white" || awakenPreview === "black") state.awakened[awakenPreview] = true;
+    snapshots = [cloneState(state)];
+    if (window.OverrideGridScene) window.OverrideGridScene.reset();
+    clocks = { white: TIME_RULES[timeRule].seconds, black: TIME_RULES[timeRule].seconds };
+    clearInterval(timer);
+    timer = setInterval(tick, 1000);
+    renderGame();
+    if (new URLSearchParams(window.location.search).get("fx") === "1") {
+      setTimeout(() => window.OverrideGridScene && window.OverrideGridScene.playAction({ from: 3, to: 21, color: "white", character: "XENA", capture: true, nonce: 999999 }), 80);
+    }
+  }
+
+  function applyLineupToState(targetState, color, packId) {
+    const lineup = unitLineups[packId] || defaultLineup(packId);
+    const backKeys = color === "white"
+      ? ["bastion", "vector1", "catalyst", "leader", "vector2", "glitch"]
+      : ["glitch", "vector2", "leader", "catalyst", "vector1", "bastion"];
+    const signalKeys = color === "white"
+      ? ["signal1", "signal2", "signal3", "signal4", "signal5", "signal6"]
+      : ["signal6", "signal5", "signal4", "signal3", "signal2", "signal1"];
+    const backRow = color === "white" ? 0 : 5;
+    const signalRow = color === "white" ? 1 : 4;
+    backKeys.forEach((key, col) => {
+      const piece = targetState.board[G.indexOf(backRow, col)];
+      const unit = unitForCharacter(lineup[key]);
+      if (piece && unit && unit.role === piece.type && ownsCodexCard(unit)) piece.character = unit.character;
+    });
+    signalKeys.forEach((key, col) => {
+      const piece = targetState.board[G.indexOf(signalRow, col)];
+      const unit = unitForCharacter(lineup[key]);
+      if (piece && unit && unit.role === "signal" && ownsCodexCard(unit)) piece.character = unit.character;
+    });
+  }
+
+  function tick() {
+    if (!state || result || replayMode) return;
+    clocks[state.turn] -= 1;
+    if (clocks[state.turn] <= 0) finish(G.other(state.turn), "시간 종료");
+    else renderGame();
+  }
+
+  function formatTime(value) {
+    const safe = Math.max(0, value);
+    return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
+  }
+
+  function pieceMarkup(piece, index) {
+    if (!piece) return "";
+    const awake = piece.type === "leader" && state.awakened[piece.color] ? "awakened" : "";
+    const locked = state.locked && state.locked.pieceId === piece.id ? "locked" : "";
+    const arriving = lastVisualMove && lastVisualMove.to === index ? "arrive" : "";
+    const art = artFor(piece);
+    const crop = awake ? { scale: 1.14, shift: "0%" } : portraitCropFor(piece.character);
+    return `<span class="piece portrait-piece role-${piece.type} ${piece.color} ${awake} ${locked} ${arriving}" style="--face-scale:${crop.scale};--face-shift:${crop.shift}"><span class="rank-tag">${roleLabel(piece.type)}</span><span class="portrait-shell"><img src="${art}" alt="${piece.character}"><span class="portrait-shine"></span><span class="role-badge">${piece.type === "leader" ? piece.character[0] : glyph[piece.type]}</span></span><span class="piece-label">${piece.character}</span></span>`;
+  }
+
+  function boardMarkup() {
+    let html = "";
+    for (let row = 5; row >= 0; row -= 1) for (let col = 0; col < 6; col += 1) {
+      const index = G.indexOf(row, col);
+      const piece = state.board[index];
+      const targets = legal.filter((move) => move.to === index && (!selectedSkill || move.skill === selectedSkill));
+      const classes = ["square", (row + col) % 2 ? "light" : "dark"];
+      if (selected === index) classes.push("selected");
+      if (targets.length) classes.push(piece && piece.color !== state.turn ? "capture" : "legal");
+      html += `<button class="${classes.join(" ")}" data-square="${index}"><span class="coord">${String.fromCharCode(65 + col)}${row + 1}</span>${pieceMarkup(piece, index)}</button>`;
+    }
+    return html;
+  }
+
+  function capturedMarkup(color) {
+    return state.captured[color].map((p) => `<span class="chip">${glyph[p.type]} ${p.character}</span>`).join("") || `<span class="chip">${t("none")}</span>`;
+  }
+
+  function artFor(piece) {
+    if (piece.type === "leader" && state && state.awakened[piece.color]) {
+      return assetSrc("portrait", piece.character === "XENA" ? "xena_override_v1.png" : "sovran_override_v1.png");
+    }
+    const configured = characterArtSrc(piece.character);
+    if (configured) return configured;
+    const portrait = PORTRAIT_ART[piece.character];
+    return portrait ? assetSrc("portrait", portrait) : CARD_ART_ROOT + (CARD_ART[piece.character] || CARD_ART[piece.color === "white" ? "XENA" : "SOVRAN"]);
+  }
+
+  function cloneState(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function recordSnapshot() {
+    snapshots.push(cloneState(state));
+  }
+
+  function focusCard(color) {
+    const focusIndex = selected !== null ? selected : lastVisualMove && lastVisualMove.to;
+    const piece = Number.isInteger(focusIndex) ? state.board[focusIndex] : null;
+    if (piece && color && piece.color !== color) return `<div class="focus-card empty-focus"><small>SELECTED UNIT</small><span>${t("opponentUnit")}</span></div>`;
+    if (!piece) return `<div class="focus-card empty-focus"><small>SELECTED UNIT</small><span>${t("selectUnit")}</span></div>`;
+    const role = roleInfo(piece.type);
+    const awakened = piece.type === "leader" && state.awakened[piece.color];
+    return `<div class="focus-card ${piece.color} ${awakened ? "awakened" : ""}"><img src="${artFor(piece)}" alt="${piece.character}"><div><small>${role[0]}</small><b>${piece.character}</b><span>${awakened ? "OVERRIDE ACTIVE" : role[1]}</span></div></div>`;
+  }
+
+  function skillButtons(color) {
+    const pack = state.packs[color];
+    const names = pack === "xena" ? ["cyanShift", "override"] : ["systemLock", "publicErasure"];
+    return names.map((key, index) => {
+      const enabled = canControl(color) && (index === 0 ? state.skills[color].base : state.awakened[color] && state.skills[color].awakened);
+      return `<button class="skill-button" data-skill="${key}" ${enabled ? "" : "disabled"}><b>${skillText(key, 0)}</b><span>${skillText(key, 1)}</span></button>`;
+    }).join("");
+  }
+
+  function emoteMarkup() {
+    return `<div class="emote-float-layer">${emoteFeed.map((emote) => `<div class="emote-float ${emote.color}" data-emote-nonce="${emote.nonce}"><img src="${assetSrc("emote", EMOTES[emote.id].art)}" alt=""><span>${EMOTES[emote.id][language]}</span></div>`).join("")}</div>`;
+  }
+
+  function emoteBar() {
+    const hasPack = cosmeticOwned.includes("emote-signal");
+    return `<div class="emote-bar" aria-label="Emotes">${Object.entries(EMOTES).map(([id, emote]) => {
+      const available = FREE_EMOTES.has(id) || hasPack;
+      return `<button class="emote-button ${available ? "" : "locked"}" data-emote="${id}" title="${available ? emote[language] : (language === "en" ? "Unlock Signal Emote Pack" : "시그널 이모트 팩에서 해금")}" ${available ? "" : "disabled"}><img src="${assetSrc("emote", emote.art)}" alt=""><span>${available ? emote[language] : (language === "en" ? "Locked" : "잠김")}</span></button>`;
+    }).join("")}</div>`;
+  }
+
+  function cinematicEffectMarkup() {
+    if (!cinematicAction || !cinematicAction.effectImage) return "";
+    const target = Number.isInteger(cinematicAction.to) ? cinematicAction.to : cinematicAction.from;
+    const row = Math.floor(target / 6);
+    const col = target % 6;
+    return `<div class="asset-vfx" style="--vfx-left:${((col + .5) * 100 / 6).toFixed(3)}%;--vfx-top:${((row + .5) * 100 / 6).toFixed(3)}%"><img src="${cinematicAction.effectImage}" alt=""></div>`;
+  }
+
+  function sendEmote(id) {
+    if (!EMOTES[id] || result || replayMode) return;
+    const color = gameMode === "local" ? state.turn : playerColor;
+    const entry = { id, color, nonce: ++emoteNonce };
+    emoteFeed = [entry];
+    if (gameMode === "online" && window.OverrideGridOnline) window.OverrideGridOnline.send({ type: "game.emote", emoteId: id });
+    renderGame();
+    setTimeout(() => {
+      if (emoteFeed[0] && emoteFeed[0].nonce === entry.nonce) {
+        emoteFeed = [];
+        if (screen === "game") renderGame();
+      }
+    }, 1900);
+  }
+
+  function panel(color, enemy) {
+    const pack = G.PACKS[state.packs[color]];
+    const localSide = gameMode === "local";
+    const sideLabel = localSide ? (color === "white" ? t("playerOne") : t("playerTwo")) : (enemy ? t("opponent") : t("player"));
+    if (localSide) enemy = false;
+    return `<aside class="side-panel ${enemy ? "enemy-panel" : ""}"><div class="combatant ${enemy ? "enemy" : ""}"><small>${sideLabel}</small><h2>${pack.leaderName}</h2>
+      <div class="timer ${state.turn === color ? "active" : ""}">${formatTime(clocks[color])}</div><div class="awakening ${state.awakened[color] ? "on" : ""}">${state.awakened[color] ? "OVERRIDE ACTIVE" : "CATALYST LINKED"}</div></div>
+      <div class="skill-list">${skillButtons(color)}</div>${enemy ? "" : focusCard()}<div><small>${t("captured")}</small><div class="captured">${capturedMarkup(color)}</div></div>
+      ${enemy ? "" : `<div class="log">${state.log.slice(-12).reverse().map((entry) => `${entry.ply + 1}. ${entry.move.skill ? skillText(entry.move.skill, 0) : (language === "en" ? "Move" : "말 이동")}`).join("<br>") || t("firstMove")}</div>`}</aside>`;
+  }
+
+  function currentRecoveries() {
+    if (!state || result || replayMode || thinking || animating) return [];
+    const humanTurn = gameMode === "local" || state.turn === playerColor;
+    return humanTurn ? G.pendingRecoveries(state, state.turn) : [];
+  }
+
+  function promotionMarkup() {
+    if (!promotionChoices.length) return "";
+    return `<div class="choice-overlay"><section class="choice-modal"><small>SIGNAL RECOVERY</small><h2>${language === "en" ? "Choose a recovered unit" : "회수할 전사 선택"}</h2><p>${language === "en" ? "The Signal reached the final rank. Restore one captured unit." : "시그널이 마지막 랭크에 도달했습니다. 포획된 아군 하나로 즉시 승급합니다."}</p><div class="choice-grid">${promotionChoices.map((move, index) => {
+      const piece = state.captured[state.turn].find((item) => item.id === move.promoteId);
+      return piece ? `<button data-promotion-index="${index}"><img src="${artFor(piece)}" alt="${piece.character}"><span><b>${piece.character}</b><small>${roleLabel(piece.type)}</small></span></button>` : "";
+    }).join("")}</div></section></div>`;
+  }
+
+  function recoveryMarkup() {
+    const options = currentRecoveries();
+    if (!options.length || promotionChoices.length) return "";
+    return `<div class="choice-overlay"><section class="choice-modal"><small>FINAL RANK LINK</small><h2>${language === "en" ? "Recovery is ready" : "회수 승급 준비 완료"}</h2><p>${language === "en" ? "A waiting Signal can now restore one captured unit." : "마지막 랭크에서 대기 중인 시그널이 포획된 아군을 회수할 수 있습니다."}</p><div class="choice-grid">${options.map((option, index) => {
+      const piece = state.captured[state.turn].find((item) => item.id === option.capturedId);
+      return piece ? `<button data-recovery-index="${index}"><img src="${artFor(piece)}" alt="${piece.character}"><span><b>${piece.character}</b><small>${roleLabel(piece.type)}</small></span></button>` : "";
+    }).join("")}</div></section></div>`;
+  }
+
+  function renderGame() {
+    if (screen !== "game") return;
+    applyCosmeticTheme();
+    const status = G.getGameStatus(state);
+    const turnPack = G.PACKS[state.packs[state.turn]].leaderName;
+    app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
+      <div class="game-layout">${panel("white", false)}<section class="arena"><div class="status-strip"><strong>${animating ? t("cinematic") : thinking ? t("thinking") : `${turnPack} ${t("turn")}${status.check ? " · CHECK" : ""}`}</strong><span>${state.ply + 1} ${t("move")}</span></div>
+      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<button class="secondary" id="exit">${t("exit")}</button>`}</div></section>${panel("black", gameMode !== "local")}</div>
+      ${result ? resultMarkup() : ""}${promotionMarkup()}${recoveryMarkup()}</div>`;
+    app.querySelectorAll("[data-square]").forEach((button) => button.addEventListener("click", () => clickSquare(Number(button.dataset.square))));
+    app.querySelectorAll("[data-skill]").forEach((button) => button.addEventListener("click", () => selectSkill(button.dataset.skill)));
+    app.querySelectorAll("[data-emote]").forEach((button) => button.addEventListener("click", () => sendEmote(button.dataset.emote)));
+    app.querySelectorAll("[data-promotion-index]").forEach((button) => button.addEventListener("click", () => {
+      const move = promotionChoices[Number(button.dataset.promotionIndex)];
+      promotionChoices = [];
+      if (move) performMove(move);
+    }));
+    const recoveries = currentRecoveries();
+    app.querySelectorAll("[data-recovery-index]").forEach((button) => button.addEventListener("click", () => {
+      const recovery = recoveries[Number(button.dataset.recoveryIndex)];
+      if (!recovery) return;
+      state = G.applyRecovery(state, recovery);
+      recordSnapshot();
+      renderGame();
+    }));
+    const exit = document.getElementById("exit"); if (exit) exit.addEventListener("click", exitGame);
+    bindStoreButton();
+    const replayPrev = document.getElementById("replay-prev"); if (replayPrev) replayPrev.addEventListener("click", () => stepReplay(-1));
+    const replayNext = document.getElementById("replay-next"); if (replayNext) replayNext.addEventListener("click", () => stepReplay(1));
+    const replayExit = document.getElementById("replay-exit"); if (replayExit) replayExit.addEventListener("click", exitGame);
+    const again = document.getElementById("again"); if (again) again.addEventListener("click", startGame);
+    const replay = document.getElementById("replay"); if (replay) replay.addEventListener("click", startReplay);
+    if (window.OverrideGridScene) {
+      window.OverrideGridScene.mount(document.getElementById("scene3d"));
+      window.OverrideGridScene.sync(state, { selected, legal, action: lastVisualMove });
+    }
+  }
+
+  function selectSkill(skill) {
+    if (!canControl(state.turn) || currentRecoveries().length || promotionChoices.length) return;
+    const leader = state.board.findIndex((p) => p && p.color === state.turn && p.type === "leader");
+    selected = leader; selectedSkill = skill;
+    legal = G.generateLegalMoves(state).filter((move) => move.skill === skill);
+    renderGame();
+  }
+
+  function clickSquare(index) {
+    if (thinking || animating || result || replayMode || currentRecoveries().length || promotionChoices.length || !canControl(state.turn)) return;
+    const matching = legal.filter((move) => move.to === index && (!selectedSkill || move.skill === selectedSkill));
+    if (matching.length) {
+      let move = matching[0];
+      if (matching.length > 1) {
+        promotionChoices = matching;
+        renderGame();
+        return;
+      }
+      performMove(move); return;
+    }
+    const piece = state.board[index];
+    if (piece && piece.color === state.turn) {
+      selected = index; selectedSkill = null;
+      legal = G.generateLegalMoves(state).filter((move) => move.from === index && move.kind === "move");
+    } else { selected = null; selectedSkill = null; legal = []; }
+    renderGame();
+  }
+
+  function afterMove() {
+    const status = G.getGameStatus(state);
+    if (status.over) return finish(status.result, status.reason);
+    renderGame();
+    if ((gameMode === "ai" || gameMode === "event") && state.turn === "black") aiTurn();
+  }
+
+  function aiTurn() {
+    thinking = true; renderGame();
+    setTimeout(() => {
+      const recoveries = G.pendingRecoveries(state, "black");
+      if (recoveries.length) { state = G.applyRecovery(state, recoveries[0]); recordSnapshot(); }
+      const difficulty = gameMode === "event" ? eventDifficulty : aiDifficulty;
+      const move = G.chooseAIMove(state, { difficulty });
+      thinking = false;
+      if (move) performMove(move);
+      else afterMove();
+    }, 750);
+  }
+
+  function finish(winner, reason) {
+    clearInterval(timer);
+    const draw = winner === "draw";
+    const localGame = gameMode === "local";
+    const win = winner === playerColor;
+    let creditReward = 0;
+    let shardReward = 0;
+    let eventBonus = 0;
+
+    if (!localGame) {
+      const difficulty = gameMode === "event" ? eventDifficulty : aiDifficulty;
+      creditReward = draw ? 10 : win ? DIFFICULTIES[difficulty].credits : DIFFICULTIES[difficulty].loss;
+      if (gameMode === "event" && win) {
+        const claims = dailyEvent();
+        if (!claims[difficulty]) {
+          claims[difficulty] = true;
+          creditReward += EVENT_REWARDS[difficulty].credits;
+          shardReward = EVENT_REWARDS[difficulty].shards;
+          if (claims.easy && claims.normal && claims.hard && !claims.bonus) {
+            claims.bonus = true;
+            creditReward += 500;
+            eventBonus = 3;
+          }
+        }
+      }
+      credits += creditReward;
+      shards += shardReward + eventBonus;
+      saveMeta();
+    }
+    lastReplay = snapshots.map(cloneState);
+    const title = draw ? t("draw") : localGame ? `${winner === "white" ? t("playerOne") : t("playerTwo")} ${t("win")}` : win ? t("win") : t("defeat");
+    result = { title, reason, reward: creditReward, shards: shardReward, bonus: eventBonus, localGame };
+    renderGame();
+  }
+
+  function makeVisualAction(move, before) {
+    const mover = Number.isInteger(move.from) ? before.board[move.from] : null;
+    const target = Number.isInteger(move.to) ? before.board[move.to] : null;
+    const effectSetting = mover && unitEffects[mover.character];
+    const effectItem = effectSetting && effectSetting.enabled !== false && cosmeticOwned.includes(effectSetting.id)
+      ? SHOP_ITEMS.find((item) => item.id === effectSetting.id && item.kind === "effect")
+      : null;
+    return {
+      ...move,
+      color: before.turn,
+      character: mover && mover.character,
+      pieceType: mover && mover.type,
+      effectStyle: effectItem && effectItem.effectStyle,
+      effectColor: effectItem && effectItem.effectColor,
+      effectImage: effectItem && itemArtSrc(effectItem),
+      capture: Boolean((move.kind === "move" && target && target.color !== before.turn) || move.skill === "publicErasure"),
+      nonce: ++visualNonce,
+    };
+  }
+
+  function performMove(move) {
+    const before = state;
+    const action = makeVisualAction(move, before);
+    selected = null; selectedSkill = null; legal = []; promotionChoices = [];
+    const cinematic = Boolean(action.capture || action.skill);
+    if (!cinematic) {
+      state = G.applyMove(state, move);
+      recordSnapshot();
+      recordVisualMove(action);
+      afterMove();
+      return;
+    }
+    animating = true;
+    cinematicAction = action;
+    if (window.OverrideGridScene) window.OverrideGridScene.playAction(action);
+    renderGame();
+    setTimeout(() => {
+      state = G.applyMove(state, move);
+      recordSnapshot();
+      recordVisualMove(action);
+      animating = false;
+      cinematicAction = null;
+      afterMove();
+    }, action.skill ? 760 : 620);
+  }
+
+  function recordVisualMove(action) {
+    lastVisualMove = action;
+    const nonce = action.nonce;
+    setTimeout(() => {
+      if (lastVisualMove && lastVisualMove.nonce === nonce) lastVisualMove = null;
+    }, 900);
+  }
+
+  function resultMarkup() {
+    const shardTotal = result.shards + result.bonus;
+    const chest = shardTotal >= 10 ? "chest_signal_override_v1.png" : shardTotal >= 5 ? "chest_signal_epic_v1.png" : result.reward >= 50 ? "chest_signal_rare_v1.png" : "chest_signal_common_v1.png";
+    const rewards = result.localGame ? "" : `<div class="reward-visual"><img src="${assetSrc("ui", chest)}" alt="보상 상자"></div><div class="reward"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${language === "en" ? "Signal Credits" : "시그널 크레딧"} +${result.reward}</div>${result.shards || result.bonus ? `<div class="reward shard-reward"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${language === "en" ? "Anomaly Shards" : "변칙 파편"} +${shardTotal}${result.bonus ? (language === "en" ? " (completion bonus)" : " (완주 보너스 포함)") : ""}</div>` : ""}`;
+    return `<div class="result-overlay"><div class="result-box"><h2>${result.title}</h2><p>${result.reason}</p>${rewards}<div class="actions"><button class="secondary" id="replay">${t("replay")}</button><button class="primary" id="again">${language === "en" ? "Play Again" : "다시 대전"}</button></div></div></div>`;
+  }
+
+  function startReplay() {
+    if (!lastReplay.length) return;
+    clearInterval(timer);
+    replayMode = true; replayIndex = 0; result = null; selected = null; selectedSkill = null; legal = [];
+    state = cloneState(lastReplay[replayIndex]);
+    renderGame();
+  }
+
+  function stepReplay(direction) {
+    replayIndex = Math.max(0, Math.min(lastReplay.length - 1, replayIndex + direction));
+    state = cloneState(lastReplay[replayIndex]); selected = null; selectedSkill = null; legal = [];
+    renderGame();
+  }
+
+  function exitGame() { clearInterval(timer); replayMode = false; promotionChoices = []; screen = "setup"; state = null; result = null; renderSetup(); }
+  const launchParams = new URLSearchParams(window.location.search);
+  saveMeta();
+  if (launchParams.get("screen") === "store") renderStore();
+  else if (launchParams.get("screen") === "codex") renderCodex();
+  else if (launchParams.get("screen") === "units") renderMyUnits();
+  else if (launchParams.get("demo") === "1") startGame();
+  else renderSetup();
+  if (launchParams.get("account") === "1") setTimeout(openAccount, 0);
+})();
