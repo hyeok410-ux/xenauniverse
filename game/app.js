@@ -434,7 +434,9 @@
   function wallet() {
     const creditLabel = language === "en" ? "Signal" : "시그널";
     const shardLabel = language === "en" ? "Anomaly Shards" : "변칙 파편";
-    return `<div class="wallet"><span class="currency-pill"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${creditLabel} <strong>${credits.toLocaleString()}</strong></span><span class="currency-pill"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${shardLabel} <strong>${shards}</strong></span><span class="rank-pill">${rankLabel()} <strong>${gridRating} GR</strong></span><button class="wallet-store profile-button" data-open-account>${profile.nickname}<small>${storage.available ? "DEVICE SAVE" : "TEMP SESSION"}</small></button><button class="wallet-store" data-open-language>${t("language")}</button><button class="wallet-store" data-open-codex>도감</button><button class="wallet-store" data-open-units>${language === "en" ? "MY UNITS" : "내 유닛"}</button><button class="wallet-store" data-open-store>${t("store")}</button></div>`;
+    const cloudUser = window.XenaCloudSync && window.XenaCloudSync.snapshot().user;
+    const saveLabel = cloudUser ? "CLOUD LINKED" : storage.available ? "DEVICE SAVE" : "TEMP SESSION";
+    return `<div class="wallet"><span class="currency-pill"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${creditLabel} <strong>${credits.toLocaleString()}</strong></span><span class="currency-pill"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${shardLabel} <strong>${shards}</strong></span><span class="rank-pill">${rankLabel()} <strong>${gridRating} GR</strong></span><button class="wallet-store profile-button" data-open-account>${profile.nickname}<small>${saveLabel}</small></button><button class="wallet-store" data-open-language>${t("language")}</button><button class="wallet-store" data-open-codex>도감</button><button class="wallet-store" data-open-units>${language === "en" ? "MY UNITS" : "내 유닛"}</button><button class="wallet-store" data-open-store>${t("store")}</button></div>`;
   }
 
   function encodeBackup(data) {
@@ -500,9 +502,46 @@
     saveMeta();
   }
 
+  function escapeMarkup(value) {
+    return String(value || "").replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
+  }
+
+  function cloudErrorLabel(code) {
+    const messages = {
+      LOGIN_CANCELLED: language === "en" ? "Sign-in was cancelled." : "로그인이 취소되었습니다.",
+      POPUP_BLOCKED: language === "en" ? "Allow pop-ups and try again." : "팝업을 허용한 뒤 다시 시도해주세요.",
+      UNAUTHORIZED_DOMAIN: language === "en" ? "This domain is not authorized yet." : "현재 도메인이 Firebase에 허용되지 않았습니다.",
+      PERMISSION_DENIED: language === "en" ? "Cloud save permission was denied." : "클라우드 저장 권한이 거부되었습니다.",
+      NETWORK_ERROR: language === "en" ? "Check your network connection." : "네트워크 연결을 확인해주세요.",
+      CLOUD_ERROR: language === "en" ? "Cloud sync is temporarily unavailable." : "클라우드 동기화를 잠시 사용할 수 없습니다.",
+    };
+    return messages[code] || "";
+  }
+
+  function cloudAccountMarkup(cloud) {
+    if (!cloud || !cloud.configured) {
+      return `<div class="cloud-account disabled"><div><small>OPTIONAL CLOUD SAVE</small><b>${language === "en" ? "Cloud login is being prepared" : "클라우드 로그인 준비 중"}</b></div><p>${language === "en" ? "Guest play and device saves remain available without an account." : "로그인 없이도 게스트 플레이와 기기 저장을 계속 이용할 수 있습니다."}</p></div>`;
+    }
+    const busy = ["connecting", "signing-in", "loading", "saving"].includes(cloud.phase);
+    const error = cloudErrorLabel(cloud.error);
+    if (!cloud.user) {
+      return `<div class="cloud-account"><div><small>OPTIONAL CLOUD SAVE</small><b>${busy ? (language === "en" ? "Connecting..." : "연결 중...") : (language === "en" ? "Continue across devices" : "다른 기기에서도 이어서 플레이")}</b></div><p>${language === "en" ? "Link a Google account to upload or restore this prototype save." : "Google 계정을 연결하면 이 체험판 저장을 업로드하거나 다른 기기에서 불러올 수 있습니다."}</p><button class="cloud-login" data-cloud-login ${busy ? "disabled" : ""}>G&nbsp; ${language === "en" ? "Sign in with Google" : "Google로 로그인"}</button>${error ? `<span class="cloud-error">${error}</span>` : ""}</div>`;
+    }
+    const identity = escapeMarkup(cloud.user.displayName || cloud.user.email || "Google Player");
+    let syncText = language === "en" ? "Cloud save not checked" : "클라우드 저장 확인 전";
+    if (cloud.remoteExists === false) syncText = language === "en" ? "No cloud save yet" : "아직 클라우드 저장 없음";
+    if (cloud.remoteExists === true) {
+      const date = cloud.lastSyncedAt ? new Date(cloud.lastSyncedAt) : null;
+      const formatted = date && !Number.isNaN(date.getTime()) ? date.toLocaleString(language === "en" ? "en-US" : "ko-KR") : "";
+      syncText = formatted ? `${language === "en" ? "Last saved" : "마지막 저장"} ${formatted}` : (language === "en" ? "Cloud save available" : "클라우드 저장 있음");
+    }
+    return `<div class="cloud-account connected"><div class="cloud-identity"><span class="cloud-avatar">G</span><div><small>GOOGLE CLOUD LINKED</small><b>${identity}</b><em>${syncText}</em></div></div><div class="cloud-actions"><button class="secondary" data-cloud-upload ${busy ? "disabled" : ""}>${cloud.phase === "saving" ? (language === "en" ? "Saving..." : "저장 중...") : (language === "en" ? "Upload this device" : "이 기기 저장 업로드")}</button><button class="primary" data-cloud-download ${busy ? "disabled" : ""}>${cloud.phase === "loading" ? (language === "en" ? "Loading..." : "불러오는 중...") : (language === "en" ? "Load cloud save" : "클라우드 저장 불러오기")}</button></div><button class="cloud-signout" data-cloud-signout ${busy ? "disabled" : ""}>${language === "en" ? "Sign out" : "로그아웃"}</button>${error ? `<span class="cloud-error">${error}</span>` : ""}</div>`;
+  }
+
   function accountMarkup() {
     const localLabel = storage.available ? (language === "en" ? "Saved on this device" : "이 기기에 저장 중") : (language === "en" ? "Temporary session" : "임시 세션");
-    return `<div class="account-overlay" data-close-account><section class="account-modal" role="dialog" aria-modal="true" aria-label="Prototype profile" data-account-panel><button class="showcase-close" data-close-account aria-label="닫기">×</button><small>WEB PROTOTYPE PROFILE</small><h2>${profile.nickname}</h2><div class="profile-id"><span>${localLabel}</span><b>${profile.id}</b></div><p>${language === "en" ? "Signals and owned items are stored in this browser. Use the save code to continue on another device. Secure login and cloud sync are in preparation." : "시그널과 보유 상품은 현재 이 브라우저에 저장됩니다. 다른 기기에서는 아래 저장 코드를 복구하세요. 정식 로그인과 클라우드 동기화는 준비 중입니다."}</p><label>${language === "en" ? "SAVE / RESTORE CODE" : "저장·복구 코드"}<textarea data-account-code spellcheck="false"></textarea></label><div class="account-actions"><button class="secondary" data-copy-save>${language === "en" ? "Copy save code" : "저장 코드 복사"}</button><button class="primary" data-restore-save ${screen === "game" ? "disabled" : ""}>${language === "en" ? "Restore on this device" : "이 기기에 복구"}</button></div><span class="account-warning">${language === "en" ? "Prototype data can be reset when browser storage is cleared. Real-money payments remain disabled." : "브라우저 데이터를 삭제하면 체험판 기록이 사라질 수 있습니다. 실제 결제는 비활성화 상태입니다."}</span></section></div>`;
+    const cloud = window.XenaCloudSync ? window.XenaCloudSync.snapshot() : null;
+    return `<div class="account-overlay" data-close-account><section class="account-modal" role="dialog" aria-modal="true" aria-label="Prototype profile" data-account-panel><button class="showcase-close" data-close-account aria-label="닫기">×</button><small>WEB PROTOTYPE PROFILE</small><h2>${profile.nickname}</h2><div class="profile-id"><span>${localLabel}</span><b>${profile.id}</b></div><p>${language === "en" ? "Your current progress is saved in this browser. Keep the save code as a manual backup." : "현재 진행 기록은 이 브라우저에 저장됩니다. 아래 저장 코드는 수동 백업용으로 보관할 수 있습니다."}</p><div data-cloud-account>${cloudAccountMarkup(cloud)}</div><label>${language === "en" ? "MANUAL SAVE / RESTORE CODE" : "수동 저장·복구 코드"}<textarea data-account-code spellcheck="false"></textarea></label><div class="account-actions"><button class="secondary" data-copy-save>${language === "en" ? "Copy save code" : "저장 코드 복사"}</button><button class="primary" data-restore-save ${screen === "game" ? "disabled" : ""}>${language === "en" ? "Restore on this device" : "이 기기에 복구"}</button></div><span class="account-warning">${language === "en" ? "Prototype cloud sync is optional. Real-money payments and premium balances remain disabled." : "체험판 클라우드 동기화는 선택 사항입니다. 실제 결제와 유료 재화 연동은 비활성화 상태입니다."}</span></section></div>`;
   }
 
   function openAccount() {
@@ -511,8 +550,13 @@
     const overlay = document.querySelector(".account-overlay");
     const textarea = overlay.querySelector("[data-account-code]");
     textarea.value = backupCode();
+    let unsubscribeCloud = () => {};
+    const closeAccount = () => {
+      unsubscribeCloud();
+      overlay.remove();
+    };
     overlay.querySelectorAll("[data-close-account]").forEach((element) => element.addEventListener("click", (event) => {
-      if (event.target === element || event.target.closest(".showcase-close")) overlay.remove();
+      if (event.target === element || event.target.closest(".showcase-close")) closeAccount();
     }));
     overlay.querySelector("[data-copy-save]").addEventListener("click", async (event) => {
       textarea.select();
@@ -524,12 +568,61 @@
     if (restore) restore.addEventListener("click", () => {
       try {
         restoreBackup(textarea.value.trim());
-        overlay.remove();
+        closeAccount();
         refreshCurrentScreen();
       } catch (_) {
         alert(language === "en" ? "This save code is invalid." : "저장 코드를 확인해주세요.");
       }
     });
+
+    const cloud = window.XenaCloudSync;
+    if (!cloud) return;
+    const updateCloudPanel = (cloudState) => {
+      const panel = overlay.querySelector("[data-cloud-account]");
+      if (!panel) return;
+      panel.innerHTML = cloudAccountMarkup(cloudState);
+      const login = panel.querySelector("[data-cloud-login]");
+      if (login) login.addEventListener("click", async () => {
+        try {
+          await cloud.signIn();
+          const remote = await cloud.load();
+          if (!remote) {
+            await cloud.save(backupCode());
+            alert(language === "en" ? "This device save is now backed up to the cloud." : "이 기기의 저장 기록을 클라우드에 처음 백업했습니다.");
+          } else if (screen !== "game" && confirm(language === "en" ? "A cloud save already exists. Load it on this device now?" : "기존 클라우드 저장이 있습니다. 지금 이 기기에 불러올까요?")) {
+            restoreBackup(remote.saveCode);
+            closeAccount();
+            refreshCurrentScreen();
+          }
+        } catch (_) { /* The cloud panel shows a localized error. */ }
+      });
+      const upload = panel.querySelector("[data-cloud-upload]");
+      if (upload) upload.addEventListener("click", async () => {
+        if (cloudState.remoteExists && !confirm(language === "en" ? "Replace the cloud save with this device's progress?" : "클라우드 저장을 이 기기의 진행 기록으로 덮어쓸까요?")) return;
+        try {
+          await cloud.save(backupCode());
+          alert(language === "en" ? "Cloud save complete." : "클라우드 저장을 완료했습니다.");
+        } catch (_) { /* The cloud panel shows a localized error. */ }
+      });
+      const download = panel.querySelector("[data-cloud-download]");
+      if (download) download.addEventListener("click", async () => {
+        if (screen === "game") return alert(language === "en" ? "Return to the lobby before loading a cloud save." : "클라우드 저장은 대전을 종료하고 로비에서 불러와주세요.");
+        if (!confirm(language === "en" ? "Replace this device's progress with the cloud save?" : "이 기기의 진행 기록을 클라우드 저장으로 교체할까요?")) return;
+        try {
+          const remote = await cloud.load();
+          if (!remote) return alert(language === "en" ? "No cloud save was found." : "불러올 클라우드 저장이 없습니다.");
+          restoreBackup(remote.saveCode);
+          closeAccount();
+          refreshCurrentScreen();
+        } catch (_) { /* The cloud panel shows a localized error. */ }
+      });
+      const signout = panel.querySelector("[data-cloud-signout]");
+      if (signout) signout.addEventListener("click", async () => {
+        try { await cloud.signOut(); } catch (_) { /* The cloud panel shows a localized error. */ }
+      });
+    };
+    unsubscribeCloud = cloud.subscribe(updateCloudPanel);
+    cloud.connect().catch(() => {});
   }
 
   function rankLabel() {
