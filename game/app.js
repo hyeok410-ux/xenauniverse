@@ -369,6 +369,7 @@
   let playerColor = "white";
   let thinking = false;
   let result = null;
+  let chestOpened = false;
   let lastVisualMove = null;
   let cinematicAction = null;
   let visualNonce = 0;
@@ -851,7 +852,7 @@
       saveMeta();
     }
     if (gameMode === "online") return renderOnlineLobby();
-    screen = "game"; result = null; selected = null; selectedSkill = null; thinking = false; promotionChoices = [];
+    screen = "game"; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = [];
     replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
     const enemy = chosen === "xena" ? "sovran" : "xena";
     state = G.createInitialState({ whitePack: chosen, blackPack: enemy });
@@ -1070,6 +1071,8 @@
     const replayExit = document.getElementById("replay-exit"); if (replayExit) replayExit.addEventListener("click", exitGame);
     const again = document.getElementById("again"); if (again) again.addEventListener("click", startGame);
     const replay = document.getElementById("replay"); if (replay) replay.addEventListener("click", startReplay);
+    bindRewardChest();
+    if (result && result.celebrate) launchFireworks();
     if (window.OverrideGridScene) {
       window.OverrideGridScene.mount(document.getElementById("scene3d"));
       window.OverrideGridScene.sync(state, { selected, legal, action: lastVisualMove });
@@ -1155,7 +1158,9 @@
     }
     lastReplay = snapshots.map(cloneState);
     const title = draw ? t("draw") : localGame ? `${winner === "white" ? t("playerOne") : t("playerTwo")} ${t("win")}` : win ? t("win") : t("defeat");
-    result = { title, reason, reward: creditReward, shards: shardReward, bonus: eventBonus, localGame };
+    const celebrate = win || (localGame && !draw);
+    result = { title, reason, reward: creditReward, shards: shardReward, bonus: eventBonus, localGame, win, celebrate };
+    chestOpened = false;
     renderGame();
   }
 
@@ -1216,8 +1221,101 @@
   function resultMarkup() {
     const shardTotal = result.shards + result.bonus;
     const chest = shardTotal >= 10 ? "chest_signal_override_v1.png" : shardTotal >= 5 ? "chest_signal_epic_v1.png" : result.reward >= 50 ? "chest_signal_rare_v1.png" : "chest_signal_common_v1.png";
-    const rewards = result.localGame ? "" : `<div class="reward-visual"><img src="${assetSrc("ui", chest)}" alt="보상 상자"></div><div class="reward"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${language === "en" ? "Signal Credits" : "시그널 크레딧"} +${result.reward}</div>${result.shards || result.bonus ? `<div class="reward shard-reward"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${language === "en" ? "Anomaly Shards" : "변칙 파편"} +${shardTotal}${result.bonus ? (language === "en" ? " (completion bonus)" : " (완주 보너스 포함)") : ""}</div>` : ""}`;
-    return `<div class="result-overlay"><div class="result-box"><h2>${result.title}</h2><p>${result.reason}</p>${rewards}<div class="actions"><button class="secondary" id="replay">${t("replay")}</button><button class="primary" id="again">${language === "en" ? "Play Again" : "다시 대전"}</button></div></div></div>`;
+    let rewards = "";
+    if (!result.localGame) {
+      const opened = chestOpened ? " is-open" : "";
+      const rewardList = `<div class="reward-list${chestOpened ? " reveal" : ""}" id="reward-list">`
+        + `<div class="reward"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${language === "en" ? "Signal Credits" : "시그널 크레딧"} +${result.reward}</div>`
+        + `${result.shards || result.bonus ? `<div class="reward shard-reward"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${language === "en" ? "Anomaly Shards" : "변칙 파편"} +${shardTotal}${result.bonus ? (language === "en" ? " (completion bonus)" : " (완주 보너스 포함)") : ""}</div>` : ""}`
+        + `</div>`;
+      const hint = chestOpened ? "" : `<div class="chest-hint" id="chest-hint">${language === "en" ? "TAP TO OPEN" : "탭하여 열기"}</div>`;
+      rewards = `<div class="reward-visual${opened}" id="chest-open" role="button" tabindex="0" aria-label="${language === "en" ? "Open reward chest" : "보상 상자 열기"}">`
+        + `<span class="chest-glow"></span><span class="chest-sparks" id="chest-sparks"></span>`
+        + `<img src="${assetSrc("ui", chest)}" alt="${language === "en" ? "Reward chest" : "보상 상자"}"></div>`
+        + hint + rewardList;
+    }
+    const fireworks = result.celebrate ? `<canvas class="fireworks" id="fireworks"></canvas>` : "";
+    return `<div class="result-overlay${result.celebrate ? " win" : ""}">${fireworks}<div class="result-box"><h2>${result.title}</h2><p>${result.reason}</p>${rewards}<div class="actions"><button class="secondary" id="replay">${t("replay")}</button><button class="primary" id="again">${language === "en" ? "Play Again" : "다시 대전"}</button></div></div></div>`;
+  }
+
+  function bindRewardChest() {
+    const chestEl = document.getElementById("chest-open");
+    if (!chestEl || chestOpened) return;
+    const open = () => {
+      if (chestOpened) return;
+      chestOpened = true;
+      chestEl.classList.add("is-open");
+      const hint = document.getElementById("chest-hint");
+      if (hint) hint.remove();
+      const sparks = document.getElementById("chest-sparks");
+      if (sparks) {
+        for (let i = 0; i < 14; i++) {
+          const s = document.createElement("i");
+          const ang = (Math.PI * 2 * i) / 14 + Math.random() * 0.4;
+          const dist = 34 + Math.random() * 26;
+          s.style.setProperty("--sx", `${Math.cos(ang) * dist}px`);
+          s.style.setProperty("--sy", `${Math.sin(ang) * dist - 10}px`);
+          s.style.animationDelay = `${Math.random() * 90}ms`;
+          sparks.appendChild(s);
+        }
+      }
+      const list = document.getElementById("reward-list");
+      if (list) list.classList.add("reveal");
+    };
+    chestEl.addEventListener("click", open);
+    chestEl.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+  }
+
+  function launchFireworks() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const canvas = document.getElementById("fireworks");
+    if (!canvas || !canvas.getContext) return;
+    if (canvas.dataset.running === "1") return;
+    canvas.dataset.running = "1";
+    const ctx = canvas.getContext("2d");
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    function resize() {
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener("resize", resize);
+    const colors = ["#32e6ef", "#a06bff", "#ff2fb0", "#ffd66b", "#ffffff"];
+    let particles = [];
+    let bursts = 0;
+    const maxBursts = 7;
+    function burst() {
+      if (bursts >= maxBursts) return;
+      bursts++;
+      const cx = canvas.offsetWidth * (0.2 + Math.random() * 0.6);
+      const cy = canvas.offsetHeight * (0.15 + Math.random() * 0.4);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const count = 34 + Math.floor(Math.random() * 18);
+      for (let i = 0; i < count; i++) {
+        const ang = (Math.PI * 2 * i) / count;
+        const speed = 1.6 + Math.random() * 3.4;
+        particles.push({ x: cx, y: cy, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, life: 1, color });
+      }
+      if (bursts < maxBursts) setTimeout(burst, 260 + Math.random() * 320);
+    }
+    function frame() {
+      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+      particles.forEach((p) => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.045; p.vx *= 0.985; p.life -= 0.016;
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+      particles = particles.filter((p) => p.life > 0);
+      if (particles.length || bursts < maxBursts) requestAnimationFrame(frame);
+      else { window.removeEventListener("resize", resize); canvas.dataset.running = "0"; }
+    }
+    burst();
+    frame();
   }
 
   function startReplay() {

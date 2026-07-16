@@ -217,11 +217,29 @@ noscript { display: block; margin: 40px auto; padding: 16px; width: min(560px, c
 .result-box { width: min(430px, calc(100% - 32px)); border: 1px solid var(--cyan); background: #090c13; padding: 30px; text-align: center; box-shadow: 0 0 60px rgba(50,230,239,.2); }
 .result-box h2 { margin: 0; font-size: 56px; }
 .result-box p { color: #aeb5c8; }
-.reward-visual { width: 142px; height: 92px; margin: -2px auto 5px; overflow: hidden; }
-.reward-visual img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.18); filter: drop-shadow(0 0 16px rgba(255,214,107,.4)); }
+.reward-visual { position: relative; width: 142px; height: 100px; margin: 6px auto 4px; overflow: visible; cursor: pointer; border: none; background: none; outline: none; -webkit-tap-highlight-color: transparent; }
+.reward-visual img { position: relative; z-index: 2; width: 100%; height: 92px; object-fit: cover; transform: scale(1.18); filter: drop-shadow(0 0 16px rgba(255,214,107,.4)); transition: transform .3s ease, filter .3s ease; animation: chest-idle 2.4s ease-in-out infinite; }
+.reward-visual:hover img { transform: scale(1.24); filter: drop-shadow(0 0 24px rgba(255,214,107,.65)); }
+.reward-visual .chest-glow { position: absolute; left: 50%; top: 52%; width: 150px; height: 150px; transform: translate(-50%,-50%) scale(.4); border-radius: 50%; z-index: 1; opacity: 0; pointer-events: none; background: radial-gradient(circle, rgba(255,214,107,.85), rgba(160,107,255,.35) 45%, transparent 70%); }
+.reward-visual.is-open { cursor: default; animation: chest-pop .5s ease; }
+.reward-visual.is-open img { animation: none; transform: scale(1.28); filter: drop-shadow(0 0 30px rgba(255,214,107,.9)) drop-shadow(0 0 60px rgba(160,107,255,.5)); }
+.reward-visual.is-open .chest-glow { animation: chest-flash .8s ease-out forwards; }
+.chest-sparks { position: absolute; left: 50%; top: 50%; width: 0; height: 0; z-index: 3; pointer-events: none; }
+.chest-sparks i { position: absolute; left: 0; top: 0; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: #ffd66b; box-shadow: 0 0 8px #ffd66b; opacity: 0; animation: spark-fly .7s ease-out forwards; }
+.chest-hint { font-family: var(--mono, monospace); font-size: 11px; letter-spacing: .22em; color: var(--gold); margin: 2px 0 8px; animation: hint-pulse 1.3s ease-in-out infinite; }
+.reward-list { display: none; opacity: 0; }
+.reward-list.reveal { display: block; animation: reward-reveal .5s ease forwards; }
 .reward { display: flex; align-items: center; justify-content: center; gap: 7px; color: var(--gold); font-weight: 850; }
 .reward img { width: 24px; height: 24px; object-fit: cover; border-radius: 50%; }
 .shard-reward { margin-top: 6px; color: #cdb9ff; }
+.fireworks { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+.result-overlay.win .result-box { position: relative; z-index: 2; }
+@keyframes chest-idle { 0%, 100% { transform: scale(1.18); } 50% { transform: scale(1.22) translateY(-2px); } }
+@keyframes chest-pop { 0% { transform: scale(1); } 30% { transform: translateX(-3px) scale(1.02); } 45% { transform: translateX(3px) scale(1.03); } 60% { transform: translateX(-2px); } 100% { transform: translateX(0) scale(1); } }
+@keyframes chest-flash { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.35); } 40% { opacity: 1; transform: translate(-50%,-50%) scale(1.05); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(1.5); } }
+@keyframes spark-fly { 0% { opacity: 0; transform: translate(0,0) scale(1); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(.2); } }
+@keyframes hint-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+@keyframes reward-reveal { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
 .store-page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 44px 0 70px; }
 .store-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 34px; }
