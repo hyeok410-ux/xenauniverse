@@ -748,7 +748,7 @@
         : item.kind === "skin" || item.kind === "effect"
           ? `<button class="secondary" data-go-my-units>${language === "en" ? "SET IN MY UNITS" : "내 유닛에서 설정"}</button>`
           : `<button class="secondary" disabled>${language === "en" ? "ACTIVE" : "자동 활성화"}</button>`;
-      return `<article class="shop-card kind-${item.kind} ${ownedItem ? "owned" : ""} ${selected ? "equipped" : ""}"><button class="shop-visual" data-preview-shop="${item.id}" aria-label="${item.name} 자세히 보기"><img class="shop-art" src="${shopArtSrc(item)}" alt="${item.name}"><span>VIEW</span>${ownedItem ? `<b class="owned-ribbon">${language === "en" ? "OWNED" : "보유 중"}</b>` : ""}</button><div class="shop-copy"><small>${details.role} · ${details.tier}</small><h2>${item.name}</h2><p>${item.description}</p><b>${ownedItem ? (language === "en" ? "OWNED" : "보유 중") : cosmeticPrice(item)}</b><div class="shop-card-actions">${ownedItem ? ownedAction : `<button class="primary" data-buy-cosmetic="${item.id}">${t("purchase")}</button>`}</div></div></article>`;
+      return `<article class="shop-card kind-${item.kind} ${ownedItem ? "owned" : ""} ${selected ? "equipped" : ""}"><button class="shop-visual" data-preview-shop="${item.id}" aria-label="${item.name} 자세히 보기"><img class="shop-art" src="${shopArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span>VIEW</span>${ownedItem ? `<b class="owned-ribbon">${language === "en" ? "OWNED" : "보유 중"}</b>` : ""}</button><div class="shop-copy"><small>${details.role} · ${details.tier}</small><h2>${item.name}</h2><p>${item.description}</p><b>${ownedItem ? (language === "en" ? "OWNED" : "보유 중") : cosmeticPrice(item)}</b><div class="shop-card-actions">${ownedItem ? ownedAction : `<button class="primary" data-buy-cosmetic="${item.id}">${t("purchase")}</button>`}</div></div></article>`;
     };
     const paymentCard = (item) => `<article class="shop-card payment-card coming-soon"><small>ANOMALY SHARD · COMING SOON</small><h2>${item.name}</h2><p>${language === "en" ? "Secure account ledger and checkout are in preparation" : "계정 장부와 안전 결제 연동을 준비 중입니다"}</p><b>${item.price}</b><div class="shop-card-actions"><button class="primary" disabled>${language === "en" ? "PAYMENT IN PREPARATION" : "결제 준비 중"}</button></div></article>`;
     const section = (title, note, items) => `<section class="store-section"><div class="section-title"><h2>${title}</h2><span>${note}</span></div><div class="shop-grid">${items.map(cosmeticCard).join("")}</div></section>`;
@@ -773,7 +773,7 @@
     const unlocked = CODEX_CARDS.filter(ownsCodexCard).length;
     const entry = (card) => {
       const isOwned = ownsCodexCard(card);
-      return `<button class="codex-entry ${isOwned ? "owned" : "locked"}" data-preview-codex="${card.id}"><span class="codex-art"><img src="${itemArtSrc(card)}" alt="${card.name}"></span><span class="codex-meta"><small>${card.faction} · ${card.rarity}</small><b>${card.name}</b><em>${roleLabel(card.role)}</em><span>${isOwned ? "보유 중" : `시그널 ${card.credit.toLocaleString()}`}</span></span></button>`;
+      return `<button class="codex-entry ${isOwned ? "owned" : "locked"}" data-preview-codex="${card.id}"><span class="codex-art"><img src="${itemArtSrc(card)}" alt="${card.name}" loading="lazy" decoding="async"></span><span class="codex-meta"><small>${card.faction} · ${card.rarity}</small><b>${card.name}</b><em>${roleLabel(card.role)}</em><span>${isOwned ? "보유 중" : `시그널 ${card.credit.toLocaleString()}`}</span></span></button>`;
     };
     const factionGroup = (packId, title) => `<section class="codex-faction"><div class="section-title"><h2>${title}</h2><span>${owned.includes(packId) ? "팩 보유 · 12명 자동 해금" : "미보유 캐릭터는 개별 해금 가능"}</span></div><div class="codex-grid">${CODEX_CARDS.filter((card) => card.pack === packId).map(entry).join("")}</div></section>`;
     app.innerHTML = `<div class="shell codex-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="codex-page"><div class="store-heading"><div><small>ALL CHARACTER ARCHIVE · WEB PROTOTYPE</small><h1>UNIT <span>CODEX</span></h1><p>현재 게임의 모든 캐릭터를 확인하고 해금하는 곳입니다. 보유 캐릭터는 컬러, 미보유 캐릭터는 무채색으로 표시됩니다.</p></div><div class="header-actions"><button class="primary" data-open-units>내 유닛</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><div class="codex-progress"><span>전체 캐릭터 컬렉션</span><b>${unlocked} / ${CODEX_CARDS.length} 보유</b></div>${factionGroup("xena", "XENA · REBEL MEMORY")}${factionGroup("sovran", "SOVRAN · SYSTEM DOMINION")}</section></div>`;
@@ -814,8 +814,8 @@
       return `<button class="formation-slot ${entry.key === slot.key ? "selected" : ""}" data-unit-slot="${entry.key}">${unitPortraitMarkup(character)}<span><small>${entry.label}</small><b>${unit ? unit.name : character}</b></span></button>`;
     };
     const choiceCard = (unit) => `<button class="unit-choice ${unit.character === selectedCharacter ? "selected" : ""}" data-equip-character="${unit.character}">${unitPortraitMarkup(unit.character)}<span><b>${unit.name}</b><small>${unit.faction}</small></span></button>`;
-    const skinChoice = (item) => `<button class="appearance-choice ${unitSkins[selectedCharacter] === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-skin="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
-    const effectChoice = (item) => `<button class="appearance-choice ${effectSetting.id === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-effect="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
+    const skinChoice = (item) => `<button class="appearance-choice ${unitSkins[selectedCharacter] === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-skin="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
+    const effectChoice = (item) => `<button class="appearance-choice ${effectSetting.id === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-effect="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
     app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>내 <span>유닛</span></h1><p>보유 캐릭터를 같은 직업 슬롯에 장착하고, 캐릭터별 스킨과 공격 이펙트를 설정합니다.</p></div><div class="header-actions"><button class="secondary" data-open-codex>도감</button><button class="secondary" data-open-store>상점</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><div class="loadout-pack-tabs">${availablePacks.map((packId) => `<button class="${lineupPack === packId ? "active" : ""}" data-lineup-pack="${packId}">${G.PACKS[packId].leaderName} · ${G.PACKS[packId].name}</button>`).join("")}</div><div class="units-layout"><section><div class="section-title"><h2>12 UNIT FORMATION</h2><span>동일 캐릭터는 한 자리만 편성 가능</span></div><div class="formation-grid">${FORMATION_SLOTS.map(slotCard).join("")}</div></section><aside class="unit-config"><div class="selected-unit-hero">${unitPortraitMarkup(selectedCharacter, "hero-portrait")}<div><small>${slot.label}</small><h2>${selectedUnit ? selectedUnit.name : selectedCharacter}</h2><span>${selectedUnit ? selectedUnit.faction : ""}</span></div></div><div class="config-block"><div class="section-title"><h3>캐릭터 교체</h3><span>같은 직업 중 현재 편성되지 않은 보유 캐릭터만 표시</span></div><div class="unit-choice-grid">${candidates.map(choiceCard).join("")}</div></div><div class="config-block"><div class="section-title"><h3>스킨</h3><span>상점에서 구매한 전용 외형</span></div><div class="appearance-grid"><button class="appearance-choice ${unitSkins[selectedCharacter] ? "" : "selected"}" data-apply-skin=""><span><b>기본 외형</b><small>보유</small></span></button>${skinItems.map(skinChoice).join("")}</div></div><div class="config-block"><div class="section-title"><h3>공격 이펙트</h3><label class="effect-toggle"><input type="checkbox" data-toggle-effect ${effectSetting.id && effectSetting.enabled !== false ? "checked" : ""} ${effectSetting.id ? "" : "disabled"}><span>효과 ${effectSetting.enabled !== false && effectSetting.id ? "ON" : "OFF"}</span></label></div><div class="appearance-grid"><button class="appearance-choice ${effectSetting.id ? "" : "selected"}" data-apply-effect=""><span><b>캐릭터 기본 효과</b><small>기본</small></span></button>${effectItems.map(effectChoice).join("")}</div></div></aside></div></section></div>`;
     bindStoreButton();
     document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
@@ -1334,46 +1334,6 @@
 
   function exitGame() { clearInterval(timer); replayMode = false; promotionChoices = []; screen = "setup"; state = null; result = null; renderSetup(); }
 
-  // ── 관리자 전용 잠금 해제 (대표님 개인 브라우저에서만 사용) ──
-  // 코드를 바꾸고 싶으면 아래 문자열만 원하는 값으로 수정하면 됩니다.
-  const ADMIN_CODE = "xenaadmin";
-  let adminKeyBuffer = "";
-
-  function unlockEverything() {
-    credits = 999999;
-    shards = 999999;
-    owned = Object.keys(G.PACKS);
-    cosmeticOwned = SHOP_ITEMS.map((item) => item.id);
-    codexOwned = CODEX_CARDS.map((card) => card.id);
-    saveMeta();
-    showAdminToast(language === "en" ? "ADMIN UNLOCK — everything granted" : "관리자 해제 — 전부 지급됨");
-    refreshCurrentScreen();
-  }
-
-  function showAdminToast(message) {
-    const el = document.createElement("div");
-    el.className = "admin-toast";
-    el.textContent = message;
-    document.body.appendChild(el);
-    setTimeout(() => el.classList.add("show"), 10);
-    setTimeout(() => { el.classList.remove("show"); setTimeout(() => el.remove(), 400); }, 2200);
-  }
-
-  function refreshCurrentScreen() {
-    if (screen === "store") renderStore();
-    else if (screen === "codex") renderCodex();
-    else if (screen === "units") renderMyUnits();
-    else if (screen === "online") renderOnlineLobby();
-    else if (screen === "game") renderGame();
-    else renderSetup();
-  }
-
-  window.addEventListener("keydown", (event) => {
-    if (event.key.length !== 1) return;
-    adminKeyBuffer = (adminKeyBuffer + event.key.toLowerCase()).slice(-ADMIN_CODE.length);
-    if (adminKeyBuffer === ADMIN_CODE) { adminKeyBuffer = ""; unlockEverything(); }
-  });
-
   const launchParams = new URLSearchParams(window.location.search);
   saveMeta();
   if (launchParams.get("screen") === "store") renderStore();
@@ -1382,5 +1342,4 @@
   else if (launchParams.get("demo") === "1") startGame();
   else renderSetup();
   if (launchParams.get("account") === "1") setTimeout(openAccount, 0);
-  if (launchParams.get("admin") === ADMIN_CODE) setTimeout(unlockEverything, 0);
 })();
