@@ -1051,6 +1051,11 @@
     if (window.OverrideGridScene) window.OverrideGridScene.reset();
     renderGame();
     if (online.room.status === "finished") {
+      if (online.room.finishReason === "resignation") {
+        const won = online.room.winnerColor === playerColor;
+        finish(online.room.winnerColor, won ? (language === "en" ? "Your opponent resigned." : "상대가 기권했습니다.") : (language === "en" ? "You resigned from the match." : "대전에서 기권했습니다."));
+        return;
+      }
       const status = G.getGameStatus(state);
       if (status.over) finish(status.result, status.reason);
     }
@@ -1080,6 +1085,11 @@
       animating = false;
       cinematicAction = null;
       thinking = false;
+      if (online.room.status === "finished" && online.room.finishReason === "resignation") {
+        const won = online.room.winnerColor === playerColor;
+        finish(online.room.winnerColor, won ? (language === "en" ? "Your opponent resigned." : "상대가 기권했습니다.") : (language === "en" ? "You resigned from the match." : "대전에서 기권했습니다."));
+        return;
+      }
       const status = G.getGameStatus(state);
       if (online.room.status === "finished" && status.over) finish(status.result, status.reason);
       else renderGame();
@@ -1167,7 +1177,10 @@
 
   function boardMarkup() {
     let html = "";
-    for (let row = 5; row >= 0; row -= 1) for (let col = 0; col < 6; col += 1) {
+    const flipped = gameMode === "online" && playerColor === "black";
+    const rows = flipped ? [0, 1, 2, 3, 4, 5] : [5, 4, 3, 2, 1, 0];
+    const columns = flipped ? [5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5];
+    for (const row of rows) for (const col of columns) {
       const index = G.indexOf(row, col);
       const piece = state.board[index];
       const targets = legal.filter((move) => move.to === index && (!selectedSkill || move.skill === selectedSkill));
@@ -1260,9 +1273,10 @@
     const localSide = gameMode === "local";
     const opponentLabel = gameMode === "online" ? (language === "en" ? "ONLINE OPPONENT" : "온라인 상대") : t("opponent");
     const sideLabel = localSide ? (color === "white" ? t("playerOne") : t("playerTwo")) : (enemy ? opponentLabel : t("player"));
+    const timerLabel = gameMode === "online" ? (state.turn === color ? (language === "en" ? "TURN" : "차례") : (language === "en" ? "WAIT" : "대기")) : formatTime(clocks[color]);
     if (localSide) enemy = false;
     return `<aside class="side-panel ${enemy ? "enemy-panel" : ""}"><div class="combatant ${enemy ? "enemy" : ""}"><small>${sideLabel}</small><h2>${pack.leaderName}</h2>
-      <div class="timer ${state.turn === color ? "active" : ""}">${formatTime(clocks[color])}</div><div class="awakening ${state.awakened[color] ? "on" : ""}">${state.awakened[color] ? "OVERRIDE ACTIVE" : "CATALYST LINKED"}</div></div>
+      <div class="timer ${state.turn === color ? "active" : ""}">${timerLabel}</div><div class="awakening ${state.awakened[color] ? "on" : ""}">${state.awakened[color] ? "OVERRIDE ACTIVE" : "CATALYST LINKED"}</div></div>
       <div class="skill-list">${skillButtons(color)}</div>${enemy ? "" : focusCard()}<div><small>${t("captured")}</small><div class="captured">${capturedMarkup(color)}</div></div>
       ${enemy ? "" : `<div class="log">${state.log.slice(-12).reverse().map((entry) => `${entry.ply + 1}. ${entry.move.skill ? skillText(entry.move.skill, 0) : (language === "en" ? "Move" : "말 이동")}`).join("<br>") || t("firstMove")}</div>`}</aside>`;
   }
@@ -1328,7 +1342,7 @@
     if (result && result.celebrate) launchFireworks();
     if (window.OverrideGridScene) {
       window.OverrideGridScene.mount(document.getElementById("scene3d"));
-      window.OverrideGridScene.sync(state, { selected, legal, action: lastVisualMove });
+      window.OverrideGridScene.sync(state, { selected, legal, action: lastVisualMove, flipped: gameMode === "online" && playerColor === "black" });
     }
   }
 
@@ -1480,6 +1494,8 @@
         clocks: { ...clocks },
         action,
         finished: status.over,
+        winnerColor: status.over ? status.result : null,
+        finishReason: status.over ? status.reason : "",
       });
       onlineRevision = Math.max(onlineRevision, expectedRevision + 1);
       thinking = false;
@@ -1616,7 +1632,31 @@
     renderGame();
   }
 
-  function exitGame() { clearInterval(timer); replayMode = false; promotionChoices = []; screen = "setup"; state = null; result = null; if (gameMode === "online" && window.OverrideGridOnline) window.OverrideGridOnline.leave(); renderSetup(); }
+  function exitGame() {
+    const online = gameMode === "online" && window.OverrideGridOnline ? window.OverrideGridOnline.snapshot() : null;
+    if (online && online.room && online.room.status === "active" && !result) {
+      const confirmed = confirm(language === "en" ? "Resign and leave this online match?" : "온라인 대전에서 기권하고 나갈까요?");
+      if (!confirmed) return;
+      thinking = true;
+      renderGame();
+      window.OverrideGridOnline.resign().then((submitted) => {
+        if (!submitted) {
+          thinking = false;
+          alert(language === "en" ? "The resignation could not be synchronized." : "기권을 동기화하지 못했습니다.");
+          renderGame();
+        }
+      });
+      return;
+    }
+    clearInterval(timer);
+    replayMode = false;
+    promotionChoices = [];
+    screen = "setup";
+    state = null;
+    result = null;
+    if (online) window.OverrideGridOnline.leave();
+    renderSetup();
+  }
 
   const launchParams = new URLSearchParams(window.location.search);
   saveMeta();

@@ -60,6 +60,12 @@
     return cloudContext && cloudContext.auth && cloudContext.auth.currentUser;
   }
 
+  function roomExpired(room) {
+    if (!room || !room.expiresAt) return false;
+    const milliseconds = typeof room.expiresAt.toMillis === "function" ? room.expiresAt.toMillis() : new Date(room.expiresAt).getTime();
+    return Number.isFinite(milliseconds) && milliseconds <= Date.now();
+  }
+
   async function connect() {
     const cloud = window.XenaCloudSync;
     if (!cloud || !cloud.snapshot().configured) {
@@ -118,6 +124,7 @@
         const roomSnapshot = await transaction.get(reference);
         if (!roomSnapshot.exists()) throw new Error("ROOM_NOT_FOUND");
         const room = roomSnapshot.data();
+        if (roomExpired(room)) throw new Error("ROOM_FINISHED");
         if (room.status === "finished" || room.status === "cancelled") throw new Error("ROOM_FINISHED");
         if (room.hostUid === user.uid || room.guestUid === user.uid) return;
         if (options.reconnect) throw new Error("ROOM_NOT_FOUND");
@@ -168,6 +175,8 @@
       revision: 0,
       lastAction: null,
       lastActorUid: null,
+      winnerColor: null,
+      finishReason: null,
       emote: null,
       createdAt: cloudContext.firestoreApi.serverTimestamp(),
       updatedAt: cloudContext.firestoreApi.serverTimestamp(),
@@ -196,7 +205,7 @@
         if (room.turnUid !== user.uid) throw new Error("NOT_YOUR_TURN");
         if (room.revision !== payload.expectedRevision) throw new Error("REVISION_CONFLICT");
         const nextTurnUid = payload.gameState.turn === "white" ? room.whiteUid : room.blackUid;
-        transaction.update(reference, {
+        const update = {
           stateJson: JSON.stringify(payload.gameState),
           clocks: payload.clocks,
           turnUid: nextTurnUid,
@@ -205,7 +214,12 @@
           lastAction: payload.action || null,
           lastActorUid: user.uid,
           updatedAt: cloudContext.firestoreApi.serverTimestamp(),
-        });
+        };
+        if (payload.finished) {
+          update.winnerColor = payload.winnerColor || "draw";
+          update.finishReason = payload.finishReason || "game-over";
+        }
+        transaction.update(reference, update);
       });
       return true;
     } catch (error) {
@@ -221,6 +235,35 @@
       await cloudContext.firestoreApi.updateDoc(roomReference(state.roomCode), {
         emote: { id: message.emoteId, uid: user.uid, nonce: Date.now() },
         updatedAt: cloudContext.firestoreApi.serverTimestamp(),
+      });
+      return true;
+    } catch (error) {
+      notify({ lastError: errorCode(error) });
+      return false;
+    }
+  }
+
+  async function resign() {
+    if (!state.roomCode || !state.room || state.room.status !== "active") return false;
+    const reference = roomReference(state.roomCode);
+    const user = currentUser();
+    try {
+      await cloudContext.firestoreApi.runTransaction(cloudContext.db, async (transaction) => {
+        const roomSnapshot = await transaction.get(reference);
+        if (!roomSnapshot.exists()) throw new Error("ROOM_NOT_FOUND");
+        const room = roomSnapshot.data();
+        if (room.status !== "active") throw new Error("ROOM_FINISHED");
+        const color = room.whiteUid === user.uid ? "white" : room.blackUid === user.uid ? "black" : "";
+        if (!color) throw new Error("PERMISSION_DENIED");
+        transaction.update(reference, {
+          status: "finished",
+          winnerColor: color === "white" ? "black" : "white",
+          finishReason: "resignation",
+          revision: room.revision + 1,
+          lastAction: { kind: "resign", color },
+          lastActorUid: user.uid,
+          updatedAt: cloudContext.firestoreApi.serverTimestamp(),
+        });
       });
       return true;
     } catch (error) {
@@ -249,6 +292,7 @@
     createRoom,
     joinRoom: openRoom,
     submit,
+    resign,
     send,
     leave,
     normalizeCode,

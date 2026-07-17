@@ -22,8 +22,10 @@
   let resizeObserver;
   let running = false;
   let lastTime = 0;
+  let viewFlipped = false;
 
   function squarePosition(index) {
+    if (viewFlipped) index = SIZE * SIZE - 1 - index;
     const row = Math.floor(index / SIZE);
     const col = index % SIZE;
     // DOM row 0 is the top rank. Positive world Z is the top of the camera view.
@@ -257,6 +259,7 @@
 
   function sync(state, ui) {
     if (!renderer) init();
+    viewFlipped = Boolean(ui && ui.flipped);
     const seen = new Set();
     const next = new Map();
     if (!SHOW_FIGURES) {
