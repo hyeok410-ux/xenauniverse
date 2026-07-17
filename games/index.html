@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>XENA GAMES — 게임 아케이드</title>
+<meta name="description" content="XENA 유니버스의 무료 웹게임 — OVERRIDE GRID 전략 체스, 포토 월드컵, 그리고 더 많은 게임이 온다.">
+<meta property="og:title" content="XENA GAMES">
+<meta property="og:description" content="XENA 유니버스의 무료 웹게임 아케이드.">
+<meta property="og:image" content="https://xenauniverse.com/images/gallery/game-scene.jpg">
+<meta property="og:url" content="https://xenauniverse.com/games/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --black:#000000;
+  --purple:#6e2fd9;
+  --purple-light:#a06bff;
+  --silver:#e6e6ee;
+  --cyan:#3fe0ff;
+  --magenta:#ff2fb0;
+  --gold:#e8c468;
+  --hair:rgba(255,255,255,.09);
+  --text-dim:rgba(230,230,238,.55);
+  --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--black);color:var(--silver);font-family:var(--font-sans);font-weight:300;min-height:100%;overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;}
+
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.24), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 88% 100%, rgba(63,224,255,.09), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 8% 92%, rgba(255,47,176,.07), transparent 60%);}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);}
+.grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 8s steps(10) infinite;}
+@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-6%)}50%{transform:translate(-7%,4%)}70%{transform:translate(6%,7%)}90%{transform:translate(-4%,3%)}}
+
+.wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 20px calc(60px + env(safe-area-inset-bottom));}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 8px;}
+.back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
+.back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);box-shadow:0 0 18px rgba(63,224,255,.2);}
+.top-mark{font-weight:800;letter-spacing:.14em;font-size:.9rem;}
+.top-mark span{color:var(--purple-light);}
+
+.head{text-align:center;padding:44px 0 40px;}
+.eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:16px;text-shadow:0 0 16px rgba(63,224,255,.5);}
+h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-height:1.12;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.head p{color:var(--text-dim);font-size:.95rem;max-width:460px;margin:0 auto;line-height:1.75;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:860px;margin:0 auto;}
+.gcard{position:relative;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;border:1px solid var(--hair);
+  background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.012));backdrop-filter:blur(16px);
+  transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease;}
+.gcard.live:hover{transform:translateY(-5px);}
+.gcard.grid-theme:hover{border-color:rgba(232,196,104,.5);box-shadow:0 18px 50px rgba(232,196,104,.14);}
+.gcard.cup-theme:hover{border-color:rgba(63,224,255,.5);box-shadow:0 18px 50px rgba(63,224,255,.14);}
+.gcard .thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:#07040e;}
+.gcard .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s ease;}
+.gcard.live:hover .thumb img{transform:scale(1.05);}
+.gcard .thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 55%, rgba(0,0,0,.55));}
+.badge{position:absolute;top:12px;left:12px;z-index:2;font-family:var(--font-mono);font-size:.58rem;font-weight:700;letter-spacing:.18em;padding:5px 11px;border-radius:14px;backdrop-filter:blur(8px);}
+.badge.live-b{color:#052015;background:rgba(63,255,180,.16);border:1px solid rgba(63,255,180,.55);color:#5cffc0;text-shadow:0 0 10px rgba(92,255,192,.6);}
+.badge.soon-b{color:var(--text-dim);background:rgba(255,255,255,.07);border:1px solid var(--hair);}
+.gbody{padding:20px 22px 22px;display:flex;flex-direction:column;flex:1;}
+.gkind{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;margin-bottom:8px;}
+.grid-theme .gkind{color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);}
+.cup-theme .gkind{color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);}
+.soon .gkind{color:var(--text-dim);}
+.gbody h3{font-size:1.25rem;font-weight:700;letter-spacing:.02em;margin-bottom:8px;}
+.gbody p{color:var(--text-dim);font-size:.85rem;line-height:1.7;margin-bottom:18px;flex:1;}
+.play-btn{align-self:flex-start;font-weight:700;font-size:.85rem;letter-spacing:.1em;padding:12px 30px;border-radius:26px;transition:.3s ease;}
+.grid-theme .play-btn{background:rgba(232,196,104,.92);color:#1a1206;}
+.grid-theme .play-btn:hover{background:var(--gold);box-shadow:0 0 26px rgba(232,196,104,.45);transform:translateY(-2px);}
+.cup-theme .play-btn{background:var(--silver);color:var(--black);}
+.cup-theme .play-btn:hover{background:#fff;box-shadow:0 0 26px rgba(63,224,255,.45);transform:translateY(-2px);}
+.soon-label{align-self:flex-start;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.14em;color:var(--text-dim);border:1px solid var(--hair);padding:11px 24px;border-radius:26px;background:rgba(255,255,255,.03);}
+.gcard.soon{opacity:.72;}
+.gcard.soon .thumb{display:flex;align-items:center;justify-content:center;}
+.soon-art{font-size:2.6rem;filter:grayscale(.3);opacity:.8;}
+.foot-note{text-align:center;margin-top:40px;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.16em;color:var(--text-dim);opacity:.7;line-height:2;}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+<div class="grain"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a class="back-link" href="../index.html">&larr; XENAUNIVERSE</a>
+    <div class="top-mark">XENA <span>GAMES</span></div>
+  </div>
+
+  <div class="head">
+    <div class="eyebrow">Free Web Arcade</div>
+    <h1>XENA GAMES</h1>
+    <p>XENA 유니버스의 무료 웹게임 아케이드.<br>설치 없이 브라우저에서 바로 플레이하세요.</p>
+  </div>
+
+  <div class="grid">
+    <!-- OVERRIDE GRID -->
+    <div class="gcard live grid-theme">
+      <div class="thumb">
+        <span class="badge live-b">&#9679; LIVE</span>
+        <img src="../images/gallery/game-scene.jpg" alt="OVERRIDE GRID 인게임 보드">
+      </div>
+      <div class="gbody">
+        <div class="gkind">Strategy Chess</div>
+        <h3>OVERRIDE GRID</h3>
+        <p>XENA 세계관의 사이버펑크 전략 체스. 시스템의 보드 위에서 당신의 수(手)로 룰을 다시 쓰세요. 3D 보드 · 온라인 대전 지원.</p>
+        <a class="play-btn" href="../game/" target="_blank" rel="noopener">지금 플레이 →</a>
+      </div>
+    </div>
+
+    <!-- PHOTO WORLD CUP -->
+    <div class="gcard live cup-theme">
+      <div class="thumb">
+        <span class="badge live-b">&#9679; LIVE</span>
+        <img src="../images/gallery/cover-answer.jpg" alt="XENA 포토 월드컵">
+      </div>
+      <div class="gbody">
+        <div class="gkind">Photo Tournament</div>
+        <h3>XENA PHOTO WORLD CUP</h3>
+        <p>XENA 화보 컷들이 토너먼트로 맞붙는다. 8강 또는 16강 — 당신의 원픽 한 장을 찾아 SNS에 자랑하세요.</p>
+        <a class="play-btn" href="world-cup/" target="_blank" rel="noopener">지금 플레이 →</a>
+      </div>
+    </div>
+
+    <!-- COMING SOON: 가챠 -->
+    <div class="gcard soon">
+      <div class="thumb">
+        <span class="badge soon-b">COMING SOON</span>
+        <div class="soon-art">&#127183;</div>
+      </div>
+      <div class="gbody">
+        <div class="gkind">Card Collection</div>
+        <h3>ZENA CARDS 가챠</h3>
+        <p>매일 무료로 뽑는 XENA 포토카드. N부터 최고 등급 Sovereign까지 — 컬렉션을 완성하라.</p>
+        <span class="soon-label">준비 중</span>
+      </div>
+    </div>
+
+    <!-- COMING SOON: 성격테스트 -->
+    <div class="gcard soon">
+      <div class="thumb">
+        <span class="badge soon-b">COMING SOON</span>
+        <div class="soon-art">&#10024;</div>
+      </div>
+      <div class="gbody">
+        <div class="gkind">Personality Test</div>
+        <h3>당신은 누구인가</h3>
+        <p>질문에 답하면 XENA 유니버스 속 당신의 자리가 밝혀진다. 시즌1 인물 매칭 성격유형 테스트.</p>
+        <span class="soon-label">준비 중</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot-note">
+    ALL GAMES FREE · NO INSTALL · MOBILE READY<br>
+    &copy; XENA UNIVERSE — STUDIO CHANS
+  </div>
+</div>
+</body>
+</html>

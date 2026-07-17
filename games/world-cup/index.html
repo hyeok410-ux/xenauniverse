@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko" data-lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>XENA PHOTO WORLD CUP — 이상형 월드컵</title>
+<meta name="description" content="XENA 화보 30장 중 당신의 최애 컷을 찾아보세요. 16강 토너먼트 이상형 월드컵.">
+<meta property="og:title" content="XENA PHOTO WORLD CUP">
+<meta property="og:description" content="30장의 XENA 화보 중 당신의 원픽은? 16강 토너먼트로 골라보세요.">
+<meta property="og:image" content="https://xenauniverse.com/images/gallery/cover-answer.jpg">
+<meta property="og:url" content="https://xenauniverse.com/games/world-cup/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --black:#000000;
+  --purple:#6e2fd9;
+  --purple-light:#a06bff;
+  --silver:#e6e6ee;
+  --cyan:#3fe0ff;
+  --magenta:#ff2fb0;
+  --gold:#e8c468;
+  --hair:rgba(255,255,255,.09);
+  --text-dim:rgba(230,230,238,.55);
+  --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--black);color:var(--silver);font-family:var(--font-sans);font-weight:300;min-height:100%;overflow-x:hidden;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;}
+
+/* ── 배경: 고정 네온 그리드 ── */
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.22), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 85% 100%, rgba(63,224,255,.09), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 10% 90%, rgba(255,47,176,.07), transparent 60%);
+}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
+  background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 100%);}
+.grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 8s steps(10) infinite;}
+@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-6%)}50%{transform:translate(-7%,4%)}70%{transform:translate(6%,7%)}90%{transform:translate(-4%,3%)}}
+
+.wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 20px calc(40px + env(safe-area-inset-bottom));min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── 상단 바 ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 8px;}
+.back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
+.back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);box-shadow:0 0 18px rgba(63,224,255,.2);}
+.top-mark{font-family:var(--font-sans);font-weight:800;letter-spacing:.14em;font-size:.9rem;color:var(--silver);}
+.top-mark span{color:var(--purple-light);}
+
+/* ── 인트로 화면 ── */
+.screen{display:none;flex:1;flex-direction:column;}
+.screen.on{display:flex;}
+.intro{align-items:center;justify-content:center;text-align:center;padding:30px 0 60px;}
+.intro-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:18px;text-shadow:0 0 16px rgba(63,224,255,.5);}
+.intro h1{font-size:clamp(2.1rem,7vw,3.6rem);font-weight:800;letter-spacing:.04em;line-height:1.12;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.intro p{color:var(--text-dim);font-size:.95rem;max-width:420px;line-height:1.75;margin-bottom:34px;}
+.intro p b{color:var(--silver);font-weight:500;}
+.round-pick{display:flex;gap:12px;margin-bottom:26px;}
+.round-btn{font-family:var(--font-mono);font-size:.8rem;font-weight:500;letter-spacing:.1em;padding:12px 26px;border-radius:26px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--text-dim);transition:.3s ease;backdrop-filter:blur(10px);}
+.round-btn.sel{color:var(--cyan);border-color:rgba(63,224,255,.55);box-shadow:0 0 22px rgba(63,224,255,.25), inset 0 0 14px rgba(63,224,255,.08);}
+.start-btn{font-family:var(--font-sans);font-weight:700;font-size:1rem;letter-spacing:.12em;color:var(--black);background:var(--silver);border:none;padding:16px 52px;border-radius:32px;transition:.35s ease;box-shadow:0 0 30px rgba(230,230,238,.15);}
+.start-btn:hover{background:#fff;box-shadow:0 0 42px rgba(160,107,255,.5);transform:translateY(-2px);}
+.intro-note{margin-top:20px;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;color:var(--text-dim);opacity:.7;}
+
+/* ── 대결 화면 ── */
+.battle{padding-top:6px;}
+.battle-head{text-align:center;margin-bottom:14px;}
+.round-label{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.32em;color:var(--gold);text-transform:uppercase;text-shadow:0 0 14px rgba(232,196,104,.45);}
+.match-label{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.14em;color:var(--text-dim);margin-top:6px;font-variant-numeric:tabular-nums;}
+.progress{height:2px;background:rgba(255,255,255,.07);border-radius:2px;margin:12px auto 0;max-width:320px;overflow:hidden;}
+.progress i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--purple-light),var(--cyan));box-shadow:0 0 10px rgba(63,224,255,.6);transition:width .4s ease;}
+
+.arena{flex:1;display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;min-height:0;}
+.fighter{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--hair);background:rgba(255,255,255,.02);cursor:pointer;transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease;aspect-ratio:3/4;max-height:62vh;width:100%;}
+.fighter img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease;}
+.fighter:hover{transform:translateY(-4px);border-color:rgba(63,224,255,.5);box-shadow:0 14px 44px rgba(63,224,255,.18);}
+.fighter:hover img{transform:scale(1.04);}
+.fighter .tag{position:absolute;left:0;right:0;bottom:0;padding:34px 16px 14px;background:linear-gradient(transparent, rgba(0,0,0,.82));pointer-events:none;}
+.fighter .tag small{display:block;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.24em;color:var(--cyan);text-transform:uppercase;margin-bottom:4px;}
+.fighter .tag b{font-weight:600;font-size:.95rem;letter-spacing:.02em;}
+.fighter.win{border-color:rgba(63,224,255,.9);box-shadow:0 0 50px rgba(63,224,255,.45);transform:scale(1.03);z-index:3;}
+.fighter.lose{opacity:.18;filter:grayscale(1);transform:scale(.96);}
+.fighter,.fighter.win,.fighter.lose{will-change:transform,opacity;}
+
+.vs{font-family:var(--font-sans);font-weight:800;font-size:clamp(1.2rem,3.4vw,2rem);letter-spacing:.06em;color:transparent;
+  background:linear-gradient(135deg,var(--magenta),var(--purple-light));-webkit-background-clip:text;background-clip:text;
+  text-shadow:0 0 30px rgba(255,47,176,.3);user-select:none;padding:0 2px;}
+
+/* ── 결과 화면 ── */
+.result{align-items:center;text-align:center;padding:16px 0 40px;}
+.result-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin:14px 0 12px;text-shadow:0 0 16px rgba(232,196,104,.5);}
+.result h2{font-size:clamp(1.7rem,5.5vw,2.6rem);font-weight:800;letter-spacing:.03em;margin-bottom:22px;
+  background:linear-gradient(135deg,#fff 30%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.champion{position:relative;width:min(420px,84vw);border-radius:20px;overflow:hidden;border:1px solid rgba(232,196,104,.45);box-shadow:0 0 70px rgba(232,196,104,.22), 0 24px 60px rgba(0,0,0,.6);animation:champIn .8s cubic-bezier(.2,.9,.3,1.2) both;}
+@keyframes champIn{from{opacity:0;transform:scale(.85) translateY(24px);}to{opacity:1;transform:none;}}
+.champion img{width:100%;display:block;aspect-ratio:3/4;object-fit:cover;}
+.champion .crown{position:absolute;top:14px;left:14px;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.22em;color:var(--gold);background:rgba(0,0,0,.65);border:1px solid rgba(232,196,104,.5);padding:6px 12px;border-radius:18px;backdrop-filter:blur(8px);}
+.champion .tag{position:absolute;left:0;right:0;bottom:0;padding:40px 18px 16px;background:linear-gradient(transparent, rgba(0,0,0,.86));text-align:left;}
+.champion .tag small{display:block;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.26em;color:var(--cyan);text-transform:uppercase;margin-bottom:5px;}
+.champion .tag b{font-weight:700;font-size:1.1rem;letter-spacing:.02em;}
+.result-sub{margin-top:18px;color:var(--text-dim);font-size:.88rem;line-height:1.7;max-width:400px;}
+.result-sub b{color:var(--silver);font-weight:500;}
+
+/* ── 누적 득표 패널 ── */
+.stats{margin-top:26px;width:100%;max-width:520px;background:linear-gradient(165deg, rgba(255,255,255,.04), rgba(255,255,255,.01));border:1px solid var(--hair);border-radius:18px;padding:22px 22px 16px;backdrop-filter:blur(14px);text-align:left;}
+.stats h3{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.3em;color:var(--cyan);text-transform:uppercase;margin-bottom:12px;text-shadow:0 0 12px rgba(63,224,255,.35);}
+.champ-rate{font-size:.92rem;color:var(--silver);margin-bottom:16px;line-height:1.6;}
+.champ-rate b{color:var(--gold);font-weight:700;font-size:1.15rem;text-shadow:0 0 14px rgba(232,196,104,.45);}
+.champ-rate span{font-family:var(--font-mono);font-size:.68rem;color:var(--text-dim);}
+.rank-list{list-style:none;display:flex;flex-direction:column;gap:9px;}
+.rank-list li{display:grid;grid-template-columns:18px 34px 1fr 72px 44px;align-items:center;gap:10px;}
+.rank-list .rk{font-family:var(--font-mono);font-size:.72rem;color:var(--text-dim);font-weight:700;text-align:center;}
+.rank-list img{width:34px;height:44px;object-fit:cover;border-radius:7px;border:1px solid var(--hair);display:block;}
+.rank-list .nm{font-size:.72rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rank-list .bar{height:5px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
+.rank-list .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--purple-light),var(--cyan));border-radius:4px;}
+.rank-list .pc{font-family:var(--font-mono);font-size:.68rem;color:var(--silver);text-align:right;font-variant-numeric:tabular-nums;}
+.rank-list li.me .nm{color:var(--gold);}
+.rank-list li.me .bar i{background:linear-gradient(90deg,var(--gold),var(--magenta));}
+.rank-list li.me .pc{color:var(--gold);font-weight:700;}
+.stats-note{margin-top:14px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.08em;color:var(--text-dim);opacity:.65;}
+
+.share-row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:26px;}
+.share-btn{font-family:var(--font-mono);font-size:.72rem;font-weight:500;letter-spacing:.1em;padding:12px 22px;border-radius:26px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--silver);transition:.3s ease;backdrop-filter:blur(10px);display:inline-flex;align-items:center;gap:8px;}
+.share-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;}
+.share-btn:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);box-shadow:0 0 20px rgba(63,224,255,.22);transform:translateY(-2px);}
+.share-btn.x:hover{color:var(--silver);border-color:rgba(230,230,238,.5);}
+.share-btn.dl:hover{color:var(--gold);border-color:rgba(232,196,104,.5);box-shadow:0 0 20px rgba(232,196,104,.22);}
+.retry-btn{margin-top:26px;font-family:var(--font-sans);font-weight:700;font-size:.92rem;letter-spacing:.1em;color:var(--black);background:var(--silver);border:none;padding:14px 44px;border-radius:30px;transition:.35s ease;}
+.retry-btn:hover{background:#fff;box-shadow:0 0 36px rgba(160,107,255,.45);transform:translateY(-2px);}
+
+/* ── 내 픽 히스토리 ── */
+.history{margin-top:38px;width:100%;max-width:520px;}
+.history h3{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:14px;}
+.history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;}
+.history-cell{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--hair);aspect-ratio:3/4;}
+.history-cell img{width:100%;height:100%;object-fit:cover;display:block;}
+.history-cell i{position:absolute;right:4px;bottom:4px;font-family:var(--font-mono);font-style:normal;font-size:.56rem;font-weight:700;color:var(--gold);background:rgba(0,0,0,.72);padding:2px 6px;border-radius:8px;letter-spacing:.04em;}
+
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:50;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;color:var(--silver);background:rgba(8,8,14,.9);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);box-shadow:0 0 24px rgba(63,224,255,.2);white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── 모바일 ── */
+@media (max-width:680px){
+  .arena{grid-template-columns:1fr;grid-template-rows:1fr auto 1fr;gap:8px;}
+  .fighter{aspect-ratio:auto;height:34vh;max-height:none;}
+  .vs{text-align:center;padding:2px 0;font-size:1.15rem;}
+  .fighter:hover{transform:none;}
+  .fighter:hover img{transform:none;}
+  .battle-head{margin-bottom:8px;}
+  .round-pick{flex-wrap:wrap;justify-content:center;}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;}
+}
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+<div class="grain"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a class="back-link" href="../../index.html">&larr; XENAUNIVERSE</a>
+    <div class="top-mark">XENA <span>WORLD CUP</span></div>
+  </div>
+
+  <!-- 인트로 -->
+  <section class="screen intro on" id="screen-intro">
+    <div class="intro-eyebrow">Photo Tournament</div>
+    <h1>XENA<br>PHOTO WORLD CUP</h1>
+    <p>세 트랙의 화보 <b>30장</b> 중 무작위로 뽑힌 컷들이 토너먼트로 맞붙습니다.<br>더 마음에 드는 사진을 눌러 <b>당신의 원픽</b>을 찾아보세요.</p>
+    <div class="round-pick" role="group" aria-label="라운드 선택">
+      <button class="round-btn" data-size="8">8강 · 빠르게</button>
+      <button class="round-btn sel" data-size="16">16강 · 정석</button>
+    </div>
+    <button class="start-btn" id="btn-start">START</button>
+    <div class="intro-note">TRACKS: I AM THE ANSWER / STAY BRIGHT / DOPAMINE</div>
+  </section>
+
+  <!-- 대결 -->
+  <section class="screen battle" id="screen-battle">
+    <div class="battle-head">
+      <div class="round-label" id="round-label">ROUND OF 16</div>
+      <div class="match-label" id="match-label">MATCH 1 / 8</div>
+      <div class="progress"><i id="progress-bar"></i></div>
+    </div>
+    <div class="arena">
+      <div class="fighter" id="fighter-a" role="button" tabindex="0" aria-label="왼쪽 사진 선택">
+        <img id="img-a" src="" alt="">
+        <div class="tag"><small id="track-a"></small><b id="name-a"></b></div>
+      </div>
+      <div class="vs">VS</div>
+      <div class="fighter" id="fighter-b" role="button" tabindex="0" aria-label="오른쪽 사진 선택">
+        <img id="img-b" src="" alt="">
+        <div class="tag"><small id="track-b"></small><b id="name-b"></b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 결과 -->
+  <section class="screen result" id="screen-result">
+    <div class="result-eyebrow">Your Final Pick</div>
+    <h2 id="result-title">WINNER</h2>
+    <div class="champion" id="champion">
+      <span class="crown">&#9733; CHAMPION</span>
+      <img id="champ-img" src="" alt="우승 사진">
+      <div class="tag"><small id="champ-track"></small><b id="champ-name"></b></div>
+    </div>
+    <p class="result-sub" id="result-sub"></p>
+    <div class="stats">
+      <h3>PICK RATE — 누적 최종픽 득표율</h3>
+      <p class="champ-rate" id="champ-rate"></p>
+      <ol class="rank-list" id="rank-list"></ol>
+      <p class="stats-note">* 집계는 현재 브라우저 기준 · 온라인 통합 집계는 준비 중</p>
+    </div>
+    <div class="share-row">
+      <button class="share-btn" id="btn-share">
+        <svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v13M7.5 7.5 12 3l4.5 4.5"/></svg>
+        공유하기
+      </button>
+      <button class="share-btn x" id="btn-x">
+        <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
+        X에 올리기
+      </button>
+      <button class="share-btn dl" id="btn-download">
+        <svg viewBox="0 0 24 24"><path d="M12 3v13M7.5 11.5 12 16l4.5-4.5M4 19h16"/></svg>
+        결과 카드 저장
+      </button>
+    </div>
+    <button class="retry-btn" id="btn-retry">다시 하기</button>
+    <div class="history" id="history-box" hidden>
+      <h3>MY PICK HISTORY — 내가 뽑은 우승 컷</h3>
+      <div class="history-grid" id="history-grid"></div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+var GALLERY = '../../images/gallery/';
+var SITE_URL = 'https://xenauniverse.com/games/world-cup/';
+var TRACKS = [
+  {key:'answer',   title:'I AM THE ANSWER', count:10, desc:'시스템에 던지는 선전포고, 딥블랙과 네온의 강렬 컨셉'},
+  {key:'bright',   title:'STAY BRIGHT',     count:10, desc:'어둠 속에서도 빛을 잃지 않는 골드빛 에테리얼 컨셉'},
+  {key:'dopamine', title:'DOPAMINE',        count:10, desc:'핑크 네온이 번지는 쾌락 도시의 일렉트릭 컨셉'}
+];
+var POOL = [];
+TRACKS.forEach(function(t){
+  for(var i=1;i<=t.count;i++){
+    POOL.push({id:t.key+'-'+i, src:GALLERY+t.key+'-'+i+'.jpg', track:t.title, name:'CUT #'+String(i).padStart(2,'0'), desc:t.desc});
+  }
+});
+
+var state = {size:16, queue:[], next:[], matchIdx:0, totalMatches:0, playedMatches:0, roundSize:0, champion:null, locked:false};
+
+var $ = function(id){return document.getElementById(id);};
+var screens = {intro:$('screen-intro'), battle:$('screen-battle'), result:$('screen-result')};
+function show(name){
+  Object.keys(screens).forEach(function(k){screens[k].classList.toggle('on', k===name);});
+  window.scrollTo(0,0);
+}
+function shuffle(arr){
+  var a = arr.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var t=a[i];a[i]=a[j];a[j]=t;
+  }
+  return a;
+}
+function roundName(n){
+  if(n===2) return 'FINAL';
+  if(n===4) return 'SEMIFINAL';
+  return 'ROUND OF '+n;
+}
+
+/* ── 라운드 선택 ── */
+var roundBtns = document.querySelectorAll('.round-btn');
+roundBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    roundBtns.forEach(function(x){x.classList.remove('sel');});
+    b.classList.add('sel');
+    state.size = parseInt(b.getAttribute('data-size'),10);
+  });
+});
+
+/* ── 시작 ── */
+$('btn-start').addEventListener('click', startGame);
+$('btn-retry').addEventListener('click', function(){show('intro');});
+
+function startGame(){
+  state.queue = shuffle(POOL).slice(0, state.size);
+  state.next = [];
+  state.matchIdx = 0;
+  state.roundSize = state.size;
+  state.totalMatches = state.size - 1;
+  state.playedMatches = 0;
+  state.champion = null;
+  state.locked = false;
+  show('battle');
+  renderMatch();
+}
+
+var fa = $('fighter-a'), fb = $('fighter-b');
+
+function currentPair(){
+  return [state.queue[state.matchIdx*2], state.queue[state.matchIdx*2+1]];
+}
+
+function renderMatch(){
+  var pair = currentPair();
+  $('round-label').textContent = roundName(state.roundSize);
+  $('match-label').textContent = 'MATCH '+(state.matchIdx+1)+' / '+(state.roundSize/2);
+  $('progress-bar').style.width = Math.round(state.playedMatches/state.totalMatches*100)+'%';
+  setFighter(fa, $('img-a'), $('track-a'), $('name-a'), pair[0]);
+  setFighter(fb, $('img-b'), $('track-b'), $('name-b'), pair[1]);
+  fa.classList.remove('win','lose');
+  fb.classList.remove('win','lose');
+  state.locked = false;
+  // 다음 매치 이미지 프리로드
+  var upNext = state.queue.slice((state.matchIdx+1)*2, (state.matchIdx+1)*2+2);
+  upNext.forEach(function(p){ if(p){ var im=new Image(); im.src=p.src; } });
+}
+function setFighter(card, img, trackEl, nameEl, photo){
+  img.src = photo.src;
+  img.alt = photo.track+' '+photo.name;
+  trackEl.textContent = photo.track;
+  nameEl.textContent = photo.name;
+}
+
+function pick(side){
+  if(state.locked) return;
+  state.locked = true;
+  var pair = currentPair();
+  var winner = side===0 ? pair[0] : pair[1];
+  (side===0?fa:fb).classList.add('win');
+  (side===0?fb:fa).classList.add('lose');
+  state.next.push(winner);
+  state.playedMatches++;
+  setTimeout(function(){
+    state.matchIdx++;
+    if(state.matchIdx*2 >= state.queue.length){
+      // 라운드 종료
+      if(state.next.length === 1){
+        state.champion = state.next[0];
+        finish();
+        return;
+      }
+      state.queue = state.next;
+      state.next = [];
+      state.matchIdx = 0;
+      state.roundSize = state.queue.length;
+    }
+    renderMatch();
+  }, 620);
+}
+fa.addEventListener('click', function(){pick(0);});
+fb.addEventListener('click', function(){pick(1);});
+[fa,fb].forEach(function(el, i){
+  el.addEventListener('keydown', function(e){
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(i);}
+  });
+});
+document.addEventListener('keydown', function(e){
+  if(!screens.battle.classList.contains('on')) return;
+  if(e.key==='ArrowLeft') pick(0);
+  if(e.key==='ArrowRight') pick(1);
+});
+
+/* ── 결과 ── */
+function finish(){
+  var c = state.champion;
+  $('champ-img').src = c.src;
+  $('champ-track').textContent = c.track;
+  $('champ-name').textContent = c.name;
+  $('result-sub').innerHTML = '당신의 원픽은 <b>'+c.track+'</b>의 <b>'+c.name+'</b> 컷.<br>'+c.desc+' — '+state.size+'강에서 살아남은 단 한 장입니다.';
+  castVote(c);
+  renderStats(c);
+  saveHistory(c);
+  renderHistory();
+  show('result');
+}
+
+/* ── 누적 득표 (전 사진 1표 시딩 → 최종픽마다 +1) ── */
+var VOTE_KEY = 'xena_worldcup_votes_v1';
+function loadVotes(){
+  var v = null;
+  try{ v = JSON.parse(localStorage.getItem(VOTE_KEY)); }catch(e){}
+  if(!v || !v.counts){ v = {counts:{}, total:0}; }
+  // 신규 사진은 자동으로 기본 1표 시딩 (풀 확장 대응)
+  POOL.forEach(function(p){
+    if(typeof v.counts[p.id] !== 'number'){ v.counts[p.id] = 1; v.total += 1; }
+  });
+  return v;
+}
+function castVote(c){
+  try{
+    var v = loadVotes();
+    v.counts[c.id] += 1;
+    v.total += 1;
+    localStorage.setItem(VOTE_KEY, JSON.stringify(v));
+  }catch(e){}
+}
+function pct(n, total){ return (n/total*100).toFixed(1); }
+function renderStats(champ){
+  var v = loadVotes();
+  $('champ-rate').innerHTML = '이 컷의 누적 최종픽 <b>'+pct(v.counts[champ.id], v.total)+'%</b> <span>('+v.counts[champ.id]+'표 / 총 '+v.total+'표)</span>';
+  var ids = Object.keys(v.counts).sort(function(a,b){return v.counts[b]-v.counts[a];}).slice(0,5);
+  var list = $('rank-list');
+  list.innerHTML = '';
+  ids.forEach(function(id, i){
+    var photo = null;
+    for(var k=0;k<POOL.length;k++){ if(POOL[k].id===id){photo=POOL[k];break;} }
+    if(!photo) return;
+    var p = pct(v.counts[id], v.total);
+    var li = document.createElement('li');
+    li.className = (id===champ.id ? 'me' : '');
+    li.innerHTML =
+      '<span class="rk">'+(i+1)+'</span>'+
+      '<img src="'+photo.src+'" alt="" loading="lazy">'+
+      '<span class="nm">'+photo.track+' · '+photo.name+'</span>'+
+      '<span class="bar"><i style="width:'+Math.min(100, p*4)+'%"></i></span>'+
+      '<span class="pc">'+p+'%</span>';
+    list.appendChild(li);
+  });
+}
+
+/* ── localStorage 픽 히스토리 ── */
+var LS_KEY = 'xena_worldcup_history_v1';
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveHistory(c){
+  try{
+    var h = loadHistory();
+    h[c.id] = (h[c.id]||0)+1;
+    localStorage.setItem(LS_KEY, JSON.stringify(h));
+  }catch(e){}
+}
+function renderHistory(){
+  var h = loadHistory();
+  var ids = Object.keys(h);
+  if(ids.length < 2){ $('history-box').hidden = true; return; }
+  ids.sort(function(a,b){return h[b]-h[a];});
+  var grid = $('history-grid');
+  grid.innerHTML = '';
+  ids.slice(0,12).forEach(function(id){
+    var photo = null;
+    for(var i=0;i<POOL.length;i++){ if(POOL[i].id===id){photo=POOL[i];break;} }
+    if(!photo) return;
+    var cell = document.createElement('div');
+    cell.className = 'history-cell';
+    cell.innerHTML = '<img src="'+photo.src+'" alt="'+photo.track+' '+photo.name+'" loading="lazy"><i>&times;'+h[id]+'</i>';
+    grid.appendChild(cell);
+  });
+  $('history-box').hidden = false;
+}
+
+/* ── 토스트 ── */
+var toastTimer = null;
+function toast(msg){
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){t.classList.remove('show');}, 2400);
+}
+
+/* ── 공유 ── */
+function shareText(){
+  var c = state.champion;
+  return '내가 뽑은 XENA 원픽 📸 '+c.track+' '+c.name+' — '+c.desc+'. XENA 이상형 월드컵, 너의 원픽은?';
+}
+$('btn-share').addEventListener('click', function(){
+  var text = shareText();
+  if(navigator.share){
+    navigator.share({title:'XENA PHOTO WORLD CUP', text:text, url:SITE_URL}).catch(function(){});
+  } else {
+    copyLink(text);
+  }
+});
+function copyLink(text){
+  var full = text+' '+SITE_URL;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(full).then(function(){toast('링크가 복사됐습니다 — SNS에 붙여넣기 하세요');},function(){toast('복사 실패 — 주소창의 링크를 직접 복사해 주세요');});
+  } else {
+    toast('이 브라우저는 자동 복사를 지원하지 않습니다');
+  }
+}
+$('btn-x').addEventListener('click', function(){
+  var url = 'https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText())+'&url='+encodeURIComponent(SITE_URL);
+  window.open(url, '_blank', 'noopener');
+});
+
+/* ── 결과 카드 이미지 다운로드 (canvas) ── */
+$('btn-download').addEventListener('click', function(){
+  var c = state.champion;
+  if(!c) return;
+  var img = new Image();
+  img.onload = function(){
+    try{
+      var W = 900, H = 1350;
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      var ctx = cv.getContext('2d');
+      // 배경
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0,0,W,H);
+      var grd = ctx.createRadialGradient(W/2, -100, 50, W/2, 0, 900);
+      grd.addColorStop(0, 'rgba(110,47,217,.4)');
+      grd.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0,0,W,H);
+      // 사진 (cover 크롭)
+      var px = 70, py = 210, pw = W-140, ph = Math.round(pw*4/3);
+      var ir = img.width/img.height, pr = pw/ph, sx,sy,sw,sh;
+      if(ir > pr){ sh = img.height; sw = sh*pr; sx = (img.width-sw)/2; sy = 0; }
+      else { sw = img.width; sh = sw/pr; sx = 0; sy = (img.height-sh)/2; }
+      ctx.save();
+      roundRect(ctx, px, py, pw, ph, 24); ctx.clip();
+      ctx.drawImage(img, sx, sy, sw, sh, px, py, pw, ph);
+      ctx.restore();
+      // 사진 테두리 글로우
+      ctx.strokeStyle = 'rgba(232,196,104,.75)';
+      ctx.lineWidth = 3;
+      roundRect(ctx, px, py, pw, ph, 24); ctx.stroke();
+      // 텍스트
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#3fe0ff';
+      ctx.font = '500 26px "JetBrains Mono", monospace';
+      ctx.fillText('X E N A   P H O T O   W O R L D   C U P', W/2, 96);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 64px Manrope, Arial, sans-serif';
+      ctx.fillText('MY FINAL PICK', W/2, 172);
+      ctx.fillStyle = '#e8c468';
+      ctx.font = '700 40px Manrope, Arial, sans-serif';
+      ctx.fillText('★ '+c.track+' — '+c.name, W/2, py+ph+78);
+      ctx.fillStyle = 'rgba(230,230,238,.55)';
+      ctx.font = '500 24px "JetBrains Mono", monospace';
+      ctx.fillText('xenauniverse.com', W/2, H-56);
+      // 다운로드
+      var a = document.createElement('a');
+      a.download = 'xena-worldcup-pick.png';
+      a.href = cv.toDataURL('image/png');
+      a.click();
+      toast('결과 카드가 저장됐습니다');
+    }catch(e){
+      toast('이미지 저장에 실패했습니다');
+    }
+  };
+  img.onerror = function(){toast('이미지 로드 실패');};
+  img.src = c.src;
+});
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+})();
+</script>
+</body>
+</html>
