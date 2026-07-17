@@ -18,10 +18,10 @@
   };
   const I18N = {
     ko: {
-      store: "상점", play: "게임으로", owned: "보유 팩", locked: "잠김 팩", mode: "대전 모드", ai: ["AI 대전", "난이도를 골라 연습"], local: ["2인 대전", "같은 화면에서 교대"], online: ["온라인 대전", "서버 연결 준비 중"], event: ["일일 이벤트", "하루 3단계 변칙 파편"], difficulty: "AI 난이도", victory: "승리", dailyClaimed: "오늘의 접속 보상 수령 완료", dailyReward: "접속 보상 · 시그널 크레딧 200", dailyReset: "뉴욕 자정 기준으로 갱신됩니다.", claim: "받기", claimed: "수령 완료", timePreview: "랭크별 제한시간 미리보기", rankReady: "온라인 랭크 준비 상태", rankNote: "매칭 서버 연결 전에는 AI·2인 대전으로 규칙과 덱을 연습합니다.", start: "시작", starterStart: "무료 스타터 확정 후 시작", buy: "구매", reset: "테스트 데이터 초기화", eventTitle: "오늘의 변칙 이벤트", complete: "완료", inProgress: "진행 중", rewardsClaimed: "보상 수령", selectUnit: "캐릭터를 선택하세요", opponentUnit: "상대 유닛을 확인 중입니다.", captured: "포획된 아군", none: "없음", firstMove: "첫 수를 선택하세요.", player: "플레이어", opponent: "AI 상대", playerOne: "플레이어 1", playerTwo: "플레이어 2", turn: "차례", move: "수", thinking: "AI가 수를 계산 중", cinematic: "전투 연출 실행 중", exit: "팩 선택으로", replay: "리플레이", previous: "이전", next: "다음", leave: "나가기", draw: "무승부", win: "승리", defeat: "패배", onlineLobby: "온라인 링크", onlineTitle: "온라인 대전 준비", onlineNote: "초대 코드 방과 일반 매칭을 위한 연결 구조를 준비했습니다. 서버 연결 전에는 실제 상대 매칭이 열리지 않습니다.", quickMatch: "일반 매칭", createRoom: "초대 방 만들기", joinRoom: "초대 코드 입장", serverOffline: "서버 연결 대기", storeTitle: "오버라이드 상점", cosmetics: "코스메틱", shardStore: "변칙 파편", equip: "장착", equipped: "장착 중", purchase: "구매", checkoutReady: "결제 준비", noPower: "모든 스킨과 보드는 전투 능력치에 영향을 주지 않습니다.", paymentNotice: "결제 완료 재화 지급은 결제 웹훅과 서버 장부로 1회 검증되어야 합니다. 클라이언트만으로 지급하지 않습니다.", connection: "온라인 연결", language: "EN"
+      store: "상점", play: "게임으로", owned: "보유 팩", locked: "잠김 팩", mode: "대전 모드", ai: ["AI 대전", "난이도를 골라 연습"], local: ["2인 대전", "같은 화면에서 교대"], online: ["온라인 대전", "초대 코드 체험판"], event: ["일일 이벤트", "하루 3단계 변칙 파편"], difficulty: "AI 난이도", victory: "승리", dailyClaimed: "오늘의 접속 보상 수령 완료", dailyReward: "접속 보상 · 시그널 크레딧 200", dailyReset: "뉴욕 자정 기준으로 갱신됩니다.", claim: "받기", claimed: "수령 완료", timePreview: "랭크별 제한시간 미리보기", rankReady: "온라인 랭크 준비 상태", rankNote: "초대 대전은 체험판이며 랭크와 재화 보상은 서버 검증 후 열립니다.", start: "시작", starterStart: "무료 스타터 확정 후 시작", buy: "구매", reset: "테스트 데이터 초기화", eventTitle: "오늘의 변칙 이벤트", complete: "완료", inProgress: "진행 중", rewardsClaimed: "보상 수령", selectUnit: "캐릭터를 선택하세요", opponentUnit: "상대 유닛을 확인 중입니다.", captured: "포획된 아군", none: "없음", firstMove: "첫 수를 선택하세요.", player: "플레이어", opponent: "AI 상대", playerOne: "플레이어 1", playerTwo: "플레이어 2", turn: "차례", move: "수", thinking: "동기화 중", cinematic: "전투 연출 실행 중", exit: "팩 선택으로", replay: "리플레이", previous: "이전", next: "다음", leave: "나가기", draw: "무승부", win: "승리", defeat: "패배", onlineLobby: "온라인 링크", onlineTitle: "온라인 초대 대전", onlineNote: "Google 로그인 후 8자리 초대 코드를 만들거나 입력해 다른 기기의 상대와 대전합니다.", quickMatch: "일반 매칭", createRoom: "초대 방 만들기", joinRoom: "초대 코드 입장", serverOffline: "서버 연결 대기", storeTitle: "오버라이드 상점", cosmetics: "코스메틱", shardStore: "변칙 파편", equip: "장착", equipped: "장착 중", purchase: "구매", checkoutReady: "결제 준비", noPower: "모든 스킨과 보드는 전투 능력치에 영향을 주지 않습니다.", paymentNotice: "결제 완료 재화 지급은 결제 웹훅과 서버 장부로 1회 검증되어야 합니다. 클라이언트만으로 지급하지 않습니다.", connection: "온라인 연결", language: "EN"
     },
     en: {
-      store: "Store", play: "Play", owned: "Owned pack", locked: "Locked pack", mode: "Match mode", ai: ["AI Match", "Practice with a chosen difficulty"], local: ["Local Match", "Pass the screen between players"], online: ["Online Match", "Server connection in preparation"], event: ["Daily Event", "Three anomaly trials each day"], difficulty: "AI difficulty", victory: "Victory", dailyClaimed: "Daily login reward already claimed", dailyReward: "Daily login reward · 200 Signal Credits", dailyReset: "Resets at New York midnight.", claim: "Claim", claimed: "Claimed", timePreview: "Rank time controls", rankReady: "Online rank readiness", rankNote: "Practice rules and decks in AI or local matches until matchmaking is connected.", start: "Start", starterStart: "Confirm free starter and play", buy: "Buy", reset: "Reset test data", eventTitle: "Today's Anomaly Event", complete: "Complete", inProgress: "In progress", rewardsClaimed: "Reward claimed", selectUnit: "Select a character.", opponentUnit: "Viewing an opponent unit.", captured: "Captured allies", none: "None", firstMove: "Choose your first move.", player: "PLAYER", opponent: "AI OPPONENT", playerOne: "PLAYER 1", playerTwo: "PLAYER 2", turn: "turn", move: "move", thinking: "AI is calculating", cinematic: "Combat sequence in progress", exit: "Pack Select", replay: "Replay", previous: "Previous", next: "Next", leave: "Leave", draw: "Draw", win: "Victory", defeat: "Defeat", onlineLobby: "ONLINE LINK", onlineTitle: "Online Match Preparation", onlineNote: "The connection contract for invite rooms and casual matchmaking is ready. Live opponent matching opens when the game server is connected.", quickMatch: "Casual Match", createRoom: "Create Invite Room", joinRoom: "Join by Code", serverOffline: "Waiting for server connection", storeTitle: "Override Store", cosmetics: "Cosmetics", shardStore: "Anomaly Shards", equip: "Equip", equipped: "Equipped", purchase: "Purchase", checkoutReady: "Checkout Setup", noPower: "Every skin and board is purely cosmetic and never changes combat power.", paymentNotice: "Purchased currency must be granted once through a payment webhook and server ledger. The client never grants it.", connection: "Online Connection", language: "KO"
+      store: "Store", play: "Play", owned: "Owned pack", locked: "Locked pack", mode: "Match mode", ai: ["AI Match", "Practice with a chosen difficulty"], local: ["Local Match", "Pass the screen between players"], online: ["Online Match", "Invite-code pilot"], event: ["Daily Event", "Three anomaly trials each day"], difficulty: "AI difficulty", victory: "Victory", dailyClaimed: "Daily login reward already claimed", dailyReward: "Daily login reward · 200 Signal Credits", dailyReset: "Resets at New York midnight.", claim: "Claim", claimed: "Claimed", timePreview: "Rank time controls", rankReady: "Online rank readiness", rankNote: "Invite matches are a pilot. Ranked rewards open after server validation is ready.", start: "Start", starterStart: "Confirm free starter and play", buy: "Buy", reset: "Reset test data", eventTitle: "Today's Anomaly Event", complete: "Complete", inProgress: "In progress", rewardsClaimed: "Reward claimed", selectUnit: "Select a character.", opponentUnit: "Viewing an opponent unit.", captured: "Captured allies", none: "None", firstMove: "Choose your first move.", player: "PLAYER", opponent: "AI OPPONENT", playerOne: "PLAYER 1", playerTwo: "PLAYER 2", turn: "turn", move: "move", thinking: "Synchronizing", cinematic: "Combat sequence in progress", exit: "Pack Select", replay: "Replay", previous: "Previous", next: "Next", leave: "Leave", draw: "Draw", win: "Victory", defeat: "Defeat", onlineLobby: "ONLINE LINK", onlineTitle: "Online Invite Match", onlineNote: "Sign in with Google, then create or enter an 8-character code to play an opponent on another device.", quickMatch: "Casual Match", createRoom: "Create Invite Room", joinRoom: "Join by Code", serverOffline: "Waiting for server connection", storeTitle: "Override Store", cosmetics: "Cosmetics", shardStore: "Anomaly Shards", equip: "Equip", equipped: "Equipped", purchase: "Purchase", checkoutReady: "Checkout Setup", noPower: "Every skin and board is purely cosmetic and never changes combat power.", paymentNotice: "Purchased currency must be granted once through a payment webhook and server ledger. The client never grants it.", connection: "Online Connection", language: "KO"
     }
   };
   const ASSET_ROOTS = {
@@ -383,6 +383,11 @@
   let emoteFeed = [];
   let emoteNonce = 0;
   let promotionChoices = [];
+  let onlineUiUnsubscribe = null;
+  let onlineBinding = false;
+  let onlineConnecting = false;
+  let onlineRevision = -1;
+  let onlineEmoteNonce = 0;
 
   function saveMeta() {
     storage.set("og_profile", JSON.stringify(profile));
@@ -551,9 +556,10 @@
     const textarea = overlay.querySelector("[data-account-code]");
     textarea.value = backupCode();
     let unsubscribeCloud = () => {};
-    const closeAccount = () => {
+    const closeAccount = (refreshOnline = true) => {
       unsubscribeCloud();
       overlay.remove();
+      if (refreshOnline && screen === "online") renderOnlineLobby();
     };
     overlay.querySelectorAll("[data-close-account]").forEach((element) => element.addEventListener("click", (event) => {
       if (event.target === element || event.target.closest(".showcase-close")) closeAccount();
@@ -568,7 +574,7 @@
     if (restore) restore.addEventListener("click", () => {
       try {
         restoreBackup(textarea.value.trim());
-        closeAccount();
+        closeAccount(false);
         refreshCurrentScreen();
       } catch (_) {
         alert(language === "en" ? "This save code is invalid." : "저장 코드를 확인해주세요.");
@@ -591,7 +597,7 @@
             alert(language === "en" ? "This device save is now backed up to the cloud." : "이 기기의 저장 기록을 클라우드에 처음 백업했습니다.");
           } else if (screen !== "game" && confirm(language === "en" ? "A cloud save already exists. Load it on this device now?" : "기존 클라우드 저장이 있습니다. 지금 이 기기에 불러올까요?")) {
             restoreBackup(remote.saveCode);
-            closeAccount();
+            closeAccount(false);
             refreshCurrentScreen();
           }
         } catch (_) { /* The cloud panel shows a localized error. */ }
@@ -612,7 +618,7 @@
           const remote = await cloud.load();
           if (!remote) return alert(language === "en" ? "No cloud save was found." : "불러올 클라우드 저장이 없습니다.");
           restoreBackup(remote.saveCode);
-          closeAccount();
+          closeAccount(false);
           refreshCurrentScreen();
         } catch (_) { /* The cloud panel shows a localized error. */ }
       });
@@ -673,7 +679,8 @@
   }
 
   function canControl(color) {
-    return !replayMode && !thinking && !animating && (gameMode === "local" ? color === state.turn : color === playerColor);
+    const onlineReady = gameMode !== "online" || (window.OverrideGridOnline && window.OverrideGridOnline.snapshot().status === "active");
+    return onlineReady && !replayMode && !thinking && !animating && (gameMode === "local" ? color === state.turn : color === playerColor);
   }
 
   function renderSetup() {
@@ -929,13 +936,163 @@
     if (toggle) toggle.addEventListener("change", () => { if (unitEffects[selectedCharacter]) unitEffects[selectedCharacter].enabled = toggle.checked; saveMeta(); renderMyUnits(); });
   }
 
+  function onlineErrorText(code) {
+    const messages = {
+      LOGIN_REQUIRED: language === "en" ? "Google sign-in is required." : "Google 로그인이 필요합니다.",
+      ROOM_NOT_FOUND: language === "en" ? "Invite room not found." : "초대 방을 찾을 수 없습니다.",
+      ROOM_FULL: language === "en" ? "This room already has two players." : "이미 두 명이 입장한 방입니다.",
+      ROOM_FINISHED: language === "en" ? "This match has already ended." : "이미 종료된 대전입니다.",
+      PERMISSION_DENIED: language === "en" ? "Online room permission was denied." : "온라인 방 접근 권한이 거부되었습니다.",
+      NETWORK_ERROR: language === "en" ? "Check your network connection." : "네트워크 연결을 확인해주세요.",
+      REVISION_CONFLICT: language === "en" ? "The room changed. Reloading the latest turn." : "방 상태가 변경되어 최신 수를 다시 불러옵니다.",
+      NOT_YOUR_TURN: language === "en" ? "Wait for your opponent's move." : "상대의 수를 기다려주세요.",
+      ONLINE_ERROR: language === "en" ? "Online pilot is temporarily unavailable." : "온라인 체험판을 잠시 사용할 수 없습니다.",
+    };
+    return messages[code] || code || (language === "en" ? "Ready" : "준비 완료");
+  }
+
+  function ensureOnlineConnection() {
+    const client = window.OverrideGridOnline;
+    if (!client) return;
+    if (!onlineUiUnsubscribe && !onlineBinding) {
+      onlineBinding = true;
+      onlineUiUnsubscribe = client.subscribe(handleOnlineSnapshot);
+      onlineBinding = false;
+    }
+    const current = client.snapshot();
+    if (!onlineConnecting && (current.status === "offline" || current.status === "auth-required")) {
+      onlineConnecting = true;
+      client.connect().catch(() => {}).finally(() => {
+        onlineConnecting = false;
+        if (screen === "online") renderOnlineLobby();
+      });
+    }
+  }
+
+  function handleOnlineSnapshot(online) {
+    if (screen === "online" && online.room && (online.room.status === "active" || online.room.status === "finished") && online.color) {
+      startOnlineGame(online);
+      return;
+    }
+    if (screen === "game" && gameMode === "online") {
+      syncOnlineGame(online);
+      return;
+    }
+    if (screen === "online" && !onlineBinding) renderOnlineLobby();
+  }
+
+  function onlineInitialState() {
+    const enemy = chosen === "xena" ? "sovran" : "xena";
+    const initial = G.createInitialState({ whitePack: chosen, blackPack: enemy });
+    applyLineupToState(initial, "white", chosen);
+    return initial;
+  }
+
   function renderOnlineLobby() {
     clearInterval(timer); screen = "online"; applyCosmeticTheme();
-    const online = window.OverrideGridOnline ? window.OverrideGridOnline.snapshot() : { status: "offline" };
-    const statusText = online.status === "connected" ? "CONNECTED" : online.status === "connecting" ? "CONNECTING" : t("serverOffline");
-    app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="online-page"><div class="online-heading"><small>${t("onlineLobby")} · COMING SOON</small><h1>${t("onlineTitle")}</h1><p>${t("onlineNote")}</p></div><div class="online-status ${online.status}"><span>${t("connection")}</span><b>${statusText}</b><small>${online.lastError || "WebSocket matchmaking contract ready"}</small></div><div class="online-actions"><button class="primary" disabled>${t("quickMatch")} · 준비 중</button><button class="secondary" disabled>${t("createRoom")} · 준비 중</button><button class="secondary" disabled>${t("joinRoom")} · 준비 중</button></div><div class="online-contract"><div><b>01</b><span>Match queue</span></div><div><b>02</b><span>Server validates every move</span></div><div><b>03</b><span>Rewards settle in the ledger</span></div></div><button class="secondary" id="back-to-setup">${t("play")}</button></section></div>`;
+    const client = window.OverrideGridOnline;
+    const online = client ? client.snapshot() : { status: "offline", lastError: "ONLINE_ERROR" };
+    const cloudUser = window.XenaCloudSync && window.XenaCloudSync.snapshot().user;
+    const connected = Boolean(cloudUser && ["connected", "waiting", "active", "finished"].includes(online.status));
+    const statusText = online.status === "waiting" ? "WAITING FOR OPPONENT" : online.status === "active" ? "MATCH LINKED" : connected ? "CONNECTED" : online.status === "connecting" ? "CONNECTING" : online.status === "auth-required" ? "LOGIN REQUIRED" : t("serverOffline");
+    let controls = "";
+    if (!cloudUser) {
+      controls = `<div class="online-login-callout"><b>${language === "en" ? "Link a Google account first" : "먼저 Google 계정을 연결하세요"}</b><span>${language === "en" ? "The account identifies your seat and reconnects the match on another device." : "계정으로 내 좌석을 구분하고 새로고침 후에도 대전에 재접속합니다."}</span><button class="primary" data-online-login>${language === "en" ? "Open profile login" : "프로필 로그인 열기"}</button></div>`;
+    } else if (online.room && online.room.status === "waiting") {
+      controls = `<div class="online-room-card"><small>INVITE CODE</small><button class="online-room-code" data-copy-room>${online.roomCode}</button><p>${language === "en" ? "Send this code to the opponent. The match starts automatically when they join." : "이 코드를 상대에게 보내세요. 상대가 입장하면 자동으로 대전이 시작됩니다."}</p><button class="secondary" data-leave-room>${language === "en" ? "Cancel waiting" : "대기 취소"}</button></div>`;
+    } else {
+      controls = `<div class="online-actions"><button class="primary" data-create-room>${t("createRoom")}</button><div class="online-join"><input data-room-code maxlength="8" inputmode="text" autocomplete="off" placeholder="8-DIGIT CODE" aria-label="Invite code"><button class="secondary" data-join-room>${t("joinRoom")}</button></div><button class="secondary" disabled>${t("quickMatch")} · ${language === "en" ? "NEXT PHASE" : "다음 단계"}</button></div>`;
+    }
+    app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="online-page"><div class="online-heading"><small>${t("onlineLobby")} · FIRESTORE PILOT</small><h1>${t("onlineTitle")}</h1><p>${t("onlineNote")}</p></div><div class="online-status ${online.status}"><span>${t("connection")}</span><b>${statusText}</b><small>${onlineErrorText(online.lastError)}</small></div>${controls}<div class="online-contract"><div><b>01</b><span>${language === "en" ? "Google identity seats" : "Google 계정 좌석 확인"}</span></div><div><b>02</b><span>${language === "en" ? "Turn revision synchronization" : "수순 번호 동기화"}</span></div><div><b>03</b><span>${language === "en" ? "No ranked rewards in pilot" : "체험판 랭크 보상 없음"}</span></div></div><button class="secondary" id="back-to-setup">${t("play")}</button></section></div>`;
     bindStoreButton();
-    document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
+    ensureOnlineConnection();
+    const login = app.querySelector("[data-online-login]");
+    if (login) login.addEventListener("click", openAccount);
+    const create = app.querySelector("[data-create-room]");
+    if (create) create.addEventListener("click", async () => {
+      create.disabled = true;
+      try {
+        const initial = onlineInitialState();
+        await client.createRoom({ pack: chosen, timeRule, gameState: initial, clocks: { white: TIME_RULES[timeRule].seconds, black: TIME_RULES[timeRule].seconds } });
+      } catch (_) { renderOnlineLobby(); }
+    });
+    const codeInput = app.querySelector("[data-room-code]");
+    if (codeInput) codeInput.addEventListener("input", () => { codeInput.value = client.normalizeCode(codeInput.value); });
+    const join = app.querySelector("[data-join-room]");
+    if (join) join.addEventListener("click", async () => {
+      const code = client.normalizeCode(codeInput.value);
+      if (code.length !== 8) return alert(language === "en" ? "Enter the 8-character invite code." : "8자리 초대 코드를 입력해주세요.");
+      join.disabled = true;
+      try { await client.joinRoom(code); } catch (_) { renderOnlineLobby(); }
+    });
+    const copyRoom = app.querySelector("[data-copy-room]");
+    if (copyRoom) copyRoom.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(online.roomCode); }
+      catch (_) { /* The visible code can still be selected manually. */ }
+      copyRoom.textContent = language === "en" ? "COPIED" : "복사 완료";
+    });
+    const leaveRoom = app.querySelector("[data-leave-room]");
+    if (leaveRoom) leaveRoom.addEventListener("click", () => client.leave());
+    document.getElementById("back-to-setup").addEventListener("click", () => { if (online.room) client.leave(); screen = "setup"; renderSetup(); });
+  }
+
+  function startOnlineGame(online) {
+    let remoteState;
+    try { remoteState = JSON.parse(online.room.stateJson); }
+    catch (_) { return alert(language === "en" ? "The room state is invalid." : "온라인 방 상태를 읽을 수 없습니다."); }
+    screen = "game"; gameMode = "online"; playerColor = online.color; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = [];
+    replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
+    state = remoteState;
+    onlineRevision = Number(online.room.revision || 0);
+    if (TIME_RULES[online.room.timeRule]) timeRule = online.room.timeRule;
+    clocks = online.room.clocks || { white: TIME_RULES[timeRule].seconds, black: TIME_RULES[timeRule].seconds };
+    snapshots = [cloneState(state)];
+    clearInterval(timer);
+    if (window.OverrideGridScene) window.OverrideGridScene.reset();
+    renderGame();
+    if (online.room.status === "finished") {
+      const status = G.getGameStatus(state);
+      if (status.over) finish(status.result, status.reason);
+    }
+  }
+
+  function syncOnlineGame(online) {
+    if (!online.room) return;
+    const cloudUser = window.XenaCloudSync && window.XenaCloudSync.snapshot().user;
+    if (online.room.emote && online.room.emote.nonce > onlineEmoteNonce && (!cloudUser || online.room.emote.uid !== cloudUser.uid)) {
+      onlineEmoteNonce = online.room.emote.nonce;
+      const color = online.room.emote.uid === online.room.whiteUid ? "white" : "black";
+      const entry = { id: online.room.emote.id, color, nonce: ++emoteNonce };
+      emoteFeed = [entry];
+      setTimeout(() => { if (emoteFeed[0] && emoteFeed[0].nonce === entry.nonce) { emoteFeed = []; if (screen === "game") renderGame(); } }, 1900);
+    }
+    const revision = Number(online.room.revision || 0);
+    if (revision <= onlineRevision) return;
+    let remoteState;
+    try { remoteState = JSON.parse(online.room.stateJson); } catch (_) { return; }
+    onlineRevision = revision;
+    clocks = online.room.clocks || clocks;
+    const remoteAction = online.room.lastAction;
+    const isRemoteActor = cloudUser && online.room.lastActorUid && online.room.lastActorUid !== cloudUser.uid;
+    const applyRemote = () => {
+      state = remoteState;
+      recordSnapshot();
+      animating = false;
+      cinematicAction = null;
+      thinking = false;
+      const status = G.getGameStatus(state);
+      if (online.room.status === "finished" && status.over) finish(status.result, status.reason);
+      else renderGame();
+    };
+    if (isRemoteActor && remoteAction && (remoteAction.capture || remoteAction.skill)) {
+      animating = true;
+      cinematicAction = remoteAction;
+      if (window.OverrideGridScene) window.OverrideGridScene.playAction(remoteAction);
+      renderGame();
+      setTimeout(applyRemote, remoteAction.skill ? 760 : 620);
+    } else {
+      applyRemote();
+    }
   }
 
   function startGame() {
@@ -1101,7 +1258,8 @@
   function panel(color, enemy) {
     const pack = G.PACKS[state.packs[color]];
     const localSide = gameMode === "local";
-    const sideLabel = localSide ? (color === "white" ? t("playerOne") : t("playerTwo")) : (enemy ? t("opponent") : t("player"));
+    const opponentLabel = gameMode === "online" ? (language === "en" ? "ONLINE OPPONENT" : "온라인 상대") : t("opponent");
+    const sideLabel = localSide ? (color === "white" ? t("playerOne") : t("playerTwo")) : (enemy ? opponentLabel : t("player"));
     if (localSide) enemy = false;
     return `<aside class="side-panel ${enemy ? "enemy-panel" : ""}"><div class="combatant ${enemy ? "enemy" : ""}"><small>${sideLabel}</small><h2>${pack.leaderName}</h2>
       <div class="timer ${state.turn === color ? "active" : ""}">${formatTime(clocks[color])}</div><div class="awakening ${state.awakened[color] ? "on" : ""}">${state.awakened[color] ? "OVERRIDE ACTIVE" : "CATALYST LINKED"}</div></div>
@@ -1138,8 +1296,8 @@
     const status = G.getGameStatus(state);
     const turnPack = G.PACKS[state.packs[state.turn]].leaderName;
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
-      <div class="game-layout">${panel("white", false)}<section class="arena"><div class="status-strip"><strong>${animating ? t("cinematic") : thinking ? t("thinking") : `${turnPack} ${t("turn")}${status.check ? " · CHECK" : ""}`}</strong><span>${state.ply + 1} ${t("move")}</span></div>
-      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<button class="secondary" id="exit">${t("exit")}</button>`}</div></section>${panel("black", gameMode !== "local")}</div>
+      <div class="game-layout">${panel("white", gameMode !== "local" && playerColor !== "white")}<section class="arena"><div class="status-strip"><strong>${animating ? t("cinematic") : thinking ? t("thinking") : `${turnPack} ${t("turn")}${status.check ? " · CHECK" : ""}`}</strong><span>${state.ply + 1} ${t("move")}</span></div>
+      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<button class="secondary" id="exit">${t("exit")}</button>`}</div></section>${panel("black", gameMode !== "local" && playerColor !== "black")}</div>
       ${result ? resultMarkup() : ""}${promotionMarkup()}${recoveryMarkup()}</div>`;
     app.querySelectorAll("[data-square]").forEach((button) => button.addEventListener("click", () => clickSquare(Number(button.dataset.square))));
     app.querySelectorAll("[data-skill]").forEach((button) => button.addEventListener("click", () => selectSkill(button.dataset.skill)));
@@ -1153,16 +1311,18 @@
     app.querySelectorAll("[data-recovery-index]").forEach((button) => button.addEventListener("click", () => {
       const recovery = recoveries[Number(button.dataset.recoveryIndex)];
       if (!recovery) return;
+      const before = state;
       state = G.applyRecovery(state, recovery);
       recordSnapshot();
-      renderGame();
+      if (gameMode === "online") publishOnlineState({ kind: "recovery", capturedId: recovery.capturedId }, before);
+      else renderGame();
     }));
     const exit = document.getElementById("exit"); if (exit) exit.addEventListener("click", exitGame);
     bindStoreButton();
     const replayPrev = document.getElementById("replay-prev"); if (replayPrev) replayPrev.addEventListener("click", () => stepReplay(-1));
     const replayNext = document.getElementById("replay-next"); if (replayNext) replayNext.addEventListener("click", () => stepReplay(1));
     const replayExit = document.getElementById("replay-exit"); if (replayExit) replayExit.addEventListener("click", exitGame);
-    const again = document.getElementById("again"); if (again) again.addEventListener("click", startGame);
+    const again = document.getElementById("again"); if (again) again.addEventListener("click", result && result.online ? exitGame : startGame);
     const replay = document.getElementById("replay"); if (replay) replay.addEventListener("click", startReplay);
     bindRewardChest();
     if (result && result.celebrate) launchFireworks();
@@ -1229,7 +1389,8 @@
     let shardReward = 0;
     let eventBonus = 0;
 
-    if (!localGame) {
+    const rewardEligible = gameMode === "ai" || gameMode === "event";
+    if (rewardEligible) {
       const difficulty = gameMode === "event" ? eventDifficulty : aiDifficulty;
       creditReward = draw ? 10 : win ? DIFFICULTIES[difficulty].credits : DIFFICULTIES[difficulty].loss;
       if (gameMode === "event" && win) {
@@ -1252,7 +1413,7 @@
     lastReplay = snapshots.map(cloneState);
     const title = draw ? t("draw") : localGame ? `${winner === "white" ? t("playerOne") : t("playerTwo")} ${t("win")}` : win ? t("win") : t("defeat");
     const celebrate = win || (localGame && !draw);
-    result = { title, reason, reward: creditReward, shards: shardReward, bonus: eventBonus, localGame, win, celebrate };
+    result = { title, reason, reward: creditReward, shards: shardReward, bonus: eventBonus, localGame, online: gameMode === "online", win, celebrate };
     chestOpened = false;
     renderGame();
   }
@@ -1286,7 +1447,8 @@
       state = G.applyMove(state, move);
       recordSnapshot();
       recordVisualMove(action);
-      afterMove();
+      if (gameMode === "online") publishOnlineState(action, before);
+      else afterMove();
       return;
     }
     animating = true;
@@ -1299,8 +1461,36 @@
       recordVisualMove(action);
       animating = false;
       cinematicAction = null;
-      afterMove();
+      if (gameMode === "online") publishOnlineState(action, before);
+      else afterMove();
     }, action.skill ? 760 : 620);
+  }
+
+  async function publishOnlineState(action, before) {
+    const client = window.OverrideGridOnline;
+    if (!client) return;
+    const expectedRevision = onlineRevision;
+    const status = G.getGameStatus(state);
+    thinking = true;
+    renderGame();
+    try {
+      await client.submit({
+        expectedRevision,
+        gameState: cloneState(state),
+        clocks: { ...clocks },
+        action,
+        finished: status.over,
+      });
+      onlineRevision = Math.max(onlineRevision, expectedRevision + 1);
+      thinking = false;
+      afterMove();
+    } catch (_) {
+      state = cloneState(before);
+      thinking = false;
+      selected = null; selectedSkill = null; legal = [];
+      alert(language === "en" ? "The move was not synchronized. The previous position was restored." : "수가 동기화되지 않아 이전 상태로 복구했습니다.");
+      renderGame();
+    }
   }
 
   function recordVisualMove(action) {
@@ -1315,7 +1505,7 @@
     const shardTotal = result.shards + result.bonus;
     const chest = shardTotal >= 10 ? "chest_signal_override_v1.png" : shardTotal >= 5 ? "chest_signal_epic_v1.png" : result.reward >= 50 ? "chest_signal_rare_v1.png" : "chest_signal_common_v1.png";
     let rewards = "";
-    if (!result.localGame) {
+    if (!result.localGame && !result.online) {
       const opened = chestOpened ? " is-open" : "";
       const rewardList = `<div class="reward-list${chestOpened ? " reveal" : ""}" id="reward-list">`
         + `<div class="reward"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${language === "en" ? "Signal Credits" : "시그널 크레딧"} +${result.reward}</div>`
@@ -1328,7 +1518,8 @@
         + hint + rewardList;
     }
     const fireworks = result.celebrate ? `<canvas class="fireworks" id="fireworks"></canvas>` : "";
-    return `<div class="result-overlay${result.celebrate ? " win" : ""}">${fireworks}<div class="result-box"><h2>${result.title}</h2><p>${result.reason}</p>${rewards}<div class="actions"><button class="secondary" id="replay">${t("replay")}</button><button class="primary" id="again">${language === "en" ? "Play Again" : "다시 대전"}</button></div></div></div>`;
+    const onlineNotice = result.online ? `<span class="account-warning">${language === "en" ? "Online pilot matches do not grant ranked rewards or currency." : "온라인 체험판은 랭크 점수와 재화를 지급하지 않습니다."}</span>` : "";
+    return `<div class="result-overlay${result.celebrate ? " win" : ""}">${fireworks}<div class="result-box"><h2>${result.title}</h2><p>${result.reason}</p>${onlineNotice}${rewards}<div class="actions"><button class="secondary" id="replay">${t("replay")}</button><button class="primary" id="again">${result.online ? (language === "en" ? "Return to Lobby" : "로비로") : (language === "en" ? "Play Again" : "다시 대전")}</button></div></div></div>`;
   }
 
   function bindRewardChest() {
@@ -1425,7 +1616,7 @@
     renderGame();
   }
 
-  function exitGame() { clearInterval(timer); replayMode = false; promotionChoices = []; screen = "setup"; state = null; result = null; renderSetup(); }
+  function exitGame() { clearInterval(timer); replayMode = false; promotionChoices = []; screen = "setup"; state = null; result = null; if (gameMode === "online" && window.OverrideGridOnline) window.OverrideGridOnline.leave(); renderSetup(); }
 
   const launchParams = new URLSearchParams(window.location.search);
   saveMeta();

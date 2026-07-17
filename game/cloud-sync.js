@@ -182,6 +182,11 @@
     }
   }
 
+  async function context() {
+    await connect();
+    return { auth, db, authApi, firestoreApi };
+  }
+
   window.XenaCloudSync = Object.freeze({
     snapshot,
     connect,
@@ -189,6 +194,7 @@
     signOut,
     load,
     save,
+    context,
     subscribe(listener) {
       listeners.add(listener);
       listener(snapshot());

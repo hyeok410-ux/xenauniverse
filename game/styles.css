@@ -421,6 +421,18 @@ noscript { display: block; margin: 40px auto; padding: 16px; width: min(560px, c
 .online-status.connecting b { color: var(--cyan); }
 .online-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 12px 0 18px; }
 .online-actions button { min-height: 54px; }
+.online-join { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; border: 1px solid var(--line); background: rgba(5,8,14,.92); }
+.online-join input { min-width: 0; width: 100%; padding: 0 13px; color: #eef5ff; border: 0; outline: 0; background: transparent; font: 900 13px/1 Consolas, monospace; text-transform: uppercase; }
+.online-join input:focus { box-shadow: inset 0 0 0 1px var(--cyan); }
+.online-join button { min-height: 52px; padding-inline: 13px; white-space: nowrap; }
+.online-login-callout, .online-room-card { display: grid; gap: 10px; margin: 12px 0 18px; padding: 20px; border: 1px solid rgba(50,230,239,.35); background: linear-gradient(135deg, rgba(50,230,239,.08), rgba(138,92,255,.08)); }
+.online-login-callout b { font-size: 16px; }
+.online-login-callout span, .online-room-card p { margin: 0; color: #aab4c7; font-size: 11px; line-height: 1.55; }
+.online-login-callout button { justify-self: start; }
+.online-room-card { text-align: center; }
+.online-room-card > small { color: var(--cyan); font-size: 9px; font-weight: 900; }
+.online-room-code { padding: 10px 4px; color: #f5fbff; border: 0; background: transparent; font: 1000 34px/1 Consolas, monospace; letter-spacing: .14em; cursor: pointer; }
+.online-room-card .secondary { justify-self: center; }
 .online-contract { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); background: rgba(8,10,16,.65); }
 .online-contract > div { min-height: 96px; padding: 14px; border-right: 1px solid var(--line); }
 .online-contract > div:last-child { border-right: 0; }
@@ -494,6 +506,9 @@ body[data-cosmetic="legacy-nova"] { --cyan: #d292ff; --lime: #ffcb66; --violet: 
   .choice-grid button { grid-template-columns: 52px minmax(0, 1fr); }
   .choice-grid img { width: 52px; height: 52px; }
   .online-actions, .online-contract { grid-template-columns: 1fr; }
+  .online-join { grid-template-columns: 1fr; }
+  .online-join input { min-height: 48px; text-align: center; }
+  .online-room-code { font-size: 28px; }
   .online-contract > div { border-right: 0; border-bottom: 1px solid var(--line); }
   .online-contract > div:last-child { border-bottom: 0; }
   .emote-button span { display: none; }
