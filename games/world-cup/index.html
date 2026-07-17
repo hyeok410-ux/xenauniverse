@@ -394,6 +394,26 @@ function finish(){
   saveHistory(c);
   renderHistory();
   show('result');
+  awardXC();
+}
+
+/* ── XC 통합 크레딧 적립 (하루 3회 × 5XC) ── */
+var WALLET_KEY = 'xena_wallet_v1';
+function awardXC(){
+  try{
+    var w = null;
+    try{ w = JSON.parse(localStorage.getItem(WALLET_KEY)); }catch(e){}
+    if(!w || typeof w.xc !== 'number'){ w = {xc:0, daily:{}}; }
+    if(!w.daily) w.daily = {};
+    var today = new Date().toISOString().slice(0,10);
+    if(w.daily.date !== today){ w.daily = {date:today}; }
+    var n = w.daily.worldcup || 0;
+    if(n >= 3) return;
+    w.daily.worldcup = n + 1;
+    w.xc += 5;
+    localStorage.setItem(WALLET_KEY, JSON.stringify(w));
+    setTimeout(function(){ toast('+5 XC 적립! ('+w.daily.worldcup+'/3 · 보유 '+w.xc+' XC) — ZENA CARDS 뽑기에 사용'); }, 900);
+  }catch(e){}
 }
 
 /* ── 누적 득표 (전 사진 1표 시딩 → 최종픽마다 +1) ── */
@@ -514,7 +534,7 @@ $('btn-download').addEventListener('click', function(){
   var img = new Image();
   img.onload = function(){
     try{
-      var W = 900, H = 1350;
+      var W = 900, H = 1440;
       var cv = document.createElement('canvas');
       cv.width = W; cv.height = H;
       var ctx = cv.getContext('2d');
@@ -549,10 +569,10 @@ $('btn-download').addEventListener('click', function(){
       ctx.fillText('MY FINAL PICK', W/2, 172);
       ctx.fillStyle = '#e8c468';
       ctx.font = '700 40px Manrope, Arial, sans-serif';
-      ctx.fillText('★ '+c.track+' — '+c.name, W/2, py+ph+78);
+      ctx.fillText('★ '+c.track+' — '+c.name, W/2, py+ph+80);
       ctx.fillStyle = 'rgba(230,230,238,.55)';
       ctx.font = '500 24px "JetBrains Mono", monospace';
-      ctx.fillText('xenauniverse.com', W/2, H-56);
+      ctx.fillText('xenauniverse.com/games/world-cup', W/2, H-42);
       // 다운로드
       var a = document.createElement('a');
       a.download = 'xena-worldcup-pick.png';

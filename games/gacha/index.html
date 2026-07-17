@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ZENA CARDS — XENA 포토카드 가챠</title>
+<meta name="description" content="매일 무료로 뽑는 XENA 포토카드. N부터 최고 등급 Sovereign까지 — 컬렉션을 완성하라.">
+<meta property="og:title" content="ZENA CARDS — XENA 포토카드 가챠">
+<meta property="og:description" content="매일 무료로 뽑는 XENA 포토카드. 컬렉션을 완성하라.">
+<meta property="og:image" content="https://xenauniverse.com/images/gallery/cover-answer.jpg">
+<meta property="og:url" content="https://xenauniverse.com/games/gacha/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --black:#000000;
+  --purple:#6e2fd9;
+  --purple-light:#a06bff;
+  --silver:#e6e6ee;
+  --cyan:#3fe0ff;
+  --magenta:#ff2fb0;
+  --gold:#e8c468;
+  --hair:rgba(255,255,255,.09);
+  --text-dim:rgba(230,230,238,.55);
+  --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  --g-N:#b9b9c6; --g-R:#3fe0ff; --g-S:#a06bff; --g-SR:#ff2fb0; --g-SSR:#e8c468;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--black);color:var(--silver);font-family:var(--font-sans);font-weight:300;min-height:100%;overflow-x:hidden;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;}
+
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.22), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 85% 100%, rgba(63,224,255,.08), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 10% 90%, rgba(255,47,176,.07), transparent 60%);}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
+  background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);}
+.grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 8s steps(10) infinite;}
+@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-6%)}50%{transform:translate(-7%,4%)}70%{transform:translate(6%,7%)}90%{transform:translate(-4%,3%)}}
+
+.wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 20px calc(60px + env(safe-area-inset-bottom));}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 8px;gap:10px;flex-wrap:wrap;}
+.back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
+.back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
+.wallet{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;color:var(--gold);border:1px solid rgba(232,196,104,.4);padding:8px 16px;border-radius:20px;background:rgba(232,196,104,.06);text-shadow:0 0 12px rgba(232,196,104,.4);font-variant-numeric:tabular-nums;}
+
+.head{text-align:center;padding:30px 0 26px;}
+.eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;text-shadow:0 0 16px rgba(63,224,255,.5);}
+h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-height:1.1;margin-bottom:12px;
+  background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.head p{color:var(--text-dim);font-size:.92rem;max-width:440px;margin:0 auto;line-height:1.7;}
+
+/* ── 팩 ── */
+.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;max-width:760px;margin:0 auto 14px;}
+.pack{position:relative;border-radius:20px;border:1px solid var(--hair);padding:26px 24px 24px;text-align:center;
+  background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.012));backdrop-filter:blur(16px);transition:.3s ease;}
+.pack.signal:hover{border-color:rgba(63,224,255,.45);box-shadow:0 14px 44px rgba(63,224,255,.12);}
+.pack.sov:hover{border-color:rgba(232,196,104,.45);box-shadow:0 14px 44px rgba(232,196,104,.12);}
+.pack-kind{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;margin-bottom:10px;}
+.pack.signal .pack-kind{color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);}
+.pack.sov .pack-kind{color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);}
+.pack h3{font-size:1.3rem;font-weight:800;letter-spacing:.06em;margin-bottom:6px;}
+.pack .cool{font-family:var(--font-mono);font-size:.64rem;color:var(--text-dim);margin-bottom:16px;letter-spacing:.08em;}
+.pack-art{width:120px;height:168px;margin:0 auto 18px;border-radius:12px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.14);}
+.pack.signal .pack-art{background:linear-gradient(150deg,#04121a,#062a3a 45%,#04121a);box-shadow:inset 0 0 34px rgba(63,224,255,.25), 0 6px 24px rgba(0,0,0,.5);}
+.pack.sov .pack-art{background:linear-gradient(150deg,#150d02,#3a2a06 45%,#150d02);box-shadow:inset 0 0 34px rgba(232,196,104,.28), 0 6px 24px rgba(0,0,0,.5);}
+.pack-art b{font-family:var(--font-sans);font-weight:800;font-size:1.9rem;letter-spacing:.04em;}
+.pack.signal .pack-art b{color:var(--cyan);text-shadow:0 0 22px rgba(63,224,255,.8);}
+.pack.sov .pack-art b{color:var(--gold);text-shadow:0 0 22px rgba(232,196,104,.8);}
+.pack-art small{position:absolute;bottom:8px;left:0;right:0;font-family:var(--font-mono);font-size:.5rem;letter-spacing:.24em;color:rgba(255,255,255,.5);}
+.draw-btn{width:100%;font-weight:700;font-size:.92rem;letter-spacing:.1em;padding:14px 0;border-radius:28px;border:none;transition:.3s ease;margin-bottom:8px;}
+.pack.signal .draw-btn{background:var(--silver);color:var(--black);}
+.pack.signal .draw-btn:not(:disabled):hover{background:#fff;box-shadow:0 0 26px rgba(63,224,255,.4);}
+.pack.sov .draw-btn{background:rgba(232,196,104,.92);color:#1a1206;}
+.pack.sov .draw-btn:not(:disabled):hover{background:var(--gold);box-shadow:0 0 26px rgba(232,196,104,.45);}
+.draw-btn:disabled{background:rgba(255,255,255,.07)!important;color:var(--text-dim)!important;cursor:default;font-family:var(--font-mono);font-weight:500;font-size:.78rem;}
+.xc-btn{width:100%;font-family:var(--font-mono);font-size:.7rem;font-weight:500;letter-spacing:.1em;padding:11px 0;border-radius:26px;border:1px solid rgba(232,196,104,.35);background:transparent;color:var(--gold);transition:.3s ease;}
+.xc-btn:not(:disabled):hover{background:rgba(232,196,104,.1);box-shadow:0 0 16px rgba(232,196,104,.2);}
+.xc-btn:disabled{opacity:.35;cursor:default;}
+.odds{margin-top:14px;font-family:var(--font-mono);font-size:.56rem;letter-spacing:.06em;color:var(--text-dim);line-height:1.9;}
+.odds b{font-weight:700;}
+.odds .oN{color:var(--g-N);} .odds .oR{color:var(--g-R);} .odds .oS{color:var(--g-S);} .odds .oSR{color:var(--g-SR);} .odds .oSSR{color:var(--g-SSR);}
+
+.note-line{text-align:center;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.1em;color:var(--text-dim);opacity:.75;margin-bottom:40px;line-height:2;}
+
+/* ── 컬렉션 ── */
+.col-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.col-head h2{font-size:1.3rem;font-weight:700;letter-spacing:.04em;}
+.col-rate{font-family:var(--font-mono);font-size:.7rem;color:var(--cyan);letter-spacing:.1em;}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.tab{font-family:var(--font-mono);font-size:.66rem;font-weight:500;letter-spacing:.1em;padding:8px 16px;border-radius:20px;border:1px solid var(--hair);background:rgba(255,255,255,.03);color:var(--text-dim);transition:.25s ease;}
+.tab.sel{color:var(--cyan);border-color:rgba(63,224,255,.5);box-shadow:0 0 14px rgba(63,224,255,.18);}
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
+.ccard{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:3/4.35;border:1px solid var(--hair);background:rgba(255,255,255,.02);transition:.25s ease;}
+.ccard.owned{cursor:pointer;}
+.ccard.owned:hover{transform:translateY(-3px);}
+.ccard img{width:100%;height:100%;object-fit:cover;display:block;}
+.ccard.locked img{filter:brightness(.1) grayscale(1);}
+.ccard.locked::after{content:'?';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:rgba(230,230,238,.25);}
+.ccard .cinfo{position:absolute;left:0;right:0;bottom:0;padding:18px 8px 6px;background:linear-gradient(transparent, rgba(0,0,0,.88));}
+.ccard .cinfo b{display:block;font-size:.6rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gtag{position:absolute;top:6px;left:6px;font-family:var(--font-mono);font-size:.54rem;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:10px;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);}
+.gtag.N{color:var(--g-N);border:1px solid rgba(185,185,198,.5);}
+.gtag.R{color:var(--g-R);border:1px solid rgba(63,224,255,.55);}
+.gtag.S{color:var(--g-S);border:1px solid rgba(160,107,255,.55);}
+.gtag.SR{color:var(--g-SR);border:1px solid rgba(255,47,176,.55);}
+.gtag.SSR{color:var(--g-SSR);border:1px solid rgba(232,196,104,.6);}
+.ccard.g-R.owned{border-color:rgba(63,224,255,.35);}
+.ccard.g-S.owned{border-color:rgba(160,107,255,.4);}
+.ccard.g-SR.owned{border-color:rgba(255,47,176,.45);box-shadow:0 0 16px rgba(255,47,176,.12);}
+.ccard.g-SSR.owned{border-color:rgba(232,196,104,.55);box-shadow:0 0 20px rgba(232,196,104,.18);}
+.dupe{position:absolute;top:6px;right:6px;font-family:var(--font-mono);font-style:normal;font-size:.56rem;font-weight:700;color:var(--gold);background:rgba(0,0,0,.72);padding:3px 7px;border-radius:10px;}
+
+/* ── 뽑기 연출 오버레이 ── */
+.reveal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;padding:24px;backdrop-filter:blur(8px);}
+.reveal.on{display:flex;}
+.flip-zone{perspective:1200px;cursor:pointer;}
+.flip-card{position:relative;width:min(300px,74vw);aspect-ratio:3/4.2;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.3,1);}
+.flip-card.flipped{transform:rotateY(180deg);}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;overflow:hidden;}
+.face.back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(110,47,217,.5), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(63,224,255,.06) 0 2px, transparent 2px 14px),
+    linear-gradient(160deg,#0a0614,#140a24 50%,#0a0614);
+  border:1px solid rgba(160,107,255,.5);box-shadow:0 0 44px rgba(110,47,217,.35);}
+.face.back .logo-x{font-size:3.4rem;font-weight:800;color:var(--purple-light);text-shadow:0 0 30px rgba(160,107,255,.9);}
+.face.back .logo-t{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.5em;color:var(--silver);}
+.face.back small{font-family:var(--font-mono);font-size:.52rem;letter-spacing:.2em;color:var(--text-dim);}
+.face.front{transform:rotateY(180deg);border:2px solid;display:flex;flex-direction:column;background:#060409;}
+.face.front img{width:100%;flex:1;object-fit:cover;min-height:0;}
+.face.front .fmeta{padding:10px 12px 12px;text-align:center;background:rgba(0,0,0,.85);}
+.face.front .fmeta small{display:block;font-family:var(--font-mono);font-size:.56rem;letter-spacing:.24em;margin-bottom:3px;}
+.face.front .fmeta b{font-size:.85rem;font-weight:700;letter-spacing:.02em;}
+.reveal-tip{margin-top:22px;font-family:var(--font-mono);font-size:.66rem;letter-spacing:.24em;color:var(--text-dim);animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.reveal-actions{display:none;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:24px;}
+.reveal-actions.on{display:flex;}
+.rv-btn{font-family:var(--font-mono);font-size:.7rem;font-weight:500;letter-spacing:.1em;padding:12px 22px;border-radius:26px;border:1px solid var(--hair);background:rgba(255,255,255,.05);color:var(--silver);transition:.3s ease;}
+.rv-btn:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
+.rv-btn.primary{background:var(--silver);color:var(--black);border:none;font-family:var(--font-sans);font-weight:700;}
+.rv-btn.primary:hover{background:#fff;color:var(--black);}
+.new-badge{margin-top:16px;display:none;font-family:var(--font-mono);font-size:.66rem;letter-spacing:.2em;padding:6px 16px;border-radius:16px;}
+.new-badge.on{display:inline-block;}
+.new-badge.isnew{color:#5cffc0;border:1px solid rgba(92,255,192,.5);text-shadow:0 0 10px rgba(92,255,192,.5);}
+.new-badge.isdupe{color:var(--text-dim);border:1px solid var(--hair);}
+.flash{position:fixed;inset:0;z-index:99;background:radial-gradient(circle, rgba(232,196,104,.85), rgba(232,196,104,0) 70%);opacity:0;pointer-events:none;}
+.flash.go{animation:flashAnim .9s ease-out;}
+@keyframes flashAnim{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:120;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;color:var(--silver);background:rgba(8,8,14,.92);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);max-width:88vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* 카드 상세(분해) 모달 */
+.detail{position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px);}
+.detail.on{display:flex;}
+.detail-inner{width:min(340px,88vw);background:linear-gradient(165deg, rgba(255,255,255,.05), rgba(255,255,255,.02));border:1px solid var(--hair);border-radius:18px;padding:20px;text-align:center;backdrop-filter:blur(16px);}
+.detail-inner img{width:100%;border-radius:12px;aspect-ratio:3/4;object-fit:cover;margin-bottom:14px;}
+.detail-inner h4{font-size:1rem;font-weight:700;margin-bottom:4px;}
+.detail-inner .dgrade{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.2em;margin-bottom:14px;}
+.detail-inner .drow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+@media (max-width:560px){
+  .album{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+<div class="grain"></div>
+<div class="flash" id="flash"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a class="back-link" href="../">&larr; XENA GAMES</a>
+    <div class="wallet" id="wallet">0 XC</div>
+  </div>
+
+  <div class="head">
+    <div class="eyebrow">Photo Card Gacha</div>
+    <h1>ZENA CARDS</h1>
+    <p>매일 무료로 뽑는 XENA 포토카드.<br>N부터 최고 등급 <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b>까지 — 컬렉션을 완성하라.</p>
+  </div>
+
+  <div class="packs">
+    <div class="pack signal">
+      <div class="pack-kind">Basic · Every 8 Hours</div>
+      <h3>SIGNAL PACK</h3>
+      <div class="cool" id="cool-signal">—</div>
+      <div class="pack-art"><b>X</b><small>ZENA CARDS</small></div>
+      <button class="draw-btn" id="btn-signal">무료 뽑기</button>
+      <button class="xc-btn" id="btn-signal-xc">50 XC로 추가 뽑기</button>
+      <div class="odds"><span class="oN">N 70%</span> · <span class="oR">R 26.9%</span> · <span class="oS">S 3%</span> · <span class="oSR">SR 0.1%</span></div>
+    </div>
+    <div class="pack sov">
+      <div class="pack-kind">Premium · Every 24 Hours</div>
+      <h3>SOVEREIGN PACK</h3>
+      <div class="cool" id="cool-sov">—</div>
+      <div class="pack-art"><b>X</b><small>ZENA CARDS</small></div>
+      <button class="draw-btn" id="btn-sov">무료 뽑기</button>
+      <button class="xc-btn" id="btn-sov-xc">200 XC로 추가 뽑기</button>
+      <div class="odds"><span class="oN">N 60.9%</span> · <span class="oR">R 33%</span> · <span class="oS">S 5%</span> · <span class="oSR">SR 1%</span> · <span class="oSSR">SSR 0.1%</span></div>
+    </div>
+  </div>
+  <p class="note-line">
+    XC는 이상형 월드컵 완주(+5, 하루 3회)·중복 카드 분해로 모을 수 있습니다<br>
+    컬렉션은 이 브라우저에 저장됩니다 · 확률 상시 공개 · 1st Edition
+  </p>
+
+  <div class="col-head">
+    <h2>MY COLLECTION</h2>
+    <div class="col-rate" id="col-rate">0 / 0 (0%)</div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab sel" data-g="ALL">전체</button>
+    <button class="tab" data-g="N">N</button>
+    <button class="tab" data-g="R">R</button>
+    <button class="tab" data-g="S">S</button>
+    <button class="tab" data-g="SR">SR</button>
+    <button class="tab" data-g="SSR">SSR</button>
+  </div>
+  <div class="album" id="album"></div>
+</div>
+
+<!-- 뽑기 연출 -->
+<div class="reveal" id="reveal">
+  <div class="flip-zone" id="flip-zone">
+    <div class="flip-card" id="flip-card">
+      <div class="face back">
+        <div class="logo-x">X</div>
+        <div class="logo-t">ZENA CARDS</div>
+        <small>1ST EDITION</small>
+      </div>
+      <div class="face front" id="front-face">
+        <img id="rv-img" src="" alt="뽑은 카드">
+        <div class="fmeta"><small id="rv-grade"></small><b id="rv-name"></b></div>
+      </div>
+    </div>
+  </div>
+  <div class="reveal-tip" id="reveal-tip">카드를 탭해서 공개</div>
+  <div class="new-badge" id="new-badge"></div>
+  <div class="reveal-actions" id="reveal-actions">
+    <button class="rv-btn primary" id="rv-close">확인</button>
+    <button class="rv-btn" id="rv-share">자랑하기</button>
+    <button class="rv-btn" id="rv-save">카드 저장</button>
+  </div>
+</div>
+
+<!-- 카드 상세 -->
+<div class="detail" id="detail">
+  <div class="detail-inner">
+    <img id="dt-img" src="" alt="">
+    <h4 id="dt-name"></h4>
+    <div class="dgrade" id="dt-grade"></div>
+    <div class="drow">
+      <button class="rv-btn" id="dt-share">자랑하기</button>
+      <button class="rv-btn" id="dt-dust">분해</button>
+      <button class="rv-btn primary" id="dt-close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="cards.js"></script>
+<script>
+(function(){
+'use strict';
+var SITE_URL = 'https://xenauniverse.com/games/gacha/';
+var GRADE_COLOR = {N:'#b9b9c6', R:'#3fe0ff', S:'#a06bff', SR:'#ff2fb0', SSR:'#e8c468'};
+var GRADE_LABEL = {N:'NORMAL', R:'RARE', S:'SUPER', SR:'SUPER RARE', SSR:'SOVEREIGN'};
+var DUST = {N:1, R:3, S:10, SR:30, SSR:100};
+var PACKS = {
+  signal: {label:'SIGNAL PACK', coolMs:8*3600*1000, price:50,
+    odds:[['SR',0.001],['S',0.03],['R',0.269],['N',0.700]]},
+  sov: {label:'SOVEREIGN PACK', coolMs:24*3600*1000, price:200,
+    odds:[['SSR',0.001],['SR',0.010],['S',0.05],['R',0.330],['N',0.609]]}
+};
+var FALLBACK = {SSR:'SR', SR:'S', S:'R', R:'N', N:null};
+
+/* 카드 풀 */
+var CARDS = (window.ZENA_CARD_DEFS||[]).map(function(d){
+  return {id:d[0], name:d[1], grade:d[2], img:d[3], avail:d[4]===1};
+});
+var AVAIL = CARDS.filter(function(c){return c.avail;});
+var byGrade = {};
+AVAIL.forEach(function(c){ (byGrade[c.grade] = byGrade[c.grade]||[]).push(c); });
+
+/* 저장 */
+var SAVE_KEY = 'zena_gacha_v1', WALLET_KEY = 'xena_wallet_v1';
+function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(e){ return def; } }
+function save(key, v){ try{ localStorage.setItem(key, JSON.stringify(v)); }catch(e){} }
+var st = load(SAVE_KEY, {});
+if(!st.owned) st.owned = {};
+if(!st.packs) st.packs = {signal:0, sov:0};
+var wallet = load(WALLET_KEY, {});
+if(typeof wallet.xc !== 'number') wallet.xc = 0;
+if(!st.welcomed){
+  st.welcomed = true;
+  wallet.xc += 50;
+  save(WALLET_KEY, wallet);
+  save(SAVE_KEY, st);
+  setTimeout(function(){ toast('웰컴 보너스 +50 XC — 추가 뽑기 1회 가능!'); }, 700);
+}
+
+var $ = function(id){ return document.getElementById(id); };
+function toastMsg(){}
+var toastTimer = null;
+function toast(msg){
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
+
+/* ── 뽑기 로직 ── */
+function rollGrade(pack){
+  var r = Math.random(), acc = 0, odds = PACKS[pack].odds;
+  for(var i=0;i<odds.length;i++){
+    acc += odds[i][1];
+    if(r < acc) return odds[i][0];
+  }
+  return 'N';
+}
+function pickCard(grade){
+  var g = grade;
+  while(g && !(byGrade[g] && byGrade[g].length)){ g = FALLBACK[g]; }
+  if(!g) return null;
+  var pool = byGrade[g];
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+var lastDrawn = null;
+function draw(pack, useXC){
+  if(!AVAIL.length){ toast('카드 준비 중입니다'); return; }
+  var now = Date.now();
+  if(useXC){
+    if(wallet.xc < PACKS[pack].price){ toast('XC가 부족합니다 — 월드컵 완주·중복 분해로 모을 수 있어요'); return; }
+    wallet.xc -= PACKS[pack].price;
+    save(WALLET_KEY, wallet);
+  } else {
+    if(now - (st.packs[pack]||0) < PACKS[pack].coolMs) return;
+    st.packs[pack] = now;
+  }
+  var card = pickCard(rollGrade(pack));
+  if(!card){ toast('카드 준비 중입니다'); return; }
+  var isNew = !st.owned[card.id];
+  st.owned[card.id] = (st.owned[card.id]||0) + 1;
+  save(SAVE_KEY, st);
+  lastDrawn = {card:card, isNew:isNew};
+  openReveal(card, isNew);
+  renderAll();
+}
+
+/* ── 연출 ── */
+var flipped = false;
+function openReveal(card, isNew){
+  flipped = false;
+  var f = $('flip-card');
+  f.classList.remove('flipped');
+  $('rv-img').src = card.img;
+  $('rv-grade').textContent = GRADE_LABEL[card.grade];
+  $('rv-grade').style.color = GRADE_COLOR[card.grade];
+  $('rv-name').textContent = card.name;
+  $('front-face').style.borderColor = GRADE_COLOR[card.grade];
+  $('front-face').style.boxShadow = '0 0 50px ' + GRADE_COLOR[card.grade] + '55';
+  $('reveal-tip').style.display = '';
+  $('reveal-actions').classList.remove('on');
+  var nb = $('new-badge');
+  nb.className = 'new-badge';
+  $('reveal').classList.add('on');
+}
+$('flip-zone').addEventListener('click', function(){
+  if(flipped || !lastDrawn) return;
+  flipped = true;
+  $('flip-card').classList.add('flipped');
+  var g = lastDrawn.card.grade;
+  if(g==='SR' || g==='SSR'){
+    var fl = $('flash');
+    fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+  }
+  setTimeout(function(){
+    $('reveal-tip').style.display = 'none';
+    var nb = $('new-badge');
+    nb.classList.add('on', lastDrawn.isNew ? 'isnew' : 'isdupe');
+    nb.textContent = lastDrawn.isNew ? '★ NEW — 도감 등록!' : '중복 카드 — 분해하면 +'+DUST[g]+' XC';
+    $('reveal-actions').classList.add('on');
+  }, 750);
+});
+$('rv-close').addEventListener('click', function(){ $('reveal').classList.remove('on'); });
+$('rv-share').addEventListener('click', function(){ if(lastDrawn) shareCard(lastDrawn.card); });
+$('rv-save').addEventListener('click', function(){ if(lastDrawn) downloadCard(lastDrawn.card); });
+
+/* ── 쿨다운 표시 ── */
+function fmtLeft(ms){
+  var s = Math.ceil(ms/1000);
+  var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return (h>0? h+'시간 ' : '') + m + '분 ' + (h>0?'':sec+'초');
+}
+function tickCooldowns(){
+  ['signal','sov'].forEach(function(p){
+    var left = PACKS[p].coolMs - (Date.now() - (st.packs[p]||0));
+    var btn = $(p==='signal'?'btn-signal':'btn-sov');
+    var cool = $(p==='signal'?'cool-signal':'cool-sov');
+    if(left <= 0){
+      btn.disabled = false;
+      btn.textContent = '무료 뽑기';
+      cool.textContent = '지금 무료 뽑기 가능!';
+    } else {
+      btn.disabled = true;
+      btn.textContent = fmtLeft(left) + ' 후 무료';
+      cool.textContent = '다음 무료까지 ' + fmtLeft(left);
+    }
+    var xcBtn = $(p==='signal'?'btn-signal-xc':'btn-sov-xc');
+    xcBtn.disabled = wallet.xc < PACKS[p].price;
+  });
+}
+setInterval(tickCooldowns, 1000);
+
+$('btn-signal').addEventListener('click', function(){ draw('signal', false); });
+$('btn-sov').addEventListener('click', function(){ draw('sov', false); });
+$('btn-signal-xc').addEventListener('click', function(){ draw('signal', true); });
+$('btn-sov-xc').addEventListener('click', function(){ draw('sov', true); });
+
+/* ── 컬렉션 ── */
+var curTab = 'ALL';
+document.querySelectorAll('.tab').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('sel');});
+    b.classList.add('sel');
+    curTab = b.getAttribute('data-g');
+    renderAlbum();
+  });
+});
+function renderAlbum(){
+  var grid = $('album');
+  grid.innerHTML = '';
+  AVAIL.forEach(function(c){
+    if(curTab !== 'ALL' && c.grade !== curTab) return;
+    var n = st.owned[c.id] || 0;
+    var cell = document.createElement('div');
+    cell.className = 'ccard g-'+c.grade+' '+(n>0?'owned':'locked');
+    cell.innerHTML =
+      '<img src="'+c.img+'" alt="'+(n>0?c.name:'미보유 카드')+'" loading="lazy">'+
+      '<span class="gtag '+c.grade+'">'+c.grade+'</span>'+
+      (n>1 ? '<span class="dupe">&times;'+n+'</span>' : '')+
+      (n>0 ? '<div class="cinfo"><b>'+c.name+'</b></div>' : '');
+    if(n>0){ cell.addEventListener('click', function(){ openDetail(c); }); }
+    grid.appendChild(cell);
+  });
+}
+function renderRate(){
+  var owned = AVAIL.filter(function(c){return st.owned[c.id];}).length;
+  var pct = AVAIL.length ? Math.round(owned/AVAIL.length*100) : 0;
+  $('col-rate').textContent = owned + ' / ' + AVAIL.length + ' (' + pct + '%)';
+}
+function renderAll(){ renderWallet(); renderAlbum(); renderRate(); tickCooldowns(); }
+
+/* ── 카드 상세 & 분해 ── */
+var detailCard = null;
+function openDetail(c){
+  detailCard = c;
+  $('dt-img').src = c.img;
+  $('dt-name').textContent = c.name;
+  var n = st.owned[c.id] || 0;
+  $('dt-grade').textContent = GRADE_LABEL[c.grade] + ' · 보유 ' + n + '장';
+  $('dt-grade').style.color = GRADE_COLOR[c.grade];
+  $('dt-dust').disabled = n < 2;
+  $('dt-dust').textContent = n < 2 ? '분해 (중복 없음)' : '중복 분해 +' + DUST[c.grade]*(n-1) + ' XC';
+  $('detail').classList.add('on');
+}
+$('dt-close').addEventListener('click', function(){ $('detail').classList.remove('on'); });
+$('detail').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
+$('dt-dust').addEventListener('click', function(){
+  if(!detailCard) return;
+  var n = st.owned[detailCard.id] || 0;
+  if(n < 2) return;
+  var gain = DUST[detailCard.grade] * (n-1);
+  st.owned[detailCard.id] = 1;
+  wallet.xc += gain;
+  save(SAVE_KEY, st); save(WALLET_KEY, wallet);
+  toast('중복 '+(n-1)+'장 분해 → +'+gain+' XC');
+  $('detail').classList.remove('on');
+  renderAll();
+});
+$('dt-share').addEventListener('click', function(){ if(detailCard) shareCard(detailCard); });
+
+/* ── 공유 ── */
+function shareText(c){
+  return 'ZENA CARDS에서 뽑은 내 카드 🃏 ['+GRADE_LABEL[c.grade]+'] '+c.name+' — 너도 무료로 뽑아봐!';
+}
+function shareCard(c){
+  if(navigator.share){
+    navigator.share({title:'ZENA CARDS', text:shareText(c), url:SITE_URL}).catch(function(){});
+  } else if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(shareText(c)+' '+SITE_URL).then(function(){toast('링크가 복사됐습니다 — SNS에 붙여넣기 하세요');},function(){toast('복사 실패');});
+  } else {
+    toast('이 브라우저는 공유를 지원하지 않습니다');
+  }
+}
+/* 공유용 카드 이미지 (ZENA CARDS 로고 + 등급 프레임 각인) */
+function downloadCard(c){
+  var img = new Image();
+  img.onload = function(){
+    try{
+      var W = 900, H = 1440;
+      var cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      var ctx = cv.getContext('2d');
+      ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+      var grd = ctx.createRadialGradient(W/2,-100,50,W/2,0,900);
+      grd.addColorStop(0,'rgba(110,47,217,.4)'); grd.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
+      var px=70, py=230, pw=W-140, ph=Math.round(pw*4/3);
+      var ir=img.width/img.height, pr=pw/ph, sx,sy,sw,sh;
+      if(ir>pr){ sh=img.height; sw=sh*pr; sx=(img.width-sw)/2; sy=0; }
+      else{ sw=img.width; sh=sw/pr; sx=0; sy=(img.height-sh)/2; }
+      ctx.save(); rr(ctx,px,py,pw,ph,24); ctx.clip();
+      ctx.drawImage(img,sx,sy,sw,sh,px,py,pw,ph); ctx.restore();
+      ctx.strokeStyle = GRADE_COLOR[c.grade]; ctx.lineWidth = 5;
+      rr(ctx,px,py,pw,ph,24); ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#a06bff';
+      ctx.font = '800 58px Manrope, Arial, sans-serif';
+      ctx.fillText('X', W/2, 92);
+      ctx.fillStyle = '#e6e6ee';
+      ctx.font = '500 30px "JetBrains Mono", monospace';
+      ctx.fillText('Z E N A   C A R D S', W/2, 140);
+      ctx.fillStyle = GRADE_COLOR[c.grade];
+      ctx.font = '700 34px "JetBrains Mono", monospace';
+      ctx.fillText('[ '+GRADE_LABEL[c.grade]+' ]', W/2, 196);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 42px Manrope, Arial, sans-serif';
+      ctx.fillText(c.name, W/2, py+ph+80);
+      ctx.fillStyle = 'rgba(230,230,238,.55)';
+      ctx.font = '500 24px "JetBrains Mono", monospace';
+      ctx.fillText('xenauniverse.com/games/gacha', W/2, H-42);
+      var a = document.createElement('a');
+      a.download = 'zena-card-'+c.id+'.png';
+      a.href = cv.toDataURL('image/png');
+      a.click();
+      toast('카드 이미지 저장 완료 — 인스타 스토리에 올려보세요!');
+    }catch(e){ toast('이미지 저장 실패'); }
+  };
+  img.onerror = function(){ toast('이미지 로드 실패'); };
+  img.src = c.img;
+}
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+
+renderAll();
+})();
+</script>
+</body>
+</html>
