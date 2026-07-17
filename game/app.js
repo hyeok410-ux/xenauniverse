@@ -335,6 +335,7 @@
   }
 
   let screen = "setup";
+  let pendingRoomCode = "";
   let profile = safeJson(storage.get("og_profile"), null) || createGuestProfile();
   let committedStarter = storage.get("og_starter");
   let chosen = committedStarter || "xena";
@@ -695,7 +696,7 @@
       </button>`;
     };
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
-      <section class="setup"><div class="demo-banner"><b>${language === "en" ? "FREE WEB PROTOTYPE" : "무료 웹 체험판"}</b><span>${language === "en" ? "AI and local matches are open. Online play, login sync and payments are in preparation." : "AI·로컬 대전을 먼저 공개합니다. 온라인 대전·로그인 동기화·결제는 준비 중입니다."}</span></div><h1>CHOOSE YOUR <span>FIRST SIGNAL</span></h1>
+      <section class="setup"><div class="demo-banner"><b>${language === "en" ? "FREE WEB PROTOTYPE" : "무료 웹 체험판"}</b><span>${language === "en" ? "AI, local and invite-code online matches are open. Payments remain disabled." : "AI·로컬·초대 코드 온라인 대전을 이용할 수 있습니다. 결제는 비활성화 상태입니다."}</span></div><h1>CHOOSE YOUR <span>FIRST SIGNAL</span></h1>
       <p class="lead">${language === "en" ? "Choose one starter pack. Every piece follows the same chess rules; each leader changes the skills and combat presentation." : "스타터 팩 하나를 선택하세요. 모든 말은 같은 체스 규칙을 따르며 리더의 기술과 전장 연출만 달라집니다."}</p>
       <div class="pack-grid">${card("xena")}${card("sovran")}</div>
       <div class="mode-control"><small>${t("mode")}</small><div class="mode-options">${Object.entries(MODES).map(([id]) => `<button class="mode-option ${gameMode === id ? "active" : ""}" data-mode="${id}"><b>${modeText(id, 0)}</b><span>${modeText(id, 1)}</span></button>`).join("")}</div></div>
@@ -942,8 +943,9 @@
       ROOM_NOT_FOUND: language === "en" ? "Invite room not found." : "초대 방을 찾을 수 없습니다.",
       ROOM_FULL: language === "en" ? "This room already has two players." : "이미 두 명이 입장한 방입니다.",
       ROOM_FINISHED: language === "en" ? "This match has already ended." : "이미 종료된 대전입니다.",
-      PERMISSION_DENIED: language === "en" ? "Online room permission was denied." : "온라인 방 접근 권한이 거부되었습니다.",
+      PERMISSION_DENIED: language === "en" ? "Room permission denied. Publish the latest Firestore rules." : "방 접근 권한이 거부되었습니다. 최신 Firestore 규칙을 게시해주세요.",
       NETWORK_ERROR: language === "en" ? "Check your network connection." : "네트워크 연결을 확인해주세요.",
+      CLOUD_NOT_CONFIGURED: language === "en" ? "Firebase is not configured." : "Firebase 설정이 연결되지 않았습니다.",
       REVISION_CONFLICT: language === "en" ? "The room changed. Reloading the latest turn." : "방 상태가 변경되어 최신 수를 다시 불러옵니다.",
       NOT_YOUR_TURN: language === "en" ? "Wait for your opponent's move." : "상대의 수를 기다려주세요.",
       ONLINE_ERROR: language === "en" ? "Online pilot is temporarily unavailable." : "온라인 체험판을 잠시 사용할 수 없습니다.",
@@ -960,7 +962,7 @@
       onlineBinding = false;
     }
     const current = client.snapshot();
-    if (!onlineConnecting && (current.status === "offline" || current.status === "auth-required")) {
+    if (!onlineConnecting && current.status === "offline") {
       onlineConnecting = true;
       client.connect().catch(() => {}).finally(() => {
         onlineConnecting = false;
@@ -992,22 +994,33 @@
     clearInterval(timer); screen = "online"; applyCosmeticTheme();
     const client = window.OverrideGridOnline;
     const online = client ? client.snapshot() : { status: "offline", lastError: "ONLINE_ERROR" };
-    const cloudUser = window.XenaCloudSync && window.XenaCloudSync.snapshot().user;
+    const cloud = window.XenaCloudSync;
+    const cloudState = cloud ? cloud.snapshot() : null;
+    const cloudUser = cloudState && cloudState.user;
     const connected = Boolean(cloudUser && ["connected", "waiting", "active", "finished"].includes(online.status));
+    const loginBusy = Boolean(cloudState && ["connecting", "signing-in"].includes(cloudState.phase));
     const statusText = online.status === "waiting" ? "WAITING FOR OPPONENT" : online.status === "active" ? "MATCH LINKED" : connected ? "CONNECTED" : online.status === "connecting" ? "CONNECTING" : online.status === "auth-required" ? "LOGIN REQUIRED" : t("serverOffline");
+    const statusDetail = !cloudUser && cloudState && cloudState.error ? cloudErrorLabel(cloudState.error) : onlineErrorText(online.lastError);
     let controls = "";
     if (!cloudUser) {
-      controls = `<div class="online-login-callout"><b>${language === "en" ? "Link a Google account first" : "먼저 Google 계정을 연결하세요"}</b><span>${language === "en" ? "The account identifies your seat and reconnects the match on another device." : "계정으로 내 좌석을 구분하고 새로고침 후에도 대전에 재접속합니다."}</span><button class="primary" data-online-login>${language === "en" ? "Open profile login" : "프로필 로그인 열기"}</button></div>`;
+      controls = `<div class="online-login-callout"><b>${loginBusy ? (language === "en" ? "Preparing secure login" : "보안 로그인을 준비하고 있습니다") : (language === "en" ? "Google sign-in is required" : "Google 로그인이 필요합니다")}</b><span>${language === "en" ? "Your account identifies your seat and reconnects the match on another device." : "계정으로 내 좌석을 구분하고 새로고침 후에도 대전에 재접속합니다."}</span><button class="primary" data-online-signin ${loginBusy || !cloudState?.configured ? "disabled" : ""}>G&nbsp; ${loginBusy ? (language === "en" ? "PREPARING..." : "준비 중...") : (language === "en" ? "SIGN IN AND PLAY" : "로그인하고 대전하기")}</button></div>`;
     } else if (online.room && online.room.status === "waiting") {
-      controls = `<div class="online-room-card"><small>INVITE CODE</small><button class="online-room-code" data-copy-room>${online.roomCode}</button><p>${language === "en" ? "Send this code to the opponent. The match starts automatically when they join." : "이 코드를 상대에게 보내세요. 상대가 입장하면 자동으로 대전이 시작됩니다."}</p><button class="secondary" data-leave-room>${language === "en" ? "Cancel waiting" : "대기 취소"}</button></div>`;
+      controls = `<div class="online-room-card"><small>INVITE CODE</small><button class="online-room-code" data-copy-room>${online.roomCode}</button><p>${language === "en" ? "Select the code to copy an invite link. The match starts when the opponent joins." : "코드를 누르면 초대 링크가 복사됩니다. 상대가 입장하면 대전이 시작됩니다."}</p><button class="secondary" data-leave-room>${language === "en" ? "Cancel waiting" : "대기 취소"}</button></div>`;
     } else {
-      controls = `<div class="online-actions"><button class="primary" data-create-room>${t("createRoom")}</button><div class="online-join"><input data-room-code maxlength="8" inputmode="text" autocomplete="off" placeholder="8-DIGIT CODE" aria-label="Invite code"><button class="secondary" data-join-room>${t("joinRoom")}</button></div><button class="secondary" disabled>${t("quickMatch")} · ${language === "en" ? "NEXT PHASE" : "다음 단계"}</button></div>`;
+      controls = `<div class="online-actions"><button class="primary" data-create-room>${t("createRoom")}</button><div class="online-join"><input data-room-code value="${pendingRoomCode}" maxlength="8" inputmode="text" autocomplete="off" placeholder="8-DIGIT CODE" aria-label="Invite code"><button class="secondary" data-join-room>${t("joinRoom")}</button></div><button class="secondary" disabled>${t("quickMatch")} · ${language === "en" ? "NEXT PHASE" : "다음 단계"}</button></div>`;
     }
-    app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="online-page"><div class="online-heading"><small>${t("onlineLobby")} · FIRESTORE PILOT</small><h1>${t("onlineTitle")}</h1><p>${t("onlineNote")}</p></div><div class="online-status ${online.status}"><span>${t("connection")}</span><b>${statusText}</b><small>${onlineErrorText(online.lastError)}</small></div>${controls}<div class="online-contract"><div><b>01</b><span>${language === "en" ? "Google identity seats" : "Google 계정 좌석 확인"}</span></div><div><b>02</b><span>${language === "en" ? "Turn revision synchronization" : "수순 번호 동기화"}</span></div><div><b>03</b><span>${language === "en" ? "No ranked rewards in pilot" : "체험판 랭크 보상 없음"}</span></div></div><button class="secondary" id="back-to-setup">${t("play")}</button></section></div>`;
+    app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="online-page"><div class="online-heading"><small>${t("onlineLobby")} · FIRESTORE PILOT</small><h1>${t("onlineTitle")}</h1><p>${t("onlineNote")}</p></div><div class="online-status ${online.status}"><span>${t("connection")}</span><b>${statusText}</b><small>${statusDetail}</small></div>${controls}<div class="online-contract"><div><b>01</b><span>${language === "en" ? "Google identity seats" : "Google 계정 좌석 확인"}</span></div><div><b>02</b><span>${language === "en" ? "Turn revision synchronization" : "수순 번호 동기화"}</span></div><div><b>03</b><span>${language === "en" ? "No ranked rewards in pilot" : "체험판 랭크 보상 없음"}</span></div></div><button class="secondary" id="back-to-setup">${t("play")}</button></section></div>`;
     bindStoreButton();
     ensureOnlineConnection();
-    const login = app.querySelector("[data-online-login]");
-    if (login) login.addEventListener("click", openAccount);
+    const login = app.querySelector("[data-online-signin]");
+    if (login) login.addEventListener("click", async () => {
+      login.disabled = true;
+      try {
+        await cloud.signIn();
+        await client.connect();
+      } catch (_) { /* The online status panel shows the localized error. */ }
+      renderOnlineLobby();
+    });
     const create = app.querySelector("[data-create-room]");
     if (create) create.addEventListener("click", async () => {
       create.disabled = true;
@@ -1023,13 +1036,20 @@
       const code = client.normalizeCode(codeInput.value);
       if (code.length !== 8) return alert(language === "en" ? "Enter the 8-character invite code." : "8자리 초대 코드를 입력해주세요.");
       join.disabled = true;
-      try { await client.joinRoom(code); } catch (_) { renderOnlineLobby(); }
+      try {
+        await client.joinRoom(code);
+        pendingRoomCode = "";
+      } catch (_) { renderOnlineLobby(); }
     });
     const copyRoom = app.querySelector("[data-copy-room]");
     if (copyRoom) copyRoom.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(online.roomCode); }
+      const invite = new URL(window.location.href);
+      invite.search = "";
+      invite.hash = "";
+      invite.searchParams.set("room", online.roomCode);
+      try { await navigator.clipboard.writeText(invite.href); }
       catch (_) { /* The visible code can still be selected manually. */ }
-      copyRoom.textContent = language === "en" ? "COPIED" : "복사 완료";
+      copyRoom.textContent = language === "en" ? "LINK COPIED" : "링크 복사 완료";
     });
     const leaveRoom = app.querySelector("[data-leave-room]");
     if (leaveRoom) leaveRoom.addEventListener("click", () => client.leave());
@@ -1659,11 +1679,15 @@
   }
 
   const launchParams = new URLSearchParams(window.location.search);
+  pendingRoomCode = window.OverrideGridOnline?.normalizeCode(launchParams.get("room") || "") || "";
+  if (pendingRoomCode) gameMode = "online";
   saveMeta();
   if (launchParams.get("screen") === "store") renderStore();
   else if (launchParams.get("screen") === "codex") renderCodex();
   else if (launchParams.get("screen") === "units") renderMyUnits();
+  else if (pendingRoomCode) renderOnlineLobby();
   else if (launchParams.get("demo") === "1") startGame();
   else renderSetup();
+  if (window.XenaCloudSync?.snapshot().configured) window.XenaCloudSync.connect().catch(() => {});
   if (launchParams.get("account") === "1") setTimeout(openAccount, 0);
 })();
