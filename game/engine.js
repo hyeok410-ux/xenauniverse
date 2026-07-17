@@ -182,6 +182,14 @@
     return state.board.findIndex((piece) => piece && piece.color === color && piece.type === TYPES.LEADER);
   }
 
+  function leaderSkillPack(state, color) {
+    const leader = findLeader(state, color);
+    const character = leader >= 0 ? String(state.board[leader].character || "").toUpperCase() : "";
+    if (character.startsWith("XENA")) return "xena";
+    if (character.startsWith("SOVRAN")) return "sovran";
+    return state.packs[color];
+  }
+
   function isSquareAttacked(state, square, byColor) {
     for (let i = 0; i < state.board.length; i += 1) {
       const piece = state.board[i];
@@ -262,7 +270,7 @@
 
   function skillMoves(state, color) {
     if (state.turn !== color) return [];
-    const pack = state.packs[color];
+    const pack = leaderSkillPack(state, color);
     const leader = findLeader(state, color);
     if (leader < 0) return [];
     const row = rowOf(leader);
@@ -582,7 +590,7 @@
   return {
     SIZE, TYPES, VALUES, PACKS,
     indexOf, rowOf, colOf, other,
-    createInitialState, generateLegalMoves, applyMove,
+    createInitialState, generateLegalMoves, applyMove, leaderSkillPack,
     isSquareAttacked, isInCheck, getGameStatus,
     pendingRecoveries, applyRecovery,
     moveKey, positionKey, seededRandom, chooseAIMove, playAIGame,
