@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DAILY SIGNAL — XENA</title>
+<meta name="description" content="Your daily signal from the XENA universe — one card, one fortune, every day.">
+<meta property="og:title" content="DAILY SIGNAL — XENA">
+<meta property="og:description" content="One card, one fortune, every day.">
+<meta property="og:url" content="https://xenauniverse.com/games/signal/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
+<script>
+(function(){
+  var saved = null;
+  try{ saved = localStorage.getItem('xena-lang'); }catch(e){}
+  document.documentElement.setAttribute('data-lang', saved === 'ko' ? 'ko' : 'en');
+  document.documentElement.setAttribute('lang', saved === 'ko' ? 'ko' : 'en');
+})();
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --black:#000000; --purple:#6e2fd9; --purple-light:#a06bff; --silver:#e6e6ee;
+  --cyan:#3fe0ff; --magenta:#ff2fb0; --gold:#e8c468;
+  --hair:rgba(255,255,255,.09); --text-dim:rgba(230,230,238,.55);
+  --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--black);color:var(--silver);font-family:var(--font-sans);font-weight:300;min-height:100%;overflow-x:hidden;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;}
+[data-lang="ko"] [lang="en"]{display:none;}
+[data-lang="en"] [lang="ko"]{display:none;}
+.lang-toggle{display:flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:20px;padding:4px;backdrop-filter:blur(14px);}
+.lang-toggle button{font-family:var(--font-mono);background:transparent;border:none;color:var(--text-dim);font-size:.64rem;font-weight:500;letter-spacing:.1em;padding:5px 10px;border-radius:16px;transition:.3s ease;}
+[data-lang="ko"] .lang-toggle button[data-set="ko"],
+[data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(160,107,255,.18);color:var(--purple-light);box-shadow:inset 0 0 0 1px rgba(160,107,255,.4);}
+
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.24), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 85% 100%, rgba(63,224,255,.08), transparent 60%);}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
+  background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);}
+.grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 8s steps(10) infinite;}
+@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-6%)}50%{transform:translate(-7%,4%)}70%{transform:translate(6%,7%)}90%{transform:translate(-4%,3%)}}
+
+.wrap{position:relative;z-index:2;max-width:760px;margin:0 auto;padding:0 20px calc(60px + env(safe-area-inset-bottom));}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 8px;gap:10px;flex-wrap:wrap;}
+.back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
+.back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
+.top-right{display:flex;align-items:center;gap:10px;}
+.wallet{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;color:var(--gold);border:1px solid rgba(232,196,104,.4);padding:8px 16px;border-radius:20px;background:rgba(232,196,104,.06);font-variant-numeric:tabular-nums;}
+
+.head{text-align:center;padding:28px 0 24px;}
+.eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;text-shadow:0 0 16px rgba(63,224,255,.5);}
+h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-height:1.1;margin-bottom:10px;
+  background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.head p{color:var(--text-dim);font-size:.9rem;line-height:1.7;}
+.date-line{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.24em;color:var(--text-dim);margin-top:8px;}
+.streak{display:inline-block;margin-top:12px;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.12em;color:var(--gold);border:1px solid rgba(232,196,104,.4);padding:6px 14px;border-radius:18px;background:rgba(232,196,104,.06);}
+
+/* 카드 */
+.sig-zone{display:flex;flex-direction:column;align-items:center;margin:8px 0 34px;}
+.flip-zone{perspective:1200px;cursor:pointer;}
+.flip-card{position:relative;width:min(280px,72vw);aspect-ratio:3/4.2;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.3,1);}
+.flip-card.flipped{transform:rotateY(180deg);}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;overflow:hidden;}
+.face.back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(110,47,217,.5), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(63,224,255,.06) 0 2px, transparent 2px 14px),
+    linear-gradient(160deg,#0a0614,#140a24 50%,#0a0614);
+  border:1px solid rgba(160,107,255,.5);box-shadow:0 0 44px rgba(110,47,217,.35);}
+.face.back .logo-x{font-size:3.2rem;font-weight:800;color:var(--purple-light);text-shadow:0 0 30px rgba(160,107,255,.9);}
+.face.back .logo-t{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.5em;color:var(--silver);}
+.face.front{transform:rotateY(180deg);border:1px solid rgba(63,224,255,.5);display:flex;flex-direction:column;background:#060409;box-shadow:0 0 44px rgba(63,224,255,.2);}
+.face.front img{width:100%;flex:1;object-fit:cover;object-position:50% 20%;min-height:0;}
+.face.front .fmeta{padding:10px 12px;text-align:center;background:rgba(0,0,0,.85);}
+.face.front .fmeta b{font-size:.82rem;font-weight:700;}
+.tap-tip{margin-top:18px;font-family:var(--font-mono);font-size:.66rem;letter-spacing:.24em;color:var(--text-dim);animation:pulse 1.6s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+.fortune{display:none;margin-top:22px;max-width:440px;text-align:center;background:linear-gradient(165deg, rgba(255,255,255,.05), rgba(255,255,255,.015));border:1px solid var(--hair);border-radius:16px;padding:20px 22px;backdrop-filter:blur(14px);}
+.fortune.on{display:block;animation:riseIn .6s ease both;}
+@keyframes riseIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.fortune small{display:block;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.32em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;text-shadow:0 0 12px rgba(232,196,104,.4);}
+.fortune p{font-size:.95rem;line-height:1.8;color:var(--silver);}
+.claim-row{display:none;gap:10px;margin-top:20px;flex-wrap:wrap;justify-content:center;}
+.claim-row.on{display:flex;}
+.cl-btn{font-family:var(--font-mono);font-size:.7rem;font-weight:500;letter-spacing:.1em;padding:12px 22px;border-radius:26px;border:1px solid var(--hair);background:rgba(255,255,255,.05);color:var(--silver);transition:.3s ease;}
+.cl-btn:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
+.cl-btn.primary{background:var(--silver);color:var(--black);border:none;font-family:var(--font-sans);font-weight:700;font-size:.85rem;}
+.cl-btn.primary:hover{background:#fff;}
+.cl-btn:disabled{opacity:.4;cursor:default;}
+
+/* 퀘스트 */
+.quests{margin-top:8px;}
+.quests h2{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:14px;}
+.q-list{display:flex;flex-direction:column;gap:10px;}
+.q{display:flex;align-items:center;gap:14px;background:linear-gradient(165deg, rgba(255,255,255,.04), rgba(255,255,255,.012));border:1px solid var(--hair);border-radius:14px;padding:14px 16px;backdrop-filter:blur(12px);}
+.q .qi{font-size:1.2rem;width:30px;text-align:center;}
+.q .qt{flex:1;min-width:0;}
+.q .qt b{display:block;font-size:.86rem;font-weight:600;letter-spacing:.01em;}
+.q .qt span{display:block;font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-top:3px;letter-spacing:.06em;}
+.q .qr{font-family:var(--font-mono);font-size:.68rem;font-weight:700;color:var(--gold);white-space:nowrap;}
+.q.done{border-color:rgba(92,255,192,.35);}
+.q.done .qr{color:#5cffc0;}
+.q a.golink, .q button.golink{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;color:var(--cyan);border:1px solid rgba(63,224,255,.4);padding:8px 14px;border-radius:18px;background:transparent;transition:.3s ease;white-space:nowrap;}
+.q a.golink:hover, .q button.golink:hover{background:rgba(63,224,255,.1);}
+.q-note{margin-top:14px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.1em;color:var(--text-dim);opacity:.7;line-height:1.9;}
+
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:120;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;color:var(--silver);background:rgba(8,8,14,.92);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);max-width:88vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+<div class="grain"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a class="back-link" href="../">&larr; XENA GAMES</a>
+    <div class="top-right">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button data-set="en">EN</button>
+        <button data-set="ko">KO</button>
+      </div>
+      <div class="wallet" id="wallet">0 XC</div>
+    </div>
+  </div>
+
+  <div class="head">
+    <div class="eyebrow">Daily Check-in</div>
+    <h1>DAILY SIGNAL</h1>
+    <p>
+      <span lang="en">One card. One fortune. Every day, the city sends you a signal.</span>
+      <span lang="ko">하루 한 장의 카드, 한 줄의 시그널. 도시가 매일 당신에게 신호를 보냅니다.</span>
+    </p>
+    <div class="date-line" id="date-line"></div>
+    <div class="streak" id="streak" hidden></div>
+  </div>
+
+  <div class="sig-zone">
+    <div class="flip-zone" id="flip-zone">
+      <div class="flip-card" id="flip-card">
+        <div class="face back">
+          <div class="logo-x">X</div>
+          <div class="logo-t">DAILY SIGNAL</div>
+        </div>
+        <div class="face front">
+          <img id="sig-img" src="" alt="Today's signal card">
+          <div class="fmeta"><b id="sig-name"></b></div>
+        </div>
+      </div>
+    </div>
+    <div class="tap-tip" id="tap-tip"><span lang="en">TAP TO RECEIVE TODAY'S SIGNAL</span><span lang="ko">탭해서 오늘의 시그널 받기</span></div>
+    <div class="fortune" id="fortune">
+      <small>Today's Signal</small>
+      <p id="fortune-text"></p>
+    </div>
+    <div class="claim-row" id="claim-row">
+      <button class="cl-btn primary" id="btn-claim"></button>
+      <button class="cl-btn" id="btn-share"><span lang="en">Share</span><span lang="ko">공유하기</span></button>
+    </div>
+  </div>
+
+  <div class="quests">
+    <h2><span lang="en">Today's Quests — earn XC across all games</span><span lang="ko">오늘의 퀘스트 — 모든 게임에서 XC 모으기</span></h2>
+    <div class="q-list" id="q-list"></div>
+    <p class="q-note">
+      <span lang="en">* XC is one shared wallet across every XENA game — spend it on ZENA CARDS draws.<br>* Quests reset daily. OVERRIDE GRID play is detected on this device.</span>
+      <span lang="ko">* XC는 모든 XENA 게임이 공유하는 지갑입니다 — ZENA CARDS 뽑기에 쓰세요.<br>* 퀘스트는 매일 리셋. OVERRIDE GRID 플레이는 이 기기 기준으로 감지됩니다.</span>
+    </p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../gacha/cards.js"></script>
+<script>
+(function(){
+'use strict';
+var SITE_URL = 'https://xenauniverse.com/games/signal/';
+var lang = document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 'en';
+function t(en, ko){ return lang === 'ko' ? ko : en; }
+var $ = function(id){ return document.getElementById(id); };
+
+var WALLET_KEY = 'xena_wallet_v1', SAVE_KEY = 'xena_signal_v1';
+function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(e){ return def; } }
+function save(key, v){ try{ localStorage.setItem(key, JSON.stringify(v)); }catch(e){} }
+function today(){ return new Date().toISOString().slice(0,10); }
+
+var wallet = load(WALLET_KEY, {});
+if(typeof wallet.xc !== 'number') wallet.xc = 0;
+if(!wallet.daily || wallet.daily.date !== today()) wallet.daily = {date: today()};
+var st = load(SAVE_KEY, {});
+
+function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
+var toastTimer = null;
+function toast(msg){
+  var el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+}
+
+/* ── 오늘의 카드 (날짜+기기 시드 → 매일 다른 카드) ── */
+var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1; });
+function hash(s){
+  var h = 5381;
+  for(var i=0;i<s.length;i++){ h = ((h<<5)+h+s.charCodeAt(i)) & 0x7fffffff; }
+  return h;
+}
+if(!st.seed){ st.seed = String(Math.floor(Math.random()*1e9)); save(SAVE_KEY, st); }
+var todayCard = CARDS.length ? CARDS[hash(today()+st.seed) % CARDS.length] : null;
+
+/* ── 운세 문구 풀 (트랙/인물 무드별) ── */
+var FORTUNES = {
+  answer: [
+    {en:'Someone will question your way today. You don\'t owe them an explanation — show them.', ko:'오늘 누군가 당신의 방식에 토를 달 겁니다. 설명할 필요 없어요 — 보여주면 됩니다.'},
+    {en:'The louder the city gets, the clearer your own answer becomes. Trust it.', ko:'도시가 시끄러울수록 당신의 답은 선명해집니다. 그 답을 믿으세요.'},
+    {en:'Today is a day to walk in a straight line. Detours are for people who don\'t know where they\'re going.', ko:'오늘은 직진의 날. 돌아가는 길은 목적지를 모르는 사람들의 것입니다.'}
+  ],
+  bright: [
+    {en:'A small light you keep on today will guide someone you\'ll never meet. Keep it on.', ko:'오늘 당신이 켜둔 작은 빛이, 만난 적 없는 누군가의 길이 됩니다. 끄지 마세요.'},
+    {en:'Broken pieces catch the most light. Whatever cracked recently — it\'s about to shine.', ko:'깨진 조각이 빛을 가장 잘 받습니다. 최근에 금 간 그것, 곧 빛날 차례예요.'},
+    {en:'The sky you see today is real. Look up at least once.', ko:'오늘 당신이 보는 하늘은 진짜입니다. 적어도 한 번은 올려다보세요.'}
+  ],
+  dopamine: [
+    {en:'Enjoy today\'s sweetness — just remember which hand is holding yours.', ko:'오늘의 달콤함을 즐기세요 — 단, 누구의 손을 잡고 있는지만 기억하면 됩니다.'},
+    {en:'One song on repeat is allowed today. Guilt-free.', ko:'오늘은 한 곡 무한반복이 허용되는 날입니다. 죄책감 금지.'},
+    {en:'Your dopamine is real when you choose it yourself. Choose loudly.', ko:'스스로 고른 도파민만이 진짜입니다. 크게 고르세요.'}
+  ],
+  nix: [
+    {en:'You\'ll notice something today that everyone else walks past. Don\'t blink. Remember.', ko:'오늘 당신은 모두가 지나치는 무언가를 알아챌 겁니다. 눈 감지 마세요. 기억하세요.'},
+    {en:'Being afraid and being present at the same time — that\'s courage. You have it today.', ko:'무서워하면서도 그 자리에 있는 것 — 그게 용기입니다. 오늘 당신에게 있어요.'},
+    {en:'A word you hear today will sound strangely familiar. Follow it.', ko:'오늘 들은 어떤 단어가 이상하게 익숙할 겁니다. 그 단어를 따라가 보세요.'}
+  ],
+  studio: [
+    {en:'Something you make today — even something small — will outlive today. Make it.', ko:'오늘 만든 것은, 아주 작아도 오늘보다 오래 살아남습니다. 만드세요.'},
+    {en:'First takes have a magic that perfection can\'t buy. Press record.', ko:'첫 테이크에는 완벽이 살 수 없는 마법이 있습니다. 녹음 버튼을 누르세요.'}
+  ],
+  home: [
+    {en:'Slow is also a speed. Tonight, choose the window seat of your own life.', ko:'느림도 속도입니다. 오늘 밤은 당신 인생의 창가 자리에 앉으세요.'},
+    {en:'Rest is not quitting. Even the city dims its lights at dawn.', ko:'쉬는 건 포기가 아닙니다. 도시도 새벽엔 불을 낮춥니다.'}
+  ],
+  generic: [
+    {en:'The signal is faint today, but it\'s pointed exactly at you.', ko:'오늘의 시그널은 희미하지만, 정확히 당신을 향해 있습니다.'},
+    {en:'Collect today like a card: one moment worth keeping is enough.', ko:'오늘을 카드처럼 수집하세요. 간직할 순간 하나면 충분합니다.'}
+  ]
+};
+function fortunePool(cardId){
+  if(/^GA-AN|^XA-/.test(cardId)){
+    if(/^XB-/.test(cardId)) return FORTUNES.studio;
+    return FORTUNES.answer.concat(FORTUNES.generic);
+  }
+  if(/^GA-BR/.test(cardId)) return FORTUNES.bright;
+  if(/^GA-DP/.test(cardId)) return FORTUNES.dopamine;
+  if(/^NX-/.test(cardId)) return FORTUNES.nix;
+  if(/^XB-/.test(cardId)) return FORTUNES.studio.concat(FORTUNES.generic);
+  if(/^XC-/.test(cardId)) return FORTUNES.home.concat(FORTUNES.generic);
+  return FORTUNES.generic;
+}
+var todayFortune = null;
+if(todayCard){
+  var pool = fortunePool(todayCard[0]);
+  todayFortune = pool[hash('f'+today()+st.seed) % pool.length];
+}
+
+/* ── 카드 공개 & 수령 ── */
+var revealed = st.lastReveal === today();
+var claimed = st.lastClaim === today();
+function cardSrc(d){ return d[3].indexOf('../../') === 0 ? d[3] : '../gacha/' + d[3]; }
+function renderDate(){
+  $('date-line').textContent = today().replace(/-/g,' . ');
+}
+function renderStreak(){
+  if(st.streak > 1){
+    $('streak').hidden = false;
+    $('streak').textContent = t('🔥 '+st.streak+'-day streak', '🔥 '+st.streak+'일 연속 접속');
+  }
+}
+function renderClaimBtn(){
+  var b = $('btn-claim');
+  if(claimed){
+    b.disabled = true;
+    b.textContent = t('Claimed today ✓', '오늘 수령 완료 ✓');
+  } else {
+    b.disabled = false;
+    b.textContent = t('Claim +5 XC', '+5 XC 받기');
+  }
+}
+function reveal(){
+  if(!todayCard) return;
+  $('sig-img').src = cardSrc(todayCard);
+  $('sig-name').textContent = todayCard[1];
+  $('fortune-text').textContent = todayFortune ? todayFortune[lang] : '';
+  $('flip-card').classList.add('flipped');
+  $('tap-tip').style.display = 'none';
+  $('fortune').classList.add('on');
+  $('claim-row').classList.add('on');
+  renderClaimBtn();
+  if(st.lastReveal !== today()){
+    /* 스트릭 계산 */
+    var y = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+    st.streak = (st.lastReveal === y) ? (st.streak||0) + 1 : 1;
+    st.lastReveal = today();
+    save(SAVE_KEY, st);
+    renderStreak();
+  }
+}
+$('flip-zone').addEventListener('click', reveal);
+$('btn-claim').addEventListener('click', function(){
+  if(claimed) return;
+  claimed = true;
+  st.lastClaim = today();
+  var bonus = (st.streak > 0 && st.streak % 7 === 0) ? 20 : 0;
+  wallet.xc += 5 + bonus;
+  save(SAVE_KEY, st); save(WALLET_KEY, wallet);
+  renderWallet(); renderClaimBtn(); renderQuests();
+  toast(bonus
+    ? t('+5 XC + streak bonus +'+bonus+' XC!', '+5 XC + 7일 연속 보너스 +'+bonus+' XC!')
+    : t('+5 XC claimed — see you tomorrow!', '+5 XC 수령 — 내일 또 만나요!'));
+});
+$('btn-share').addEventListener('click', function(){
+  var text = todayCard ? t(
+    'Today\'s signal for me 🔮 ['+todayCard[1]+'] — "'+(todayFortune?todayFortune.en:'')+'" Get yours:',
+    '오늘의 내 시그널 🔮 ['+todayCard[1]+'] — "'+(todayFortune?todayFortune.ko:'')+'" 너의 시그널은?'
+  ) : 'DAILY SIGNAL';
+  var full = text+'\n'+SITE_URL;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(full).then(function(){
+      toast(t('Message + link copied!', '문구+링크가 복사됐습니다!'));
+    },function(){});
+  }
+  if(navigator.share){ navigator.share({title:'DAILY SIGNAL', text:text, url:SITE_URL}).catch(function(){}); }
+});
+
+/* ── 퀘스트 (모든 게임 통합) ── */
+function chessSnapshot(){
+  var keys = ['og_credits','og_shards','og_grid_rating','og_daily_login'];
+  var s = '';
+  keys.forEach(function(k){ try{ s += '|' + (localStorage.getItem(k)||''); }catch(e){} });
+  return s;
+}
+/* 오늘 첫 방문 시 체스 상태 스냅샷 저장 → 이후 변화가 생기면 "플레이함"으로 판정 */
+if(!st.chessBase || st.chessBase.date !== today()){
+  st.chessBase = {date: today(), snap: chessSnapshot()};
+  save(SAVE_KEY, st);
+}
+function chessPlayed(){ return chessSnapshot() !== st.chessBase.snap; }
+function chessClaimed(){ return st.chessClaim === today(); }
+
+function gachaDrawnToday(){
+  var g = load('zena_gacha_v1', {});
+  if(!g.packs) return false;
+  var t0 = new Date(); t0.setHours(0,0,0,0);
+  return (g.packs.signal||0) >= t0.getTime() || (g.packs.sov||0) >= t0.getTime();
+}
+
+function renderQuests(){
+  var wc = (wallet.daily && wallet.daily.date === today() && wallet.daily.worldcup) || 0;
+  var quests = [
+    {icon:'🔮', done: claimed,
+      title: t('Receive today\'s signal', '오늘의 시그널 받기'),
+      sub: t('Flip the card above', '위 카드를 뒤집고 수령'),
+      reward: '+5 XC', link: null},
+    {icon:'🏆', done: wc >= 3,
+      title: t('Finish the Photo World Cup', '이상형 월드컵 완주'),
+      sub: t(wc+'/3 today · +5 XC each', '오늘 '+wc+'/3회 · 회당 +5 XC'),
+      reward: '+15 XC', link:'../world-cup/'},
+    {icon:'🃏', done: gachaDrawnToday(),
+      title: t('Open a free ZENA CARDS pack', 'ZENA CARDS 무료팩 뽑기'),
+      sub: t('SIGNAL every 8h · SOVEREIGN every 24h', 'SIGNAL 8시간 · SOVEREIGN 24시간마다'),
+      reward: t('FREE CARD','무료 카드'), link:'../gacha/'},
+    {icon:'♟️', done: chessClaimed(),
+      title: t('Play OVERRIDE GRID (1 match)', 'OVERRIDE GRID 1판 플레이'),
+      sub: chessClaimed() ? t('Reward claimed', '보상 수령 완료')
+         : chessPlayed() ? t('Play detected — claim your XC!', '플레이 감지됨 — XC를 받으세요!')
+         : t('Play a match, then come back here', '한 판 하고 이 페이지로 돌아오세요'),
+      reward: '+10 XC',
+      link: chessPlayed() && !chessClaimed() ? 'CLAIM_CHESS' : '../../game/'}
+  ];
+  var list = $('q-list');
+  list.innerHTML = '';
+  quests.forEach(function(q){
+    var el = document.createElement('div');
+    el.className = 'q' + (q.done ? ' done' : '');
+    var action = '';
+    if(!q.done && q.link === 'CLAIM_CHESS'){
+      action = '<button class="golink" data-act="chess">'+t('CLAIM','받기')+'</button>';
+    } else if(!q.done && q.link){
+      action = '<a class="golink" href="'+q.link+'" target="_blank" rel="noopener">'+t('GO','이동')+'</a>';
+    }
+    el.innerHTML = '<div class="qi">'+q.icon+'</div><div class="qt"><b>'+q.title+'</b><span>'+q.sub+'</span></div><div class="qr">'+(q.done?'✓ ':'')+q.reward+'</div>'+action;
+    list.appendChild(el);
+  });
+  var chessBtn = list.querySelector('button[data-act="chess"]');
+  if(chessBtn){
+    chessBtn.addEventListener('click', function(){
+      if(chessClaimed() || !chessPlayed()) return;
+      st.chessClaim = today();
+      wallet.xc += 10;
+      save(SAVE_KEY, st); save(WALLET_KEY, wallet);
+      renderWallet(); renderQuests();
+      toast(t('+10 XC — OVERRIDE GRID quest complete!', '+10 XC — OVERRIDE GRID 퀘스트 완료!'));
+    });
+  }
+}
+
+/* ── 언어 토글 ── */
+document.querySelectorAll('.lang-toggle button').forEach(function(b){
+  b.addEventListener('click', function(){
+    lang = b.getAttribute('data-set') === 'ko' ? 'ko' : 'en';
+    document.documentElement.setAttribute('data-lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+    try{ localStorage.setItem('xena-lang', lang); }catch(e){}
+    if($('flip-card').classList.contains('flipped')){
+      $('fortune-text').textContent = todayFortune ? todayFortune[lang] : '';
+      renderClaimBtn();
+    }
+    renderStreak();
+    renderQuests();
+  });
+});
+
+/* 다른 탭(게임)에서 지갑이 바뀌면 실시간 반영 */
+window.addEventListener('storage', function(e){
+  if(e.key === WALLET_KEY){
+    wallet = load(WALLET_KEY, {xc:0});
+    renderWallet(); renderQuests();
+  }
+});
+
+renderDate();
+renderWallet();
+renderStreak();
+renderQuests();
+/* 이미 오늘 공개했으면 자동으로 펼쳐두기 */
+if(revealed){ reveal(); }
+})();
+</script>
+</body>
+</html>

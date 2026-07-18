@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SIGNAL LINK — XENA Tile Connect</title>
+<meta name="description" content="Reconnect the city's broken signal lines. Match identical tiles with a path of two turns or fewer.">
+<meta property="og:title" content="SIGNAL LINK — XENA Tile Connect">
+<meta property="og:description" content="Match identical tiles with a path of two turns or fewer.">
+<meta property="og:url" content="https://xenauniverse.com/games/shisen/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
+<script>
+(function(){
+  var saved = null;
+  try{ saved = localStorage.getItem('xena-lang'); }catch(e){}
+  document.documentElement.setAttribute('data-lang', saved === 'ko' ? 'ko' : 'en');
+  document.documentElement.setAttribute('lang', saved === 'ko' ? 'ko' : 'en');
+})();
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --black:#000000; --purple:#6e2fd9; --purple-light:#a06bff; --silver:#e6e6ee;
+  --cyan:#3fe0ff; --magenta:#ff2fb0; --gold:#e8c468;
+  --hair:rgba(255,255,255,.09); --text-dim:rgba(230,230,238,.55);
+  --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--black);color:var(--silver);font-family:var(--font-sans);font-weight:300;min-height:100%;overflow-x:hidden;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;}
+[data-lang="ko"] [lang="en"]{display:none;}
+[data-lang="en"] [lang="ko"]{display:none;}
+.lang-toggle{display:flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:20px;padding:4px;backdrop-filter:blur(14px);}
+.lang-toggle button{font-family:var(--font-mono);background:transparent;border:none;color:var(--text-dim);font-size:.64rem;font-weight:500;letter-spacing:.1em;padding:5px 10px;border-radius:16px;transition:.3s ease;}
+[data-lang="ko"] .lang-toggle button[data-set="ko"],
+[data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(160,107,255,.18);color:var(--purple-light);box-shadow:inset 0 0 0 1px rgba(160,107,255,.4);}
+
+.bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.24), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 85% 100%, rgba(63,224,255,.08), transparent 60%);}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
+  background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
+  background-size:56px 56px;
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);}
+.grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 8s steps(10) infinite;}
+@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-6%)}50%{transform:translate(-7%,4%)}70%{transform:translate(6%,7%)}90%{transform:translate(-4%,3%)}}
+
+.wrap{position:relative;z-index:2;max-width:860px;margin:0 auto;padding:0 16px calc(50px + env(safe-area-inset-bottom));min-height:100vh;display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 8px;gap:10px;flex-wrap:wrap;}
+.back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
+.back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
+.top-right{display:flex;align-items:center;gap:10px;}
+.wallet{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;color:var(--gold);border:1px solid rgba(232,196,104,.4);padding:8px 16px;border-radius:20px;background:rgba(232,196,104,.06);font-variant-numeric:tabular-nums;}
+
+.screen{display:none;flex:1;flex-direction:column;}
+.screen.on{display:flex;}
+
+/* 인트로 */
+.intro{align-items:center;justify-content:center;text-align:center;padding:20px 0 50px;}
+.eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;text-shadow:0 0 16px rgba(63,224,255,.5);}
+h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-height:1.1;margin-bottom:12px;
+  background:linear-gradient(135deg,#fff 30%,var(--cyan) 75%,var(--purple-light));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.intro p{color:var(--text-dim);font-size:.92rem;max-width:460px;line-height:1.75;margin-bottom:26px;}
+.intro p b{color:var(--cyan);font-weight:600;}
+.stage-grid{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:26px;}
+.stage-btn{position:relative;font-family:var(--font-mono);width:92px;padding:14px 0 12px;border-radius:14px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--silver);transition:.3s ease;backdrop-filter:blur(10px);}
+.stage-btn b{display:block;font-size:1rem;font-weight:700;}
+.stage-btn span{display:block;font-size:.56rem;color:var(--text-dim);margin-top:4px;letter-spacing:.08em;}
+.stage-btn:not(:disabled):hover{border-color:rgba(63,224,255,.5);box-shadow:0 0 18px rgba(63,224,255,.2);transform:translateY(-2px);}
+.stage-btn:disabled{opacity:.35;cursor:default;}
+.stage-btn .st-done{position:absolute;top:-7px;right:-7px;font-size:.7rem;background:rgba(92,255,192,.15);border:1px solid rgba(92,255,192,.5);color:#5cffc0;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+.intro-note{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;color:var(--text-dim);opacity:.75;line-height:2;}
+
+/* 플레이 */
+.hud{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:6px 0 14px;}
+.hud .pill{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;border:1px solid var(--hair);padding:8px 14px;border-radius:20px;background:rgba(255,255,255,.03);font-variant-numeric:tabular-nums;}
+.hud .pill b{font-weight:700;}
+.hud .timer b{color:var(--cyan);}
+.hud .timer.low b{color:var(--magenta);animation:blink 1s steps(2) infinite;}
+@keyframes blink{50%{opacity:.35}}
+.hud button.pill{color:var(--gold);border-color:rgba(232,196,104,.4);transition:.3s ease;cursor:pointer;}
+.hud button.pill:not(:disabled):hover{background:rgba(232,196,104,.1);}
+.hud button.pill:disabled{opacity:.4;cursor:default;}
+
+.board-wrap{position:relative;margin:0 auto;width:100%;max-width:640px;}
+.board{display:grid;gap:4px;width:100%;}
+.tile{position:relative;aspect-ratio:1/1;border-radius:6px;overflow:hidden;border:1px solid rgba(160,107,255,.28);background:#0a0614;padding:0;transition:transform .15s ease, opacity .3s ease, border-color .2s ease, box-shadow .2s ease;}
+.tile img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;display:block;pointer-events:none;}
+.tile.sel{border-color:var(--cyan);box-shadow:0 0 14px rgba(63,224,255,.55), inset 0 0 8px rgba(63,224,255,.3);transform:scale(1.06);z-index:2;}
+.tile.hintg{border-color:var(--gold);box-shadow:0 0 14px rgba(232,196,104,.55);animation:hintPulse 1s ease-in-out 3;}
+@keyframes hintPulse{50%{transform:scale(1.08);}}
+.tile.gone{opacity:0;pointer-events:none;transform:scale(.7);}
+.tile.deny{animation:deny .3s ease;}
+@keyframes deny{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.link-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible;}
+.link-svg polyline{fill:none;stroke:var(--cyan);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;
+  filter:drop-shadow(0 0 8px rgba(63,224,255,.9));opacity:0;}
+.link-svg polyline.show{opacity:1;transition:opacity .1s;}
+
+/* 결과 */
+.result{align-items:center;justify-content:center;text-align:center;padding:20px 0 40px;}
+.result h2{font-size:clamp(1.8rem,6vw,2.6rem);font-weight:800;letter-spacing:.04em;margin-bottom:14px;}
+.result h2.win{background:linear-gradient(135deg,#fff 30%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.result h2.lose{color:var(--text-dim);}
+.result p{color:var(--text-dim);font-size:.92rem;line-height:1.8;margin-bottom:26px;}
+.result p b{color:var(--gold);font-weight:700;}
+.r-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.r-btn{font-family:var(--font-mono);font-size:.72rem;font-weight:500;letter-spacing:.1em;padding:13px 26px;border-radius:26px;border:1px solid var(--hair);background:rgba(255,255,255,.05);color:var(--silver);transition:.3s ease;}
+.r-btn:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
+.r-btn.primary{background:var(--silver);color:var(--black);border:none;font-family:var(--font-sans);font-weight:700;font-size:.9rem;}
+.r-btn.primary:hover{background:#fff;}
+
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:120;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;color:var(--silver);background:rgba(8,8,14,.92);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);max-width:88vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+<div class="bg-grid"></div>
+<div class="grain"></div>
+
+<div class="wrap">
+  <div class="topbar">
+    <a class="back-link" href="../">&larr; XENA GAMES</a>
+    <div class="top-right">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button data-set="en">EN</button>
+        <button data-set="ko">KO</button>
+      </div>
+      <div class="wallet" id="wallet">0 XC</div>
+    </div>
+  </div>
+
+  <!-- 인트로 -->
+  <section class="screen intro on" id="screen-intro">
+    <div class="eyebrow">Tile Connect</div>
+    <h1>SIGNAL LINK</h1>
+    <p>
+      <span lang="en">The city's signal lines are broken. Reconnect them:<br>match two identical tiles with a path of <b>2 turns or fewer</b> that doesn't cross other tiles.</span>
+      <span lang="ko">도시의 시그널 회선이 끊겼다. 다시 이어라:<br>같은 그림 타일 2개를 <b>꺾임 2번 이하</b>, 다른 타일을 지나지 않는 선으로 연결하면 제거됩니다.</span>
+    </p>
+    <div class="stage-grid" id="stage-grid"></div>
+    <p class="intro-note">
+      <span lang="en">First clear each day: Stage n = +n×2 XC (up to +20/day) · Hints 3 per stage<br>Auto-reshuffle when no moves remain</span>
+      <span lang="ko">하루 첫 클리어: n스테이지 = +n×2 XC (하루 최대 +20) · 힌트 스테이지당 3회<br>연결 가능한 짝이 없으면 자동 셔플</span>
+    </p>
+  </section>
+
+  <!-- 플레이 -->
+  <section class="screen" id="screen-play">
+    <div class="hud">
+      <div class="pill"><span lang="en">STAGE </span><span lang="ko">스테이지 </span><b id="hud-stage">1</b></div>
+      <div class="pill timer" id="hud-timer-box">⏱ <b id="hud-timer">120</b>s</div>
+      <div class="pill"><span lang="en">LEFT </span><span lang="ko">남은 타일 </span><b id="hud-left">0</b></div>
+      <button class="pill" id="btn-hint">💡 <span lang="en">HINT</span><span lang="ko">힌트</span> <b id="hud-hint">3</b></button>
+    </div>
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+      <svg class="link-svg" id="link-svg"><polyline id="link-line" points=""/></svg>
+    </div>
+  </section>
+
+  <!-- 결과 -->
+  <section class="screen result" id="screen-result">
+    <h2 id="r-title"></h2>
+    <p id="r-sub"></p>
+    <div class="r-row">
+      <button class="r-btn primary" id="r-next"></button>
+      <button class="r-btn" id="r-retry"><span lang="en">RETRY</span><span lang="ko">다시 도전</span></button>
+      <button class="r-btn" id="r-home"><span lang="en">STAGES</span><span lang="ko">스테이지 선택</span></button>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../gacha/cards.js"></script>
+<script>
+(function(){
+'use strict';
+var lang = document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 'en';
+function t(en, ko){ return lang === 'ko' ? ko : en; }
+var $ = function(id){ return document.getElementById(id); };
+
+/* 스테이지: 가로x세로, 시간. 타일 수 = w*h (짝수) */
+var STAGES = [
+  {w:6, h:4, time:120, kinds:8},
+  {w:6, h:5, time:150, kinds:10},
+  {w:8, h:5, time:180, kinds:12},
+  {w:8, h:6, time:220, kinds:14}
+];
+function stageReward(idx){ return (idx+1)*2; }
+var HINTS_PER_STAGE = 3;
+
+var WALLET_KEY = 'xena_wallet_v1', SAVE_KEY = 'xena_shisen_v1';
+function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(e){ return def; } }
+function save(key, v){ try{ localStorage.setItem(key, JSON.stringify(v)); }catch(e){} }
+function today(){ return new Date().toISOString().slice(0,10); }
+var wallet = load(WALLET_KEY, {});
+if(typeof wallet.xc !== 'number') wallet.xc = 0;
+var st = load(SAVE_KEY, {});
+if(!st.unlocked) st.unlocked = 1;
+if(!st.daily || st.daily.date !== today()) st.daily = {date: today(), cleared: []};
+
+var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1; });
+function cardSrc(d){ return d[3].indexOf('../../') === 0 ? d[3] : '../gacha/' + d[3]; }
+
+function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
+var toastTimer = null;
+function toast(msg){
+  var el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2400);
+}
+var screens = {intro:$('screen-intro'), play:$('screen-play'), result:$('screen-result')};
+function show(name){
+  Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('on', k===name); });
+  window.scrollTo(0,0);
+}
+function shuffle(a){
+  a = a.slice();
+  for(var i=a.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1));
+    var x=a[i];a[i]=a[j];a[j]=x;
+  }
+  return a;
+}
+
+/* ── 스테이지 선택 ── */
+function renderStages(){
+  var g = $('stage-grid');
+  g.innerHTML = '';
+  STAGES.forEach(function(s, i){
+    var locked = (i+1) > st.unlocked;
+    var clearedToday = st.daily.cleared.indexOf(i+1) !== -1;
+    var b = document.createElement('button');
+    b.className = 'stage-btn';
+    b.disabled = locked;
+    b.innerHTML = '<b>'+(locked?'🔒':(i+1))+'</b><span>'+(s.w*s.h)+' '+t('TILES','타일')+'</span>'+(clearedToday?'<span class="st-done">✓</span>':'');
+    if(!locked){ b.addEventListener('click', function(){ start(i); }); }
+    g.appendChild(b);
+  });
+}
+
+/* ── 보드 상태 ──
+ * grid[y][x] = 타일 종류번호 (0 = 빈칸). 실제 보드 밖 1칸 여백 포함: 크기 (w+2)x(h+2)
+ */
+var cur = null;
+function start(idx){
+  var s = STAGES[idx];
+  var total = s.w * s.h;
+  var pairs = total / 2;
+  var kindsPool = shuffle(CARDS).slice(0, s.kinds);
+  /* 짝 배분: 종류를 돌아가며 pairs개 채움 */
+  var tiles = [];
+  for(var p=0; p<pairs; p++){
+    var k = p % s.kinds;
+    tiles.push(k, k);
+  }
+  tiles = shuffle(tiles);
+  var grid = [];
+  for(var y=0; y<s.h+2; y++){
+    grid.push([]);
+    for(var x=0; x<s.w+2; x++){ grid[y].push(0); }
+  }
+  var ti = 0;
+  for(var yy=1; yy<=s.h; yy++){
+    for(var xx=1; xx<=s.w; xx++){
+      grid[yy][xx] = tiles[ti++] + 1; /* 1-based 종류 */
+    }
+  }
+  cur = {idx:idx, s:s, grid:grid, kinds:kindsPool, left:total, sel:null, time:s.time, hints:HINTS_PER_STAGE, timer:null, locked:false};
+  $('hud-stage').textContent = idx+1;
+  $('hud-timer').textContent = s.time;
+  $('hud-timer-box').classList.remove('low');
+  $('hud-left').textContent = total;
+  $('hud-hint').textContent = cur.hints;
+  $('btn-hint').disabled = false;
+  renderBoard();
+  show('play');
+  ensureSolvable(true);
+  cur.timer = setInterval(tick, 1000);
+}
+function renderBoard(){
+  var s = cur.s;
+  var board = $('board');
+  board.style.gridTemplateColumns = 'repeat('+s.w+', 1fr)';
+  board.innerHTML = '';
+  for(var y=1; y<=s.h; y++){
+    for(var x=1; x<=s.w; x++){
+      var k = cur.grid[y][x];
+      var el = document.createElement('button');
+      el.className = 'tile' + (k===0 ? ' gone' : '');
+      el.dataset.x = x; el.dataset.y = y;
+      if(k > 0){
+        el.innerHTML = '<img src="'+cardSrc(cur.kinds[k-1])+'" alt="" draggable="false">';
+        el.addEventListener('click', onTile);
+      }
+      board.appendChild(el);
+    }
+  }
+}
+function tileEl(x, y){
+  return $('board').children[(y-1)*cur.s.w + (x-1)];
+}
+function tick(){
+  if(!cur) return;
+  cur.time--;
+  $('hud-timer').textContent = Math.max(0, cur.time);
+  if(cur.time <= 15) $('hud-timer-box').classList.add('low');
+  if(cur.time <= 0) finish(false, t('Time\'s up!', '시간 초과!'));
+}
+
+/* ── 사천성 경로 판정: 꺾임 최대 2번 BFS ── */
+function findPath(x1, y1, x2, y2){
+  var g = cur.grid, H = g.length, W = g[0].length;
+  var DIRS = [[1,0],[-1,0],[0,1],[0,-1]];
+  /* best[y][x][dir] = 최소 꺾임 수 */
+  var best = [];
+  for(var y=0; y<H; y++){ best.push([]); for(var x=0; x<W; x++){ best[y].push([9,9,9,9]); } }
+  var queue = [];
+  for(var d=0; d<4; d++){
+    var nx = x1 + DIRS[d][0], ny = y1 + DIRS[d][1];
+    if(nx<0||ny<0||nx>=W||ny>=H) continue;
+    if(g[ny][nx] === 0 || (nx===x2 && ny===y2)){
+      best[ny][nx][d] = 0;
+      queue.push({x:nx, y:ny, d:d, turns:0, path:[[x1,y1],[nx,ny]]});
+    }
+  }
+  var found = null;
+  while(queue.length){
+    /* 꺾임 수 오름차순 처리 */
+    queue.sort(function(a,b){ return a.turns - b.turns; });
+    var c = queue.shift();
+    if(c.x === x2 && c.y === y2){ found = c.path; break; }
+    if(cur.grid[c.y][c.x] !== 0) continue; /* 타일 위는 통과 불가 (목적지 제외, 위에서 처리됨) */
+    for(var nd=0; nd<4; nd++){
+      var turns = c.turns + (nd === c.d ? 0 : 1);
+      if(turns > 2) continue;
+      var mx = c.x + DIRS[nd][0], my = c.y + DIRS[nd][1];
+      if(mx<0||my<0||mx>=W||my>=H) continue;
+      if(g[my][mx] !== 0 && !(mx===x2 && my===y2)) continue;
+      if(best[my][mx][nd] <= turns) continue;
+      best[my][mx][nd] = turns;
+      queue.push({x:mx, y:my, d:nd, turns:turns, path:c.path.concat([[mx,my]])});
+    }
+  }
+  return found;
+}
+function anyPair(){
+  var s = cur.s, g = cur.grid;
+  var byKind = {};
+  for(var y=1; y<=s.h; y++){
+    for(var x=1; x<=s.w; x++){
+      var k = g[y][x];
+      if(k > 0){ (byKind[k] = byKind[k]||[]).push([x,y]); }
+    }
+  }
+  for(var kk in byKind){
+    var list = byKind[kk];
+    for(var i=0; i<list.length; i++){
+      for(var j=i+1; j<list.length; j++){
+        if(findPath(list[i][0], list[i][1], list[j][0], list[j][1])){
+          return [list[i], list[j]];
+        }
+      }
+    }
+  }
+  return null;
+}
+function ensureSolvable(silent){
+  if(cur.left <= 0) return;
+  var guard = 0;
+  while(!anyPair() && guard < 30){
+    reshuffleRemaining();
+    guard++;
+  }
+  if(guard > 0 && !silent){ toast(t('No moves — tiles reshuffled', '연결 가능한 짝이 없어 셔플했습니다')); }
+}
+function reshuffleRemaining(){
+  var s = cur.s, g = cur.grid;
+  var kinds = [], cells = [];
+  for(var y=1; y<=s.h; y++){
+    for(var x=1; x<=s.w; x++){
+      if(g[y][x] > 0){ kinds.push(g[y][x]); cells.push([x,y]); }
+    }
+  }
+  kinds = shuffle(kinds);
+  cells.forEach(function(c, i){ g[c[1]][c[0]] = kinds[i]; });
+  renderBoard();
+}
+
+/* ── 클릭 처리 ── */
+function onTile(e){
+  if(!cur || cur.locked) return;
+  var el = e.currentTarget;
+  var x = +el.dataset.x, y = +el.dataset.y;
+  if(cur.grid[y][x] === 0) return;
+  if(cur.sel && cur.sel[0] === x && cur.sel[1] === y){
+    el.classList.remove('sel');
+    cur.sel = null;
+    return;
+  }
+  if(!cur.sel){
+    cur.sel = [x, y];
+    el.classList.add('sel');
+    return;
+  }
+  var sx = cur.sel[0], sy = cur.sel[1];
+  var sEl = tileEl(sx, sy);
+  if(cur.grid[sy][sx] !== cur.grid[y][x]){
+    el.classList.add('deny');
+    setTimeout(function(){ el.classList.remove('deny'); }, 320);
+    sEl.classList.remove('sel');
+    cur.sel = [x, y];
+    el.classList.add('sel');
+    return;
+  }
+  var path = findPath(sx, sy, x, y);
+  if(!path){
+    el.classList.add('deny'); sEl.classList.add('deny');
+    setTimeout(function(){ el.classList.remove('deny'); sEl.classList.remove('deny'); }, 320);
+    sEl.classList.remove('sel');
+    cur.sel = null;
+    return;
+  }
+  /* 매치! */
+  cur.locked = true;
+  drawLink(path);
+  sEl.classList.remove('sel');
+  cur.grid[sy][sx] = 0;
+  cur.grid[y][x] = 0;
+  cur.sel = null;
+  setTimeout(function(){
+    sEl.classList.add('gone');
+    el.classList.add('gone');
+    hideLink();
+    cur.left -= 2;
+    $('hud-left').textContent = cur.left;
+    cur.locked = false;
+    if(cur.left <= 0){ finish(true); }
+    else { ensureSolvable(false); }
+  }, 280);
+}
+
+/* ── 연결선 연출 (SVG) ── */
+function cellCenter(x, y){
+  /* 보드 픽셀 좌표: 여백 칸(0, w+1)도 실제 칸 크기 기준으로 환산 */
+  var board = $('board');
+  var rect = board.getBoundingClientRect();
+  var wrap = $('link-svg').getBoundingClientRect();
+  var cellW = rect.width / cur.s.w;
+  var first = board.children[0].getBoundingClientRect();
+  var cellH = first.height + 4; /* gap 포함 근사 */
+  var px = (rect.left - wrap.left) + (x - 1) * cellW + cellW/2;
+  var py = (rect.top - wrap.top) + (y - 1) * (rect.height / cur.s.h) + (rect.height / cur.s.h)/2;
+  return px + ',' + py;
+}
+function drawLink(path){
+  var pts = path.map(function(p){ return cellCenter(p[0], p[1]); }).join(' ');
+  var line = $('link-line');
+  line.setAttribute('points', pts);
+  line.classList.add('show');
+}
+function hideLink(){
+  $('link-line').classList.remove('show');
+}
+
+/* ── 힌트 ── */
+$('btn-hint').addEventListener('click', function(){
+  if(!cur || cur.hints <= 0) return;
+  var pair = anyPair();
+  if(!pair) return;
+  cur.hints--;
+  $('hud-hint').textContent = cur.hints;
+  if(cur.hints <= 0) $('btn-hint').disabled = true;
+  var a = tileEl(pair[0][0], pair[0][1]), b = tileEl(pair[1][0], pair[1][1]);
+  a.classList.add('hintg'); b.classList.add('hintg');
+  setTimeout(function(){ a.classList.remove('hintg'); b.classList.remove('hintg'); }, 3000);
+});
+
+/* ── 결과 ── */
+function finish(win, reason){
+  if(!cur) return;
+  clearInterval(cur.timer);
+  var idx = cur.idx, s = cur.s;
+  var title = $('r-title'), sub = $('r-sub'), next = $('r-next');
+  if(win){
+    var timeUsed = s.time - cur.time;
+    title.className = 'win';
+    title.textContent = t('LINK RESTORED!', '회선 복구 완료!');
+    var rewardMsg = '';
+    if(st.daily.cleared.indexOf(idx+1) === -1){
+      st.daily.cleared.push(idx+1);
+      var rw = stageReward(idx);
+      wallet.xc += rw;
+      save(WALLET_KEY, wallet);
+      rewardMsg = t(' · <b>+'+rw+' XC</b> (first clear today)', ' · <b>+'+rw+' XC</b> (오늘 첫 클리어)');
+    }
+    if(idx+2 > st.unlocked){ st.unlocked = Math.min(STAGES.length, idx+2); }
+    if(!st.best) st.best = {};
+    if(!st.best[idx+1] || timeUsed < st.best[idx+1]) st.best[idx+1] = timeUsed;
+    save(SAVE_KEY, st);
+    sub.innerHTML = t(
+      'Stage '+(idx+1)+' clear in '+timeUsed+'s'+rewardMsg+'<br>Best: '+st.best[idx+1]+'s',
+      '스테이지 '+(idx+1)+' 클리어 · '+timeUsed+'초'+rewardMsg+'<br>최고 기록: '+st.best[idx+1]+'초'
+    );
+    if(idx+1 < STAGES.length){
+      next.hidden = false;
+      next.innerHTML = t('NEXT STAGE →', '다음 스테이지 →');
+      next.onclick = function(){ start(idx+1); };
+    } else {
+      next.hidden = false;
+      next.innerHTML = t('ALL CLEAR! 🏆', '전체 클리어! 🏆');
+      next.onclick = function(){ show('intro'); renderStages(); };
+    }
+  } else {
+    title.className = 'lose';
+    title.textContent = t('SIGNAL LOST', '시그널 유실');
+    sub.textContent = (reason||'') + ' ' + t((s.w*s.h - cur.left)+'/'+(s.w*s.h)+' tiles cleared.', '타일 '+(s.w*s.h - cur.left)+'/'+(s.w*s.h)+' 제거.');
+    next.hidden = true;
+  }
+  $('r-retry').onclick = function(){ start(idx); };
+  renderWallet();
+  show('result');
+}
+$('r-home').addEventListener('click', function(){ show('intro'); renderStages(); });
+
+/* ── 언어 토글 ── */
+document.querySelectorAll('.lang-toggle button').forEach(function(b){
+  b.addEventListener('click', function(){
+    lang = b.getAttribute('data-set') === 'ko' ? 'ko' : 'en';
+    document.documentElement.setAttribute('data-lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+    try{ localStorage.setItem('xena-lang', lang); }catch(e){}
+    renderStages();
+  });
+});
+
+renderWallet();
+renderStages();
+})();
+</script>
+</body>
+</html>

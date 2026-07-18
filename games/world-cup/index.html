@@ -1,12 +1,20 @@
 <!DOCTYPE html>
-<html lang="ko" data-lang="ko">
+<html lang="en" data-lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>XENA PHOTO WORLD CUP — 이상형 월드컵</title>
-<meta name="description" content="XENA 화보 30장 중 당신의 최애 컷을 찾아보세요. 16강 토너먼트 이상형 월드컵.">
+<title>XENA PHOTO WORLD CUP</title>
+<meta name="description" content="Find your one favorite XENA photo cut through a tournament bracket.">
 <meta property="og:title" content="XENA PHOTO WORLD CUP">
-<meta property="og:description" content="30장의 XENA 화보 중 당신의 원픽은? 16강 토너먼트로 골라보세요.">
+<meta property="og:description" content="XENA's photo cuts face off — find your one pick.">
+<script>
+(function(){
+  var saved = null;
+  try{ saved = localStorage.getItem('xena-lang'); }catch(e){}
+  document.documentElement.setAttribute('data-lang', saved === 'ko' ? 'ko' : 'en');
+  document.documentElement.setAttribute('lang', saved === 'ko' ? 'ko' : 'en');
+})();
+</script>
 <meta property="og:image" content="https://xenauniverse.com/images/gallery/cover-answer.jpg">
 <meta property="og:url" content="https://xenauniverse.com/games/world-cup/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
@@ -30,6 +38,12 @@ html,body{background:var(--black);color:var(--silver);font-family:var(--font-san
 button{font-family:inherit;cursor:pointer;}
 a{color:inherit;text-decoration:none;}
 :focus-visible{outline:1px solid var(--cyan);outline-offset:3px;}
+[data-lang="ko"] [lang="en"]{display:none;}
+[data-lang="en"] [lang="ko"]{display:none;}
+.lang-toggle{display:flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:20px;padding:4px;backdrop-filter:blur(14px);}
+.lang-toggle button{font-family:var(--font-mono);background:transparent;border:none;color:var(--text-dim);font-size:.64rem;font-weight:500;letter-spacing:.1em;padding:5px 10px;border-radius:16px;cursor:pointer;transition:.3s ease;}
+[data-lang="ko"] .lang-toggle button[data-set="ko"],
+[data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(160,107,255,.18);color:var(--purple-light);box-shadow:inset 0 0 0 1px rgba(160,107,255,.4);}
 
 /* ── 배경: 고정 네온 그리드 ── */
 .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -83,7 +97,7 @@ a{color:inherit;text-decoration:none;}
 
 .arena{flex:1;display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;min-height:0;}
 .fighter{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--hair);background:rgba(255,255,255,.02);cursor:pointer;transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease;aspect-ratio:3/4;max-height:62vh;width:100%;}
-.fighter img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s ease;}
+.fighter img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;display:block;transition:transform .45s ease;}
 .fighter:hover{transform:translateY(-4px);border-color:rgba(63,224,255,.5);box-shadow:0 14px 44px rgba(63,224,255,.18);}
 .fighter:hover img{transform:scale(1.04);}
 .fighter .tag{position:absolute;left:0;right:0;bottom:0;padding:34px 16px 14px;background:linear-gradient(transparent, rgba(0,0,0,.82));pointer-events:none;}
@@ -104,7 +118,7 @@ a{color:inherit;text-decoration:none;}
   background:linear-gradient(135deg,#fff 30%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
 .champion{position:relative;width:min(420px,84vw);border-radius:20px;overflow:hidden;border:1px solid rgba(232,196,104,.45);box-shadow:0 0 70px rgba(232,196,104,.22), 0 24px 60px rgba(0,0,0,.6);animation:champIn .8s cubic-bezier(.2,.9,.3,1.2) both;}
 @keyframes champIn{from{opacity:0;transform:scale(.85) translateY(24px);}to{opacity:1;transform:none;}}
-.champion img{width:100%;display:block;aspect-ratio:3/4;object-fit:cover;}
+.champion img{width:100%;display:block;aspect-ratio:3/4;object-fit:cover;object-position:50% 20%;}
 .champion .crown{position:absolute;top:14px;left:14px;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.22em;color:var(--gold);background:rgba(0,0,0,.65);border:1px solid rgba(232,196,104,.5);padding:6px 12px;border-radius:18px;backdrop-filter:blur(8px);}
 .champion .tag{position:absolute;left:0;right:0;bottom:0;padding:40px 18px 16px;background:linear-gradient(transparent, rgba(0,0,0,.86));text-align:left;}
 .champion .tag small{display:block;font-family:var(--font-mono);font-size:.62rem;letter-spacing:.26em;color:var(--cyan);text-transform:uppercase;margin-bottom:5px;}
@@ -121,7 +135,7 @@ a{color:inherit;text-decoration:none;}
 .rank-list{list-style:none;display:flex;flex-direction:column;gap:9px;}
 .rank-list li{display:grid;grid-template-columns:18px 34px 1fr 72px 44px;align-items:center;gap:10px;}
 .rank-list .rk{font-family:var(--font-mono);font-size:.72rem;color:var(--text-dim);font-weight:700;text-align:center;}
-.rank-list img{width:34px;height:44px;object-fit:cover;border-radius:7px;border:1px solid var(--hair);display:block;}
+.rank-list img{width:34px;height:44px;object-fit:cover;object-position:50% 20%;border-radius:7px;border:1px solid var(--hair);display:block;}
 .rank-list .nm{font-size:.72rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .rank-list .bar{height:5px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;}
 .rank-list .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--purple-light),var(--cyan));border-radius:4px;}
@@ -145,7 +159,7 @@ a{color:inherit;text-decoration:none;}
 .history h3{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:14px;}
 .history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;}
 .history-cell{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--hair);aspect-ratio:3/4;}
-.history-cell img{width:100%;height:100%;object-fit:cover;display:block;}
+.history-cell img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;display:block;}
 .history-cell i{position:absolute;right:4px;bottom:4px;font-family:var(--font-mono);font-style:normal;font-size:.56rem;font-weight:700;color:var(--gold);background:rgba(0,0,0,.72);padding:2px 6px;border-radius:8px;letter-spacing:.04em;}
 
 .toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:50;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;color:var(--silver);background:rgba(8,8,14,.9);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);box-shadow:0 0 24px rgba(63,224,255,.2);white-space:nowrap;}
@@ -173,18 +187,27 @@ a{color:inherit;text-decoration:none;}
 
 <div class="wrap">
   <div class="topbar">
-    <a class="back-link" href="../../index.html">&larr; XENAUNIVERSE</a>
-    <div class="top-mark">XENA <span>WORLD CUP</span></div>
+    <a class="back-link" href="../">&larr; XENA GAMES</a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button data-set="en">EN</button>
+        <button data-set="ko">KO</button>
+      </div>
+      <div class="top-mark">XENA <span>WORLD CUP</span></div>
+    </div>
   </div>
 
   <!-- 인트로 -->
   <section class="screen intro on" id="screen-intro">
     <div class="intro-eyebrow">Photo Tournament</div>
     <h1>XENA<br>PHOTO WORLD CUP</h1>
-    <p>세 트랙의 화보 <b>30장</b> 중 무작위로 뽑힌 컷들이 토너먼트로 맞붙습니다.<br>더 마음에 드는 사진을 눌러 <b>당신의 원픽</b>을 찾아보세요.</p>
-    <div class="round-pick" role="group" aria-label="라운드 선택">
-      <button class="round-btn" data-size="8">8강 · 빠르게</button>
-      <button class="round-btn sel" data-size="16">16강 · 정석</button>
+    <p>
+      <span lang="en">Randomly drawn photo cuts face off in a bracket.<br>Tap the one you like more and find <b>your one pick</b>.</span>
+      <span lang="ko">무작위로 뽑힌 화보 컷들이 토너먼트로 맞붙습니다.<br>더 마음에 드는 사진을 눌러 <b>당신의 원픽</b>을 찾아보세요.</span>
+    </p>
+    <div class="round-pick" role="group" aria-label="Round select">
+      <button class="round-btn" data-size="8"><span lang="en">Round of 8 · Quick</span><span lang="ko">8강 · 빠르게</span></button>
+      <button class="round-btn sel" data-size="16"><span lang="en">Round of 16 · Classic</span><span lang="ko">16강 · 정석</span></button>
     </div>
     <button class="start-btn" id="btn-start">START</button>
     <div class="intro-note">TRACKS: I AM THE ANSWER / STAY BRIGHT / DOPAMINE</div>
@@ -221,28 +244,28 @@ a{color:inherit;text-decoration:none;}
     </div>
     <p class="result-sub" id="result-sub"></p>
     <div class="stats">
-      <h3>PICK RATE — 누적 최종픽 득표율</h3>
+      <h3><span lang="en">PICK RATE — All-time final picks</span><span lang="ko">PICK RATE — 누적 최종픽 득표율</span></h3>
       <p class="champ-rate" id="champ-rate"></p>
       <ol class="rank-list" id="rank-list"></ol>
-      <p class="stats-note">* 집계는 현재 브라우저 기준 · 온라인 통합 집계는 준비 중</p>
+      <p class="stats-note"><span lang="en">* Counted on this browser · global online tally coming soon</span><span lang="ko">* 집계는 현재 브라우저 기준 · 온라인 통합 집계는 준비 중</span></p>
     </div>
     <div class="share-row">
       <button class="share-btn" id="btn-share">
         <svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v13M7.5 7.5 12 3l4.5 4.5"/></svg>
-        공유하기
+        <span lang="en">Share</span><span lang="ko">공유하기</span>
       </button>
       <button class="share-btn x" id="btn-x">
         <svg viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20"/></svg>
-        X에 올리기
+        <span lang="en">Post on X</span><span lang="ko">X에 올리기</span>
       </button>
       <button class="share-btn dl" id="btn-download">
         <svg viewBox="0 0 24 24"><path d="M12 3v13M7.5 11.5 12 16l4.5-4.5M4 19h16"/></svg>
-        결과 카드 저장
+        <span lang="en">Save result card</span><span lang="ko">결과 카드 저장</span>
       </button>
     </div>
-    <button class="retry-btn" id="btn-retry">다시 하기</button>
+    <button class="retry-btn" id="btn-retry"><span lang="en">PLAY AGAIN</span><span lang="ko">다시 하기</span></button>
     <div class="history" id="history-box" hidden>
-      <h3>MY PICK HISTORY — 내가 뽑은 우승 컷</h3>
+      <h3><span lang="en">MY PICK HISTORY</span><span lang="ko">MY PICK HISTORY — 내가 뽑은 우승 컷</span></h3>
       <div class="history-grid" id="history-grid"></div>
     </div>
   </section>
@@ -250,22 +273,66 @@ a{color:inherit;text-decoration:none;}
 
 <div class="toast" id="toast"></div>
 
+<script src="../gacha/cards.js"></script>
 <script>
 (function(){
 'use strict';
 var GALLERY = '../../images/gallery/';
 var SITE_URL = 'https://xenauniverse.com/games/world-cup/';
-var TRACKS = [
-  {key:'answer',   title:'I AM THE ANSWER', count:10, desc:'시스템에 던지는 선전포고, 딥블랙과 네온의 강렬 컨셉'},
-  {key:'bright',   title:'STAY BRIGHT',     count:10, desc:'어둠 속에서도 빛을 잃지 않는 골드빛 에테리얼 컨셉'},
-  {key:'dopamine', title:'DOPAMINE',        count:10, desc:'핑크 네온이 번지는 쾌락 도시의 일렉트릭 컨셉'}
+
+/* ══════════ 사진 풀 편집 구역 (대표님이 직접 수정하는 곳) ══════════
+ * 1) 갤러리 사진 빼기: 아래 목록에서 빼고 싶은 번호를 지우면 됩니다.
+ *    예) answer에서 3번 컷 빼기 → [1,2,4,5,...] 로 수정
+ * 2) ZENA CARDS 사진 차출: EXTRA_CARD_IDS 에 카드ID를 추가하면 됩니다.
+ *    (가챠 cards.js에서 사용가능(1) 상태인 카드만 등장. N등급 위주 권장)
+ *    예) var EXTRA_CARD_IDS = ['XA-N-01','NX-N-02'];
+ * ════════════════════════════════════════════════════════════ */
+var GALLERY_PHOTOS = {
+  answer:   [1,2,3,4,5,6,7,8,9,10],
+  bright:   [1,2,3,4,5,7,8,9,10],        /* 6번 제외 (대표님 X표시 2026-07-18) */
+  dopamine: [1,2,3,7,8,10]               /* 4·5·6·9번 제외 (〃) */
+};
+var EXTRA_CARD_IDS = [
+  /* ZENA CARDS N등급 차출분 (2026-07-18) — 빼려면 줄 삭제, 추가하려면 카드ID 추가 */
+  'XA-N-03','XA-N-05','XA-N-06','XA-N-07','XA-N-09','XA-N-10',
+  'NX-N-02','NX-N-03','NX-N-04','NX-N-05','NX-N-06',
+  'XC-N-04'
 ];
+
+/* ── 언어 ── */
+var lang = document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 'en';
+function t(en, ko){ return lang === 'ko' ? ko : en; }
+
+var TRACKS = [
+  {key:'answer', title:'I AM THE ANSWER',
+    desc:{en:'the jet-black neon concept, a declaration to the System', ko:'시스템에 던지는 선전포고, 딥블랙 네온 컨셉'},
+    close:{en:'Be your own answer today 🖤', ko:'오늘도 당신만의 답을 지키세요 🖤'}},
+  {key:'bright', title:'STAY BRIGHT',
+    desc:{en:'the golden ethereal concept, a light that won\'t go out', ko:'어둠 속에서도 빛을 잃지 않는 골드빛 에테리얼 컨셉'},
+    close:{en:'Stay bright today ✨', ko:'오늘도 빛을 잃지 마세요 ✨'}},
+  {key:'dopamine', title:'DOPAMINE',
+    desc:{en:'the electric pink-neon concept of the pleasure city', ko:'핑크 네온이 번지는 쾌락 도시의 일렉트릭 컨셉'},
+    close:{en:'Charge up your dopamine today 💗', ko:'오늘도 도파민 충전하세요 💗'}}
+];
+var CARD_META = {
+  desc:{en:'a ZENA CARDS special cut', ko:'제나카드 스페셜 컷'},
+  close:{en:'Good luck on today\'s draw 🃏', ko:'오늘의 뽑기도 행운을 🃏'}
+};
+
 var POOL = [];
-TRACKS.forEach(function(t){
-  for(var i=1;i<=t.count;i++){
-    POOL.push({id:t.key+'-'+i, src:GALLERY+t.key+'-'+i+'.jpg', track:t.title, name:'CUT #'+String(i).padStart(2,'0'), desc:t.desc});
-  }
+TRACKS.forEach(function(tr){
+  (GALLERY_PHOTOS[tr.key]||[]).forEach(function(i){
+    POOL.push({id:tr.key+'-'+i, src:GALLERY+tr.key+'-'+i+'.jpg', track:tr.title, name:'CUT #'+String(i).padStart(2,'0'), desc:tr.desc, close:tr.close});
+  });
 });
+/* ZENA CARDS 차출분 */
+if(window.ZENA_CARD_DEFS && EXTRA_CARD_IDS.length){
+  window.ZENA_CARD_DEFS.forEach(function(d){
+    if(EXTRA_CARD_IDS.indexOf(d[0]) === -1 || d[4] !== 1) return;
+    var src = d[3].indexOf('../../') === 0 ? d[3] : '../gacha/' + d[3];
+    POOL.push({id:'card-'+d[0], src:src, track:'ZENA CARDS', name:d[1], desc:CARD_META.desc, close:CARD_META.close});
+  });
+}
 
 var state = {size:16, queue:[], next:[], matchIdx:0, totalMatches:0, playedMatches:0, roundSize:0, champion:null, locked:false};
 
@@ -383,12 +450,20 @@ document.addEventListener('keydown', function(e){
 });
 
 /* ── 결과 ── */
+function renderResultTexts(){
+  var c = state.champion;
+  if(!c) return;
+  $('champ-track').textContent = c.track;
+  $('champ-name').textContent = c.name;
+  $('result-sub').innerHTML = t(
+    'Your one pick: <b>'+c.name+'</b> from <b>'+c.track+'</b>.<br>'+c.desc.en+' — the last one standing out of '+state.size+'.',
+    '당신의 원픽은 <b>'+c.track+'</b>의 <b>'+c.name+'</b> 컷.<br>'+c.desc.ko+' — '+state.size+'강에서 살아남은 단 한 장입니다.'
+  );
+}
 function finish(){
   var c = state.champion;
   $('champ-img').src = c.src;
-  $('champ-track').textContent = c.track;
-  $('champ-name').textContent = c.name;
-  $('result-sub').innerHTML = '당신의 원픽은 <b>'+c.track+'</b>의 <b>'+c.name+'</b> 컷.<br>'+c.desc+' — '+state.size+'강에서 살아남은 단 한 장입니다.';
+  renderResultTexts();
   castVote(c);
   renderStats(c);
   saveHistory(c);
@@ -412,7 +487,10 @@ function awardXC(){
     w.daily.worldcup = n + 1;
     w.xc += 5;
     localStorage.setItem(WALLET_KEY, JSON.stringify(w));
-    setTimeout(function(){ toast('+5 XC 적립! ('+w.daily.worldcup+'/3 · 보유 '+w.xc+' XC) — ZENA CARDS 뽑기에 사용'); }, 900);
+    setTimeout(function(){ toast(t(
+      '+5 XC earned! ('+w.daily.worldcup+'/3 today · balance '+w.xc+' XC) — spend it on ZENA CARDS',
+      '+5 XC 적립! ('+w.daily.worldcup+'/3 · 보유 '+w.xc+' XC) — ZENA CARDS 뽑기에 사용'
+    )); }, 900);
   }catch(e){}
 }
 
@@ -439,7 +517,10 @@ function castVote(c){
 function pct(n, total){ return (n/total*100).toFixed(1); }
 function renderStats(champ){
   var v = loadVotes();
-  $('champ-rate').innerHTML = '이 컷의 누적 최종픽 <b>'+pct(v.counts[champ.id], v.total)+'%</b> <span>('+v.counts[champ.id]+'표 / 총 '+v.total+'표)</span>';
+  $('champ-rate').innerHTML = t(
+    'This cut\'s all-time pick rate: <b>'+pct(v.counts[champ.id], v.total)+'%</b> <span>('+v.counts[champ.id]+' of '+v.total+' picks)</span>',
+    '이 컷의 누적 최종픽 <b>'+pct(v.counts[champ.id], v.total)+'%</b> <span>('+v.counts[champ.id]+'표 / 총 '+v.total+'표)</span>'
+  );
   var ids = Object.keys(v.counts).sort(function(a,b){return v.counts[b]-v.counts[a];}).slice(0,5);
   var list = $('rank-list');
   list.innerHTML = '';
@@ -501,27 +582,28 @@ function toast(msg){
   toastTimer = setTimeout(function(){t.classList.remove('show');}, 2400);
 }
 
-/* ── 공유 ── */
+/* ── 공유 (현재 언어에 맞춘 풀 문구 + 링크) ── */
 function shareText(){
   var c = state.champion;
-  return '내가 뽑은 XENA 원픽 📸 '+c.track+' '+c.name+' — '+c.desc+'. XENA 이상형 월드컵, 너의 원픽은?';
+  return t(
+    'Today\'s my pick 📸 '+c.name+' from '+c.track+' — '+c.desc.en+'. '+c.close.en+'\nXENA PHOTO WORLD CUP — what\'s your pick?',
+    '오늘의 내 픽은 📸 '+c.track+'의 '+c.name+' — '+c.desc.ko+'. '+c.close.ko+'\nXENA 이상형 월드컵, 너의 원픽은?'
+  );
 }
 $('btn-share').addEventListener('click', function(){
-  var text = shareText();
+  var full = shareText()+'\n'+SITE_URL;
+  /* 문구+링크를 항상 클립보드에 먼저 복사 → 어디든 붙여넣기 가능 */
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(full).then(function(){
+      toast(t('Message + link copied — paste it anywhere!', '문구+링크가 복사됐습니다 — 어디든 붙여넣기 하세요!'));
+    },function(){});
+  }
   if(navigator.share){
-    navigator.share({title:'XENA PHOTO WORLD CUP', text:text, url:SITE_URL}).catch(function(){});
-  } else {
-    copyLink(text);
+    navigator.share({title:'XENA PHOTO WORLD CUP', text:shareText(), url:SITE_URL}).catch(function(){});
+  } else if(!(navigator.clipboard && navigator.clipboard.writeText)){
+    toast(t('Sharing is not supported in this browser', '이 브라우저는 공유를 지원하지 않습니다'));
   }
 });
-function copyLink(text){
-  var full = text+' '+SITE_URL;
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(full).then(function(){toast('링크가 복사됐습니다 — SNS에 붙여넣기 하세요');},function(){toast('복사 실패 — 주소창의 링크를 직접 복사해 주세요');});
-  } else {
-    toast('이 브라우저는 자동 복사를 지원하지 않습니다');
-  }
-}
 $('btn-x').addEventListener('click', function(){
   var url = 'https://twitter.com/intent/tweet?text='+encodeURIComponent(shareText())+'&url='+encodeURIComponent(SITE_URL);
   window.open(url, '_blank', 'noopener');
@@ -578,12 +660,12 @@ $('btn-download').addEventListener('click', function(){
       a.download = 'xena-worldcup-pick.png';
       a.href = cv.toDataURL('image/png');
       a.click();
-      toast('결과 카드가 저장됐습니다');
+      toast(t('Result card saved', '결과 카드가 저장됐습니다'));
     }catch(e){
-      toast('이미지 저장에 실패했습니다');
+      toast(t('Failed to save image', '이미지 저장에 실패했습니다'));
     }
   };
-  img.onerror = function(){toast('이미지 로드 실패');};
+  img.onerror = function(){toast(t('Failed to load image', '이미지 로드 실패'));};
   img.src = c.src;
 });
 function roundRect(ctx,x,y,w,h,r){
@@ -595,6 +677,21 @@ function roundRect(ctx,x,y,w,h,r){
   ctx.arcTo(x,y,x+w,y,r);
   ctx.closePath();
 }
+
+/* ── 언어 토글 ── */
+document.querySelectorAll('.lang-toggle button').forEach(function(b){
+  b.addEventListener('click', function(){
+    lang = b.getAttribute('data-set') === 'ko' ? 'ko' : 'en';
+    document.documentElement.setAttribute('data-lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+    try{ localStorage.setItem('xena-lang', lang); }catch(e){}
+    /* 결과 화면이 떠 있으면 동적 텍스트 다시 그리기 */
+    if(screens.result.classList.contains('on') && state.champion){
+      renderResultTexts();
+      renderStats(state.champion);
+    }
+  });
+});
 })();
 </script>
 </body>
