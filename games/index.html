@@ -307,6 +307,19 @@ function hubSetNickname(user){
 function hubRefresh(state){
   var user = state && state.user;
   var name = hubProfileName();
+  if(user){
+    var confirmed = false;
+    try{ confirmed = localStorage.getItem('xena_nickname_confirmed') === '1'; }catch(e){}
+    if(!confirmed && !window.__xenaNicknamePrompting){
+      window.__xenaNicknamePrompting = true;
+      setTimeout(async function(){
+        var current = window.XenaCloudSync && window.XenaCloudSync.snapshot();
+        if(current && current.user && !hubSetNickname(current.user)) await window.XenaCloudSync.signOut();
+        window.__xenaNicknamePrompting = false;
+        hubRefresh(window.XenaCloudSync ? window.XenaCloudSync.snapshot() : {});
+      }, 0);
+    }
+  }
   hubAccount.classList.toggle('signed', !!user);
   hubLabel.textContent = user ? (name || user.displayName || 'SIGNED IN') : 'GOOGLE LOGIN';
   var credits = 0; try{ credits = Number(localStorage.getItem('og_credits') || 0); }catch(e){}
