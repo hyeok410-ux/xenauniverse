@@ -11,6 +11,8 @@
   window.addEventListener("unhandledrejection", showFatalError);
   const glyph = { signal: "S", bastion: "B", vector: "V", glitch: "G", leader: "L", catalyst: "C" };
   const skillNames = {
+    prismShift: { ko: ["프리즘 시프트", "인접 아군과 위치를 교환"], en: ["Prism Shift", "Swap with an adjacent ally"] },
+    etherealLeap: { ko: ["이더리얼 리프", "각성 후 빈 칸으로 도약"], en: ["Ethereal Leap", "Leap to an empty L-square"] },
     cyanShift: { ko: ["시안 시프트", "인접 아군과 위치 교환"], en: ["Cyan Shift", "Swap with an adjacent ally"] },
     override: { ko: ["오버라이드", "빈 L자 칸으로 이동"], en: ["Override", "Move to an empty L-square"] },
     systemLock: { ko: ["시스템 락", "적 하나를 다음 턴 고정"], en: ["System Lock", "Lock one enemy for its next turn"] },
@@ -375,6 +377,9 @@
   let screen = "setup";
   let pendingRoomCode = "";
   let profile = safeJson(storage.get("og_profile"), null) || createGuestProfile();
+  const hubNickname = storage.get("xena_nickname");
+  if (hubNickname && !profile.nickname) profile.nickname = hubNickname;
+  if (hubNickname) profile.nickname = hubNickname;
   let committedStarter = storage.get("og_starter");
   let chosen = committedStarter || "xena";
   let owned = storedArray("og_owned");
@@ -401,6 +406,7 @@
   let selectedUnitSlot = null;
   let lineupPack = committedStarter || "xena";
   let dailyLogin = safeJson(storage.get("og_daily_login"), {}) || {};
+  let activity = safeJson(storage.get("og_activity"), { totalMinutes: 0, games: {}, lastGame: "" }) || { totalMinutes: 0, games: {}, lastGame: "" };
   let codexOwned = [...new Set(storedArray("og_codex_owned").map((id) => LEGACY_CODEX_MAP[id] || id).filter((id) => CODEX_CARDS.some((card) => card.id === id)))];
   let showcase = null;
   let state = null;
@@ -430,6 +436,7 @@
   let onlineRevision = -1;
   let onlineEmoteNonce = 0;
   let timerWarningKey = "";
+  let activityStartedAt = 0;
   let audioEnabled = storage.get("og_audio_enabled") !== "0";
   const audioState = { unlocked: false, bgm: null, bgmKey: "", lastSfxAt: 0 };
   const BGM = {
@@ -482,6 +489,20 @@
     audioState.unlocked = true;
     if (audioEnabled) syncBgm();
   }
+
+  function stopAudioForBackground() {
+    if (audioState.bgm) audioState.bgm.pause();
+  }
+
+  function resumeAudioAfterForeground() {
+    if (document.visibilityState === "visible" && audioEnabled && audioState.unlocked) syncBgm();
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") stopAudioForBackground();
+    else resumeAudioAfterForeground();
+  });
+  window.addEventListener("pagehide", stopAudioForBackground);
 
   function playSfx(key, volume) {
     if (!audioEnabled || !audioState.unlocked || !SFX[key]) return;
@@ -561,7 +582,22 @@
     storage.set("og_unit_skins", JSON.stringify(unitSkins));
     storage.set("og_unit_effects", JSON.stringify(unitEffects));
     storage.set("og_daily_login", JSON.stringify(dailyLogin));
+    storage.set("og_activity", JSON.stringify(activity));
     storage.set("og_codex_owned", JSON.stringify(codexOwned));
+  }
+
+  function activityMeta() {
+    return { totalMinutes: Math.max(0, Number(activity.totalMinutes) || 0), games: activity.games || {}, lastGame: activity.lastGame || "" };
+  }
+
+  function recordActivity(gameName, startedAt) {
+    const elapsed = Math.max(0, Math.round((Date.now() - startedAt) / 60000));
+    activity.totalMinutes = (Number(activity.totalMinutes) || 0) + elapsed;
+    activity.games[gameName] = (Number(activity.games[gameName]) || 0) + 1;
+    activity.lastGame = new Date().toISOString();
+    saveMeta();
+    const cloud = window.XenaCloudSync;
+    if (cloud && cloud.snapshot().user) cloud.save(backupCode(), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
   }
 
   function t(key) {
@@ -746,7 +782,7 @@
           await cloud.signIn();
           const remote = await cloud.load();
           if (!remote) {
-            await cloud.save(backupCode());
+            await cloud.save(backupCode(), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
             alert(language === "en" ? "This device save is now backed up to the cloud." : "이 기기의 저장 기록을 클라우드에 처음 백업했습니다.");
           } else if (screen !== "game" && confirm(language === "en" ? "A cloud save already exists. Load it on this device now?" : "기존 클라우드 저장이 있습니다. 지금 이 기기에 불러올까요?")) {
             restoreBackup(remote.saveCode);
@@ -759,7 +795,7 @@
       if (upload) upload.addEventListener("click", async () => {
         if (cloudState.remoteExists && !confirm(language === "en" ? "Replace the cloud save with this device's progress?" : "클라우드 저장을 이 기기의 진행 기록으로 덮어쓸까요?")) return;
         try {
-          await cloud.save(backupCode());
+          await cloud.save(backupCode(), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
           alert(language === "en" ? "Cloud save complete." : "클라우드 저장을 완료했습니다.");
         } catch (_) { /* The cloud panel shows a localized error. */ }
       });
@@ -883,6 +919,8 @@
     if (buy) buy.addEventListener("click", () => {
       const price = packPrice(chosen);
       if (credits < price) return alert(`크레딧이 ${price - credits} 부족합니다.`);
+      const pack = G.PACKS[chosen];
+      if (!confirm(`${pack.leaderName} 팩을 ${price.toLocaleString()} 시그널 크레딧에 구매하시겠습니까?\n\n확인: 구매   취소: 돌아가기`)) return;
       credits -= price; owned.push(chosen); unitLineups = normalizedLineups(unitLineups); playSfx("purchase", 0.52); saveMeta(); renderSetup();
     });
     const reset = document.getElementById("reset");
@@ -1028,6 +1066,10 @@
       if (item) app.insertAdjacentHTML("beforeend", showcaseMarkup(item, "store"));
     }
     bindStoreButton();
+    const effectHeader = app.querySelector(".effect-toggle")?.parentElement;
+    if (effectHeader && !effectHeader.querySelector("[data-equip-all-effects]")) {
+      effectHeader.insertAdjacentHTML("beforeend", `<button class="secondary effect-equip-all" data-equip-all-effects>전체 착용</button>`);
+    }
     document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
     app.querySelectorAll("[data-buy-cosmetic]").forEach((button) => button.addEventListener("click", () => buyCosmetic(button.dataset.buyCosmetic)));
     app.querySelectorAll("[data-go-my-units]").forEach((button) => button.addEventListener("click", () => { showcase = null; renderMyUnits(); }));
@@ -1110,6 +1152,14 @@
     app.querySelectorAll("[data-apply-effect]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.applyEffect; if (id) unitEffects[selectedCharacter] = { id, enabled: true }; else delete unitEffects[selectedCharacter]; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
     app.querySelectorAll("[data-apply-board]").forEach((button) => button.addEventListener("click", () => { activeBoard = button.dataset.applyBoard; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
     app.querySelectorAll("[data-apply-frame]").forEach((button) => button.addEventListener("click", () => { activeFrame = button.dataset.applyFrame; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
+    const allEffects = app.querySelector("[data-equip-all-effects]");
+    if (allEffects) allEffects.addEventListener("click", () => {
+      const available = effectItems.filter((item) => cosmeticOwned.includes(item.id));
+      if (!available.length) return;
+      const characters = [...new Set(Object.values(unitLineups[lineupPack]))];
+      characters.forEach((character, index) => { unitEffects[character] = { id: available[index % available.length].id, enabled: true }; });
+      playSfx("equip", 0.5); saveMeta(); renderMyUnits();
+    });
     const toggle = app.querySelector("[data-toggle-effect]");
     if (toggle) toggle.addEventListener("change", () => { if (unitEffects[selectedCharacter]) unitEffects[selectedCharacter].enabled = toggle.checked; saveMeta(); renderMyUnits(); });
     syncBgm();
@@ -1239,7 +1289,7 @@
     let remoteState;
     try { remoteState = JSON.parse(online.room.stateJson); }
     catch (_) { return alert(language === "en" ? "The room state is invalid." : "온라인 방 상태를 읽을 수 없습니다."); }
-    screen = "game"; gameMode = "online"; playerColor = online.color; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = []; timerWarningKey = "";
+    screen = "game"; gameMode = "online"; playerColor = online.color; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = []; timerWarningKey = ""; activityStartedAt = Date.now();
     replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
     state = remoteState;
     onlineRevision = Number(online.room.revision || 0);
@@ -1317,7 +1367,7 @@
       saveMeta();
     }
     if (gameMode === "online") return renderOnlineLobby();
-    screen = "game"; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = []; timerWarningKey = "";
+    screen = "game"; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = []; timerWarningKey = ""; activityStartedAt = Date.now();
     replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
     const enemy = chosen === "xena" ? "sovran" : "xena";
     state = G.createInitialState({ whitePack: chosen, blackPack: enemy });
@@ -1438,7 +1488,7 @@
 
   function skillButtons(color) {
     const pack = G.leaderSkillPack(state, color);
-    const names = pack === "xena" ? ["cyanShift", "override"] : ["systemLock", "publicErasure"];
+    const names = pack === "xena" ? ["cyanShift", "override"] : pack === "crystal" ? ["prismShift", "etherealLeap"] : ["systemLock", "publicErasure"];
     return names.map((key, index) => {
       const enabled = canControl(color) && (index === 0 ? state.skills[color].base : state.awakened[color] && state.skills[color].awakened);
       return `<button class="skill-button" data-skill="${key}" ${enabled ? "" : "disabled"}><b>${skillText(key, 0)}</b><span>${skillText(key, 1)}</span></button>`;
@@ -1901,6 +1951,7 @@
       });
       return;
     }
+    if (activityStartedAt) { recordActivity(gameMode === "online" ? "override-grid-online" : gameMode === "event" ? "override-grid-event" : "override-grid-ai", activityStartedAt); activityStartedAt = 0; }
     clearInterval(timer);
     replayMode = false;
     promotionChoices = [];

@@ -152,14 +152,14 @@
       const data = result.data();
       if (data.schemaVersion !== 1 || typeof data.saveCode !== "string") throw new Error("UNSUPPORTED_CLOUD_SAVE");
       setState({ phase: "signed-in", remoteExists: true, lastSyncedAt: data.clientUpdatedAt || "" });
-      return { saveCode: data.saveCode, clientUpdatedAt: data.clientUpdatedAt || "" };
+      return { saveCode: data.saveCode, clientUpdatedAt: data.clientUpdatedAt || "", profile: data.profile || null, activity: data.activity || null };
     } catch (error) {
       setState({ phase: "signed-in", error: friendlyError(error) });
       throw error;
     }
   }
 
-  async function save(saveCode) {
+  async function save(saveCode, meta) {
     if (typeof saveCode !== "string" || !saveCode.trim()) throw new Error("INVALID_SAVE_CODE");
     await connect();
     const user = requireUser();
@@ -167,13 +167,16 @@
     const clientUpdatedAt = new Date().toISOString();
     try {
       const reference = firestoreApi.doc(db, "players", user.uid);
-      await firestoreApi.setDoc(reference, {
+      const payload = {
         uid: user.uid,
         schemaVersion: 1,
         saveCode,
         clientUpdatedAt,
         updatedAt: firestoreApi.serverTimestamp(),
-      });
+      };
+      if (meta && meta.profile) payload.profile = meta.profile;
+      if (meta && meta.activity) payload.activity = meta.activity;
+      await firestoreApi.setDoc(reference, payload, { merge: true });
       setState({ phase: "signed-in", remoteExists: true, lastSyncedAt: clientUpdatedAt });
       return snapshot();
     } catch (error) {

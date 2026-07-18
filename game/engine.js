@@ -200,6 +200,7 @@
   function leaderSkillPack(state, color) {
     const leader = findLeader(state, color);
     const character = leader >= 0 ? String(state.board[leader].character || "").toUpperCase() : "";
+    if (character === "XENA ETHEREAL") return "crystal";
     if (character.startsWith("XENA")) return "xena";
     if (character.startsWith("SOVRAN")) return "sovran";
     return state.packs[color];
@@ -252,12 +253,12 @@
   function executeSkill(state, move) {
     const color = state.turn;
     const leaderIndex = findLeader(state, color);
-    if (move.skill === "cyanShift") {
+    if (move.skill === "cyanShift" || move.skill === "prismShift") {
       const temp = state.board[leaderIndex];
       state.board[leaderIndex] = state.board[move.to];
       state.board[move.to] = temp;
       state.skills[color].base = false;
-    } else if (move.skill === "override") {
+    } else if (move.skill === "override" || move.skill === "etherealLeap") {
       state.board[move.to] = state.board[leaderIndex];
       state.board[leaderIndex] = null;
       state.skills[color].awakened = false;
@@ -310,6 +311,29 @@
           const c = col + dc;
           if (!inside(r, c) || pieceAt(state, r, c)) continue;
           const move = { kind: "skill", skill: "override", from: leader, to: indexOf(r, c) };
+          if (legalAfter(state, move, color)) moves.push(move);
+        }
+      }
+    }
+    if (pack === "crystal") {
+      if (state.skills[color].base) {
+        for (let dr = -1; dr <= 1; dr += 1) for (let dc = -1; dc <= 1; dc += 1) {
+          if (!dr && !dc) continue;
+          const r = row + dr;
+          const c = col + dc;
+          const target = pieceAt(state, r, c);
+          if (target && target.color === color && target.type !== TYPES.LEADER) {
+            const move = { kind: "skill", skill: "prismShift", from: leader, to: indexOf(r, c) };
+            if (legalAfter(state, move, color)) moves.push(move);
+          }
+        }
+      }
+      if (state.awakened[color] && state.skills[color].awakened) {
+        for (const [dr, dc] of [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]) {
+          const r = row + dr;
+          const c = col + dc;
+          if (!inside(r, c) || pieceAt(state, r, c)) continue;
+          const move = { kind: "skill", skill: "etherealLeap", from: leader, to: indexOf(r, c) };
           if (legalAfter(state, move, color)) moves.push(move);
         }
       }

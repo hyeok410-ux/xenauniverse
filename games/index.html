@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>XENA GAMES — Free Web Arcade</title>
-<meta name="description" content="Free web games from the XENA universe — OVERRIDE GRID strategy chess, photo world cup, ZENA CARDS gacha and more.">
+<meta name="description" content="Free web games from the XENA universe — OVERRIDE GRID strategy chess, photo world cup, XENA CARDS gacha and more.">
 <meta property="og:title" content="XENA GAMES">
 <meta property="og:description" content="Free web games from the XENA universe.">
 <meta property="og:image" content="https://xenauniverse.com/images/gallery/game-scene.jpg">
@@ -60,6 +60,9 @@ a{color:inherit;text-decoration:none;}
 .back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
 .back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);box-shadow:0 0 18px rgba(63,224,255,.2);}
 .top-right{display:flex;align-items:center;gap:10px;}
+.account-link{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid rgba(63,224,255,.35);border-radius:18px;background:rgba(63,224,255,.06);color:var(--cyan);font-family:var(--font-mono);font-size:.62rem;letter-spacing:.08em;cursor:pointer;}
+.account-link small{color:var(--text-dim);letter-spacing:0;font-family:var(--font-sans);}
+.account-link.signed{border-color:rgba(232,196,104,.5);color:var(--gold);}
 .top-mark{font-weight:800;letter-spacing:.14em;font-size:.9rem;}
 .top-mark span{color:var(--purple-light);}
 .lang-toggle{display:flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:20px;padding:4px;backdrop-filter:blur(14px);}
@@ -124,6 +127,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
         <button data-set="en">EN</button>
         <button data-set="ko">KO</button>
       </div>
+      <button class="account-link" id="hub-account" type="button"><span id="hub-account-label">GOOGLE LOGIN</span><small id="hub-credit-label">SIGNAL 0</small></button>
       <div class="top-mark">XENA <span>GAMES</span></div>
     </div>
   </div>
@@ -138,62 +142,11 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
   </div>
 
   <div class="grid">
-    <!-- OVERRIDE GRID -->
-    <div class="gcard live grid-theme">
-      <div class="thumb">
-        <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../game/assets/portraits/xena_override_v1.webp" alt="OVERRIDE GRID — XENA" style="object-position:50% 18%;">
-      </div>
-      <div class="gbody">
-        <div class="gkind">Strategy Chess</div>
-        <h3>OVERRIDE GRID</h3>
-        <p>
-          <span lang="en">Cyberpunk strategy chess set in XENA's world. Rewrite the rules of the System's board — 3D battles &amp; online matches with Google login.</span>
-          <span lang="ko">XENA 세계관의 사이버펑크 전략 체스. 시스템의 보드 위에서 룰을 다시 쓰세요. 3D 전투 · 구글 로그인 온라인 대전 지원.</span>
-        </p>
-        <a class="play-btn" href="../game/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
-      </div>
-    </div>
-
-    <!-- PHOTO WORLD CUP -->
+    <!-- 1. DAILY SIGNAL -->
     <div class="gcard live cup-theme">
       <div class="thumb">
         <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/gallery/bright-1.jpg" alt="XENA Photo World Cup" style="object-position:50% 30%;">
-      </div>
-      <div class="gbody">
-        <div class="gkind">Photo Tournament</div>
-        <h3>XENA PHOTO WORLD CUP</h3>
-        <p>
-          <span lang="en">XENA's photo cuts face off in a tournament. Round of 8 or 16 — find your one pick and share it.</span>
-          <span lang="ko">XENA 화보 컷들이 토너먼트로 맞붙는다. 8강 또는 16강 — 당신의 원픽 한 장을 찾아 SNS에 자랑하세요.</span>
-        </p>
-        <a class="play-btn" href="world-cup/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
-      </div>
-    </div>
-
-    <!-- ZENA CARDS 가챠 -->
-    <div class="gcard live gacha-theme">
-      <div class="thumb">
-        <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/gallery/cover-answer.jpg" alt="ZENA CARDS photo card gacha" style="object-position:50% 32%;">
-      </div>
-      <div class="gbody">
-        <div class="gkind">Card Collection</div>
-        <h3>ZENA CARDS</h3>
-        <p>
-          <span lang="en">Free daily photo card gacha. From N to the top grade SOVEREIGN — dust duplicates for credits and complete the collection.</span>
-          <span lang="ko">매일 무료로 뽑는 XENA 포토카드. N부터 최고 등급 Sovereign까지 — 중복은 분해해서 크레딧으로, 컬렉션을 완성하라.</span>
-        </p>
-        <a class="play-btn" href="gacha/" target="_blank" rel="noopener"><span lang="en">DRAW NOW →</span><span lang="ko">지금 뽑기 →</span></a>
-      </div>
-    </div>
-
-    <!-- DAILY SIGNAL -->
-    <div class="gcard live cup-theme">
-      <div class="thumb">
-        <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/gallery/bright-9.jpg" alt="Daily Signal" style="object-position:50% 30%;">
+        <img src="../images/thumbs/thumb-signal.jpg" alt="Daily Signal">
       </div>
       <div class="gbody">
         <div class="gkind" style="color:var(--purple-light);text-shadow:0 0 12px rgba(160,107,255,.4);">Daily Check-in</div>
@@ -206,28 +159,45 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- MEMORY GRID -->
-    <div class="gcard live gacha-theme">
-      <div class="thumb">
-        <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/gallery/dopamine-1.jpg" alt="Memory Grid card match" style="object-position:50% 25%;">
-      </div>
-      <div class="gbody">
-        <div class="gkind">Card Match</div>
-        <h3>MEMORY GRID</h3>
-        <p>
-          <span lang="en">Flip and match XENA photo cards before time runs out. 5 stages, limited mistakes, daily XC.</span>
-          <span lang="ko">시간 안에 카드 짝을 맞춰라. 5스테이지, 실수 제한, 하루 첫 클리어 XC 보상.</span>
-        </p>
-        <a class="play-btn" href="memory/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
-      </div>
-    </div>
-
-    <!-- SIGNAL LINK (사천성) -->
+    <!-- 2. OVERRIDE GRID -->
     <div class="gcard live grid-theme">
       <div class="thumb">
         <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/gallery/answer-2.jpg" alt="Signal Link tile connect" style="object-position:50% 35%;">
+        <img src="../images/gallery/game-scene.jpg" alt="OVERRIDE GRID">
+      </div>
+      <div class="gbody">
+        <div class="gkind">Strategy Chess</div>
+        <h3>OVERRIDE GRID</h3>
+        <p>
+          <span lang="en">Cyberpunk strategy chess set in XENA's world. Rewrite the rules of the System's board — 3D battles &amp; online matches with Google login.</span>
+          <span lang="ko">XENA 세계관의 사이버펑크 전략 체스. 시스템의 보드 위에서 룰을 다시 쓰세요. 3D 전투 · 구글 로그인 온라인 대전 지원.</span>
+        </p>
+        <a class="play-btn" href="../game/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
+      </div>
+    </div>
+
+    <!-- 3. XENA CARDS 가챠 -->
+    <div class="gcard live gacha-theme">
+      <div class="thumb">
+        <span class="badge live-b">&#9679; LIVE</span>
+        <img src="../images/thumbs/thumb-gacha.jpg" alt="XENA CARDS photo card gacha">
+      </div>
+      <div class="gbody">
+        <div class="gkind">Card Collection</div>
+        <h3>XENA CARDS</h3>
+        <p>
+          <span lang="en">Free daily photo card gacha. From N to the top grade SOVEREIGN — dust duplicates for credits and complete the collection.</span>
+          <span lang="ko">매일 무료로 뽑는 XENA 포토카드. N부터 최고 등급 Sovereign까지 — 중복은 분해해서 크레딧으로, 컬렉션을 완성하라.</span>
+        </p>
+        <a class="play-btn" href="gacha/" target="_blank" rel="noopener"><span lang="en">DRAW NOW →</span><span lang="ko">지금 뽑기 →</span></a>
+      </div>
+    </div>
+
+    <!-- 4. SIGNAL LINK -->
+    <div class="gcard live grid-theme">
+      <div class="thumb">
+        <span class="badge live-b">&#9679; LIVE</span>
+        <img src="../images/thumbs/thumb-shisen.jpg" alt="Signal Link tile connect">
       </div>
       <div class="gbody">
         <div class="gkind" style="color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);">Tile Connect</div>
@@ -237,6 +207,40 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="ko">끊긴 시그널 회선을 다시 이어라 — 같은 타일을 꺾임 2번 이하의 선으로 연결하는 사천성 퍼즐.</span>
         </p>
         <a class="play-btn" style="background:var(--silver);color:var(--black);" href="shisen/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
+      </div>
+    </div>
+
+    <!-- 5. MEMORY GRID -->
+    <div class="gcard live gacha-theme">
+      <div class="thumb">
+        <span class="badge live-b">&#9679; LIVE</span>
+        <img src="../images/thumbs/thumb-memory.jpg" alt="Memory Grid card match">
+      </div>
+      <div class="gbody">
+        <div class="gkind">Card Match</div>
+        <h3>MEMORY GRID</h3>
+        <p>
+          <span lang="en">Flip and match XENA photo cards before time runs out. 10 stages, limited mistakes, daily XC.</span>
+          <span lang="ko">시간 안에 카드 짝을 맞춰라. 10스테이지, 실수 제한, 하루 첫 클리어 XC 보상.</span>
+        </p>
+        <a class="play-btn" href="memory/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
+      </div>
+    </div>
+
+    <!-- 6. PHOTO WORLD CUP -->
+    <div class="gcard live cup-theme">
+      <div class="thumb">
+        <span class="badge live-b">&#9679; LIVE</span>
+        <img src="../images/thumbs/thumb-worldcup.jpg" alt="XENA Photo World Cup">
+      </div>
+      <div class="gbody">
+        <div class="gkind">Photo Tournament</div>
+        <h3>XENA PHOTO WORLD CUP</h3>
+        <p>
+          <span lang="en">XENA's photo cuts face off in a tournament. Round of 8 or 16 — find your one pick and share it.</span>
+          <span lang="ko">XENA 화보 컷들이 토너먼트로 맞붙는다. 8강 또는 16강 — 당신의 원픽 한 장을 찾아 SNS에 자랑하세요.</span>
+        </p>
+        <a class="play-btn" href="world-cup/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
     </div>
 
@@ -281,7 +285,55 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
   </div>
 </div>
 
+<script src="../game/firebase-config.js?v=20260718b"></script>
+<script src="../game/cloud-sync.js?v=20260718b"></script>
 <script>
+var hubAccount = document.getElementById('hub-account');
+var hubLabel = document.getElementById('hub-account-label');
+var hubCredit = document.getElementById('hub-credit-label');
+function hubProfileName(){ try{return localStorage.getItem('xena_nickname') || '';}catch(e){return '';} }
+function hubSetNickname(user){
+  var current = hubProfileName();
+  if(current) return current;
+  var entered = window.prompt('처음 방문입니다. 사용할 닉네임을 정해주세요.\n닉네임은 정한 뒤 변경할 수 없습니다.');
+  entered = (entered || '').trim().replace(/[^\p{L}\p{N} _-]/gu,'').slice(0,20);
+  if(!entered) entered = (user && user.displayName ? user.displayName : 'SIGNAL PLAYER').slice(0,20);
+  try{ localStorage.setItem('xena_nickname', entered); }catch(e){}
+  return entered;
+}
+function hubRefresh(state){
+  var user = state && state.user;
+  var name = hubProfileName();
+  hubAccount.classList.toggle('signed', !!user);
+  hubLabel.textContent = user ? (name || user.displayName || 'SIGNED IN') : 'GOOGLE LOGIN';
+  var credits = 0; try{ credits = Number(localStorage.getItem('og_credits') || 0); }catch(e){}
+  hubCredit.textContent = 'SIGNAL ' + credits.toLocaleString();
+  hubAccount.title = user ? 'Profile settings: nickname is locked.' : 'Sign in with Google to enter XENA Games';
+}
+if(window.XenaCloudSync){
+  window.XenaCloudSync.subscribe(hubRefresh);
+  window.XenaCloudSync.connect().catch(function(){});
+}
+hubAccount.addEventListener('click', async function(){
+  var cloud = window.XenaCloudSync;
+  if(!cloud) return;
+  var state = cloud.snapshot();
+  if(!state.user){
+    try{ var signed = await cloud.signIn(); hubSetNickname(signed.user); hubRefresh(cloud.snapshot()); }
+    catch(e){ alert('Google 로그인을 완료하지 못했습니다. 팝업 차단을 확인해주세요.'); }
+  } else {
+    alert((hubProfileName() || state.user.displayName || 'SIGNAL PLAYER') + '\nGoogle ID: ' + (state.user.email || state.user.uid) + '\n닉네임은 최초 설정 후 변경할 수 없습니다.');
+  }
+});
+document.querySelectorAll('.play-btn').forEach(function(link){
+  link.addEventListener('click', async function(event){
+    var cloud = window.XenaCloudSync;
+    if(!cloud || cloud.snapshot().user) return;
+    event.preventDefault();
+    try{ var signed = await cloud.signIn(); hubSetNickname(signed.user); hubRefresh(cloud.snapshot()); window.location.href = link.href; }
+    catch(e){ alert('게임을 시작하려면 먼저 Google 로그인이 필요합니다.'); }
+  });
+});
 document.querySelectorAll('.lang-toggle button').forEach(function(b){
   b.addEventListener('click', function(){
     var l = b.getAttribute('data-set');
