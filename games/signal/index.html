@@ -38,15 +38,14 @@ a{color:inherit;text-decoration:none;}
 [data-lang="ko"] .lang-toggle button[data-set="ko"],
 [data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(160,107,255,.18);color:var(--purple-light);box-shadow:inset 0 0 0 1px rgba(160,107,255,.4);}
 
+/* 배경: 딥 바이올렛 + 별빛 (시그널 전용 무드) */
 .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.24), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.32), transparent 60%),
     radial-gradient(ellipse 45% 35% at 85% 100%, rgba(63,224,255,.08), transparent 60%);}
-.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
-  background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
-  background-size:56px 56px;
-  mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
-  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);}
+.bg-stars{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(rgba(230,230,238,.35) 1px, transparent 1.6px),radial-gradient(rgba(160,107,255,.3) 1px, transparent 1.6px);
+  background-size:140px 140px, 90px 90px;background-position:0 0, 40px 60px;}
 .grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation:grain 8s steps(10) infinite;}
@@ -82,7 +81,7 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 .face.back .logo-x{font-size:3.2rem;font-weight:800;color:var(--purple-light);text-shadow:0 0 30px rgba(160,107,255,.9);}
 .face.back .logo-t{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.5em;color:var(--silver);}
 .face.front{transform:rotateY(180deg);border:1px solid rgba(63,224,255,.5);display:flex;flex-direction:column;background:#060409;box-shadow:0 0 44px rgba(63,224,255,.2);}
-.face.front img{width:100%;flex:1;object-fit:cover;object-position:50% 20%;min-height:0;}
+.face.front img{width:100%;flex:1;object-fit:cover;object-position:50% 20%;min-height:0;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
 .face.front .fmeta{padding:10px 12px;text-align:center;background:rgba(0,0,0,.85);}
 .face.front .fmeta b{font-size:.82rem;font-weight:700;}
 .tap-tip{margin-top:18px;font-family:var(--font-mono);font-size:.66rem;letter-spacing:.24em;color:var(--text-dim);animation:pulse 1.6s ease-in-out infinite;}
@@ -123,7 +122,7 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 </head>
 <body>
 <div class="bg-fx"></div>
-<div class="bg-grid"></div>
+<div class="bg-stars"></div>
 <div class="grain"></div>
 
 <div class="wrap">
@@ -157,7 +156,7 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
           <div class="logo-t">DAILY SIGNAL</div>
         </div>
         <div class="face front">
-          <img id="sig-img" src="" alt="Today's signal card">
+          <img id="sig-img" src="" alt="Today's signal card" draggable="false">
           <div class="fmeta"><b id="sig-name"></b></div>
         </div>
       </div>
@@ -177,8 +176,8 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
     <h2><span lang="en">Today's Quests — earn XC across all games</span><span lang="ko">오늘의 퀘스트 — 모든 게임에서 XC 모으기</span></h2>
     <div class="q-list" id="q-list"></div>
     <p class="q-note">
-      <span lang="en">* XC is one shared wallet across every XENA game — spend it on ZENA CARDS draws.<br>* Quests reset daily. OVERRIDE GRID play is detected on this device.</span>
-      <span lang="ko">* XC는 모든 XENA 게임이 공유하는 지갑입니다 — ZENA CARDS 뽑기에 쓰세요.<br>* 퀘스트는 매일 리셋. OVERRIDE GRID 플레이는 이 기기 기준으로 감지됩니다.</span>
+      <span lang="en">* XC is one shared wallet across every XENA game — spend it on XENA CARDS draws.<br>* Quests reset daily. OVERRIDE GRID play is detected on this device.</span>
+      <span lang="ko">* XC는 모든 XENA 게임이 공유하는 지갑입니다 — XENA CARDS 뽑기에 쓰세요.<br>* 퀘스트는 매일 리셋. OVERRIDE GRID 플레이는 이 기기 기준으로 감지됩니다.</span>
     </p>
   </div>
 </div>
@@ -311,7 +310,6 @@ function reveal(){
   $('claim-row').classList.add('on');
   renderClaimBtn();
   if(st.lastReveal !== today()){
-    /* 스트릭 계산 */
     var y = new Date(Date.now() - 86400000).toISOString().slice(0,10);
     st.streak = (st.lastReveal === y) ? (st.streak||0) + 1 : 1;
     st.lastReveal = today();
@@ -319,7 +317,21 @@ function reveal(){
     renderStreak();
   }
 }
-$('flip-zone').addEventListener('click', reveal);
+$('flip-zone').addEventListener('click', function(){
+  if($('flip-card').classList.contains('flipped')){
+    toast(t('Collect more cards like this in XENA CARDS! 🃏', 'XENA CARDS에서 이런 카드를 직접 뽑고 모아보세요! 🃏'));
+    return;
+  }
+  reveal();
+});
+/* 이미지 우클릭/드래그 보호 + 안내 멘트 */
+document.addEventListener('contextmenu', function(e){
+  var tgt = e.target;
+  if(tgt && (tgt.tagName === 'IMG' || (tgt.closest && tgt.closest('.flip-zone')))){
+    e.preventDefault();
+    toast(t('Want this card? Draw it yourself in XENA CARDS! 🃏', '이 카드가 갖고 싶다면 XENA CARDS에서 직접 뽑아보세요! 🃏'));
+  }
+});
 $('btn-claim').addEventListener('click', function(){
   if(claimed) return;
   claimed = true;
@@ -353,7 +365,6 @@ function chessSnapshot(){
   keys.forEach(function(k){ try{ s += '|' + (localStorage.getItem(k)||''); }catch(e){} });
   return s;
 }
-/* 오늘 첫 방문 시 체스 상태 스냅샷 저장 → 이후 변화가 생기면 "플레이함"으로 판정 */
 if(!st.chessBase || st.chessBase.date !== today()){
   st.chessBase = {date: today(), snap: chessSnapshot()};
   save(SAVE_KEY, st);
@@ -375,21 +386,21 @@ function renderQuests(){
       title: t('Receive today\'s signal', '오늘의 시그널 받기'),
       sub: t('Flip the card above', '위 카드를 뒤집고 수령'),
       reward: '+5 XC', link: null},
-    {icon:'🏆', done: wc >= 3,
-      title: t('Finish the Photo World Cup', '이상형 월드컵 완주'),
-      sub: t(wc+'/3 today · +5 XC each', '오늘 '+wc+'/3회 · 회당 +5 XC'),
-      reward: '+15 XC', link:'../world-cup/'},
-    {icon:'🃏', done: gachaDrawnToday(),
-      title: t('Open a free ZENA CARDS pack', 'ZENA CARDS 무료팩 뽑기'),
-      sub: t('SIGNAL every 8h · SOVEREIGN every 24h', 'SIGNAL 8시간 · SOVEREIGN 24시간마다'),
-      reward: t('FREE CARD','무료 카드'), link:'../gacha/'},
     {icon:'♟️', done: chessClaimed(),
       title: t('Play OVERRIDE GRID (1 match)', 'OVERRIDE GRID 1판 플레이'),
       sub: chessClaimed() ? t('Reward claimed', '보상 수령 완료')
          : chessPlayed() ? t('Play detected — claim your XC!', '플레이 감지됨 — XC를 받으세요!')
          : t('Play a match, then come back here', '한 판 하고 이 페이지로 돌아오세요'),
       reward: '+10 XC',
-      link: chessPlayed() && !chessClaimed() ? 'CLAIM_CHESS' : '../../game/'}
+      link: chessPlayed() && !chessClaimed() ? 'CLAIM_CHESS' : '../../game/'},
+    {icon:'🃏', done: gachaDrawnToday(),
+      title: t('Open a free XENA CARDS pack', 'XENA CARDS 무료팩 뽑기'),
+      sub: t('SIGNAL every 8h · SOVEREIGN every 24h', 'SIGNAL 8시간 · SOVEREIGN 24시간마다'),
+      reward: t('FREE CARD','무료 카드'), link:'../gacha/'},
+    {icon:'🏆', done: wc >= 3,
+      title: t('Finish the Photo World Cup', '이상형 월드컵 완주'),
+      sub: t(wc+'/3 today · +5 XC each', '오늘 '+wc+'/3회 · 회당 +5 XC'),
+      reward: '+15 XC', link:'../world-cup/'}
   ];
   var list = $('q-list');
   list.innerHTML = '';
@@ -434,7 +445,6 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
   });
 });
 
-/* 다른 탭(게임)에서 지갑이 바뀌면 실시간 반영 */
 window.addEventListener('storage', function(e){
   if(e.key === WALLET_KEY){
     wallet = load(WALLET_KEY, {xc:0});
@@ -446,7 +456,6 @@ renderDate();
 renderWallet();
 renderStreak();
 renderQuests();
-/* 이미 오늘 공개했으면 자동으로 펼쳐두기 */
 if(revealed){ reveal(); }
 })();
 </script>

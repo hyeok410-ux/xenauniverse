@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ZENA CARDS — XENA Photo Card Gacha</title>
+<title>XENA CARDS — XENA Photo Card Gacha</title>
 <meta name="description" content="Free daily XENA photo card gacha. From N to the top grade SOVEREIGN — complete the collection.">
-<meta property="og:title" content="ZENA CARDS — XENA Photo Card Gacha">
+<meta property="og:title" content="XENA CARDS — XENA Photo Card Gacha">
 <meta property="og:description" content="Free daily XENA photo card gacha. Complete the collection.">
 <script>
 (function(){
@@ -48,9 +48,9 @@ a{color:inherit;text-decoration:none;}
 
 .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.22), transparent 60%),
-    radial-gradient(ellipse 45% 35% at 85% 100%, rgba(63,224,255,.08), transparent 60%),
-    radial-gradient(ellipse 40% 30% at 10% 90%, rgba(255,47,176,.07), transparent 60%);}
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255,47,176,.16), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 85% 100%, rgba(110,47,217,.14), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 10% 90%, rgba(232,196,104,.06), transparent 60%);}
 .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
   background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
   background-size:56px 56px;
@@ -210,7 +210,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 
   <div class="head">
     <div class="eyebrow">Photo Card Gacha</div>
-    <h1>ZENA CARDS</h1>
+    <h1>XENA CARDS</h1>
     <p>
       <span lang="en">Free daily XENA photo cards.<br>From N to the top grade <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b> — complete the collection.</span>
       <span lang="ko">매일 무료로 뽑는 XENA 포토카드.<br>N부터 최고 등급 <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b>까지 — 컬렉션을 완성하라.</span>
@@ -222,7 +222,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
       <div class="pack-kind">Basic · Every 8 Hours</div>
       <h3>SIGNAL PACK</h3>
       <div class="cool" id="cool-signal">—</div>
-      <div class="pack-art"><b>X</b><small>ZENA CARDS</small></div>
+      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
       <button class="draw-btn" id="btn-signal">FREE DRAW</button>
       <button class="xc-btn" id="btn-signal-xc"><span lang="en">Extra draw · 50 XC</span><span lang="ko">50 XC로 추가 뽑기</span></button>
       <div class="odds"><span class="oN">N 70%</span> · <span class="oR">R 26.9%</span> · <span class="oS">S 3%</span> · <span class="oSR">SR 0.1%</span></div>
@@ -231,7 +231,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
       <div class="pack-kind">Premium · Every 24 Hours</div>
       <h3>SOVEREIGN PACK</h3>
       <div class="cool" id="cool-sov">—</div>
-      <div class="pack-art"><b>X</b><small>ZENA CARDS</small></div>
+      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
       <button class="draw-btn" id="btn-sov">FREE DRAW</button>
       <button class="xc-btn" id="btn-sov-xc"><span lang="en">Extra draw · 200 XC</span><span lang="ko">200 XC로 추가 뽑기</span></button>
       <div class="odds"><span class="oN">N 60.9%</span> · <span class="oR">R 33%</span> · <span class="oS">S 5%</span> · <span class="oSR">SR 1%</span> · <span class="oSSR">SSR 0.1%</span></div>
@@ -263,7 +263,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
     <div class="flip-card" id="flip-card">
       <div class="face back">
         <div class="logo-x">X</div>
-        <div class="logo-t">ZENA CARDS</div>
+        <div class="logo-t">XENA CARDS</div>
         <small>1ST EDITION</small>
       </div>
       <div class="face front" id="front-face">
@@ -531,8 +531,8 @@ $('dt-share').addEventListener('click', function(){ if(detailCard) shareCard(det
 /* ── 공유 ── */
 function shareText(c){
   return t(
-    'My ZENA CARDS pull 🃏 ['+GRADE_LABEL[c.grade]+'] '+c.name+' — free daily draws, try your luck!',
-    'ZENA CARDS에서 뽑은 내 카드 🃏 ['+GRADE_LABEL[c.grade]+'] '+c.name+' — 너도 무료로 뽑아봐!'
+    'My XENA CARDS pull 🃏 ['+GRADE_LABEL[c.grade]+'] '+c.name+' — free daily draws, try your luck!',
+    'XENA CARDS에서 뽑은 내 카드 🃏 ['+GRADE_LABEL[c.grade]+'] '+c.name+' — 너도 무료로 뽑아봐!'
   );
 }
 function shareCard(c){
@@ -543,12 +543,12 @@ function shareCard(c){
     },function(){});
   }
   if(navigator.share){
-    navigator.share({title:'ZENA CARDS', text:shareText(c), url:SITE_URL}).catch(function(){});
+    navigator.share({title:'XENA CARDS', text:shareText(c), url:SITE_URL}).catch(function(){});
   } else if(!(navigator.clipboard && navigator.clipboard.writeText)){
     toast(t('Sharing is not supported in this browser', '이 브라우저는 공유를 지원하지 않습니다'));
   }
 }
-/* 공유용 카드 이미지 (ZENA CARDS 로고 + 등급 프레임 각인) */
+/* 공유용 카드 이미지 (XENA CARDS 로고 + 등급 프레임 각인) */
 function downloadCard(c){
   var img = new Image();
   img.onload = function(){
@@ -575,7 +575,7 @@ function downloadCard(c){
       ctx.fillText('X', W/2, 92);
       ctx.fillStyle = '#e6e6ee';
       ctx.font = '500 30px "JetBrains Mono", monospace';
-      ctx.fillText('Z E N A   C A R D S', W/2, 140);
+      ctx.fillText('X E N A   C A R D S', W/2, 140);
       ctx.fillStyle = GRADE_COLOR[c.grade];
       ctx.font = '700 34px "JetBrains Mono", monospace';
       ctx.fillText('[ '+GRADE_LABEL[c.grade]+' ]', W/2, 196);
@@ -586,7 +586,7 @@ function downloadCard(c){
       ctx.font = '500 24px "JetBrains Mono", monospace';
       ctx.fillText('xenauniverse.com/games/gacha', W/2, H-42);
       var a = document.createElement('a');
-      a.download = 'zena-card-'+c.id+'.png';
+      a.download = 'xena-card-'+c.id+'.png';
       a.href = cv.toDataURL('image/png');
       a.click();
       toast(t('Card image saved — post it to your Insta story!', '카드 이미지 저장 완료 — 인스타 스토리에 올려보세요!'));

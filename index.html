@@ -602,6 +602,21 @@
         </div>
         <a class="release-link" href="https://open.spotify.com/artist/2RnYNUO4Jo2v5TKuIyiHIr" target="_blank" rel="noopener"><span lang="ko">듣기</span><span lang="en">LISTEN</span></a>
       </div>
+
+      <div class="release-row">
+        <div class="release-left">
+          <span class="release-num">04</span>
+          <img class="release-cover" loading="lazy" src="images/gallery/cover-light.jpg" alt="Leave Me in the Light album cover">
+          <div>
+            <div class="release-title">Leave Me in the Light</div>
+            <div class="release-desc">
+              <span lang="ko">그림자의 속삭임을 지나 빛 속으로 — 시즌1 최종장의 서막</span>
+              <span lang="en">Through the shadow's whisper, into the light</span>
+            </div>
+          </div>
+        </div>
+        <a class="release-link" href="https://open.spotify.com/artist/2RnYNUO4Jo2v5TKuIyiHIr" target="_blank" rel="noopener"><span lang="ko">듣기</span><span lang="en">LISTEN</span></a>
+      </div>
     </div>
   </div>
 </section>
@@ -970,14 +985,14 @@ document.addEventListener('DOMContentLoaded', function(){
   if(mark){
     mark.innerHTML = mark.textContent.split('').map(function(ch){ return '<span>' + ch + '</span>'; }).join('');
     if(window.gsap && !reduceMotion){
-      gsap.from(mark.querySelectorAll('span'), {y:50, opacity:0, filter:'blur(14px)', duration:1.1, stagger:.09, ease:'power3.out', delay:.2});
-      gsap.from('.hero-tag', {y:20, opacity:0, duration:1, ease:'power2.out', delay:1.1});
-      gsap.from('.hero-scroll', {opacity:0, duration:1, ease:'power2.out', delay:1.6});
+      gsap.from(mark.querySelectorAll('span'), {y:24, opacity:0, duration:.5, stagger:.035, ease:'power3.out', delay:.05});
+      gsap.from('.hero-tag', {y:16, opacity:0, duration:.6, ease:'power2.out', delay:.4});
+      gsap.from('.hero-scroll', {opacity:0, duration:.6, ease:'power2.out', delay:.7});
       /* 어떤 환경에서든 인트로가 끊겨도 로고는 반드시 보이게 (안전장치) */
       setTimeout(function(){
         gsap.set(mark.querySelectorAll('span'), {clearProps:'all'});
         gsap.set('.hero-tag,.hero-scroll', {clearProps:'all'});
-      }, 3400);
+      }, 1500);
     }
   }
 
@@ -1190,7 +1205,8 @@ document.addEventListener('DOMContentLoaded', function(){
   var TRACKS = [
     {title:'I am the answer', sub:'XENA — SINGLE 01', cover:'images/gallery/cover-answer.jpg', src:'audio/answer.mp3'},
     {title:'Stay Bright',     sub:'XENA — SINGLE 02', cover:'images/gallery/cover-bright.jpg', src:'audio/bright.mp3'},
-    {title:'DOPAMINE',        sub:'XENA — SINGLE 03', cover:'images/gallery/cover-dopamine.jpg', src:'audio/dopamine.mp3'}
+    {title:'DOPAMINE',        sub:'XENA — SINGLE 03', cover:'images/gallery/cover-dopamine.jpg', src:'audio/dopamine.mp3'},
+    {title:'Leave Me in the Light', sub:'XENA — SINGLE 04', cover:'images/gallery/cover-light.jpg', src:'audio/light.mp3'}
   ];
   var idx = 0, audio = new Audio();
   audio.preload = 'metadata';
@@ -1272,9 +1288,40 @@ document.addEventListener('DOMContentLoaded', function(){
     audio.currentTime = ((e.clientX - r.left) / r.width) * audio.duration;
   });
 
-  var savedTrack = 0;
-  try{ savedTrack = Math.min(TRACKS.length - 1, Math.max(0, Number(localStorage.getItem('xena-track')) || 0)); }catch(e){}
-  load(savedTrack, false);
+  /* 들어올 때마다 랜덤 트랙으로 시작 */
+  load(Math.floor(Math.random() * TRACKS.length), false);
+
+  /* ── 앨범커버 클릭 → 곡 선택 팝업 ── */
+  (function(){
+    var picker = document.createElement('div');
+    picker.id = 'trackPicker';
+    picker.style.cssText = 'position:fixed;right:18px;bottom:96px;z-index:80;display:none;flex-direction:column;gap:4px;'
+      + 'background:rgba(8,8,14,.94);border:1px solid rgba(160,107,255,.4);border-radius:16px;padding:10px;'
+      + 'backdrop-filter:blur(16px);box-shadow:0 12px 44px rgba(0,0,0,.6), 0 0 30px rgba(110,47,217,.25);';
+    TRACKS.forEach(function(tr, i){
+      var row = document.createElement('button');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;background:transparent;border:none;color:#e6e6ee;'
+        + 'cursor:pointer;padding:7px 10px;border-radius:10px;text-align:left;font-family:inherit;transition:background .2s;';
+      row.innerHTML = '<img src="'+tr.cover+'" alt="" style="width:34px;height:34px;object-fit:cover;border-radius:7px;border:1px solid rgba(255,255,255,.12);">'
+        + '<span style="font-size:.82rem;font-weight:600;letter-spacing:.01em;">'+tr.title+'</span>';
+      row.addEventListener('mouseenter', function(){ row.style.background = 'rgba(160,107,255,.15)'; });
+      row.addEventListener('mouseleave', function(){ row.style.background = 'transparent'; });
+      row.addEventListener('click', function(e){
+        e.stopPropagation();
+        picker.style.display = 'none';
+        load(i, true);
+      });
+      picker.appendChild(row);
+    });
+    document.body.appendChild(picker);
+    elCover.style.cursor = 'pointer';
+    elCover.title = '곡 선택 / Choose a track';
+    elCover.addEventListener('click', function(e){
+      e.stopPropagation();
+      picker.style.display = picker.style.display === 'none' || !picker.style.display ? 'flex' : 'none';
+    });
+    document.addEventListener('click', function(){ picker.style.display = 'none'; });
+  })();
 
   /* 네온 사운드 비주얼라이저 + 전기 스파크 */
   (function(){

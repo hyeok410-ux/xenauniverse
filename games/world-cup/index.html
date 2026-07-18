@@ -283,7 +283,7 @@ var SITE_URL = 'https://xenauniverse.com/games/world-cup/';
 /* ══════════ 사진 풀 편집 구역 (대표님이 직접 수정하는 곳) ══════════
  * 1) 갤러리 사진 빼기: 아래 목록에서 빼고 싶은 번호를 지우면 됩니다.
  *    예) answer에서 3번 컷 빼기 → [1,2,4,5,...] 로 수정
- * 2) ZENA CARDS 사진 차출: EXTRA_CARD_IDS 에 카드ID를 추가하면 됩니다.
+ * 2) XENA CARDS 사진 차출: EXTRA_CARD_IDS 에 카드ID를 추가하면 됩니다.
  *    (가챠 cards.js에서 사용가능(1) 상태인 카드만 등장. N등급 위주 권장)
  *    예) var EXTRA_CARD_IDS = ['XA-N-01','NX-N-02'];
  * ════════════════════════════════════════════════════════════ */
@@ -293,7 +293,7 @@ var GALLERY_PHOTOS = {
   dopamine: [1,2,3,7,8,10]               /* 4·5·6·9번 제외 (〃) */
 };
 var EXTRA_CARD_IDS = [
-  /* ZENA CARDS N등급 차출분 (2026-07-18) — 빼려면 줄 삭제, 추가하려면 카드ID 추가 */
+  /* XENA CARDS N등급 차출분 (2026-07-18) — 빼려면 줄 삭제, 추가하려면 카드ID 추가 */
   'XA-N-03','XA-N-05','XA-N-06','XA-N-07','XA-N-09','XA-N-10',
   'NX-N-02','NX-N-03','NX-N-04','NX-N-05','NX-N-06',
   'XC-N-04'
@@ -315,7 +315,7 @@ var TRACKS = [
     close:{en:'Charge up your dopamine today 💗', ko:'오늘도 도파민 충전하세요 💗'}}
 ];
 var CARD_META = {
-  desc:{en:'a ZENA CARDS special cut', ko:'제나카드 스페셜 컷'},
+  desc:{en:'a XENA CARDS special cut', ko:'제나카드 스페셜 컷'},
   close:{en:'Good luck on today\'s draw 🃏', ko:'오늘의 뽑기도 행운을 🃏'}
 };
 
@@ -325,12 +325,12 @@ TRACKS.forEach(function(tr){
     POOL.push({id:tr.key+'-'+i, src:GALLERY+tr.key+'-'+i+'.jpg', track:tr.title, name:'CUT #'+String(i).padStart(2,'0'), desc:tr.desc, close:tr.close});
   });
 });
-/* ZENA CARDS 차출분 */
+/* XENA CARDS 차출분 */
 if(window.ZENA_CARD_DEFS && EXTRA_CARD_IDS.length){
   window.ZENA_CARD_DEFS.forEach(function(d){
     if(EXTRA_CARD_IDS.indexOf(d[0]) === -1 || d[4] !== 1) return;
     var src = d[3].indexOf('../../') === 0 ? d[3] : '../gacha/' + d[3];
-    POOL.push({id:'card-'+d[0], src:src, track:'ZENA CARDS', name:d[1], desc:CARD_META.desc, close:CARD_META.close});
+    POOL.push({id:'card-'+d[0], src:src, track:'XENA CARDS', name:d[1], desc:CARD_META.desc, close:CARD_META.close});
   });
 }
 
@@ -488,8 +488,8 @@ function awardXC(){
     w.xc += 5;
     localStorage.setItem(WALLET_KEY, JSON.stringify(w));
     setTimeout(function(){ toast(t(
-      '+5 XC earned! ('+w.daily.worldcup+'/3 today · balance '+w.xc+' XC) — spend it on ZENA CARDS',
-      '+5 XC 적립! ('+w.daily.worldcup+'/3 · 보유 '+w.xc+' XC) — ZENA CARDS 뽑기에 사용'
+      '+5 XC earned! ('+w.daily.worldcup+'/3 today · balance '+w.xc+' XC) — spend it on XENA CARDS',
+      '+5 XC 적립! ('+w.daily.worldcup+'/3 · 보유 '+w.xc+' XC) — XENA CARDS 뽑기에 사용'
     )); }, 900);
   }catch(e){}
 }

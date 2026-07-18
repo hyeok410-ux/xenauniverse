@@ -42,11 +42,15 @@ a{color:inherit;text-decoration:none;}
   background:
     radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.24), transparent 60%),
     radial-gradient(ellipse 45% 35% at 85% 100%, rgba(255,47,176,.07), transparent 60%);}
-.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.32;
-  background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
-  background-size:56px 56px;
+/* 메모리 전용 배경: 마젠타 사선 스트라이프 */
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:repeating-linear-gradient(45deg, rgba(255,47,176,.05) 0 2px, transparent 2px 36px),repeating-linear-gradient(-45deg, rgba(160,107,255,.04) 0 2px, transparent 2px 52px);
   mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
   -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);}
+.rotate-ov{display:none;position:fixed;inset:0;z-index:200;background:rgba(2,1,5,.96);align-items:center;justify-content:center;text-align:center;}
+.rotate-ov b{display:block;font-size:2.4rem;margin-bottom:14px;}
+.rotate-ov span{font-size:.95rem;color:var(--text-dim);letter-spacing:.04em;}
+@media (max-width:900px) and (orientation:portrait){ body.playing .rotate-ov{display:flex;} }
 .grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation:grain 8s steps(10) infinite;}
@@ -69,9 +73,10 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
   background:linear-gradient(135deg,#fff 30%,var(--magenta) 75%,var(--purple-light));-webkit-background-clip:text;background-clip:text;color:transparent;}
 .intro p{color:var(--text-dim);font-size:.92rem;max-width:430px;line-height:1.75;margin-bottom:28px;}
 .stage-grid{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:28px;}
-.stage-btn{position:relative;font-family:var(--font-mono);width:86px;padding:14px 0 12px;border-radius:14px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--silver);transition:.3s ease;backdrop-filter:blur(10px);}
+.stage-btn{position:relative;font-family:var(--font-mono);width:98px;padding:14px 0 12px;border-radius:14px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--silver);transition:.3s ease;backdrop-filter:blur(10px);}
 .stage-btn b{display:block;font-size:1rem;font-weight:700;}
-.stage-btn span{display:block;font-size:.56rem;color:var(--text-dim);margin-top:4px;letter-spacing:.08em;}
+.stage-btn span{display:block;font-size:.54rem;color:var(--text-dim);margin-top:3px;letter-spacing:.06em;}
+.stage-btn span:last-of-type{color:var(--gold);}
 .stage-btn:not(:disabled):hover{border-color:rgba(255,47,176,.5);box-shadow:0 0 18px rgba(255,47,176,.2);transform:translateY(-2px);}
 .stage-btn:disabled{opacity:.35;cursor:default;}
 .stage-btn .st-done{position:absolute;top:-7px;right:-7px;font-size:.7rem;background:rgba(92,255,192,.15);border:1px solid rgba(92,255,192,.5);color:#5cffc0;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
@@ -86,6 +91,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 @keyframes blink{50%{opacity:.35}}
 .hud .miss b{color:var(--gold);}
 .board{display:grid;gap:10px;margin:0 auto;width:100%;max-width:560px;}
+@media (min-width:1100px){ .board{max-width:800px;gap:12px;} }
 .mcard{position:relative;aspect-ratio:3/4;perspective:800px;cursor:pointer;border:none;background:transparent;padding:0;}
 .mcard .inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.2,.8,.3,1);}
 .mcard.open .inner, .mcard.matched .inner{transform:rotateY(180deg);}
@@ -148,9 +154,10 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
       <span lang="ko">시간이 다 되기 전에 카드를 뒤집어 짝을 맞추세요.<br>실수 횟수 제한 — 클리어하면 다음 스테이지가 열립니다.</span>
     </p>
     <div class="stage-grid" id="stage-grid"></div>
+    <button class="r-btn" id="btn-reset-plays" style="margin-bottom:20px;"></button>
     <p class="intro-note">
-      <span lang="en">First clear each day: Stage 1 = +1 XC ... Stage 10 = +10 XC (up to +55/day)<br>Cards come from your ZENA CARDS pool</span>
-      <span lang="ko">하루 첫 클리어: 1스테이지 +1 XC ... 10스테이지 +10 XC (하루 최대 +55)<br>카드는 ZENA CARDS 풀에서 등장합니다</span>
+      <span lang="en">First clear each day: Stage 1 = +1 XC ... Stage 10 = +10 XC (up to +55/day)<br>5 plays per stage per day · Weekly best times per stage<br>Cards come from your XENA CARDS pool</span>
+      <span lang="ko">하루 첫 클리어: 1스테이지 +1 XC ... 10스테이지 +10 XC (하루 최대 +55)<br>스테이지당 하루 5판 · 스테이지별 이번 주 최고기록 표시<br>카드는 XENA CARDS 풀에서 등장합니다</span>
     </p>
   </section>
 
@@ -177,6 +184,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="rotate-ov" id="rotate-ov"><div><b>📱↻</b><span lang="en">Please rotate your device to landscape</span><span lang="ko">기기를 가로로 돌려주세요</span></div></div>
 
 <script src="../gacha/cards.js"></script>
 <script>
@@ -209,7 +217,17 @@ var wallet = load(WALLET_KEY, {});
 if(typeof wallet.xc !== 'number') wallet.xc = 0;
 var st = load(SAVE_KEY, {});
 if(!st.unlocked) st.unlocked = 1;
-if(!st.daily || st.daily.date !== today()) st.daily = {date: today(), cleared: []};
+if(!st.daily || st.daily.date !== today()) st.daily = {date: today(), cleared: [], plays: {}};
+if(!st.daily.plays) st.daily.plays = {};
+/* 주간 최고기록 (매주 리셋) */
+function weekKey(){
+  var d = new Date();
+  var onejan = new Date(d.getFullYear(), 0, 1);
+  var wk = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+  return d.getFullYear() + '-W' + wk;
+}
+if(!st.weekly || st.weekly.week !== weekKey()) st.weekly = {week: weekKey(), best: {}};
+var PLAYS_PER_DAY = 5, RESET_COST = 30;
 
 var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1; });
 
@@ -225,6 +243,7 @@ function toast(msg){
 var screens = {intro:$('screen-intro'), play:$('screen-play'), result:$('screen-result')};
 function show(name){
   Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('on', k===name); });
+  if(name === 'intro'){ document.body.classList.remove('playing'); }
   window.scrollTo(0,0);
 }
 function shuffle(a){
@@ -243,18 +262,44 @@ function renderStages(){
   STAGES.forEach(function(s, i){
     var locked = (i+1) > st.unlocked;
     var clearedToday = st.daily.cleared.indexOf(i+1) !== -1;
+    var used = st.daily.plays[i+1] || 0;
+    var wb = st.weekly.best[i+1];
     var b = document.createElement('button');
     b.className = 'stage-btn';
     b.disabled = locked;
-    b.innerHTML = '<b>'+(locked?'🔒':(i+1))+'</b><span>'+s.cards+' '+t('CARDS','장')+'</span>'+(clearedToday?'<span class="st-done">✓</span>':'');
+    b.innerHTML = '<b>'+(locked?'🔒':(i+1))+'</b><span>'+s.cards+' '+t('CARDS','장')+' · '+used+'/'+PLAYS_PER_DAY+'</span>'
+      + '<span>'+(wb ? t('WK BEST '+wb+'s', '주간 '+wb+'초') : '—')+'</span>'
+      + (clearedToday?'<span class="st-done">✓</span>':'');
     if(!locked){ b.addEventListener('click', function(){ start(i); }); }
     g.appendChild(b);
   });
+  var rb = $('btn-reset-plays');
+  var anyUsed = Object.keys(st.daily.plays).some(function(k){ return st.daily.plays[k] > 0; });
+  rb.innerHTML = t('🔄 Reset today\'s plays — '+RESET_COST+' XC', '🔄 오늘 도전 횟수 전체 초기화 — '+RESET_COST+' XC');
+  rb.disabled = !anyUsed || wallet.xc < RESET_COST;
+  rb.style.opacity = rb.disabled ? '.4' : '1';
 }
+$('btn-reset-plays').addEventListener('click', function(){
+  if(wallet.xc < RESET_COST) return;
+  wallet.xc -= RESET_COST;
+  st.daily.plays = {};
+  save(WALLET_KEY, wallet); save(SAVE_KEY, st);
+  renderWallet(); renderStages();
+  toast(t('-'+RESET_COST+' XC — all stage plays reset!', '-'+RESET_COST+' XC — 모든 스테이지 횟수가 초기화됐습니다!'));
+});
 
 /* ── 플레이 ── */
 var cur = null;
 function start(idx){
+  var used = st.daily.plays[idx+1] || 0;
+  if(used >= PLAYS_PER_DAY){
+    toast(t('No plays left today for this stage — reset with XC or come back tomorrow', '오늘 이 스테이지 도전 횟수를 다 썼습니다 — XC로 초기화하거나 내일 다시 오세요'));
+    show('intro'); renderStages();
+    return;
+  }
+  st.daily.plays[idx+1] = used + 1;
+  save(SAVE_KEY, st);
+  document.body.classList.add('playing');
   var s = STAGES[idx];
   var pairs = s.cards/2;
   var picks = shuffle(CARDS).slice(0, pairs);
@@ -336,9 +381,10 @@ function finish(win, reason){
     }
     /* 다음 스테이지 해금 */
     if(idx+2 > st.unlocked && idx+1 < STAGES.length+1){ st.unlocked = Math.min(STAGES.length, idx+2); }
-    /* 최고 기록 */
+    /* 최고 기록 (전체 + 이번 주) */
     if(!st.best) st.best = {};
     if(!st.best[idx+1] || timeUsed < st.best[idx+1]) st.best[idx+1] = timeUsed;
+    if(!st.weekly.best[idx+1] || timeUsed < st.weekly.best[idx+1]) st.weekly.best[idx+1] = timeUsed;
     save(SAVE_KEY, st);
     sub.innerHTML = t(
       'Time '+timeUsed+'s · mistakes '+cur.miss+'/'+s.miss+rewardMsg+'<br>Best: '+st.best[idx+1]+'s',
