@@ -294,11 +294,14 @@ var hubCredit = document.getElementById('hub-credit-label');
 function hubProfileName(){ try{return localStorage.getItem('xena_nickname') || '';}catch(e){return '';} }
 function hubSetNickname(user){
   var current = hubProfileName();
-  if(current) return current;
+  var confirmed = false;
+  try{ confirmed = localStorage.getItem('xena_nickname_confirmed') === '1'; }catch(e){}
+  if(current && confirmed) return current;
   var entered = window.prompt('처음 방문입니다. 사용할 닉네임을 정해주세요.\n닉네임은 정한 뒤 변경할 수 없습니다.');
   entered = (entered || '').trim().replace(/[^\p{L}\p{N} _-]/gu,'').slice(0,20);
-  if(!entered) entered = (user && user.displayName ? user.displayName : 'SIGNAL PLAYER').slice(0,20);
+  if(!entered) return '';
   try{ localStorage.setItem('xena_nickname', entered); }catch(e){}
+  try{ localStorage.setItem('xena_nickname_confirmed', '1'); }catch(e){}
   return entered;
 }
 function hubRefresh(state){
@@ -319,7 +322,7 @@ hubAccount.addEventListener('click', async function(){
   if(!cloud) return;
   var state = cloud.snapshot();
   if(!state.user){
-    try{ var signed = await cloud.signIn(); hubSetNickname(signed.user); hubRefresh(cloud.snapshot()); }
+    try{ var signed = await cloud.signIn(); if(!hubSetNickname(signed.user)) { await cloud.signOut(); return; } hubRefresh(cloud.snapshot()); }
     catch(e){ alert('Google 로그인을 완료하지 못했습니다. 팝업 차단을 확인해주세요.'); }
   } else {
     alert((hubProfileName() || state.user.displayName || 'SIGNAL PLAYER') + '\nGoogle ID: ' + (state.user.email || state.user.uid) + '\n닉네임은 최초 설정 후 변경할 수 없습니다.');
@@ -330,7 +333,7 @@ document.querySelectorAll('.play-btn').forEach(function(link){
     var cloud = window.XenaCloudSync;
     if(!cloud || cloud.snapshot().user) return;
     event.preventDefault();
-    try{ var signed = await cloud.signIn(); hubSetNickname(signed.user); hubRefresh(cloud.snapshot()); window.location.href = link.href; }
+    try{ var signed = await cloud.signIn(); if(!hubSetNickname(signed.user)) { await cloud.signOut(); return; } hubRefresh(cloud.snapshot()); window.location.href = link.href; }
     catch(e){ alert('게임을 시작하려면 먼저 Google 로그인이 필요합니다.'); }
   });
 });

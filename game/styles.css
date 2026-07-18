@@ -147,6 +147,11 @@ noscript { display: block; margin: 40px auto; padding: 16px; width: min(560px, c
 .log { margin-top: auto; overflow: auto; font-size: 11px; color: #929aaf; line-height: 1.65; max-height: 190px; }
 
 .arena { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 9px; }
+.game-layout { position: relative; isolation: isolate; }
+body[data-arena="arena-crystal-bastion"] .game-layout { background: linear-gradient(90deg, rgba(3,8,15,.74), rgba(15,24,42,.38), rgba(3,8,15,.74)), url("./assets/boards/board_sector_nine_v1.webp") center / cover; }
+body[data-arena="arena-echo-grid"] .game-layout { background: linear-gradient(90deg, rgba(3,8,15,.74), rgba(19,10,34,.38), rgba(3,8,15,.74)), url("./assets/boards/board_echo_grid_v1.webp") center / cover; }
+body[data-arena="arena-mothership"] .game-layout { background: linear-gradient(90deg, rgba(3,8,15,.78), rgba(34,8,18,.34), rgba(3,8,15,.78)), url("./assets/boards/board_mothership_sky_v1.webp") center / cover; }
+body[data-arena] .side-panel { background: rgba(5,8,15,.66); }
 .arena-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #858da1; font-size: 10px; }
 .replay-actions { display: flex; gap: 6px; }
 .replay-actions .secondary { padding: 7px 9px; font-size: 10px; }
@@ -218,6 +223,11 @@ noscript { display: block; margin: 40px auto; padding: 16px; width: min(560px, c
 .portrait-piece.frame-violet-glitch .portrait-shell, .frame-sample.frame-violet-glitch { border-color: #d16cff; box-shadow: -3px 0 0 rgba(50,230,239,.72), 3px 0 0 rgba(255,47,176,.72), 0 0 22px rgba(164,78,255,.9), inset 0 0 22px rgba(164,78,255,.42); }
 .portrait-piece.frame-gold-sovereign .portrait-shell, .frame-sample.frame-gold-sovereign { border-color: #ffe28a; box-shadow: 0 0 0 2px rgba(255,255,255,.68), 0 0 22px rgba(255,214,107,.94), inset 0 0 25px rgba(255,214,107,.5); }
 .portrait-piece.frame-crimson-eclipse .portrait-shell, .frame-sample.frame-crimson-eclipse { border-color: #ff315f; box-shadow: 0 0 0 2px rgba(90,0,28,.9), 0 0 22px rgba(255,49,95,.94), inset 0 0 25px rgba(255,49,95,.5); }
+.portrait-piece .portrait-shell { width: 86%; aspect-ratio: 1; clip-path: inset(0 round 12px); border-radius: 12px; }
+.portrait-piece .portrait-shell::before { clip-path: inset(0 round 10px); border-radius: 10px; }
+.frame-sample, .frame-sample img { border-radius: 10px; }
+.frame-sample img { filter: contrast(1.45) brightness(.48) saturate(1.25); mix-blend-mode: screen; }
+.shop-card.kind-effect .shop-art, .showcase-modal.kind-effect .showcase-art img { filter: contrast(1.25) brightness(.58) saturate(1.18); }
 .three-ready .three-board { display: grid; border-color: rgba(110,220,255,.26); box-shadow: 0 22px 56px rgba(0,0,0,.48), 0 0 34px rgba(50,230,239,.08); transform: none; background: #0a0d14; }
 .three-ready .three-board .square.light { background: linear-gradient(145deg, #222938, #171c27); }
 .three-ready .three-board .square.dark { background: linear-gradient(145deg, #101521, #0a0d14); }
@@ -481,8 +491,8 @@ body[data-cosmetic="echo-grid"] .three-board { background-image: linear-gradient
 body[data-cosmetic="dragoon-core"] .three-board { background-image: linear-gradient(rgba(5,9,16,.26), rgba(5,9,16,.26)), url("./assets/boards/board_dragoon_core_v1.webp"); }
 body[data-cosmetic="mothership-sky"] .three-board { background-image: linear-gradient(rgba(5,9,16,.26), rgba(5,9,16,.26)), url("./assets/boards/board_mothership_sky_v1.webp"); }
 body[data-cosmetic]:not([data-cosmetic=""]) .three-board { background-position: center; background-size: cover; }
-body[data-cosmetic]:not([data-cosmetic=""]) .three-board .square.light { background: rgba(41,52,72,.56); }
-body[data-cosmetic]:not([data-cosmetic=""]) .three-board .square.dark { background: rgba(7,11,19,.68); }
+body[data-cosmetic]:not([data-cosmetic=""]) .three-board .square.light { background: rgba(41,52,72,.32); }
+body[data-cosmetic]:not([data-cosmetic=""]) .three-board .square.dark { background: rgba(7,11,19,.46); }
 body[data-cosmetic="legacy-nova"] { --cyan: #d292ff; --lime: #ffcb66; --violet: #ee69e8; }
 
 @media (max-width: 900px) {
