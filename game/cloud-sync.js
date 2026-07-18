@@ -150,7 +150,7 @@
         return null;
       }
       const data = result.data();
-      if (data.schemaVersion !== 1 || typeof data.saveCode !== "string") throw new Error("UNSUPPORTED_CLOUD_SAVE");
+      if (![1, 2].includes(data.schemaVersion) || typeof data.saveCode !== "string") throw new Error("UNSUPPORTED_CLOUD_SAVE");
       setState({ phase: "signed-in", remoteExists: true, lastSyncedAt: data.clientUpdatedAt || "" });
       return { saveCode: data.saveCode, clientUpdatedAt: data.clientUpdatedAt || "", profile: data.profile || null, activity: data.activity || null };
     } catch (error) {
@@ -169,7 +169,7 @@
       const reference = firestoreApi.doc(db, "players", user.uid);
       const payload = {
         uid: user.uid,
-        schemaVersion: 1,
+        schemaVersion: 2,
         saveCode,
         clientUpdatedAt,
         updatedAt: firestoreApi.serverTimestamp(),

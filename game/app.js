@@ -39,7 +39,7 @@
   const CARD_ART_ROOT = ASSET_ROOTS.card;
   const PORTRAIT_ART_ROOT = ASSET_ROOTS.portrait;
   function assetSrc(root, file) {
-    const keepPng = /^(unit_t2_|emote_xena_|pack_|frame_)/i.test(file || "");
+    const keepPng = /^(unit_t2_|emote_xena_|pack_|frame_|skin_xena_ethereal_|nayun_mother_v1)/i.test(file || "");
     const optimized = root !== "card" && !keepPng && /\.png$/i.test(file) ? file.replace(/\.png$/i, ".webp") : file;
     return (ASSET_ROOTS[root] || CARD_ART_ROOT) + optimized;
   }
@@ -239,6 +239,8 @@
     { id: "black-xena", name: "XENA · Black Signal", kind: "skin", role: "캐릭터 스킨", tier: "EPIC", targetCharacter: "XENA", credit: 7000, artRoot: "skin", art: "skin_xena_black_signal_v1.png", description: "검은 신호 잠입 장비를 착용한 제나 전용 스킨" },
     { id: "violet-xena", name: "XENA · Violet Pulse", kind: "skin", role: "캐릭터 스킨", tier: "LEGACY", targetCharacter: "XENA", credit: 6500, artRoot: "skin", art: "skin_xena_violet_pulse_v1.png", description: "보랏빛 주파수 코어가 점등된 제나 전용 스킨" },
     { id: "override-xena", name: "XENA · Override Form", kind: "skin", role: "캐릭터 스킨", tier: "OVERRIDE", targetCharacter: "XENA", shards: 420, artRoot: "portrait", art: "xena_override_v1.png", description: "캐털리스트 링크가 끊어진 뒤 각성한 오버라이드 외형" },
+    { id: "ethereal-crystal-xena", name: "XENA ETHEREAL · Crystal Answer", kind: "skin", role: "캐릭터 스킨", tier: "SECRET", targetCharacter: "XENA ETHEREAL", credit: 7600, artRoot: "skin", art: "skin_xena_ethereal_crystal_v1.png", description: "크리스털 반란의 초월형 제나 이더리얼 스킨" },
+    { id: "ethereal-prism-xena", name: "XENA ETHEREAL · Prism Dress", kind: "skin", role: "캐릭터 스킨", tier: "OVERRIDE", targetCharacter: "XENA ETHEREAL", shards: 420, artRoot: "skin", art: "skin_xena_ethereal_prism_dress_v1.png", description: "프리즘 섬유 드레스를 두른 제나 이더리얼 스킨" },
     { id: "crimson-sovran", name: "SOVRAN · Crimson Sovereign", kind: "skin", role: "캐릭터 스킨", tier: "SOVEREIGN", targetCharacter: "SOVRAN", credit: 8000, artRoot: "skin", art: "skin_sovran_crimson_sovereign_v1.png", description: "크림슨 심판 회로가 활성화된 소브란 전용 스킨" },
     { id: "eclipse-sovran", name: "SOVRAN · Eclipse Judgment", kind: "skin", role: "캐릭터 스킨", tier: "BOSS", targetCharacter: "SOVRAN", shards: 300, artRoot: "skin", art: "skin_sovran_eclipse_judgment_v1.png", description: "일식의 판결장을 펼치는 소브란 전용 스킨" },
     { id: "override-sovran", name: "SOVRAN · Override Form", kind: "skin", role: "캐릭터 스킨", tier: "OVERRIDE", targetCharacter: "SOVRAN", shards: 420, artRoot: "portrait", art: "sovran_override_v1.png", description: "캐털리스트 상실 뒤 폭주한 소브란 각성 외형" },
@@ -603,7 +605,7 @@
     activity.lastGame = new Date().toISOString();
     saveMeta();
     const cloud = window.XenaCloudSync;
-    if (cloud && cloud.snapshot().user) cloud.save(backupCode(), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
+    if (cloud && cloud.snapshot().user) cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
   }
 
   function t(key) {
@@ -651,12 +653,17 @@
     return JSON.parse(new TextDecoder().decode(bytes));
   }
 
-  function backupCode() {
+  function backupCode(options) {
+    const includeWallet = !options || options.includeWallet !== false;
+    const data = {
+      committedStarter, owned, timeRule, gameMode, language, aiDifficulty, eventClaims, gridRating, cosmeticOwned, activeBoard, activeArena, activeFrame, unitLineups, unitSkins, unitEffects, dailyLogin, codexOwned,
+    };
+    if (includeWallet) { data.credits = credits; data.shards = shards; }
     return encodeBackup({
       version: 1,
       exportedAt: new Date().toISOString(),
       profile,
-      data: { committedStarter, owned, credits, shards, timeRule, gameMode, language, aiDifficulty, eventClaims, gridRating, cosmeticOwned, activeBoard, activeArena, activeFrame, unitLineups, unitSkins, unitEffects, dailyLogin, codexOwned },
+      data,
     });
   }
 
@@ -669,7 +676,7 @@
     else renderSetup();
   }
 
-  function restoreBackup(value) {
+  function restoreBackup(value, options) {
     const payload = decodeBackup(value);
     if (!payload || payload.version !== 1 || !payload.data) throw new Error("UNSUPPORTED_SAVE");
     const data = payload.data;
@@ -682,8 +689,10 @@
     committedStarter = ["xena", "sovran"].includes(data.committedStarter) ? data.committedStarter : null;
     chosen = committedStarter || "xena";
     owned = Array.isArray(data.owned) ? [...new Set(data.owned.filter((id) => ["xena", "sovran"].includes(id)))] : [];
-    credits = Math.max(0, Number(data.credits) || 0);
-    shards = Math.max(0, Number(data.shards) || 0);
+    if (!options || options.trustedWallet !== false) {
+      credits = Math.max(0, Number(data.credits) || 0);
+      shards = Math.max(0, Number(data.shards) || 0);
+    }
     timeRule = TIME_RULES[data.timeRule] ? data.timeRule : "beginner";
     gameMode = MODES[data.gameMode] ? data.gameMode : "ai";
     language = data.language === "en" ? "en" : "ko";
@@ -789,10 +798,10 @@
           await cloud.signIn();
           const remote = await cloud.load();
           if (!remote) {
-            await cloud.save(backupCode(), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
+            await cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
             alert(language === "en" ? "This device save is now backed up to the cloud." : "이 기기의 저장 기록을 클라우드에 처음 백업했습니다.");
           } else if (screen !== "game" && confirm(language === "en" ? "A cloud save already exists. Load it on this device now?" : "기존 클라우드 저장이 있습니다. 지금 이 기기에 불러올까요?")) {
-            restoreBackup(remote.saveCode);
+            restoreBackup(remote.saveCode, { trustedWallet: false });
             closeAccount(false);
             refreshCurrentScreen();
           }
@@ -802,7 +811,7 @@
       if (upload) upload.addEventListener("click", async () => {
         if (cloudState.remoteExists && !confirm(language === "en" ? "Replace the cloud save with this device's progress?" : "클라우드 저장을 이 기기의 진행 기록으로 덮어쓸까요?")) return;
         try {
-          await cloud.save(backupCode(), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
+          await cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
           alert(language === "en" ? "Cloud save complete." : "클라우드 저장을 완료했습니다.");
         } catch (_) { /* The cloud panel shows a localized error. */ }
       });
@@ -813,7 +822,7 @@
         try {
           const remote = await cloud.load();
           if (!remote) return alert(language === "en" ? "No cloud save was found." : "불러올 클라우드 저장이 없습니다.");
-          restoreBackup(remote.saveCode);
+          restoreBackup(remote.saveCode, { trustedWallet: false });
           closeAccount(false);
           refreshCurrentScreen();
         } catch (_) { /* The cloud panel shows a localized error. */ }
@@ -1447,7 +1456,8 @@
     const crop = awake ? { scale: 1.14, shift: "0%" } : portraitCropFor(piece.character);
     const frameItem = piece.color === playerColor ? SHOP_ITEMS.find((item) => item.id === activeFrame && item.kind === "frame") : null;
     const frameClass = frameItem ? `frame-${frameItem.frameStyle}` : "";
-    return `<span class="piece portrait-piece role-${piece.type} ${piece.color} ${awake} ${locked} ${arriving} ${frameClass}" style="--face-scale:${crop.scale};--face-shift:${crop.shift}"><span class="rank-tag">${roleLabel(piece.type)}</span><span class="portrait-shell"><img src="${art}" alt="${piece.character}"><span class="portrait-shine"></span><span class="role-badge">${piece.type === "leader" ? piece.character[0] : glyph[piece.type]}</span></span><span class="piece-label">${piece.character}</span></span>`;
+    const frameArt = frameItem ? `<img class="piece-frame-art" src="${assetSrc(frameItem.artRoot, frameItem.art)}" alt="" aria-hidden="true">` : "";
+    return `<span class="piece portrait-piece role-${piece.type} ${piece.color} ${awake} ${locked} ${arriving} ${frameClass}" style="--face-scale:${crop.scale};--face-shift:${crop.shift}"><span class="rank-tag">${roleLabel(piece.type)}</span><span class="portrait-shell"><img src="${art}" alt="${piece.character}">${frameArt}<span class="portrait-shine"></span><span class="role-badge">${piece.type === "leader" ? piece.character[0] : glyph[piece.type]}</span></span><span class="piece-label">${piece.character}</span></span>`;
   }
 
   function boardMarkup() {
@@ -1991,6 +2001,13 @@
   else if (pendingRoomCode) renderOnlineLobby();
   else if (launchParams.get("demo") === "1") startGame();
   else renderSetup();
-  if (window.XenaCloudSync?.snapshot().configured) window.XenaCloudSync.connect().catch(() => {});
+  if (window.XenaCloudSync?.snapshot().configured) {
+    window.XenaCloudSync.connect().then(async () => {
+      const cloudState = window.XenaCloudSync.snapshot();
+      if (!cloudState.user) return;
+      const remote = await window.XenaCloudSync.load().catch(() => null);
+      if (!remote) window.XenaCloudSync.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
+    }).catch(() => {});
+  }
   if (launchParams.get("account") === "1") setTimeout(openAccount, 0);
 })();

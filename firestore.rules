@@ -1,0 +1,147 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /players/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isValidPrototypeSave() {
+        return request.resource.data.keys().hasOnly([
+            'uid',
+            'schemaVersion',
+            'saveCode',
+            'clientUpdatedAt',
+            'profile',
+            'activity',
+            'updatedAt'
+          ])
+          && request.resource.data.uid == userId
+          && request.resource.data.schemaVersion in [1, 2]
+          && request.resource.data.saveCode is string
+          && request.resource.data.saveCode.size() < 50000
+          && request.resource.data.clientUpdatedAt is string
+          && (!request.resource.data.keys().hasAny(['profile']) || (request.resource.data.profile is map && request.resource.data.profile.keys().hasOnly(['nickname', 'createdAt']) && request.resource.data.profile.nickname is string && request.resource.data.profile.nickname.size() <= 20))
+          && (!request.resource.data.keys().hasAny(['activity']) || (request.resource.data.activity is map && request.resource.data.activity.keys().hasOnly(['totalMinutes', 'games', 'lastGame']) && request.resource.data.activity.totalMinutes is int && request.resource.data.activity.totalMinutes >= 0 && request.resource.data.activity.totalMinutes <= 1000000 && request.resource.data.activity.games is map && request.resource.data.activity.lastGame is string))
+          && request.resource.data.updatedAt is timestamp;
+      }
+
+      allow read: if isOwner();
+      allow create, update: if isOwner() && isValidPrototypeSave();
+      allow delete: if false;
+    }
+
+    // Wallets are readable by the owner but never writable from a browser.
+    // Firebase Admin SDK / Cloud Functions is the only writer.
+    match /wallets/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    match /rewardEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /matches/{roomCode} {
+      function signedIn() {
+        return request.auth != null;
+      }
+
+      function isPlayer() {
+        return signedIn()
+          && (request.auth.uid == resource.data.whiteUid
+            || request.auth.uid == resource.data.blackUid);
+      }
+
+      function validCreate() {
+        return request.resource.data.keys().hasOnly([
+            'schemaVersion', 'code', 'status', 'hostUid', 'guestUid',
+            'whiteUid', 'blackUid', 'whitePack', 'blackPack', 'timeRule',
+            'stateJson', 'clocks', 'turnUid', 'revision', 'lastAction',
+            'lastActorUid', 'winnerColor', 'finishReason', 'emote',
+            'createdAt', 'updatedAt', 'expiresAt'
+          ])
+          && request.resource.data.schemaVersion == 1
+          && request.resource.data.code == roomCode
+          && request.resource.data.status == 'waiting'
+          && request.resource.data.hostUid == request.auth.uid
+          && request.resource.data.whiteUid == request.auth.uid
+          && request.resource.data.guestUid == null
+          && request.resource.data.blackUid == null
+          && request.resource.data.turnUid == request.auth.uid
+          && request.resource.data.revision == 0
+          && request.resource.data.winnerColor == null
+          && request.resource.data.finishReason == null
+          && request.resource.data.stateJson is string
+          && request.resource.data.stateJson.size() < 200000
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp
+          && request.resource.data.expiresAt is timestamp;
+      }
+
+      function validJoin() {
+        return signedIn()
+          && resource.data.status == 'waiting'
+          && resource.data.guestUid == null
+          && request.auth.uid != resource.data.hostUid
+          && request.resource.data.guestUid == request.auth.uid
+          && request.resource.data.blackUid == request.auth.uid
+          && request.resource.data.status == 'active'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['guestUid', 'blackUid', 'status', 'updatedAt']);
+      }
+
+      function validTurnUpdate() {
+        return isPlayer()
+          && resource.data.status == 'active'
+          && resource.data.turnUid == request.auth.uid
+          && request.resource.data.revision == resource.data.revision + 1
+          && request.resource.data.lastActorUid == request.auth.uid
+          && request.resource.data.stateJson is string
+          && request.resource.data.stateJson.size() < 200000
+          && request.resource.data.status in ['active', 'finished']
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['stateJson', 'clocks', 'turnUid', 'revision', 'status', 'lastAction', 'lastActorUid', 'winnerColor', 'finishReason', 'updatedAt']);
+      }
+
+      function validEmote() {
+        return isPlayer()
+          && request.resource.data.emote.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['emote', 'updatedAt']);
+      }
+
+      function validWaitingCancel() {
+        return signedIn()
+          && resource.data.status == 'waiting'
+          && resource.data.hostUid == request.auth.uid
+          && request.resource.data.status == 'cancelled'
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'updatedAt']);
+      }
+
+      function validResign() {
+        return isPlayer()
+          && resource.data.status == 'active'
+          && request.resource.data.status == 'finished'
+          && request.resource.data.revision == resource.data.revision + 1
+          && request.resource.data.lastActorUid == request.auth.uid
+          && request.resource.data.finishReason == 'resignation'
+          && request.resource.data.winnerColor in ['white', 'black']
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'winnerColor', 'finishReason', 'revision', 'lastAction', 'lastActorUid', 'updatedAt']);
+      }
+
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && validCreate();
+      allow update: if validJoin() || validTurnUpdate() || validEmote() || validWaitingCancel() || validResign();
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

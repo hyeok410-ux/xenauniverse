@@ -226,7 +226,7 @@ body[data-arena] .side-panel { background: rgba(5,8,15,.66); }
 .portrait-piece .portrait-shell { width: 86%; aspect-ratio: 1; clip-path: inset(0 round 12px); border-radius: 12px; }
 .portrait-piece .portrait-shell::before { clip-path: inset(0 round 10px); border-radius: 10px; }
 .frame-sample, .frame-sample img { border-radius: 10px; }
-.frame-sample img { filter: contrast(1.45) brightness(.48) saturate(1.25); mix-blend-mode: screen; }
+.frame-sample img { filter: contrast(1.45) brightness(.72) saturate(1.25); mix-blend-mode: normal; }
 .shop-card.kind-effect .shop-art, .showcase-modal.kind-effect .showcase-art img { filter: contrast(1.25) brightness(.58) saturate(1.18); }
 .three-ready .three-board { display: grid; border-color: rgba(110,220,255,.26); box-shadow: 0 22px 56px rgba(0,0,0,.48), 0 0 34px rgba(50,230,239,.08); transform: none; background: #0a0d14; }
 .three-ready .three-board .square.light { background: linear-gradient(145deg, #222938, #171c27); }
@@ -397,7 +397,8 @@ body[data-arena] .side-panel { background: rgba(5,8,15,.66); }
 .shop-card.kind-board .shop-art, .shop-card.kind-effect .shop-art, .shop-card.kind-emote .shop-art { object-position: center; transform: scale(1); }
 .shop-card.kind-frame .shop-art, .shop-card.kind-effect .shop-art { background: #05070b; mix-blend-mode: screen; }
 .showcase-modal.kind-frame .showcase-art, .showcase-modal.kind-effect .showcase-art { background: #05070b; }
-.showcase-modal.kind-frame .showcase-art img, .showcase-modal.kind-effect .showcase-art img { mix-blend-mode: screen; }
+.showcase-modal.kind-frame .showcase-art img, .showcase-modal.kind-effect .showcase-art img { mix-blend-mode: normal; }
+.piece-frame-art { position: absolute; inset: -3px; z-index: 3; width: calc(100% + 6px) !important; height: calc(100% + 6px) !important; object-fit: fill !important; transform: none !important; filter: contrast(1.12) saturate(1.2) drop-shadow(0 0 5px currentColor); pointer-events: none; }
 .showcase-art::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; z-index: 1; background: linear-gradient(180deg, transparent, #080b12 56%); pointer-events: none; }
 .showcase-copy { position: relative; z-index: 1; }
 .showcase-copy small { color: var(--cyan); font-size: 10px; font-weight: 900; letter-spacing: .1em; }
