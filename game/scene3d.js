@@ -158,6 +158,18 @@
       "CLONE-02": { color: 0xff315f, style: "slash" },
       "DRONE-01": { color: 0xff315f, style: "missile" },
       "DRONE-02": { color: 0xff315f, style: "missile" },
+      "XENA ETHEREAL": { color: 0xffd66b, style: "override" },
+      "NIX-09 CATALYST": { color: 0xa77bff, style: "memory" },
+      "CRYSTAL BASTION": { color: 0xffd66b, style: "shield" },
+      "LYRA MEMORY VECTOR": { color: 0xe9e8c6, style: "lance" },
+      "ECHO FREQUENCY VECTOR": { color: 0x4ce9ff, style: "frequency" },
+      "NOVA LAUGHING GLITCH": { color: 0xff4fbd, style: "burst" },
+      "BAEK SIGNAL": { color: 0xe9e8c6, style: "shield" },
+      "JIN CRYSTAL MARK": { color: 0x37eef5, style: "memory" },
+      "FIRST WHISTLER RETURNED": { color: 0xb7ff3c, style: "memory" },
+      "LUCID-5 RED CHAIN": { color: 0xff516b, style: "slash" },
+      "LUCID-6 GLASS SHARD": { color: 0x9beeff, style: "lance" },
+      "NAYUN MOTHER STAY BRIGHT": { color: 0xffd66b, style: "memory" },
     };
     return profiles[action.character] || { color: colors[action.color || "white"].primary, style: action.capture ? "burst" : "pulse" };
   }

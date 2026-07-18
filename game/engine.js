@@ -48,6 +48,21 @@
       },
       signals: ["CLONE-01", "CLONE-02", "DRONE-01", "DRONE-02", "MOOD+ WORKER", "SHADOW WATCHER"],
     },
+    crystal: {
+      id: "crystal",
+      name: "STAY BRIGHT · CRYSTAL REBELLION",
+      leaderName: "XENA ETHEREAL",
+      accent: "gold",
+      back: {
+        bastion: "CRYSTAL BASTION",
+        vector1: "LYRA MEMORY VECTOR",
+        catalyst: "NIX-09 CATALYST",
+        leader: "XENA ETHEREAL",
+        vector2: "ECHO FREQUENCY VECTOR",
+        glitch: "NOVA LAUGHING GLITCH",
+      },
+      signals: ["BAEK SIGNAL", "JIN CRYSTAL MARK", "FIRST WHISTLER RETURNED", "LUCID-5 RED CHAIN", "LUCID-6 GLASS SHARD", "NAYUN MOTHER STAY BRIGHT"],
+    },
   };
 
   const BACK_TYPES = [TYPES.BASTION, TYPES.VECTOR, TYPES.CATALYST, TYPES.LEADER, TYPES.VECTOR, TYPES.GLITCH];
