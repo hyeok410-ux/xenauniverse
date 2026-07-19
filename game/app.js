@@ -1477,6 +1477,16 @@
     return html;
   }
 
+  function displayGridPosition(index) {
+    const row = Math.floor(index / 6);
+    const col = index % 6;
+    const flipped = gameMode === "online" && playerColor === "black";
+    return {
+      row: flipped ? row : 5 - row,
+      col: flipped ? 5 - col : col,
+    };
+  }
+
   function capturedMarkup(color) {
     return state.captured[color].map((p) => `<span class="chip">${glyph[p.type]} ${p.character}</span>`).join("") || `<span class="chip">${t("none")}</span>`;
   }
@@ -1533,8 +1543,7 @@
   function cinematicEffectMarkup() {
     if (!cinematicAction || !cinematicAction.effectImage) return "";
     const target = Number.isInteger(cinematicAction.to) ? cinematicAction.to : cinematicAction.from;
-    const row = Math.floor(target / 6);
-    const col = target % 6;
+    const { row, col } = displayGridPosition(target);
     return `<div class="asset-vfx" style="--vfx-left:${((col + .5) * 100 / 6).toFixed(3)}%;--vfx-top:${((row + .5) * 100 / 6).toFixed(3)}%"><img src="${cinematicAction.effectImage}" alt=""></div>`;
   }
 

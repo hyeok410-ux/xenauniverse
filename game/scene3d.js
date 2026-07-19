@@ -25,11 +25,12 @@
   let viewFlipped = false;
 
   function squarePosition(index) {
-    if (viewFlipped) index = SIZE * SIZE - 1 - index;
     const row = Math.floor(index / SIZE);
     const col = index % SIZE;
-    // DOM row 0 is the top rank. Positive world Z is the top of the camera view.
-    return new T.Vector3(col - 2.5, 0, 2.5 - row);
+    // Match the DOM board order exactly, including the black-side online rotation.
+    const x = viewFlipped ? 2.5 - col : col - 2.5;
+    const z = viewFlipped ? 2.5 - row : row - 2.5;
+    return new T.Vector3(x, 0, z);
   }
 
   function material(color, emissive, amount) {
