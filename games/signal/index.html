@@ -114,6 +114,11 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 .q a.golink, .q button.golink{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;color:var(--cyan);border:1px solid rgba(63,224,255,.4);padding:8px 14px;border-radius:18px;background:transparent;transition:.3s ease;white-space:nowrap;}
 .q a.golink:hover, .q button.golink:hover{background:rgba(63,224,255,.1);}
 .q-note{margin-top:14px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.1em;color:var(--text-dim);opacity:.7;line-height:1.9;}
+.all-bonus{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  background:linear-gradient(120deg, rgba(232,196,104,.14), rgba(255,47,176,.1));border:1px solid rgba(232,196,104,.4);border-radius:14px;padding:14px 18px;}
+.all-bonus span{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;color:var(--gold);text-shadow:0 0 10px rgba(232,196,104,.4);}
+.all-bonus button{font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.08em;color:#1a1206;background:var(--gold);border:none;padding:9px 18px;border-radius:18px;transition:.3s ease;}
+.all-bonus button:hover{box-shadow:0 0 18px rgba(232,196,104,.5);}
 
 .toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:120;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;color:var(--silver);background:rgba(8,8,14,.92);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);max-width:88vw;text-align:center;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -175,9 +180,10 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
   <div class="quests">
     <h2><span lang="en">Today's Quests — earn XC across all games</span><span lang="ko">오늘의 퀘스트 — 모든 게임에서 XC 모으기</span></h2>
     <div class="q-list" id="q-list"></div>
+    <div class="all-bonus" id="all-bonus" hidden></div>
     <p class="q-note">
-      <span lang="en">* XC is one shared wallet across every XENA game — spend it on XENA CARDS draws.<br>* Quests reset daily. OVERRIDE GRID play is detected on this device.</span>
-      <span lang="ko">* XC는 모든 XENA 게임이 공유하는 지갑입니다 — XENA CARDS 뽑기에 쓰세요.<br>* 퀘스트는 매일 리셋. OVERRIDE GRID 플레이는 이 기기 기준으로 감지됩니다.</span>
+      <span lang="en">* XC is one shared wallet across every XENA game — spend it on XENA CARDS draws.<br>* Quests reset daily. Game progress is detected on this device.</span>
+      <span lang="ko">* XC는 모든 XENA 게임이 공유하는 지갑입니다 — XENA CARDS 뽑기에 쓰세요.<br>* 퀘스트는 매일 리셋. 게임 진행 상황은 이 기기 기준으로 감지됩니다.</span>
     </p>
   </div>
 </div>
@@ -359,48 +365,109 @@ $('btn-share').addEventListener('click', function(){
 });
 
 /* ── 퀘스트 (모든 게임 통합) ── */
+var CHESS_PER_MATCH = 8, CHESS_MAX = 3, CHESS_BONUS = 10;
+var WC_BONUS = 10, GACHA_BONUS = 8, MEMORY_BONUS = 8, SHISEN_BONUS = 8, ALL_BONUS = 25;
+
 function chessSnapshot(){
   var keys = ['og_credits','og_shards','og_grid_rating','og_daily_login'];
   var s = '';
   keys.forEach(function(k){ try{ s += '|' + (localStorage.getItem(k)||''); }catch(e){} });
   return s;
 }
-if(!st.chessBase || st.chessBase.date !== today()){
-  st.chessBase = {date: today(), snap: chessSnapshot()};
+if(!st.chessDay || st.chessDay !== today()){
+  st.chessDay = today();
+  st.chessLastSnap = chessSnapshot();
+  st.chessMatches = 0;
+  st.chessBonusClaimed = false;
   save(SAVE_KEY, st);
 }
-function chessPlayed(){ return chessSnapshot() !== st.chessBase.snap; }
-function chessClaimed(){ return st.chessClaim === today(); }
+/* 페이지를 열 때마다 체스 상태 변화를 감지해서 매치 1회로 자동 환산(최대 3회/일) */
+(function detectChessMatch(){
+  if(st.chessMatches < CHESS_MAX){
+    var snap = chessSnapshot();
+    if(snap !== st.chessLastSnap){
+      st.chessLastSnap = snap;
+      st.chessMatches++;
+      wallet.xc += CHESS_PER_MATCH;
+      save(SAVE_KEY, st); save(WALLET_KEY, wallet);
+      setTimeout(function(){ toast(t('+'+CHESS_PER_MATCH+' XC — OVERRIDE GRID match detected! ('+st.chessMatches+'/'+CHESS_MAX+')', '+'+CHESS_PER_MATCH+' XC — OVERRIDE GRID 플레이 감지! ('+st.chessMatches+'/'+CHESS_MAX+')')); }, 900);
+    }
+  }
+})();
 
-function gachaDrawnToday(){
+function gachaFreeDrawnToday(){
   var g = load('zena_gacha_v1', {});
   if(!g.packs) return false;
   var t0 = new Date(); t0.setHours(0,0,0,0);
-  return (g.packs.signal||0) >= t0.getTime() || (g.packs.sov||0) >= t0.getTime();
+  return ['signal','sov','elite'].some(function(p){ return (g.packs[p]||0) >= t0.getTime(); });
+}
+function memoryStageToday(){
+  var m = load('xena_memory_v1', {});
+  return !!(m.daily && m.daily.date === today() && m.daily.cleared && m.daily.cleared.length > 0);
+}
+function shisenStageToday(){
+  var sh = load('xena_shisen_v1', {});
+  return !!(sh.daily && sh.daily.date === today() && sh.daily.cleared && sh.daily.cleared.length > 0);
+}
+function claimedFlag(key){ return st[key] === today(); }
+function setClaimedFlag(key){ st[key] = today(); save(SAVE_KEY, st); }
+
+function allQuestsDone(wc){
+  return claimed && claimedFlag('wcBonusClaim') && claimedFlag('gachaBonusClaim')
+    && st.chessBonusClaimed && claimedFlag('memBonusClaim') && claimedFlag('shBonusClaim');
 }
 
 function renderQuests(){
   var wc = (wallet.daily && wallet.daily.date === today() && wallet.daily.worldcup) || 0;
+  var wcBonusDone = claimedFlag('wcBonusClaim');
+  var gachaBonusDone = claimedFlag('gachaBonusClaim');
+  var memBonusDone = claimedFlag('memBonusClaim');
+  var shBonusDone = claimedFlag('shBonusClaim');
+  var chessBonusDone = !!st.chessBonusClaimed;
+
   var quests = [
     {icon:'🔮', done: claimed,
       title: t('Receive today\'s signal', '오늘의 시그널 받기'),
       sub: t('Flip the card above', '위 카드를 뒤집고 수령'),
-      reward: '+5 XC', link: null},
-    {icon:'♟️', done: chessClaimed(),
-      title: t('Play OVERRIDE GRID (1 match)', 'OVERRIDE GRID 1판 플레이'),
-      sub: chessClaimed() ? t('Reward claimed', '보상 수령 완료')
-         : chessPlayed() ? t('Play detected — claim your XC!', '플레이 감지됨 — XC를 받으세요!')
-         : t('Play a match, then come back here', '한 판 하고 이 페이지로 돌아오세요'),
-      reward: '+10 XC',
-      link: chessPlayed() && !chessClaimed() ? 'CLAIM_CHESS' : '../../game/'},
-    {icon:'🃏', done: gachaDrawnToday(),
+      reward: '+5 XC', act:null, link:null},
+    {icon:'♟️', done: chessBonusDone,
+      title: t('Play OVERRIDE GRID (up to 3 matches)', 'OVERRIDE GRID 플레이 (최대 3판)'),
+      sub: chessBonusDone ? t('Completion bonus claimed', '완주 보너스 수령 완료')
+         : t(st.chessMatches+'/'+CHESS_MAX+' matches · +'+CHESS_PER_MATCH+' XC each, auto-credited', st.chessMatches+'/'+CHESS_MAX+'판 · 판마다 +'+CHESS_PER_MATCH+' XC 자동 지급'),
+      reward: '+'+CHESS_BONUS+' XC',
+      act: (st.chessMatches >= CHESS_MAX && !chessBonusDone) ? 'chess' : null,
+      link: st.chessMatches < CHESS_MAX ? '../../game/' : null},
+    {icon:'🃏', done: gachaBonusDone,
       title: t('Open a free XENA CARDS pack', 'XENA CARDS 무료팩 뽑기'),
-      sub: t('SIGNAL every 8h · SOVEREIGN every 24h', 'SIGNAL 8시간 · SOVEREIGN 24시간마다'),
-      reward: t('FREE CARD','무료 카드'), link:'../gacha/'},
-    {icon:'🏆', done: wc >= 3,
+      sub: gachaBonusDone ? t('Bonus claimed', '보너스 수령 완료')
+         : gachaFreeDrawnToday() ? t('Free pack detected — claim your bonus!', '무료팩 감지됨 — 보너스를 받으세요!')
+         : t('SIGNAL 8h · SOVEREIGN 12h · OVERRIDE 24h', 'SIGNAL 8시간 · SOVEREIGN 12시간 · OVERRIDE 24시간마다'),
+      reward: '+'+GACHA_BONUS+' XC',
+      act: (gachaFreeDrawnToday() && !gachaBonusDone) ? 'gacha' : null,
+      link: !gachaFreeDrawnToday() ? '../gacha/' : null},
+    {icon:'🏆', done: wcBonusDone,
       title: t('Finish the Photo World Cup', '이상형 월드컵 완주'),
-      sub: t(wc+'/3 today · +5 XC each', '오늘 '+wc+'/3회 · 회당 +5 XC'),
-      reward: '+15 XC', link:'../world-cup/'}
+      sub: wcBonusDone ? t('Bonus claimed', '보너스 수령 완료')
+         : t(wc+'/3 today · +5 XC each, auto-credited', '오늘 '+wc+'/3회 · 회마다 +5 XC 자동 지급'),
+      reward: '+'+WC_BONUS+' XC',
+      act: (wc >= 3 && !wcBonusDone) ? 'worldcup' : null,
+      link: wc < 3 ? '../world-cup/' : null},
+    {icon:'🧠', done: memBonusDone,
+      title: t('Clear a Memory Grid stage', '메모리 그리드 스테이지 클리어'),
+      sub: memBonusDone ? t('Bonus claimed', '보너스 수령 완료')
+         : memoryStageToday() ? t('Clear detected — claim your bonus!', '클리어 감지됨 — 보너스를 받으세요!')
+         : t('Any stage, once a day', '아무 스테이지나 하루 1회'),
+      reward: '+'+MEMORY_BONUS+' XC',
+      act: (memoryStageToday() && !memBonusDone) ? 'memory' : null,
+      link: !memoryStageToday() ? '../memory/' : null},
+    {icon:'🔗', done: shBonusDone,
+      title: t('Clear a Signal Link stage', '시그널 링크 스테이지 클리어'),
+      sub: shBonusDone ? t('Bonus claimed', '보너스 수령 완료')
+         : shisenStageToday() ? t('Clear detected — claim your bonus!', '클리어 감지됨 — 보너스를 받으세요!')
+         : t('Any stage, once a day', '아무 스테이지나 하루 1회'),
+      reward: '+'+SHISEN_BONUS+' XC',
+      act: (shisenStageToday() && !shBonusDone) ? 'shisen' : null,
+      link: !shisenStageToday() ? '../shisen/' : null}
   ];
   var list = $('q-list');
   list.innerHTML = '';
@@ -408,25 +475,49 @@ function renderQuests(){
     var el = document.createElement('div');
     el.className = 'q' + (q.done ? ' done' : '');
     var action = '';
-    if(!q.done && q.link === 'CLAIM_CHESS'){
-      action = '<button class="golink" data-act="chess">'+t('CLAIM','받기')+'</button>';
+    if(!q.done && q.act){
+      action = '<button class="golink" data-act="'+q.act+'">'+t('CLAIM','받기')+'</button>';
     } else if(!q.done && q.link){
       action = '<a class="golink" href="'+q.link+'" target="_blank" rel="noopener">'+t('GO','이동')+'</a>';
     }
     el.innerHTML = '<div class="qi">'+q.icon+'</div><div class="qt"><b>'+q.title+'</b><span>'+q.sub+'</span></div><div class="qr">'+(q.done?'✓ ':'')+q.reward+'</div>'+action;
     list.appendChild(el);
   });
-  var chessBtn = list.querySelector('button[data-act="chess"]');
-  if(chessBtn){
-    chessBtn.addEventListener('click', function(){
-      if(chessClaimed() || !chessPlayed()) return;
-      st.chessClaim = today();
-      wallet.xc += 10;
-      save(SAVE_KEY, st); save(WALLET_KEY, wallet);
-      renderWallet(); renderQuests();
-      toast(t('+10 XC — OVERRIDE GRID quest complete!', '+10 XC — OVERRIDE GRID 퀘스트 완료!'));
-    });
+
+  /* 전체 완료 보너스 배너 */
+  var allDone = quests.every(function(q){ return q.done; });
+  var allBanner = $('all-bonus');
+  if(allDone && !claimedFlag('allBonusClaim')){
+    allBanner.hidden = false;
+    allBanner.innerHTML = '<span>'+t('All quests complete!', '모든 퀘스트 완료!')+'</span><button class="golink" data-act="allbonus">'+t('CLAIM +'+ALL_BONUS+' XC','+'+ALL_BONUS+' XC 받기')+'</button>';
+  } else if(claimedFlag('allBonusClaim')){
+    allBanner.hidden = false;
+    allBanner.innerHTML = '<span>✓ '+t('All quests bonus claimed today', '오늘의 전체 완료 보너스 수령 완료')+'</span>';
+  } else {
+    allBanner.hidden = true;
   }
+
+  bindQuestActions();
+}
+function bindQuestActions(){
+  var map = {
+    chess: function(){ wallet.xc += CHESS_BONUS; st.chessBonusClaimed = true; save(SAVE_KEY, st); toast(t('+'+CHESS_BONUS+' XC — OVERRIDE GRID quest complete!', '+'+CHESS_BONUS+' XC — OVERRIDE GRID 퀘스트 완료!')); },
+    gacha: function(){ wallet.xc += GACHA_BONUS; setClaimedFlag('gachaBonusClaim'); toast(t('+'+GACHA_BONUS+' XC — XENA CARDS quest complete!', '+'+GACHA_BONUS+' XC — XENA CARDS 퀘스트 완료!')); },
+    worldcup: function(){ wallet.xc += WC_BONUS; setClaimedFlag('wcBonusClaim'); toast(t('+'+WC_BONUS+' XC — World Cup quest complete!', '+'+WC_BONUS+' XC — 월드컵 퀘스트 완료!')); },
+    memory: function(){ wallet.xc += MEMORY_BONUS; setClaimedFlag('memBonusClaim'); toast(t('+'+MEMORY_BONUS+' XC — Memory Grid quest complete!', '+'+MEMORY_BONUS+' XC — 메모리 그리드 퀘스트 완료!')); },
+    shisen: function(){ wallet.xc += SHISEN_BONUS; setClaimedFlag('shBonusClaim'); toast(t('+'+SHISEN_BONUS+' XC — Signal Link quest complete!', '+'+SHISEN_BONUS+' XC — 시그널 링크 퀘스트 완료!')); },
+    allbonus: function(){ wallet.xc += ALL_BONUS; setClaimedFlag('allBonusClaim'); toast(t('+'+ALL_BONUS+' XC — all quests bonus!', '+'+ALL_BONUS+' XC — 전체 완료 보너스!')); }
+  };
+  document.querySelectorAll('button[data-act]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var act = btn.getAttribute('data-act');
+      if(!map[act]) return;
+      map[act]();
+      save(WALLET_KEY, wallet);
+      renderWallet();
+      renderQuests();
+    });
+  });
 }
 
 /* ── 언어 토글 ── */

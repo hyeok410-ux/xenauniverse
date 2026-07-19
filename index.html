@@ -18,7 +18,7 @@
 <meta name="twitter:description" content="Virtual pop star XENA — music, story, game, and merch.">
 <meta name="twitter:image" content="https://xenauniverse.com/images/gallery/cover-dopamine.jpg">
 <link rel="canonical" href="https://xenauniverse.com/">
-<link rel="preload" as="image" href="images/gallery/hero-bg.jpg">
+<link rel="preload" as="image" href="images/gallery/hero-bg.jpg" fetchpriority="high">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -190,17 +190,18 @@
   #dustGL{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
   @keyframes gridMove{0%{transform:translateY(0);}100%{transform:translateY(48px);}}
   .hero-inner{position:relative;z-index:5;padding:0 20px;}
-  /* XENA 로고 — 메탈 크롬 + 네온 림 + 3D 압출 + 마우스 반응 틸트 */
+  /* XENA 로고 — 네온 그라디언트 + 3D 압출 + 마우스 반응 틸트 */
   .hero-mark{font-family:var(--font-sans);font-size:clamp(4rem,16vw,9.5rem);font-weight:800;letter-spacing:.05em;line-height:1;
-    background:linear-gradient(168deg,#ffffff 0%,#f2f4fa 12%,#c9cfde 27%,#ffffff 42%,#aeb5c7 56%,#f7f9ff 70%,#d8dcea 84%,#ffffff 100%);
-    background-size:200% 200%;background-position:0% 0%;
+    transform-style:preserve-3d;will-change:transform;transition:transform .18s ease-out;
+  }
+  .hero-mark-main{
+    background:linear-gradient(120deg,#5cf3ff 0%,#a06bff 32%,#ff2fb0 58%,#a06bff 78%,#5cf3ff 100%);
+    background-size:220% 220%;background-position:0% 0%;
     -webkit-background-clip:text;background-clip:text;color:transparent;
     text-shadow:
-      0 2px 0 rgba(26,22,40,.9), 0 4px 0 rgba(22,18,34,.85), 0 6px 0 rgba(18,14,28,.8),
-      0 8px 0 rgba(13,10,21,.75), 0 11px 2px rgba(8,6,14,.6), 0 16px 30px rgba(0,0,0,.85),
-      0 0 26px rgba(63,224,255,.32), 0 0 60px rgba(255,47,176,.2), 0 0 110px rgba(160,107,255,.3);
+      0 3px 0 rgba(10,6,20,.85), 0 6px 0 rgba(8,5,16,.8), 0 10px 22px rgba(0,0,0,.75),
+      0 0 30px rgba(63,224,255,.55), 0 0 64px rgba(255,47,176,.4), 0 0 120px rgba(160,107,255,.4);
     animation:chromeSheen 5.5s ease-in-out infinite;
-    transform-style:preserve-3d;will-change:transform;transition:transform .18s ease-out;
   }
   .hero-mark span{display:inline-block;}
   .hero-mark-main{display:block;}
@@ -471,7 +472,7 @@
 
 <!-- ============ HERO ============ -->
 <section class="hero">
-  <img class="hero-bg-photo" src="images/gallery/hero-bg.jpg" alt="" aria-hidden="true">
+  <img class="hero-bg-photo" src="images/gallery/hero-bg.jpg" alt="" aria-hidden="true" fetchpriority="high" decoding="sync">
   <div class="hero-glow" id="heroGlow" aria-hidden="true"></div>
   <canvas class="hero-canvas" id="heroCanvas"></canvas>
   <div class="hero-inner">
@@ -982,17 +983,23 @@ document.addEventListener('DOMContentLoaded', function(){
     els.forEach(function(el){ el.classList.add('in'); });
   }
 
-  /* 히어로 타이틀 — 영화 오프닝 타이틀처럼 글자 단위로 등장 */
+  /* 히어로 타이틀 — 영화 오프닝 타이틀처럼 글자 단위로 등장 (XENA / UNIVERSE 2줄 구조 유지) */
   var mark = document.getElementById('heroMark');
   if(mark){
-    mark.innerHTML = mark.textContent.split('').map(function(ch){ return '<span>' + ch + '</span>'; }).join('');
+    var markMain = mark.querySelector('.hero-mark-main');
+    var markSmall = mark.querySelector('small');
+    if(markMain){
+      markMain.innerHTML = markMain.textContent.split('').map(function(ch){ return '<span>' + ch + '</span>'; }).join('');
+    }
     if(window.gsap && !reduceMotion){
-      gsap.from(mark.querySelectorAll('span'), {y:24, opacity:0, duration:.5, stagger:.035, ease:'power3.out', delay:.05});
+      gsap.from(mark.querySelectorAll('.hero-mark-main span'), {y:24, opacity:0, duration:.5, stagger:.035, ease:'power3.out', delay:.05});
+      if(markSmall){ gsap.from(markSmall, {y:12, opacity:0, duration:.5, ease:'power2.out', delay:.35}); }
       gsap.from('.hero-tag', {y:16, opacity:0, duration:.6, ease:'power2.out', delay:.4});
       gsap.from('.hero-scroll', {opacity:0, duration:.6, ease:'power2.out', delay:.7});
       /* 어떤 환경에서든 인트로가 끊겨도 로고는 반드시 보이게 (안전장치) */
       setTimeout(function(){
-        gsap.set(mark.querySelectorAll('span'), {clearProps:'all'});
+        gsap.set(mark.querySelectorAll('.hero-mark-main span'), {clearProps:'all'});
+        if(markSmall){ gsap.set(markSmall, {clearProps:'all'}); }
         gsap.set('.hero-tag,.hero-scroll', {clearProps:'all'});
       }, 1500);
     }

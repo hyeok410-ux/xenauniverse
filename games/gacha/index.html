@@ -61,7 +61,7 @@ a{color:inherit;text-decoration:none;}
   animation:grain 8s steps(10) infinite;}
 @keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-6%)}50%{transform:translate(-7%,4%)}70%{transform:translate(6%,7%)}90%{transform:translate(-4%,3%)}}
 
-.wrap{position:relative;z-index:2;max-width:1080px;margin:0 auto;padding:0 20px calc(60px + env(safe-area-inset-bottom));}
+.wrap{position:relative;z-index:2;max-width:1120px;margin:0 auto;padding:0 20px calc(60px + env(safe-area-inset-bottom));}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 8px;gap:10px;flex-wrap:wrap;}
 .back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
 .back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
@@ -71,37 +71,44 @@ a{color:inherit;text-decoration:none;}
 .eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;text-shadow:0 0 16px rgba(63,224,255,.5);}
 h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-height:1.1;margin-bottom:12px;
   background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
-.head p{color:var(--text-dim);font-size:.92rem;max-width:440px;margin:0 auto;line-height:1.7;}
+.head p{color:var(--text-dim);font-size:.92rem;max-width:460px;margin:0 auto;line-height:1.7;}
 
-/* ── 팩 ── */
-.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;max-width:760px;margin:0 auto 14px;}
-.pack{position:relative;border-radius:20px;border:1px solid var(--hair);padding:26px 24px 24px;text-align:center;
+/* ── 팩 (3종) ── */
+.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;max-width:1000px;margin:0 auto 14px;}
+.pack{position:relative;border-radius:20px;border:1px solid var(--hair);padding:26px 22px 24px;text-align:center;
   background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.012));backdrop-filter:blur(16px);transition:.3s ease;}
 .pack.signal:hover{border-color:rgba(63,224,255,.45);box-shadow:0 14px 44px rgba(63,224,255,.12);}
 .pack.sov:hover{border-color:rgba(232,196,104,.45);box-shadow:0 14px 44px rgba(232,196,104,.12);}
+.pack.elite:hover{border-color:rgba(255,47,176,.45);box-shadow:0 14px 44px rgba(255,47,176,.14);}
 .pack-kind{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;margin-bottom:10px;}
 .pack.signal .pack-kind{color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);}
 .pack.sov .pack-kind{color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);}
-.pack h3{font-size:1.3rem;font-weight:800;letter-spacing:.06em;margin-bottom:6px;}
-.pack .cool{font-family:var(--font-mono);font-size:.64rem;color:var(--text-dim);margin-bottom:16px;letter-spacing:.08em;}
-.pack-art{width:120px;height:168px;margin:0 auto 18px;border-radius:12px;position:relative;overflow:hidden;
+.pack.elite .pack-kind{color:var(--magenta);text-shadow:0 0 12px rgba(255,47,176,.4);}
+.pack h3{font-size:1.2rem;font-weight:800;letter-spacing:.05em;margin-bottom:6px;}
+.pack .cool{font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:16px;letter-spacing:.06em;}
+.pack-art{width:112px;height:156px;margin:0 auto 18px;border-radius:12px;position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.14);}
 .pack.signal .pack-art{background:linear-gradient(150deg,#04121a,#062a3a 45%,#04121a);box-shadow:inset 0 0 34px rgba(63,224,255,.25), 0 6px 24px rgba(0,0,0,.5);}
 .pack.sov .pack-art{background:linear-gradient(150deg,#150d02,#3a2a06 45%,#150d02);box-shadow:inset 0 0 34px rgba(232,196,104,.28), 0 6px 24px rgba(0,0,0,.5);}
-.pack-art b{font-family:var(--font-sans);font-weight:800;font-size:1.9rem;letter-spacing:.04em;}
+.pack.elite .pack-art{background:linear-gradient(150deg,#160410,#3a0a28 45%,#160410);box-shadow:inset 0 0 34px rgba(255,47,176,.3), 0 6px 24px rgba(0,0,0,.5);}
+.pack-art b{font-family:var(--font-sans);font-weight:800;font-size:1.8rem;letter-spacing:.04em;}
 .pack.signal .pack-art b{color:var(--cyan);text-shadow:0 0 22px rgba(63,224,255,.8);}
 .pack.sov .pack-art b{color:var(--gold);text-shadow:0 0 22px rgba(232,196,104,.8);}
-.pack-art small{position:absolute;bottom:8px;left:0;right:0;font-family:var(--font-mono);font-size:.5rem;letter-spacing:.24em;color:rgba(255,255,255,.5);}
-.draw-btn{width:100%;font-weight:700;font-size:.92rem;letter-spacing:.1em;padding:14px 0;border-radius:28px;border:none;transition:.3s ease;margin-bottom:8px;}
+.pack.elite .pack-art b{color:var(--magenta);text-shadow:0 0 22px rgba(255,47,176,.85);}
+.pack-art small{position:absolute;bottom:8px;left:0;right:0;font-family:var(--font-mono);font-size:.5rem;letter-spacing:.2em;color:rgba(255,255,255,.5);}
+.pack-x3{position:absolute;top:8px;right:8px;font-family:var(--font-mono);font-size:.56rem;font-weight:700;letter-spacing:.06em;padding:3px 7px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.25);}
+.draw-btn{width:100%;font-weight:700;font-size:.9rem;letter-spacing:.08em;padding:14px 0;border-radius:28px;border:none;transition:.3s ease;margin-bottom:8px;}
 .pack.signal .draw-btn{background:var(--silver);color:var(--black);}
 .pack.signal .draw-btn:not(:disabled):hover{background:#fff;box-shadow:0 0 26px rgba(63,224,255,.4);}
 .pack.sov .draw-btn{background:rgba(232,196,104,.92);color:#1a1206;}
 .pack.sov .draw-btn:not(:disabled):hover{background:var(--gold);box-shadow:0 0 26px rgba(232,196,104,.45);}
-.draw-btn:disabled{background:rgba(255,255,255,.07)!important;color:var(--text-dim)!important;cursor:default;font-family:var(--font-mono);font-weight:500;font-size:.78rem;}
-.xc-btn{width:100%;font-family:var(--font-mono);font-size:.7rem;font-weight:500;letter-spacing:.1em;padding:11px 0;border-radius:26px;border:1px solid rgba(232,196,104,.35);background:transparent;color:var(--gold);transition:.3s ease;}
+.pack.elite .draw-btn{background:rgba(255,47,176,.9);color:#20040f;}
+.pack.elite .draw-btn:not(:disabled):hover{background:var(--magenta);box-shadow:0 0 26px rgba(255,47,176,.45);}
+.draw-btn:disabled{background:rgba(255,255,255,.07)!important;color:var(--text-dim)!important;cursor:default;font-family:var(--font-mono);font-weight:500;font-size:.74rem;}
+.xc-btn{width:100%;font-family:var(--font-mono);font-size:.68rem;font-weight:500;letter-spacing:.08em;padding:11px 0;border-radius:26px;border:1px solid rgba(232,196,104,.35);background:transparent;color:var(--gold);transition:.3s ease;}
 .xc-btn:not(:disabled):hover{background:rgba(232,196,104,.1);box-shadow:0 0 16px rgba(232,196,104,.2);}
 .xc-btn:disabled{opacity:.35;cursor:default;}
-.odds{margin-top:14px;font-family:var(--font-mono);font-size:.56rem;letter-spacing:.06em;color:var(--text-dim);line-height:1.9;}
+.odds{margin-top:14px;font-family:var(--font-mono);font-size:.54rem;letter-spacing:.04em;color:var(--text-dim);line-height:1.9;}
 .odds b{font-weight:700;}
 .odds .oN{color:var(--g-N);} .odds .oR{color:var(--g-R);} .odds .oS{color:var(--g-S);} .odds .oSR{color:var(--g-SR);} .odds .oSSR{color:var(--g-SSR);}
 
@@ -118,7 +125,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 .ccard{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:3/4.35;border:1px solid var(--hair);background:rgba(255,255,255,.02);transition:.25s ease;}
 .ccard.owned{cursor:pointer;}
 .ccard.owned:hover{transform:translateY(-3px);}
-.ccard img{width:100%;height:100%;object-fit:cover;display:block;}
+.ccard img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
 .ccard.locked img{filter:brightness(.1) grayscale(1);}
 .ccard.locked::after{content:'?';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:rgba(230,230,238,.25);}
 .ccard .cinfo{position:absolute;left:0;right:0;bottom:0;padding:18px 8px 6px;background:linear-gradient(transparent, rgba(0,0,0,.88));}
@@ -129,33 +136,45 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 .gtag.S{color:var(--g-S);border:1px solid rgba(160,107,255,.55);}
 .gtag.SR{color:var(--g-SR);border:1px solid rgba(255,47,176,.55);}
 .gtag.SSR{color:var(--g-SSR);border:1px solid rgba(232,196,104,.6);}
-.ccard.g-R.owned{border-color:rgba(63,224,255,.35);}
-.ccard.g-S.owned{border-color:rgba(160,107,255,.4);}
-.ccard.g-SR.owned{border-color:rgba(255,47,176,.45);box-shadow:0 0 16px rgba(255,47,176,.12);}
-.ccard.g-SSR.owned{border-color:rgba(232,196,104,.55);box-shadow:0 0 20px rgba(232,196,104,.18);}
 .dupe{position:absolute;top:6px;right:6px;font-family:var(--font-mono);font-style:normal;font-size:.56rem;font-weight:700;color:var(--gold);background:rgba(0,0,0,.72);padding:3px 7px;border-radius:10px;}
 
-/* ── 뽑기 연출 오버레이 ── */
-.reveal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;padding:24px;backdrop-filter:blur(8px);}
+/* ── 등급별 테두리 퀄리티 (도감·뽑기연출·상세 공용) ── */
+.gframe-N{border-width:1px!important;border-color:var(--g-N)!important;box-shadow:none!important;}
+.gframe-R{border-width:2px!important;border-color:var(--g-R)!important;box-shadow:0 0 14px rgba(63,224,255,.35)!important;}
+.gframe-S{border-width:2px!important;border-color:var(--g-S)!important;box-shadow:0 0 18px rgba(160,107,255,.42), inset 0 0 14px rgba(160,107,255,.1)!important;}
+.gframe-SR{border-width:3px!important;border-color:var(--g-SR)!important;box-shadow:0 0 24px rgba(255,47,176,.5), inset 0 0 16px rgba(255,47,176,.14)!important;animation:srPulse 2.2s ease-in-out infinite;}
+.gframe-SSR{border-width:4px!important;border-color:var(--g-SSR)!important;box-shadow:0 0 32px rgba(232,196,104,.65), inset 0 0 22px rgba(232,196,104,.2)!important;animation:ssrPulse 1.8s ease-in-out infinite;}
+@keyframes srPulse{0%,100%{box-shadow:0 0 24px rgba(255,47,176,.5), inset 0 0 16px rgba(255,47,176,.14);}50%{box-shadow:0 0 38px rgba(255,47,176,.78), inset 0 0 22px rgba(255,47,176,.26);}}
+@keyframes ssrPulse{0%,100%{box-shadow:0 0 32px rgba(232,196,104,.65), inset 0 0 22px rgba(232,196,104,.2);}50%{box-shadow:0 0 54px rgba(232,196,104,.98), inset 0 0 30px rgba(232,196,104,.36);}}
+.ccard.owned.gframe-N,.ccard.owned.gframe-R,.ccard.owned.gframe-S,.ccard.owned.gframe-SR,.ccard.owned.gframe-SSR{border-style:solid;}
+
+/* ── 뽑기 연출 오버레이 (3연팩) ── */
+.reveal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;flex-direction:column;padding:22px;backdrop-filter:blur(8px);overflow-y:auto;}
 .reveal.on{display:flex;}
-.flip-zone{perspective:1200px;cursor:pointer;}
-.flip-card{position:relative;width:min(300px,74vw);aspect-ratio:3/4.2;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.3,1);}
-.flip-card.flipped{transform:rotateY(180deg);}
-.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;overflow:hidden;}
-.face.back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+.pack-title{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:18px;}
+.flip-zone{cursor:pointer;}
+.triple-row{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.flip-card{position:relative;width:min(210px,27vw);min-width:130px;aspect-ratio:3/4.2;perspective:1200px;}
+.flip-card .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.3,1);}
+.flip-card.flipped .inner{transform:rotateY(180deg);}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;overflow:hidden;border:1px solid transparent;}
+.face.back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
   background:
     radial-gradient(ellipse 70% 50% at 50% 30%, rgba(110,47,217,.5), transparent 70%),
     repeating-linear-gradient(45deg, rgba(63,224,255,.06) 0 2px, transparent 2px 14px),
     linear-gradient(160deg,#0a0614,#140a24 50%,#0a0614);
-  border:1px solid rgba(160,107,255,.5);box-shadow:0 0 44px rgba(110,47,217,.35);}
-.face.back .logo-x{font-size:3.4rem;font-weight:800;color:var(--purple-light);text-shadow:0 0 30px rgba(160,107,255,.9);}
-.face.back .logo-t{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.5em;color:var(--silver);}
-.face.back small{font-family:var(--font-mono);font-size:.52rem;letter-spacing:.2em;color:var(--text-dim);}
-.face.front{transform:rotateY(180deg);border:2px solid;display:flex;flex-direction:column;background:#060409;}
-.face.front img{width:100%;flex:1;object-fit:cover;min-height:0;}
-.face.front .fmeta{padding:10px 12px 12px;text-align:center;background:rgba(0,0,0,.85);}
-.face.front .fmeta small{display:block;font-family:var(--font-mono);font-size:.56rem;letter-spacing:.24em;margin-bottom:3px;}
-.face.front .fmeta b{font-size:.85rem;font-weight:700;letter-spacing:.02em;}
+  border:1px solid rgba(160,107,255,.5);box-shadow:0 0 34px rgba(110,47,217,.3);}
+.face.back .logo-x{font-size:2.4rem;font-weight:800;color:var(--purple-light);text-shadow:0 0 26px rgba(160,107,255,.9);}
+.face.back .logo-t{font-family:var(--font-mono);font-size:.5rem;letter-spacing:.4em;color:var(--silver);}
+.face.front{transform:rotateY(180deg);display:flex;flex-direction:column;background:#060409;border-width:2px;border-style:solid;}
+.face.front img{width:100%;flex:1;object-fit:cover;min-height:0;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
+.face.front .fmeta{padding:8px 8px 10px;text-align:center;background:rgba(0,0,0,.85);}
+.face.front .fmeta small{display:block;font-family:var(--font-mono);font-size:.5rem;letter-spacing:.18em;margin-bottom:2px;}
+.face.front .fmeta b{font-size:.72rem;font-weight:700;letter-spacing:.01em;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.card-badge{position:absolute;top:6px;right:6px;z-index:3;font-family:var(--font-mono);font-size:.5rem;font-weight:700;letter-spacing:.06em;padding:3px 7px;border-radius:8px;background:rgba(0,0,0,.7);display:none;}
+.card-badge.on{display:block;}
+.card-badge.isnew{color:#5cffc0;border:1px solid rgba(92,255,192,.5);}
+.card-badge.isdupe{color:var(--text-dim);border:1px solid var(--hair);}
 .reveal-tip{margin-top:22px;font-family:var(--font-mono);font-size:.66rem;letter-spacing:.24em;color:var(--text-dim);animation:pulse 1.6s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
 .reveal-actions{display:none;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:24px;}
@@ -164,10 +183,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 .rv-btn:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
 .rv-btn.primary{background:var(--silver);color:var(--black);border:none;font-family:var(--font-sans);font-weight:700;}
 .rv-btn.primary:hover{background:#fff;color:var(--black);}
-.new-badge{margin-top:16px;display:none;font-family:var(--font-mono);font-size:.66rem;letter-spacing:.2em;padding:6px 16px;border-radius:16px;}
-.new-badge.on{display:inline-block;}
-.new-badge.isnew{color:#5cffc0;border:1px solid rgba(92,255,192,.5);text-shadow:0 0 10px rgba(92,255,192,.5);}
-.new-badge.isdupe{color:var(--text-dim);border:1px solid var(--hair);}
+.rv-btn:disabled{opacity:.4;cursor:default;}
 .flash{position:fixed;inset:0;z-index:99;background:radial-gradient(circle, rgba(232,196,104,.85), rgba(232,196,104,0) 70%);opacity:0;pointer-events:none;}
 .flash.go{animation:flashAnim .9s ease-out;}
 @keyframes flashAnim{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
@@ -175,17 +191,19 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 .toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:120;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;color:var(--silver);background:rgba(8,8,14,.92);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);max-width:88vw;text-align:center;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* 카드 상세(분해) 모달 */
+/* 카드 상세(도감) 모달 */
 .detail{position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px);}
 .detail.on{display:flex;}
 .detail-inner{width:min(340px,88vw);background:linear-gradient(165deg, rgba(255,255,255,.05), rgba(255,255,255,.02));border:1px solid var(--hair);border-radius:18px;padding:20px;text-align:center;backdrop-filter:blur(16px);}
-.detail-inner img{width:100%;border-radius:12px;aspect-ratio:3/4;object-fit:cover;margin-bottom:14px;}
+.detail-inner img{width:100%;border-radius:12px;aspect-ratio:3/4;object-fit:cover;margin-bottom:14px;border-width:2px;border-style:solid;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
 .detail-inner h4{font-size:1rem;font-weight:700;margin-bottom:4px;}
 .detail-inner .dgrade{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.2em;margin-bottom:14px;}
 .detail-inner .drow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 
 @media (max-width:560px){
   .album{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;}
+  .triple-row{gap:8px;}
+  .flip-card{width:min(140px,29vw);}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}}
 </style>
@@ -212,13 +230,14 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
     <div class="eyebrow">Photo Card Gacha</div>
     <h1>XENA CARDS</h1>
     <p>
-      <span lang="en">Free daily XENA photo cards.<br>From N to the top grade <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b> — complete the collection.</span>
-      <span lang="ko">매일 무료로 뽑는 XENA 포토카드.<br>N부터 최고 등급 <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b>까지 — 컬렉션을 완성하라.</span>
+      <span lang="en">Every pack opens <b style="color:var(--silver);font-weight:600;">3 cards</b> at once.<br>From N to the top grade <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b> — complete the collection.</span>
+      <span lang="ko">모든 팩은 한 번에 <b style="color:var(--silver);font-weight:600;">카드 3장</b>이 나옵니다.<br>N부터 최고 등급 <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b>까지 — 컬렉션을 완성하라.</span>
     </p>
   </div>
 
   <div class="packs">
     <div class="pack signal">
+      <span class="pack-x3">×3</span>
       <div class="pack-kind">Basic · Every 8 Hours</div>
       <h3>SIGNAL PACK</h3>
       <div class="cool" id="cool-signal">—</div>
@@ -228,18 +247,29 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
       <div class="odds"><span class="oN">N 70%</span> · <span class="oR">R 26.9%</span> · <span class="oS">S 3%</span> · <span class="oSR">SR 0.1%</span></div>
     </div>
     <div class="pack sov">
-      <div class="pack-kind">Premium · Every 24 Hours</div>
+      <span class="pack-x3">×3</span>
+      <div class="pack-kind">Advanced · Every 12 Hours</div>
       <h3>SOVEREIGN PACK</h3>
       <div class="cool" id="cool-sov">—</div>
       <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
       <button class="draw-btn" id="btn-sov">FREE DRAW</button>
-      <button class="xc-btn" id="btn-sov-xc"><span lang="en">Extra draw · 200 XC</span><span lang="ko">200 XC로 추가 뽑기</span></button>
-      <div class="odds"><span class="oN">N 60.9%</span> · <span class="oR">R 33%</span> · <span class="oS">S 5%</span> · <span class="oSR">SR 1%</span> · <span class="oSSR">SSR 0.1%</span></div>
+      <button class="xc-btn" id="btn-sov-xc"><span lang="en">Extra draw · 150 XC</span><span lang="ko">150 XC로 추가 뽑기</span></button>
+      <div class="odds"><span class="oR">R 84.5%</span> · <span class="oS">S 10%</span> · <span class="oSR">SR 5%</span> · <span class="oSSR">SSR 0.5%</span></div>
+    </div>
+    <div class="pack elite">
+      <span class="pack-x3">×3</span>
+      <div class="pack-kind">Elite · Every 24 Hours</div>
+      <h3>OVERRIDE PACK</h3>
+      <div class="cool" id="cool-elite">—</div>
+      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
+      <button class="draw-btn" id="btn-elite">FREE DRAW</button>
+      <button class="xc-btn" id="btn-elite-xc"><span lang="en">Extra draw · 300 XC</span><span lang="ko">300 XC로 추가 뽑기</span></button>
+      <div class="odds"><span class="oR">R 78%</span> · <span class="oS">S 15%</span> · <span class="oSR">SR 6%</span> · <span class="oSSR">SSR 1%</span></div>
     </div>
   </div>
   <p class="note-line">
-    <span lang="en">Earn XC by finishing the Photo World Cup (+5, 3/day) and dusting duplicate cards<br>Collection is saved in this browser · Odds always public · 1st Edition</span>
-    <span lang="ko">XC는 이상형 월드컵 완주(+5, 하루 3회)·중복 카드 분해로 모을 수 있습니다<br>컬렉션은 이 브라우저에 저장됩니다 · 확률 상시 공개 · 1st Edition</span>
+    <span lang="en">Earn XC from Daily Signal quests (World Cup · OVERRIDE GRID · this gacha) and dusting duplicates<br>Collection is saved in this browser · Odds always public · 1st Edition</span>
+    <span lang="ko">XC는 데일리 시그널 퀘스트(월드컵·오버라이드 그리드·이 가챠)와 중복 카드 분해로 모을 수 있습니다<br>컬렉션은 이 브라우저에 저장됩니다 · 확률 상시 공개 · 1st Edition</span>
   </p>
 
   <div class="col-head">
@@ -257,31 +287,40 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
   <div class="album" id="album"></div>
 </div>
 
-<!-- 뽑기 연출 -->
+<!-- 뽑기 연출 (3장) -->
 <div class="reveal" id="reveal">
+  <div class="pack-title" id="pack-title"></div>
   <div class="flip-zone" id="flip-zone">
-    <div class="flip-card" id="flip-card">
-      <div class="face back">
-        <div class="logo-x">X</div>
-        <div class="logo-t">XENA CARDS</div>
-        <small>1ST EDITION</small>
+    <div class="triple-row" id="triple-row">
+      <div class="flip-card" data-i="0">
+        <div class="inner">
+          <div class="face back"><div class="logo-x">X</div><div class="logo-t">XENA CARDS</div></div>
+          <div class="face front"><span class="card-badge" data-badge="0"></span><img data-img="0" src="" alt="card 1"><div class="fmeta"><small data-grade="0"></small><b data-name="0"></b></div></div>
+        </div>
       </div>
-      <div class="face front" id="front-face">
-        <img id="rv-img" src="" alt="뽑은 카드">
-        <div class="fmeta"><small id="rv-grade"></small><b id="rv-name"></b></div>
+      <div class="flip-card" data-i="1">
+        <div class="inner">
+          <div class="face back"><div class="logo-x">X</div><div class="logo-t">XENA CARDS</div></div>
+          <div class="face front"><span class="card-badge" data-badge="1"></span><img data-img="1" src="" alt="card 2"><div class="fmeta"><small data-grade="1"></small><b data-name="1"></b></div></div>
+        </div>
+      </div>
+      <div class="flip-card" data-i="2">
+        <div class="inner">
+          <div class="face back"><div class="logo-x">X</div><div class="logo-t">XENA CARDS</div></div>
+          <div class="face front"><span class="card-badge" data-badge="2"></span><img data-img="2" src="" alt="card 3"><div class="fmeta"><small data-grade="2"></small><b data-name="2"></b></div></div>
+        </div>
       </div>
     </div>
   </div>
-  <div class="reveal-tip" id="reveal-tip"><span lang="en">TAP THE CARD TO REVEAL</span><span lang="ko">카드를 탭해서 공개</span></div>
-  <div class="new-badge" id="new-badge"></div>
+  <div class="reveal-tip" id="reveal-tip"><span lang="en">TAP THE CARDS TO REVEAL</span><span lang="ko">카드를 탭해서 공개</span></div>
   <div class="reveal-actions" id="reveal-actions">
     <button class="rv-btn primary" id="rv-close"><span lang="en">OK</span><span lang="ko">확인</span></button>
     <button class="rv-btn" id="rv-share"><span lang="en">Show off</span><span lang="ko">자랑하기</span></button>
-    <button class="rv-btn" id="rv-save"><span lang="en">Save card</span><span lang="ko">카드 저장</span></button>
+    <button class="rv-btn" id="rv-save"><span lang="en">Save Cards</span><span lang="ko">카드 저장</span></button>
   </div>
 </div>
 
-<!-- 카드 상세 -->
+<!-- 카드 상세(도감) -->
 <div class="detail" id="detail">
   <div class="detail-inner">
     <img id="dt-img" src="" alt="">
@@ -290,6 +329,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
     <div class="drow">
       <button class="rv-btn" id="dt-share"><span lang="en">Show off</span><span lang="ko">자랑하기</span></button>
       <button class="rv-btn" id="dt-dust"></button>
+      <button class="rv-btn" id="dt-save"><span lang="en">Save card</span><span lang="ko">카드 저장</span></button>
       <button class="rv-btn primary" id="dt-close"><span lang="en">Close</span><span lang="ko">닫기</span></button>
     </div>
   </div>
@@ -307,11 +347,14 @@ function t(en, ko){ return lang === 'ko' ? ko : en; }
 var GRADE_COLOR = {N:'#b9b9c6', R:'#3fe0ff', S:'#a06bff', SR:'#ff2fb0', SSR:'#e8c468'};
 var GRADE_LABEL = {N:'NORMAL', R:'RARE', S:'SUPER', SR:'SUPER RARE', SSR:'SOVEREIGN'};
 var DUST = {N:1, R:3, S:10, SR:30, SSR:100};
+var DRAW_COUNT = 3;
 var PACKS = {
   signal: {label:'SIGNAL PACK', coolMs:8*3600*1000, price:50,
     odds:[['SR',0.001],['S',0.03],['R',0.269],['N',0.700]]},
-  sov: {label:'SOVEREIGN PACK', coolMs:24*3600*1000, price:200,
-    odds:[['SSR',0.001],['SR',0.010],['S',0.05],['R',0.330],['N',0.609]]}
+  sov: {label:'SOVEREIGN PACK', coolMs:12*3600*1000, price:150,
+    odds:[['SSR',0.005],['SR',0.05],['S',0.10],['R',0.845]]},
+  elite: {label:'OVERRIDE PACK', coolMs:24*3600*1000, price:300,
+    odds:[['SSR',0.01],['SR',0.06],['S',0.15],['R',0.78]]}
 };
 var FALLBACK = {SSR:'SR', SR:'S', S:'R', R:'N', N:null};
 
@@ -329,7 +372,8 @@ function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || de
 function save(key, v){ try{ localStorage.setItem(key, JSON.stringify(v)); }catch(e){} }
 var st = load(SAVE_KEY, {});
 if(!st.owned) st.owned = {};
-if(!st.packs) st.packs = {signal:0, sov:0};
+if(!st.packs) st.packs = {};
+['signal','sov','elite'].forEach(function(p){ if(typeof st.packs[p] !== 'number') st.packs[p] = 0; });
 var wallet = load(WALLET_KEY, {});
 if(typeof wallet.xc !== 'number') wallet.xc = 0;
 if(!st.welcomed){
@@ -337,20 +381,28 @@ if(!st.welcomed){
   wallet.xc += 50;
   save(WALLET_KEY, wallet);
   save(SAVE_KEY, st);
-  setTimeout(function(){ toast(t('Welcome bonus +50 XC — enough for one extra draw!', '웰컴 보너스 +50 XC — 추가 뽑기 1회 가능!')); }, 700);
+  setTimeout(function(){ toast(t('Welcome bonus +50 XC!', '웰컴 보너스 +50 XC!')); }, 700);
 }
 
 var $ = function(id){ return document.getElementById(id); };
-function toastMsg(){}
 var toastTimer = null;
 function toast(msg){
-  var t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  var el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2600);
 }
 function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
+
+/* 이미지 우클릭/드래그 보호 (도감·상세·연출 전역) */
+document.addEventListener('contextmenu', function(e){
+  var tgt = e.target;
+  if(tgt && tgt.tagName === 'IMG'){
+    e.preventDefault();
+    toast(t('Use the Save Card button to download', '카드 저장 버튼으로 다운로드하세요'));
+  }
+});
 
 /* ── 뽑기 로직 ── */
 function rollGrade(pack){
@@ -359,7 +411,7 @@ function rollGrade(pack){
     acc += odds[i][1];
     if(r < acc) return odds[i][0];
   }
-  return 'N';
+  return odds[odds.length-1][0];
 }
 function pickCard(grade){
   var g = grade;
@@ -368,68 +420,84 @@ function pickCard(grade){
   var pool = byGrade[g];
   return pool[Math.floor(Math.random()*pool.length)];
 }
-var lastDrawn = null;
+var lastDrawn = null; /* [{card, isNew}, ...] x3 */
 function draw(pack, useXC){
   if(!AVAIL.length){ toast(t('Cards are being prepared', '카드 준비 중입니다')); return; }
   var now = Date.now();
   if(useXC){
-    if(wallet.xc < PACKS[pack].price){ toast(t('Not enough XC — earn it in the World Cup or by dusting duplicates', 'XC가 부족합니다 — 월드컵 완주·중복 분해로 모을 수 있어요')); return; }
+    if(wallet.xc < PACKS[pack].price){ toast(t('Not enough XC — check Daily Signal quests', 'XC가 부족합니다 — 데일리 시그널 퀘스트를 확인하세요')); return; }
     wallet.xc -= PACKS[pack].price;
     save(WALLET_KEY, wallet);
   } else {
     if(now - (st.packs[pack]||0) < PACKS[pack].coolMs) return;
     st.packs[pack] = now;
   }
-  var card = pickCard(rollGrade(pack));
-  if(!card){ toast(t('Cards are being prepared', '카드 준비 중입니다')); return; }
-  var isNew = !st.owned[card.id];
-  st.owned[card.id] = (st.owned[card.id]||0) + 1;
+  var pulls = [];
+  for(var i=0;i<DRAW_COUNT;i++){
+    var card = pickCard(rollGrade(pack));
+    if(!card) continue;
+    var isNew = !st.owned[card.id];
+    st.owned[card.id] = (st.owned[card.id]||0) + 1;
+    pulls.push({card:card, isNew:isNew});
+  }
+  if(!pulls.length){ toast(t('Cards are being prepared', '카드 준비 중입니다')); return; }
   save(SAVE_KEY, st);
-  lastDrawn = {card:card, isNew:isNew};
-  openReveal(card, isNew);
+  lastDrawn = pulls;
+  openReveal(pulls, PACKS[pack].label);
   renderAll();
 }
 
-/* ── 연출 ── */
+/* ── 연출 (3장 동시 공개) ── */
 var flipped = false;
-function openReveal(card, isNew){
+function openReveal(pulls, packLabel){
   flipped = false;
-  var f = $('flip-card');
-  f.classList.remove('flipped');
-  $('rv-img').src = card.img;
-  $('rv-grade').textContent = GRADE_LABEL[card.grade];
-  $('rv-grade').style.color = GRADE_COLOR[card.grade];
-  $('rv-name').textContent = card.name;
-  $('front-face').style.borderColor = GRADE_COLOR[card.grade];
-  $('front-face').style.boxShadow = '0 0 50px ' + GRADE_COLOR[card.grade] + '55';
+  $('pack-title').textContent = packLabel;
+  document.querySelectorAll('.flip-card').forEach(function(el){ el.classList.remove('flipped'); });
+  pulls.forEach(function(p, i){
+    var g = p.card.grade;
+    $('triple-row').querySelector('[data-img="'+i+'"]').src = p.card.img;
+    $('triple-row').querySelector('[data-grade="'+i+'"]').textContent = GRADE_LABEL[g];
+    $('triple-row').querySelector('[data-grade="'+i+'"]').style.color = GRADE_COLOR[g];
+    $('triple-row').querySelector('[data-name="'+i+'"]').textContent = p.card.name;
+    var frontEl = document.querySelectorAll('.flip-card')[i].querySelector('.face.front');
+    frontEl.className = 'face front gframe-'+g;
+    var badge = $('triple-row').querySelector('[data-badge="'+i+'"]');
+    badge.className = 'card-badge';
+  });
+  /* 남는 슬롯(카드 부족 시) 숨김 */
+  document.querySelectorAll('.flip-card').forEach(function(el, i){ el.style.display = i < pulls.length ? '' : 'none'; });
   $('reveal-tip').style.display = '';
   $('reveal-actions').classList.remove('on');
-  var nb = $('new-badge');
-  nb.className = 'new-badge';
   $('reveal').classList.add('on');
 }
 $('flip-zone').addEventListener('click', function(){
   if(flipped || !lastDrawn) return;
   flipped = true;
-  $('flip-card').classList.add('flipped');
-  var g = lastDrawn.card.grade;
-  if(g==='SR' || g==='SSR'){
-    var fl = $('flash');
-    fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+  var hasRare = false;
+  document.querySelectorAll('.flip-card').forEach(function(el, i){
+    if(i >= lastDrawn.length) return;
+    setTimeout(function(){ el.classList.add('flipped'); }, i*180);
+    if(lastDrawn[i].card.grade === 'SR' || lastDrawn[i].card.grade === 'SSR') hasRare = true;
+  });
+  if(hasRare){
+    setTimeout(function(){
+      var fl = $('flash');
+      fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
+    }, 400);
   }
   setTimeout(function(){
     $('reveal-tip').style.display = 'none';
-    var nb = $('new-badge');
-    nb.classList.add('on', lastDrawn.isNew ? 'isnew' : 'isdupe');
-    nb.textContent = lastDrawn.isNew
-      ? t('★ NEW — added to collection!', '★ NEW — 도감 등록!')
-      : t('Duplicate — dust it for +'+DUST[g]+' XC', '중복 카드 — 분해하면 +'+DUST[g]+' XC');
+    lastDrawn.forEach(function(p, i){
+      var badge = $('triple-row').querySelector('[data-badge="'+i+'"]');
+      badge.classList.add('on', p.isNew ? 'isnew' : 'isdupe');
+      badge.textContent = p.isNew ? t('NEW','NEW') : t('DUP','중복');
+    });
     $('reveal-actions').classList.add('on');
-  }, 750);
+  }, 750 + (lastDrawn.length-1)*180);
 });
 $('rv-close').addEventListener('click', function(){ $('reveal').classList.remove('on'); });
-$('rv-share').addEventListener('click', function(){ if(lastDrawn) shareCard(lastDrawn.card); });
-$('rv-save').addEventListener('click', function(){ if(lastDrawn) downloadCard(lastDrawn.card); });
+$('rv-share').addEventListener('click', function(){ if(lastDrawn) shareCards(lastDrawn); });
+$('rv-save').addEventListener('click', function(){ if(lastDrawn) downloadCards(lastDrawn.map(function(p){return p.card;})); });
 
 /* ── 쿨다운 표시 ── */
 function fmtLeft(ms){
@@ -439,10 +507,10 @@ function fmtLeft(ms){
   return (h>0? h+'h ' : '') + m + 'm' + (h>0?'':' '+sec+'s');
 }
 function tickCooldowns(){
-  ['signal','sov'].forEach(function(p){
+  ['signal','sov','elite'].forEach(function(p){
     var left = PACKS[p].coolMs - (Date.now() - (st.packs[p]||0));
-    var btn = $(p==='signal'?'btn-signal':'btn-sov');
-    var cool = $(p==='signal'?'cool-signal':'cool-sov');
+    var btn = $('btn-'+p);
+    var cool = $('cool-'+p);
     if(left <= 0){
       btn.disabled = false;
       btn.textContent = t('FREE DRAW', '무료 뽑기');
@@ -452,7 +520,7 @@ function tickCooldowns(){
       btn.textContent = t('Free in '+fmtLeft(left), fmtLeft(left)+' 후 무료');
       cool.textContent = t('Next free draw in '+fmtLeft(left), '다음 무료까지 '+fmtLeft(left));
     }
-    var xcBtn = $(p==='signal'?'btn-signal-xc':'btn-sov-xc');
+    var xcBtn = $('btn-'+p+'-xc');
     xcBtn.disabled = wallet.xc < PACKS[p].price;
   });
 }
@@ -460,8 +528,10 @@ setInterval(tickCooldowns, 1000);
 
 $('btn-signal').addEventListener('click', function(){ draw('signal', false); });
 $('btn-sov').addEventListener('click', function(){ draw('sov', false); });
+$('btn-elite').addEventListener('click', function(){ draw('elite', false); });
 $('btn-signal-xc').addEventListener('click', function(){ draw('signal', true); });
 $('btn-sov-xc').addEventListener('click', function(){ draw('sov', true); });
+$('btn-elite-xc').addEventListener('click', function(){ draw('elite', true); });
 
 /* ── 컬렉션 ── */
 var curTab = 'ALL';
@@ -480,9 +550,9 @@ function renderAlbum(){
     if(curTab !== 'ALL' && c.grade !== curTab) return;
     var n = st.owned[c.id] || 0;
     var cell = document.createElement('div');
-    cell.className = 'ccard g-'+c.grade+' '+(n>0?'owned':'locked');
+    cell.className = 'ccard '+(n>0?('owned gframe-'+c.grade):'locked');
     cell.innerHTML =
-      '<img src="'+c.img+'" alt="'+(n>0?c.name:'미보유 카드')+'" loading="lazy">'+
+      '<img src="'+c.img+'" alt="'+(n>0?c.name:'locked card')+'" loading="lazy" draggable="false">'+
       '<span class="gtag '+c.grade+'">'+c.grade+'</span>'+
       (n>1 ? '<span class="dupe">&times;'+n+'</span>' : '')+
       (n>0 ? '<div class="cinfo"><b>'+c.name+'</b></div>' : '');
@@ -497,11 +567,12 @@ function renderRate(){
 }
 function renderAll(){ renderWallet(); renderAlbum(); renderRate(); tickCooldowns(); }
 
-/* ── 카드 상세 & 분해 ── */
+/* ── 카드 상세 & 분해 & 저장 (도감) ── */
 var detailCard = null;
 function openDetail(c){
   detailCard = c;
   $('dt-img').src = c.img;
+  $('dt-img').className = 'gframe-'+c.grade;
   $('dt-name').textContent = c.name;
   var n = st.owned[c.id] || 0;
   $('dt-grade').textContent = GRADE_LABEL[c.grade] + t(' · owned ×'+n, ' · 보유 '+n+'장');
@@ -527,6 +598,7 @@ $('dt-dust').addEventListener('click', function(){
   renderAll();
 });
 $('dt-share').addEventListener('click', function(){ if(detailCard) shareCard(detailCard); });
+$('dt-save').addEventListener('click', function(){ if(detailCard) downloadCards([detailCard]); });
 
 /* ── 공유 ── */
 function shareText(c){
@@ -548,52 +620,91 @@ function shareCard(c){
     toast(t('Sharing is not supported in this browser', '이 브라우저는 공유를 지원하지 않습니다'));
   }
 }
-/* 공유용 카드 이미지 (XENA CARDS 로고 + 등급 프레임 각인) */
-function downloadCard(c){
-  var img = new Image();
-  img.onload = function(){
+var GRADE_RANK = {N:0,R:1,S:2,SR:3,SSR:4};
+function shareCards(pulls){
+  var best = pulls.reduce(function(a,b){ return GRADE_RANK[b.card.grade] > GRADE_RANK[a.card.grade] ? b : a; });
+  var text = t(
+    'I opened a pack on XENA CARDS 🃏 3 cards, best pull: ['+GRADE_LABEL[best.card.grade]+'] '+best.card.name+' — try your luck!',
+    'XENA CARDS 팩 오픈! 🃏 3장 중 최고 등급: ['+GRADE_LABEL[best.card.grade]+'] '+best.card.name+' — 너도 뽑아봐!'
+  );
+  var full = text+'\n'+SITE_URL;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(full).then(function(){
+      toast(t('Message + link copied — paste it anywhere!', '문구+링크가 복사됐습니다 — 어디든 붙여넣기 하세요!'));
+    },function(){});
+  }
+  if(navigator.share){
+    navigator.share({title:'XENA CARDS', text:text, url:SITE_URL}).catch(function(){});
+  } else if(!(navigator.clipboard && navigator.clipboard.writeText)){
+    toast(t('Sharing is not supported in this browser', '이 브라우저는 공유를 지원하지 않습니다'));
+  }
+}
+/* 공유/저장용 카드 이미지 (등급 프레임 각인) — 1장이면 단일, 여러 장이면 가로 합성 */
+function downloadCards(cards){
+  var imgs = cards.map(function(){ return new Image(); });
+  var loaded = 0;
+  imgs.forEach(function(img, i){
+    img.onload = function(){
+      loaded++;
+      if(loaded === cards.length) render();
+    };
+    img.onerror = function(){ toast(t('Failed to load image', '이미지 로드 실패')); };
+    img.src = cards[i].img;
+  });
+  function render(){
     try{
-      var W = 900, H = 1440;
+      var single = cards.length === 1;
+      var cardW = single ? 900 : 620, cardH = single ? 1440 : 980;
+      var gap = 24;
+      var W = single ? cardW : (cardW*cards.length + gap*(cards.length-1) + 80);
+      var H = cardH + 60;
       var cv = document.createElement('canvas');
       cv.width = W; cv.height = H;
       var ctx = cv.getContext('2d');
       ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
       var grd = ctx.createRadialGradient(W/2,-100,50,W/2,0,900);
-      grd.addColorStop(0,'rgba(110,47,217,.4)'); grd.addColorStop(1,'rgba(0,0,0,0)');
+      grd.addColorStop(0,'rgba(110,47,217,.35)'); grd.addColorStop(1,'rgba(0,0,0,0)');
       ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
-      var px=70, py=230, pw=W-140, ph=Math.round(pw*4/3);
-      var ir=img.width/img.height, pr=pw/ph, sx,sy,sw,sh;
-      if(ir>pr){ sh=img.height; sw=sh*pr; sx=(img.width-sw)/2; sy=0; }
-      else{ sw=img.width; sh=sw/pr; sx=0; sy=(img.height-sh)/2; }
-      ctx.save(); rr(ctx,px,py,pw,ph,24); ctx.clip();
-      ctx.drawImage(img,sx,sy,sw,sh,px,py,pw,ph); ctx.restore();
-      ctx.strokeStyle = GRADE_COLOR[c.grade]; ctx.lineWidth = 5;
-      rr(ctx,px,py,pw,ph,24); ctx.stroke();
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#a06bff';
-      ctx.font = '800 58px Manrope, Arial, sans-serif';
-      ctx.fillText('X', W/2, 92);
-      ctx.fillStyle = '#e6e6ee';
-      ctx.font = '500 30px "JetBrains Mono", monospace';
-      ctx.fillText('X E N A   C A R D S', W/2, 140);
-      ctx.fillStyle = GRADE_COLOR[c.grade];
-      ctx.font = '700 34px "JetBrains Mono", monospace';
-      ctx.fillText('[ '+GRADE_LABEL[c.grade]+' ]', W/2, 196);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '700 42px Manrope, Arial, sans-serif';
-      ctx.fillText(c.name, W/2, py+ph+80);
-      ctx.fillStyle = 'rgba(230,230,238,.55)';
-      ctx.font = '500 24px "JetBrains Mono", monospace';
-      ctx.fillText('xenauniverse.com/games/gacha', W/2, H-42);
+      cards.forEach(function(c, i){
+        var ox = single ? 0 : (40 + i*(cardW+gap));
+        drawOneCard(ctx, imgs[i], c, ox, 20, cardW, cardH, single);
+      });
       var a = document.createElement('a');
-      a.download = 'xena-card-'+c.id+'.png';
+      a.download = cards.length === 1 ? 'xena-card-'+cards[0].id+'.png' : 'xena-cards-pack.png';
       a.href = cv.toDataURL('image/png');
       a.click();
       toast(t('Card image saved — post it to your Insta story!', '카드 이미지 저장 완료 — 인스타 스토리에 올려보세요!'));
     }catch(e){ toast(t('Failed to save image', '이미지 저장 실패')); }
-  };
-  img.onerror = function(){ toast(t('Failed to load image', '이미지 로드 실패')); };
-  img.src = c.img;
+  }
+}
+function drawOneCard(ctx, img, c, ox, oy, W, H, single){
+  var px = ox + (single?70:36), py = oy + (single?160:110);
+  var pw = W - (single?140:72), ph = Math.round(pw*4/3);
+  var ir=img.width/img.height, pr=pw/ph, sx,sy,sw,sh;
+  if(ir>pr){ sh=img.height; sw=sh*pr; sx=(img.width-sw)/2; sy=0; }
+  else{ sw=img.width; sh=sw/pr; sx=0; sy=(img.height-sh)/2; }
+  ctx.save(); rr(ctx,px,py,pw,ph,20); ctx.clip();
+  ctx.drawImage(img,sx,sy,sw,sh,px,py,pw,ph); ctx.restore();
+  ctx.strokeStyle = GRADE_COLOR[c.grade]; ctx.lineWidth = single?5:4;
+  ctx.shadowColor = GRADE_COLOR[c.grade]; ctx.shadowBlur = c.grade==='SSR'?26:(c.grade==='SR'?18:8);
+  rr(ctx,px,py,pw,ph,20); ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.textAlign = 'center';
+  if(single){
+    ctx.fillStyle = '#a06bff';
+    ctx.font = '800 58px Manrope, Arial, sans-serif';
+    ctx.fillText('X', ox+W/2, oy+82);
+    ctx.fillStyle = '#e6e6ee';
+    ctx.font = '500 26px "JetBrains Mono", monospace';
+    ctx.fillText('X E N A   C A R D S', ox+W/2, oy+124);
+  }
+  ctx.fillStyle = GRADE_COLOR[c.grade];
+  ctx.font = (single?'700 30px ':'700 22px ')+'"JetBrains Mono", monospace';
+  ctx.fillText('[ '+GRADE_LABEL[c.grade]+' ]', ox+W/2, py+ph+(single?52:38));
+  ctx.fillStyle = '#ffffff';
+  ctx.font = (single?'700 36px ':'700 22px ')+'Manrope, Arial, sans-serif';
+  var name = c.name.length > (single?28:16) ? c.name.slice(0,(single?26:14))+'…' : c.name;
+  ctx.fillText(name, ox+W/2, py+ph+(single?92:66));
 }
 function rr(ctx,x,y,w,h,r){
   ctx.beginPath();
