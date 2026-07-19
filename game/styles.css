@@ -169,14 +169,14 @@ body[data-arena] .side-panel { background: rgba(5,8,15,.66); }
 .emote-float img { width: 68px; height: 68px; margin: -2px auto 3px; object-fit: cover; border-radius: 50%; filter: drop-shadow(0 0 12px currentColor); }
 .emote-float span { margin-top: 4px; color: #f0f4ff; font-size: 10px; font-weight: 800; }
 .emote-bar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 5px; }
-.emote-button { min-height: 38px; color: #c7d0e4; border: 1px solid var(--line); background: rgba(10,13,20,.82); cursor: pointer; }
+.emote-button { min-height: 52px; color: #c7d0e4; border: 1px solid var(--line); background: rgba(10,13,20,.82); cursor: pointer; }
 .emote-button:hover { color: var(--cyan); border-color: var(--cyan); }
 .emote-button.locked { color: #687084; cursor: not-allowed; }
 .emote-button.locked b { color: #687084; font-size: 8px; }
 .emote-button img, .emote-button span { display: inline-block; vertical-align: middle; }
-.emote-button img { width: 27px; height: 27px; margin-right: 4px; object-fit: cover; border-radius: 50%; }
+.emote-button img { width: 38px; height: 38px; margin-right: 6px; object-fit: cover; border-radius: 50%; }
 .emote-button.locked img { filter: grayscale(1) brightness(.4); }
-.emote-button span { font-size: 9px; }
+.emote-button span { font-size: 11px; font-weight: 800; }
 .asset-vfx { position: absolute; z-index: 15; left: var(--vfx-left); top: var(--vfx-top); width: 48%; aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; mix-blend-mode: screen; animation: asset-vfx-strike .72s cubic-bezier(.15,.74,.28,1) forwards; }
 .asset-vfx img { width: 100%; height: 100%; object-fit: contain; filter: saturate(1.35) contrast(1.15) drop-shadow(0 0 18px rgba(120,230,255,.75)); }
 .scene3d { position: absolute; inset: 0; z-index: 3; overflow: hidden; pointer-events: none; background: transparent; transform: rotateX(4deg); transform-origin: center bottom; }
@@ -401,8 +401,13 @@ body[data-arena] .side-panel { background: rgba(5,8,15,.66); }
 .shop-card.kind-skin .shop-art { object-position: center; transform: scale(1.04); }
 .shop-card.kind-board .shop-art, .shop-card.kind-effect .shop-art, .shop-card.kind-emote .shop-art { object-position: center; transform: scale(1); }
 .shop-card.kind-frame .shop-art, .shop-card.kind-effect .shop-art { background: #05070b; mix-blend-mode: screen; }
+.shop-card.kind-frame .shop-visual { overflow: visible; margin-bottom: 18px; }
+.shop-card.kind-frame .shop-art { object-fit: contain; object-position: center; transform: scale(.78); padding: 8px; mix-blend-mode: normal; }
+.shop-card.kind-frame:hover .shop-art, .shop-card.kind-frame .shop-visual:focus-visible .shop-art { transform: scale(.84); }
+.shop-card.kind-frame .shop-visual span { bottom: -22px; padding: 3px 4px; background: rgba(4,7,12,.92); border: 1px solid rgba(255,255,255,.16); }
 .showcase-modal.kind-frame .showcase-art, .showcase-modal.kind-effect .showcase-art { background: #05070b; }
 .showcase-modal.kind-frame .showcase-art img, .showcase-modal.kind-effect .showcase-art img { mix-blend-mode: normal; }
+.showcase-modal.kind-frame .showcase-art img { object-fit: contain; transform: scale(.76); padding: 18px; }
 .piece-frame-art { position: absolute; inset: -3px; z-index: 3; width: calc(100% + 6px) !important; height: calc(100% + 6px) !important; object-fit: fill !important; transform: none !important; filter: contrast(1.12) saturate(1.2) drop-shadow(0 0 5px currentColor); pointer-events: none; }
 .showcase-art::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 18%; z-index: 1; background: linear-gradient(180deg, transparent, #080b12 56%); pointer-events: none; }
 .showcase-copy { position: relative; z-index: 1; }

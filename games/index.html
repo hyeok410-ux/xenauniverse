@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-lang="en">
 <head>
 <meta charset="UTF-8">
@@ -40,16 +40,21 @@ a{color:inherit;text-decoration:none;}
 [data-lang="ko"] [lang="en"]{display:none;}
 [data-lang="en"] [lang="ko"]{display:none;}
 
+html,body{background:#07040f;}
 .bg-fx{position:fixed;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(110,47,217,.24), transparent 60%),
-    radial-gradient(ellipse 45% 35% at 88% 100%, rgba(63,224,255,.09), transparent 60%),
-    radial-gradient(ellipse 40% 30% at 8% 92%, rgba(255,47,176,.07), transparent 60%);}
-.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;
-  background-image:linear-gradient(rgba(160,107,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(160,107,255,.05) 1px,transparent 1px);
-  background-size:56px 56px;
-  mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
-  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);}
+    radial-gradient(ellipse 80% 55% at 50% -8%, rgba(160,107,255,.4), transparent 62%),
+    radial-gradient(ellipse 55% 42% at 92% 8%, rgba(63,224,255,.22), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 100%, rgba(63,224,255,.2), transparent 58%),
+    radial-gradient(ellipse 50% 40% at 6% 96%, rgba(255,47,176,.2), transparent 58%),
+    radial-gradient(ellipse 40% 35% at 8% 30%, rgba(232,196,104,.1), transparent 55%);
+  animation:bgDrift 14s ease-in-out infinite alternate;}
+@keyframes bgDrift{0%{filter:brightness(1) saturate(1);}100%{filter:brightness(1.14) saturate(1.15);}}
+.bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(160,107,255,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(63,224,255,.08) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(ellipse 85% 75% at 50% 30%, #000 35%, transparent 100%);
+  -webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 30%, #000 35%, transparent 100%);}
 .grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation:grain 8s steps(10) infinite;}
@@ -77,8 +82,8 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
 .head p{color:var(--text-dim);font-size:.95rem;max-width:460px;margin:0 auto;line-height:1.75;}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:860px;margin:0 auto;}
-.gcard{position:relative;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;border:1px solid var(--hair);
-  background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.012));backdrop-filter:blur(16px);
+.gcard{position:relative;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;border:1px solid rgba(160,107,255,.16);
+  background:linear-gradient(165deg, rgba(160,107,255,.09), rgba(255,255,255,.02));backdrop-filter:blur(16px);
   transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease;}
 .gcard.live:hover{transform:translateY(-5px);}
 .gcard.grid-theme:hover{border-color:rgba(232,196,104,.5);box-shadow:0 18px 50px rgba(232,196,104,.14);}
@@ -155,7 +160,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="en">One card, one fortune, every day. Claim daily XC and track quests across every XENA game.</span>
           <span lang="ko">하루 한 장의 카드와 한 줄의 시그널. 매일 XC를 받고 전체 게임 퀘스트를 확인하세요.</span>
         </p>
-        <a class="play-btn" href="signal/" target="_blank" rel="noopener"><span lang="en">CHECK IN →</span><span lang="ko">시그널 받기 →</span></a>
+        <a class="play-btn" href="signal/"><span lang="en">CHECK IN →</span><span lang="ko">시그널 받기 →</span></a>
       </div>
     </div>
 
@@ -163,7 +168,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
     <div class="gcard live grid-theme">
       <div class="thumb">
         <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/gallery/game-scene.jpg" alt="OVERRIDE GRID">
+        <img src="../images/thumbs/thumb-grid.jpg" alt="OVERRIDE GRID">
       </div>
       <div class="gbody">
         <div class="gkind">Strategy Chess</div>
@@ -172,7 +177,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="en">Cyberpunk strategy chess set in XENA's world. Rewrite the rules of the System's board — 3D battles &amp; online matches with Google login.</span>
           <span lang="ko">XENA 세계관의 사이버펑크 전략 체스. 시스템의 보드 위에서 룰을 다시 쓰세요. 3D 전투 · 구글 로그인 온라인 대전 지원.</span>
         </p>
-        <a class="play-btn" href="../game/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
+        <a class="play-btn" href="../game/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
     </div>
 
@@ -189,7 +194,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="en">Free daily photo card gacha. From N to the top grade SOVEREIGN — dust duplicates for credits and complete the collection.</span>
           <span lang="ko">매일 무료로 뽑는 XENA 포토카드. N부터 최고 등급 Sovereign까지 — 중복은 분해해서 크레딧으로, 컬렉션을 완성하라.</span>
         </p>
-        <a class="play-btn" href="gacha/" target="_blank" rel="noopener"><span lang="en">DRAW NOW →</span><span lang="ko">지금 뽑기 →</span></a>
+        <a class="play-btn" href="gacha/"><span lang="en">DRAW NOW →</span><span lang="ko">지금 뽑기 →</span></a>
       </div>
     </div>
 
@@ -206,7 +211,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="en">Reconnect the city's broken signal lines — match identical tiles with a path of two turns or fewer.</span>
           <span lang="ko">끊긴 시그널 회선을 다시 이어라 — 같은 타일을 꺾임 2번 이하의 선으로 연결하는 사천성 퍼즐.</span>
         </p>
-        <a class="play-btn" style="background:var(--silver);color:var(--black);" href="shisen/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
+        <a class="play-btn" style="background:var(--silver);color:var(--black);" href="shisen/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
     </div>
 
@@ -223,7 +228,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="en">Flip and match XENA photo cards before time runs out. 10 stages, limited mistakes, daily XC.</span>
           <span lang="ko">시간 안에 카드 짝을 맞춰라. 10스테이지, 실수 제한, 하루 첫 클리어 XC 보상.</span>
         </p>
-        <a class="play-btn" href="memory/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
+        <a class="play-btn" href="memory/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
     </div>
 
@@ -240,7 +245,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="en">XENA's photo cuts face off in a tournament. Round of 8 or 16 — find your one pick and share it.</span>
           <span lang="ko">XENA 화보 컷들이 토너먼트로 맞붙는다. 8강 또는 16강 — 당신의 원픽 한 장을 찾아 SNS에 자랑하세요.</span>
         </p>
-        <a class="play-btn" href="world-cup/" target="_blank" rel="noopener"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
+        <a class="play-btn" href="world-cup/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
     </div>
 
@@ -361,3 +366,4 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 </script>
 </body>
 </html>
+

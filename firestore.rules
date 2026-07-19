@@ -48,6 +48,98 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /users/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function validNickname(value) {
+        return value is string
+          && value.size() >= 2
+          && value.size() <= 16
+          && value.matches('^[A-Za-z0-9가-힣 _-]+$');
+      }
+
+      function validCreateUser() {
+        return request.resource.data.keys().hasOnly([
+            'uid', 'nickname', 'nicknameLower', 'nicknameLocked',
+            'createdAt', 'updatedAt'
+          ])
+          && request.resource.data.uid == userId
+          && validNickname(request.resource.data.nickname)
+          && request.resource.data.nicknameLower is string
+          && request.resource.data.nicknameLower.size() >= 2
+          && request.resource.data.nicknameLower.size() <= 16
+          && request.resource.data.nicknameLocked == true
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp;
+      }
+
+      function validUpdateUser() {
+        return isOwner()
+          && resource.data.nicknameLocked == true
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['updatedAt'])
+          && request.resource.data.updatedAt is timestamp;
+      }
+
+      allow read: if isOwner();
+      allow create: if isOwner() && validCreateUser();
+      allow update: if validUpdateUser();
+      allow delete: if false;
+    }
+
+    match /gameProgress/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function validProgress() {
+        return request.resource.data.keys().hasOnly([
+            'uid', 'schemaVersion', 'gacha', 'worldcup',
+            'memory', 'shisen', 'updatedAt'
+          ])
+          && request.resource.data.uid == userId
+          && request.resource.data.schemaVersion in [1, 2]
+          && request.resource.data.updatedAt is timestamp;
+      }
+
+      allow read: if isOwner();
+      allow create, update: if isOwner() && validProgress();
+      allow delete: if false;
+    }
+
+    match /leaderboards/{boardId}/entries/{userId} {
+      function signedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner() {
+        return signedIn() && request.auth.uid == userId;
+      }
+
+      function validLeaderboardEntry() {
+        return request.resource.data.keys().hasOnly([
+            'uid', 'nickname', 'game', 'week', 'stage', 'score', 'updatedAt'
+          ])
+          && request.resource.data.uid == userId
+          && request.resource.data.game in ['memory', 'shisen']
+          && request.resource.data.week is string
+          && request.resource.data.week.size() <= 12
+          && request.resource.data.stage is string
+          && request.resource.data.stage.size() <= 40
+          && request.resource.data.score is number
+          && request.resource.data.score >= 0
+          && request.resource.data.score <= 999999999
+          && request.resource.data.nickname is string
+          && request.resource.data.nickname.size() <= 16
+          && request.resource.data.updatedAt is timestamp;
+      }
+
+      allow read: if true;
+      allow create, update: if isOwner() && validLeaderboardEntry();
+      allow delete: if false;
+    }
+
     match /matches/{roomCode} {
       function signedIn() {
         return request.auth != null;

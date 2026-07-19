@@ -395,6 +395,7 @@
   let gameMode = storage.get("og_game_mode") || "ai";
   let language = storage.get("og_language") || "ko";
   let aiDifficulty = storage.get("og_ai_difficulty") || "normal";
+  let aiOpponentPack = storage.get("og_ai_opponent_pack") || "sovran";
   let eventDifficulty = "easy";
   let eventClaims = safeJson(storage.get("og_event_claims"), {}) || {};
   let gridRating = Math.max(0, Number(storage.get("og_grid_rating") || 0) || 0);
@@ -580,6 +581,7 @@
     storage.set("og_game_mode", gameMode);
     storage.set("og_language", language);
     storage.set("og_ai_difficulty", aiDifficulty);
+    storage.set("og_ai_opponent_pack", aiOpponentPack);
     storage.set("og_event_claims", JSON.stringify(eventClaims));
     storage.set("og_grid_rating", String(gridRating));
     storage.set("og_cosmetics", JSON.stringify(cosmeticOwned));
@@ -608,6 +610,21 @@
     saveMeta();
     const cloud = window.XenaCloudSync;
     if (cloud && cloud.snapshot().user) cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
+  }
+
+  async function syncTrustedWallet() {
+    const cloud = window.XenaCloudSync;
+    if (!cloud || !cloud.snapshot().user || !cloud.ensurePlayer) return false;
+    try {
+      const walletState = await cloud.ensurePlayer();
+      credits = Math.max(0, Number(walletState.credits) || 0);
+      shards = Math.max(0, Number(walletState.shards) || 0);
+      saveMeta();
+      refreshCurrentScreen();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function t(key) {
@@ -798,6 +815,7 @@
       if (login) login.addEventListener("click", async () => {
         try {
           await cloud.signIn();
+          await syncTrustedWallet();
           const remote = await cloud.load();
           if (!remote) {
             await cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
@@ -910,13 +928,18 @@
       </button>`;
     };
     const packIds = Object.keys(G.PACKS);
+    if (!G.PACKS[aiOpponentPack]) aiOpponentPack = chosen === "xena" ? "sovran" : "xena";
+    const aiOpponentOptions = packIds.map((id) => {
+      const pack = G.PACKS[id];
+      return `<button class="mode-option ${aiOpponentPack === id ? "active" : ""}" data-ai-opponent="${id}"><b>${pack.leaderName}</b><span>${pack.name}</span></button>`;
+    }).join("");
     const canStartSelected = owned.includes(chosen) || (!committedStarter && STARTER_PACKS.has(chosen));
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
       <section class="setup"><div class="demo-banner"><b>${language === "en" ? "FREE WEB PROTOTYPE" : "무료 웹 체험판"}</b><span>${language === "en" ? "AI, local and invite-code online matches are open. Payments remain disabled." : "AI·로컬·초대 코드 온라인 대전을 이용할 수 있습니다. 결제는 비활성화 상태입니다."}</span></div><h1>CHOOSE YOUR <span>FIRST SIGNAL</span></h1>
       <p class="lead">${language === "en" ? "Choose one starter pack. Every piece follows the same chess rules; each leader changes the skills and combat presentation." : "스타터 팩 하나를 선택하세요. 모든 말은 같은 체스 규칙을 따르며 리더의 기술과 전장 연출만 달라집니다."}</p>
       <div class="pack-grid">${packIds.map(card).join("")}</div>
       <div class="mode-control"><small>${t("mode")}</small><div class="mode-options">${Object.entries(MODES).map(([id]) => `<button class="mode-option ${gameMode === id ? "active" : ""}" data-mode="${id}"><b>${modeText(id, 0)}</b><span>${modeText(id, 1)}</span></button>`).join("")}</div></div>
-      ${gameMode === "ai" ? `<div class="difficulty-control"><small>${t("difficulty")}</small><div class="mode-options">${Object.entries(DIFFICULTIES).map(([id, difficulty]) => `<button class="mode-option ${aiDifficulty === id ? "active" : ""}" data-difficulty="${id}"><b>${language === "en" ? ({ easy: "Easy", normal: "Normal", hard: "Hard" })[id] : difficulty.label}</b><span>${language === "en" ? ({ easy: "Basic board reading", normal: "Two-ply search", hard: "Three-ply search" })[id] : difficulty.description} · ${t("victory")} ${difficulty.credits}</span></button>`).join("")}</div></div>` : ""}
+      ${gameMode === "ai" ? `<div class="difficulty-control"><small>${t("difficulty")}</small><div class="mode-options">${Object.entries(DIFFICULTIES).map(([id, difficulty]) => `<button class="mode-option ${aiDifficulty === id ? "active" : ""}" data-difficulty="${id}"><b>${language === "en" ? ({ easy: "Easy", normal: "Normal", hard: "Hard" })[id] : difficulty.label}</b><span>${language === "en" ? ({ easy: "Basic board reading", normal: "Two-ply search", hard: "Three-ply search" })[id] : difficulty.description} · ${t("victory")} ${difficulty.credits}</span></button>`).join("")}</div></div><div class="difficulty-control"><small>${language === "en" ? "AI opponent pack" : "AI 상대 팩"}</small><div class="mode-options">${aiOpponentOptions}</div></div>` : ""}
       ${gameMode === "event" ? eventMarkup() : ""}
       <div class="daily-login"><div><small>NEW YORK DAILY SIGNAL</small><b>${hasDailyLogin() ? t("dailyClaimed") : t("dailyReward")}</b><span>${t("dailyReset")}</span></div><button class="secondary" id="daily-login" ${hasDailyLogin() ? "disabled" : ""}>${hasDailyLogin() ? t("claimed") : t("claim")}</button></div>
       <div class="time-control"><small>${t("timePreview")}</small><div class="time-options">${Object.entries(TIME_RULES).map(([id, rule]) => `<button class="time-option ${timeRule === id ? "active" : ""}" data-time-rule="${id}"><b>${language === "en" ? rule.note.replace("초보", "Beginner").replace("표준", "Standard").replace("상위", "Advanced").replace("최상위", "Elite").replace("분", " min") : rule.note}</b><span>${rule.label}</span></button>`).join("")}</div></div>
@@ -927,6 +950,7 @@
     app.querySelectorAll("[data-pack]").forEach((button) => button.addEventListener("click", () => { chosen = button.dataset.pack; renderSetup(); }));
     app.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => { gameMode = button.dataset.mode; saveMeta(); renderSetup(); }));
     app.querySelectorAll("[data-difficulty]").forEach((button) => button.addEventListener("click", () => { aiDifficulty = button.dataset.difficulty; saveMeta(); renderSetup(); }));
+    app.querySelectorAll("[data-ai-opponent]").forEach((button) => button.addEventListener("click", () => { aiOpponentPack = button.dataset.aiOpponent; saveMeta(); renderSetup(); }));
     app.querySelectorAll("[data-event-difficulty]").forEach((button) => button.addEventListener("click", () => { eventDifficulty = button.dataset.eventDifficulty; renderSetup(); }));
     app.querySelectorAll("[data-time-rule]").forEach((button) => button.addEventListener("click", () => { timeRule = button.dataset.timeRule; saveMeta(); renderSetup(); }));
     bindStoreButton();
@@ -1393,10 +1417,10 @@
     if (gameMode === "online") return renderOnlineLobby();
     screen = "game"; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = []; timerWarningKey = ""; activityStartedAt = Date.now();
     replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
-    const enemy = chosen === "xena" ? "sovran" : "xena";
+    const enemy = gameMode === "ai" && G.PACKS[aiOpponentPack] ? aiOpponentPack : chosen === "xena" ? "sovran" : "xena";
     state = G.createInitialState({ whitePack: chosen, blackPack: enemy });
     applyLineupToState(state, "white", chosen);
-    if (gameMode === "local" && owned.includes(enemy)) applyLineupToState(state, "black", enemy);
+    if ((gameMode === "local" && owned.includes(enemy)) || gameMode === "ai") applyLineupToState(state, "black", enemy);
     const awakenPreview = new URLSearchParams(window.location.search).get("awaken");
     if (awakenPreview === "white" || awakenPreview === "black") state.awakened[awakenPreview] = true;
     snapshots = [cloneState(state)];
@@ -2073,6 +2097,7 @@
     window.XenaCloudSync.connect().then(async () => {
       const cloudState = window.XenaCloudSync.snapshot();
       if (!cloudState.user) return;
+      await syncTrustedWallet();
       const remote = await window.XenaCloudSync.load().catch(() => null);
       if (!remote) window.XenaCloudSync.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
     }).catch(() => {});

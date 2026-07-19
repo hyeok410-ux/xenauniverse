@@ -393,8 +393,8 @@
 
   function getGameStatus(state) {
     const same = state.history.filter((key) => key === positionKey(state)).length;
-    if (same >= 4) return { over: true, result: "draw", reason: "threefold" };
-    if (state.halfmove >= 80) return { over: true, result: "draw", reason: "forty-move" };
+    if (same >= 6) return { over: true, result: "draw", reason: "threefold" };
+    if (state.halfmove >= 140) return { over: true, result: "draw", reason: "forty-move" };
     const moves = generateLegalMoves(state, state.turn, true);
     if (moves.length) return { over: false, check: isInCheck(state, state.turn) };
     if (isInCheck(state, state.turn)) return { over: true, result: other(state.turn), reason: "checkmate" };
