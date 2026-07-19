@@ -39,7 +39,7 @@
   const CARD_ART_ROOT = ASSET_ROOTS.card;
   const PORTRAIT_ART_ROOT = ASSET_ROOTS.portrait;
   function assetSrc(root, file) {
-    const keepPng = /^(unit_t2_|emote_xena_|pack_|frame_|skin_xena_ethereal_|nayun_mother_v1)/i.test(file || "");
+    const keepPng = /^(unit_t2_|emote_xena_|pack_|frame_|fx_frequency_pulse_v1|fx_sky_verdict_v1|skin_xena_ethereal_|nayun_mother_v1)/i.test(file || "");
     const optimized = root !== "card" && !keepPng && /\.png$/i.test(file) ? file.replace(/\.png$/i, ".webp") : file;
     return (ASSET_ROOTS[root] || CARD_ART_ROOT) + optimized;
   }
@@ -415,6 +415,7 @@
   let dailyLogin = safeJson(storage.get("og_daily_login"), {}) || {};
   let activity = safeJson(storage.get("og_activity"), { totalMinutes: 0, games: {}, lastGame: "" }) || { totalMinutes: 0, games: {}, lastGame: "" };
   let codexOwned = [...new Set(storedArray("og_codex_owned").map((id) => LEGACY_CODEX_MAP[id] || id).filter((id) => CODEX_CARDS.some((card) => card.id === id)))];
+  let showOpponentThreats = storage.get("og_show_opponent_threats") === "1";
   let showcase = null;
   let state = null;
   let selected = null;
@@ -592,6 +593,7 @@
     storage.set("og_daily_login", JSON.stringify(dailyLogin));
     storage.set("og_activity", JSON.stringify(activity));
     storage.set("og_codex_owned", JSON.stringify(codexOwned));
+    storage.set("og_show_opponent_threats", showOpponentThreats ? "1" : "0");
   }
 
   function activityMeta() {
@@ -1465,12 +1467,20 @@
     const flipped = gameMode === "online" && playerColor === "black";
     const rows = flipped ? [0, 1, 2, 3, 4, 5] : [5, 4, 3, 2, 1, 0];
     const columns = flipped ? [5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5];
+    const threatColor = gameMode === "local" ? G.other(state.turn) : G.other(playerColor);
+    const threatMoves = showOpponentThreats && !replayMode && !result ? G.generateLegalMoves(state, threatColor, false) : [];
+    const threatTargets = new Set(threatMoves.map((move) => move.to));
+    const threatCaptures = new Set(threatMoves.filter((move) => {
+      const target = state.board[move.to];
+      return target && target.color !== threatColor;
+    }).map((move) => move.to));
     for (const row of rows) for (const col of columns) {
       const index = G.indexOf(row, col);
       const piece = state.board[index];
       const targets = legal.filter((move) => move.to === index && (!selectedSkill || move.skill === selectedSkill));
       const classes = ["square", (row + col) % 2 ? "light" : "dark"];
       if (selected === index) classes.push("selected");
+      if (!targets.length && threatTargets.has(index)) classes.push(threatCaptures.has(index) ? "enemy-threat enemy-capture-threat" : "enemy-threat");
       if (targets.length) classes.push(piece && piece.color !== state.turn ? "capture" : "legal");
       html += `<button class="${classes.join(" ")}" data-square="${index}"><span class="coord">${String.fromCharCode(65 + col)}${row + 1}</span>${pieceMarkup(piece, index)}</button>`;
     }
@@ -1609,7 +1619,7 @@
     const turnPack = turnLeader ? turnLeader.character : G.PACKS[state.packs[state.turn]].leaderName;
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
       <div class="game-layout">${panel("white", gameMode !== "local" && playerColor !== "white")}<section class="arena"><div class="status-strip"><strong>${animating ? t("cinematic") : thinking ? t("thinking") : `${turnPack} ${t("turn")}${status.check ? " · CHECK" : ""}`}</strong><span>${state.ply + 1} ${t("move")}</span></div>
-      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<button class="secondary" id="exit">${t("exit")}</button>`}</div></section>${panel("black", gameMode !== "local" && playerColor !== "black")}</div>
+      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<div class="replay-actions"><button class="secondary threat-toggle ${showOpponentThreats ? "active" : ""}" id="toggle-threats">${language === "en" ? "Threats ON" : "위협 보기"}</button><button class="secondary" id="exit">${t("exit")}</button></div>`}</div></section>${panel("black", gameMode !== "local" && playerColor !== "black")}</div>
       ${result ? resultMarkup() : ""}${promotionMarkup()}${recoveryMarkup()}</div>`;
     if (result) {
       const resultActions = app.querySelector(".result-box .actions");
@@ -1635,6 +1645,7 @@
       else renderGame();
     }));
     const exit = document.getElementById("exit"); if (exit) exit.addEventListener("click", exitGame);
+    const threatToggle = document.getElementById("toggle-threats"); if (threatToggle) threatToggle.addEventListener("click", () => { showOpponentThreats = !showOpponentThreats; saveMeta(); renderGame(); });
     bindStoreButton();
     const replayPrev = document.getElementById("replay-prev"); if (replayPrev) replayPrev.addEventListener("click", () => stepReplay(-1));
     const replayNext = document.getElementById("replay-next"); if (replayNext) replayNext.addEventListener("click", () => stepReplay(1));
@@ -1699,7 +1710,7 @@
       thinking = false;
       if (move) performMove(move);
       else afterMove();
-    }, 750);
+    }, 1750);
   }
 
   function rewardKeyFor(mode, difficulty, didWin) {
