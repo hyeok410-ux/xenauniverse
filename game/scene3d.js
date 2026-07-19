@@ -27,8 +27,9 @@
   function squarePosition(index) {
     const row = Math.floor(index / SIZE);
     const col = index % SIZE;
-    // Match the DOM board order exactly, including the black-side online rotation.
-    const x = viewFlipped ? 2.5 - col : col - 2.5;
+    // The top-down camera's right vector is negative X, so X must be mirrored
+    // to land VFX on the same left/right square as the DOM board.
+    const x = viewFlipped ? col - 2.5 : 2.5 - col;
     const z = viewFlipped ? 2.5 - row : row - 2.5;
     return new T.Vector3(x, 0, z);
   }
