@@ -470,6 +470,16 @@ function finish(){
   renderHistory();
   show('result');
   awardXC();
+  bumpLifetimeFinishes();
+}
+
+/* 뱃지 시스템용 — 하루 3회 캡 없이 누적 완주 횟수 기록 */
+function bumpLifetimeFinishes(){
+  try{
+    var s = JSON.parse(localStorage.getItem('xena_worldcup_stats_v1')||'{}');
+    s.totalFinishes = (s.totalFinishes||0) + 1;
+    localStorage.setItem('xena_worldcup_stats_v1', JSON.stringify(s));
+  }catch(e){}
 }
 
 /* ── XC 통합 크레딧 적립 (하루 3회 × 5XC) ── */
@@ -694,5 +704,6 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 });
 })();
 </script>
+<script src="../shared-profile.js"></script>
 </body>
 </html>

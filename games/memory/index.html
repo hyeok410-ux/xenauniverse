@@ -326,7 +326,7 @@ function renderStages(){
     b.className = 'stage-btn';
     b.disabled = locked;
     b.innerHTML = '<b>'+(locked?'🔒':(i+1))+'</b><span>'+s.cards+' '+t('CARDS','장')+' · '+used+'/'+PLAYS_PER_DAY+'</span>'
-      + '<span>'+(wb ? t('WK BEST '+wb+'s', '주간 '+wb+'초') : '—')+'</span>'
+      + '<span>'+(wb ? t('WK BEST '+wb+'s', '주간 '+wb+'초')+' '+(window.XenaProfile?window.XenaProfile.chipHTML():'') : '—')+'</span>'
       + (clearedToday?'<span class="st-done">✓</span>':'');
     if(!locked){ b.addEventListener('click', function(){ start(i); }); }
     g.appendChild(b);
@@ -487,5 +487,6 @@ renderWallet();
 renderStages();
 })();
 </script>
+<script src="../shared-profile.js"></script>
 </body>
 </html>
