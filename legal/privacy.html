@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>개인정보처리방침 | XENA Universe</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="legal-shell">
+    <nav class="legal-top">
+      <a class="brand" href="../">XENA Universe</a>
+      <a class="back" href="./">Legal Center</a>
+    </nav>
+    <section class="hero">
+      <small>Privacy Policy</small>
+      <h1>개인정보처리방침</h1>
+      <p class="lead">XENA Universe는 서비스 제공에 필요한 최소한의 개인정보만 처리하며, 게임 재화와 결제성 데이터는 조작 방지를 위해 서버 원장 방식으로 분리 관리합니다.</p>
+      <p class="meta">시행일: 2026-07-19</p>
+    </section>
+    <article class="content">
+      <h2>1. 처리 목적</h2>
+      <p>XENA Universe는 다음 목적을 위해 개인정보를 처리합니다.</p>
+      <ul>
+        <li>Google 로그인 기반 계정 식별 및 중복 계정 방지</li>
+        <li>XENA Games 진행 상황, 보유 유닛, 스킨, 전장, 재화 내역 저장</li>
+        <li>온라인 대전, 이벤트 보상, 부정 이용 방지</li>
+        <li>문의, 계정 삭제, 환불 요청 처리</li>
+        <li>서비스 안정성 개선 및 오류 대응</li>
+      </ul>
+
+      <h2>2. 처리하는 개인정보 항목</h2>
+      <table>
+        <tr><th>구분</th><th>항목</th><th>수집 방법</th></tr>
+        <tr><td>계정 정보</td><td>Firebase UID, Google 계정 표시 이름 또는 이메일 일부, 프로필 이미지 URL, 이용자가 설정한 닉네임</td><td>Google 로그인, 이용자 입력</td></tr>
+        <tr><td>게임 정보</td><td>보유 팩, 유닛, 스킨, 전장, 이펙트, 진행 기록, 승패/보상 이벤트, 시그널 크레딧, 변칙 파편</td><td>게임 이용 중 생성</td></tr>
+        <tr><td>기술 정보</td><td>접속 시간, 브라우저/기기 환경, 오류 기록, 보안 이벤트</td><td>브라우저 및 Firebase 서비스</td></tr>
+        <tr><td>문의 정보</td><td>이메일 주소, 요청 내용, 본인 확인에 필요한 계정 식별 정보</td><td>이용자 문의</td></tr>
+      </table>
+      <p>현재 체험판은 주민등록번호, 주소, 전화번호, 결제 카드번호를 직접 수집하지 않습니다.</p>
+
+      <h2>3. 보유 및 이용 기간</h2>
+      <ul>
+        <li>계정 및 게임 데이터: 회원 탈퇴 또는 삭제 요청 시까지</li>
+        <li>문의/분쟁 대응 기록: 처리 완료 후 3년 이내</li>
+        <li>유료 결제 기록이 도입될 경우: 전자상거래 등 관련 법령에서 정한 기간</li>
+        <li>부정 이용 방지 기록: 서비스 보호 목적상 필요한 최소 기간</li>
+      </ul>
+
+      <h2>4. 개인정보의 제3자 제공</h2>
+      <p>XENA Universe는 이용자의 동의가 있거나 법령상 의무가 있는 경우를 제외하고 개인정보를 제3자에게 판매하거나 임의 제공하지 않습니다.</p>
+
+      <h2>5. 처리 위탁 및 외부 서비스</h2>
+      <p>서비스 운영을 위해 Google Firebase, Google Authentication, GitHub Pages 등 외부 서비스를 사용합니다. 자세한 내용은 <a href="./third-party.html">제3자 서비스 고지</a>에서 확인할 수 있습니다.</p>
+
+      <h2>6. 파기 절차 및 방법</h2>
+      <p>보유 기간이 끝났거나 처리 목적이 달성된 개인정보는 복구하기 어렵도록 삭제합니다. 전자 파일은 데이터베이스 삭제 또는 익명화 방식으로 처리합니다.</p>
+
+      <h2>7. 이용자의 권리</h2>
+      <p>이용자는 개인정보 열람, 정정, 삭제, 처리 정지를 요청할 수 있습니다. 계정 삭제 요청은 <a href="./deletion.html">계정/데이터 삭제 안내</a>에 따라 접수합니다.</p>
+
+      <h2>8. 아동 및 미성년자</h2>
+      <p>만 14세 미만 아동을 대상으로 개인정보를 고의로 수집하지 않습니다. 미성년자의 유료 결제는 법정대리인 동의 및 취소 기준을 따릅니다.</p>
+
+      <h2>9. 안전성 확보 조치</h2>
+      <ul>
+        <li>Firebase Authentication 기반 로그인 식별</li>
+        <li>재화 데이터는 클라이언트 저장값이 아닌 서버 원장 기준으로 관리</li>
+        <li>Firestore 보안 규칙으로 지갑 데이터 직접 수정 차단</li>
+        <li>Cloud Functions를 통한 보상 지급 및 중복 지급 방지</li>
+        <li>최소 정보 수집 및 불필요한 민감정보 미수집</li>
+      </ul>
+
+      <h2>10. 개인정보 보호책임자 및 문의</h2>
+      <p>운영자: Studio CHANS / XENA Universe 운영팀</p>
+      <p>문의: 공식 사이트 또는 운영자가 공지한 이메일/문의 채널</p>
+      <p>개인정보 침해 신고는 개인정보보호위원회, 개인정보침해신고센터 등 공적 기관을 통해서도 진행할 수 있습니다.</p>
+
+      <h2>11. 변경 고지</h2>
+      <p>본 방침이 변경되는 경우 사이트 공지 또는 본 페이지를 통해 고지합니다.</p>
+    </article>
+  </main>
+</body>
+</html>

@@ -1693,6 +1693,13 @@
     }, 750);
   }
 
+  function rewardKeyFor(mode, difficulty, didWin) {
+    if (!didWin) return "";
+    if (mode === "event") return `event_${difficulty}_win`;
+    if (mode === "ai") return `ai_${difficulty}_win`;
+    return "";
+  }
+
   function finish(winner, reason) {
     clearInterval(timer);
     const draw = winner === "draw";
@@ -1701,13 +1708,18 @@
     let creditReward = 0;
     let shardReward = 0;
     let eventBonus = 0;
+    let nextEventClaims = null;
 
     const rewardEligible = gameMode === "ai" || gameMode === "event";
+    const difficulty = gameMode === "event" ? eventDifficulty : aiDifficulty;
+    const cloud = window.XenaCloudSync;
+    const cloudUser = cloud && cloud.snapshot().user;
+    const rewardKey = rewardKeyFor(gameMode, difficulty, win);
+    const serverReward = Boolean(rewardEligible && rewardKey && cloudUser && cloud.awardMatchReward);
     if (rewardEligible) {
-      const difficulty = gameMode === "event" ? eventDifficulty : aiDifficulty;
       creditReward = draw ? 10 : win ? DIFFICULTIES[difficulty].credits : DIFFICULTIES[difficulty].loss;
       if (gameMode === "event" && win) {
-        const claims = dailyEvent();
+        const claims = { ...dailyEvent() };
         if (!claims[difficulty]) {
           claims[difficulty] = true;
           creditReward += EVENT_REWARDS[difficulty].credits;
@@ -1717,19 +1729,48 @@
             creditReward += 500;
             eventBonus = 3;
           }
+          nextEventClaims = claims;
+        } else if (serverReward) {
+          creditReward = 0;
+          shardReward = 0;
+          eventBonus = 0;
         }
       }
-      credits += creditReward;
-      shards += shardReward + eventBonus;
-      saveMeta();
+      if (!serverReward) {
+        if (nextEventClaims) eventClaims[todayKey()] = nextEventClaims;
+        credits += creditReward;
+        shards += shardReward + eventBonus;
+        saveMeta();
+      }
     }
     lastReplay = snapshots.map(cloneState);
     const reasonText = draw ? ({ threefold: language === "en" ? "Draw: the same position repeated four times." : "무승부: 같은 포지션이 네 번 반복되었습니다.", "forty-move": language === "en" ? "Draw: 80 quiet moves passed without a capture or Signal move." : "무승부: 포획이나 시그널 이동 없이 80번의 조용한 수가 진행되었습니다.", stalemate: language === "en" ? "Draw: the player to move has no legal move, but is not in check." : "무승부: 둘 차례에 합법적인 수가 없지만 체크 상태는 아닙니다." }[reason] || (language === "en" ? "Draw by the board rules." : "보드 규칙에 따른 무승부입니다.")) : reason;
     const title = draw ? t("draw") : localGame ? `${winner === "white" ? t("playerOne") : t("playerTwo")} ${t("win")}` : win ? t("win") : t("defeat");
     const celebrate = win || (localGame && !draw);
-    result = { title, reason: reasonText, reward: creditReward, shards: shardReward, bonus: eventBonus, localGame, online: gameMode === "online", win, celebrate };
+    result = { title, reason: reasonText, reward: serverReward ? 0 : creditReward, shards: serverReward ? 0 : shardReward, bonus: serverReward ? 0 : eventBonus, localGame, online: gameMode === "online", win, celebrate, rewardStatus: serverReward ? "pending" : "" };
     chestOpened = false;
     renderGame();
+    if (serverReward) {
+      const eventId = `${todayKey()}_${gameMode}_${difficulty}_${Date.now()}_${state.ply}`;
+      cloud.awardMatchReward({ rewardKey, eventId }).then((walletResult) => {
+        credits = Math.max(0, Number(walletResult.credits) || 0);
+        shards = Math.max(0, Number(walletResult.shards) || 0);
+        const granted = walletResult.granted || {};
+        result.reward = Math.max(0, Number(granted.credits) || 0);
+        result.shards = Math.max(0, Number(granted.shards) || 0);
+        result.bonus = 0;
+        result.rewardStatus = "confirmed";
+        if (nextEventClaims) eventClaims[todayKey()] = nextEventClaims;
+        saveMeta();
+        renderGame();
+      }).catch(() => {
+        result.reward = 0;
+        result.shards = 0;
+        result.bonus = 0;
+        result.rewardStatus = "failed";
+        renderGame();
+      });
+    }
   }
 
   function makeVisualAction(move, before) {
@@ -1866,7 +1907,14 @@
     }
     const fireworks = result.celebrate ? `<canvas class="fireworks" id="fireworks"></canvas>` : "";
     const onlineNotice = result.online ? `<span class="account-warning">${language === "en" ? "Online pilot matches do not grant ranked rewards or currency." : "온라인 체험판은 랭크 점수와 재화를 지급하지 않습니다."}</span>` : "";
-    return `<div class="result-overlay${result.celebrate ? " win" : ""}">${fireworks}<div class="result-box"><h2>${result.title}</h2><p>${result.reason}</p>${onlineNotice}${rewards}<div class="actions"><button class="secondary" id="replay">${t("replay")}</button><button class="primary" id="again">${result.online ? (language === "en" ? "Return to Lobby" : "로비로") : (language === "en" ? "Play Again" : "다시 대전")}</button></div></div></div>`;
+    const rewardStatus = result.rewardStatus === "pending"
+      ? `<span class="account-warning">${language === "en" ? "Verifying reward on the server..." : "서버에서 보상을 확인하는 중입니다..."}</span>`
+      : result.rewardStatus === "confirmed"
+        ? `<span class="account-warning">${language === "en" ? "Server reward confirmed." : "서버 보상이 확정되었습니다."}</span>`
+        : result.rewardStatus === "failed"
+          ? `<span class="account-warning">${language === "en" ? "Server reward failed. Please try again after cloud setup is complete." : "서버 보상 지급에 실패했습니다. 클라우드 배포 완료 후 다시 확인해 주세요."}</span>`
+          : "";
+    return `<div class="result-overlay${result.celebrate ? " win" : ""}">${fireworks}<div class="result-box"><h2>${result.title}</h2><p>${result.reason}</p>${onlineNotice}${rewardStatus}${rewards}<div class="actions"><button class="secondary" id="replay">${t("replay")}</button><button class="primary" id="again">${result.online ? (language === "en" ? "Return to Lobby" : "로비로") : (language === "en" ? "Play Again" : "다시 대전")}</button></div></div></div>`;
   }
 
   function bindRewardChest() {

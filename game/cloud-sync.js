@@ -20,6 +20,8 @@
   let provider = null;
   let authApi = null;
   let firestoreApi = null;
+  let functionsApi = null;
+  let functionsInstance = null;
 
   function publicUser(user) {
     if (!user) return null;
@@ -71,10 +73,11 @@
     setState({ phase: "connecting", error: "" });
     sdkPromise = (async () => {
       try {
-        const [appModule, authModule, firestoreModule] = await Promise.all([
+        const [appModule, authModule, firestoreModule, functionsModule] = await Promise.all([
           import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-app.js`),
           import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-auth.js`),
           import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-firestore.js`),
+          import(`https://www.gstatic.com/firebasejs/${SDK_VERSION}/firebase-functions.js`),
         ]);
         const app = appModule.initializeApp({
           apiKey: config.apiKey,
@@ -84,8 +87,10 @@
         });
         authApi = authModule;
         firestoreApi = firestoreModule;
+        functionsApi = functionsModule;
         auth = authModule.getAuth(app);
         db = firestoreModule.getFirestore(app);
+        functionsInstance = functionsApi.getFunctions(app, "us-central1");
         provider = new authModule.GoogleAuthProvider();
         provider.setCustomParameters({ prompt: "select_account" });
 
@@ -185,9 +190,26 @@
     }
   }
 
+  async function callFunction(name, data) {
+    await connect();
+    requireUser();
+    if (!functionsApi || !functionsInstance) throw new Error("FUNCTIONS_UNAVAILABLE");
+    const callable = functionsApi.httpsCallable(functionsInstance, name);
+    const result = await callable(data || {});
+    return result.data;
+  }
+
+  async function ensurePlayer() {
+    return callFunction("ensurePlayer", {});
+  }
+
+  async function awardMatchReward(payload) {
+    return callFunction("awardMatchReward", payload);
+  }
+
   async function context() {
     await connect();
-    return { auth, db, authApi, firestoreApi };
+    return { auth, db, authApi, firestoreApi, functionsApi, functionsInstance };
   }
 
   window.XenaCloudSync = Object.freeze({
@@ -197,6 +219,8 @@
     signOut,
     load,
     save,
+    ensurePlayer,
+    awardMatchReward,
     context,
     subscribe(listener) {
       listeners.add(listener);

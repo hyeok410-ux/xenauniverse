@@ -39,6 +39,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /dailyRewardClaims/{claimId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
     match /rewardEvents/{eventId} {
       allow read, write: if false;
     }
