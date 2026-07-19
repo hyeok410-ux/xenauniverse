@@ -35,11 +35,12 @@
     emote: "./assets/emotes/",
     ui: "./assets/ui/",
     audio: "./assets/audio/",
+    voice: "./assets/voice/",
   };
   const CARD_ART_ROOT = ASSET_ROOTS.card;
   const PORTRAIT_ART_ROOT = ASSET_ROOTS.portrait;
   function assetSrc(root, file) {
-    const keepPng = /^(unit_t2_|emote_xena_|pack_|frame_|fx_frequency_pulse_v1|fx_sky_verdict_v1|skin_xena_ethereal_|nayun_mother_v1)/i.test(file || "");
+    const keepPng = /^(unit_t2_|emote_xena_|pack_|frame_|fx_frequency_pulse_v1|fx_sky_verdict_v1|skin_xena_ethereal_|nayun_mother_v1|space_|battlefield_)/i.test(file || "");
     const optimized = root !== "card" && !keepPng && /\.png$/i.test(file) ? file.replace(/\.png$/i, ".webp") : file;
     return (ASSET_ROOTS[root] || CARD_ART_ROOT) + optimized;
   }
@@ -234,6 +235,26 @@
     { id: "arena-crystal-bastion", name: "Crystal Bastion Atmosphere", kind: "arena", role: "게임 공간 스킨", tier: "EPIC", credit: 4800, artRoot: "board", art: "board_sector_nine_v1.webp", arenaStyle: "crystal-bastion", description: "좌우 패널과 전투 배경을 크리스털 반란군 분위기로 변경" },
     { id: "arena-echo-grid", name: "Echo Grid Atmosphere", kind: "arena", role: "게임 공간 스킨", tier: "LEGACY", credit: 5600, artRoot: "board", art: "board_echo_grid_v1.webp", arenaStyle: "echo-grid", description: "좌우 패널과 전투 배경을 주파수 아카이브 분위기로 변경" },
     { id: "arena-mothership", name: "Mothership Eclipse Atmosphere", kind: "arena", role: "게임 공간 스킨", tier: "BOSS", shards: 240, artRoot: "board", art: "board_mothership_sky_v1.webp", arenaStyle: "mothership", description: "좌우 패널과 전투 배경을 모선 폭격 구역 분위기로 변경" },
+    { id: "arena-alley", name: "Neon Alley", kind: "arena", role: "게임 공간 스킨", tier: "RARE", credit: 2600, artRoot: "board", art: "space_alley_v1.png", arenaStyle: "alley", description: "비 내리는 네온 골목의 사이버펑크 전투 공간" },
+    { id: "arena-chans", name: "CHANS Signal Room", kind: "arena", role: "게임 공간 스킨", tier: "EPIC", credit: 4200, artRoot: "board", art: "space_chans_v1.png", arenaStyle: "chans", description: "XENA 신호 관제실로 바뀌는 게임 공간" },
+    { id: "arena-city", name: "Sector City Pulse", kind: "arena", role: "게임 공간 스킨", tier: "EPIC", credit: 4500, artRoot: "board", art: "space_city_v1.png", arenaStyle: "city", description: "거대 도시의 홀로그램 광고와 전광판 공간" },
+    { id: "arena-concert", name: "Override Concert", kind: "arena", role: "게임 공간 스킨", tier: "LEGACY", shards: 180, artRoot: "board", art: "space_concert_v1.png", arenaStyle: "concert", description: "제나의 라이브 스테이지를 닮은 공연장 공간" },
+    { id: "arena-core", name: "Core Chamber", kind: "arena", role: "게임 공간 스킨", tier: "BOSS", shards: 240, artRoot: "board", art: "space_core_v1.png", arenaStyle: "core", description: "시스템 코어 내부에서 싸우는 압도적인 공간" },
+    { id: "arena-crystal", name: "Crystal Memory", kind: "arena", role: "게임 공간 스킨", tier: "EPIC", credit: 4800, artRoot: "board", art: "space_crystal_v1.png", arenaStyle: "crystal", description: "결정화된 기억 신호가 흐르는 공간" },
+    { id: "arena-drone", name: "Drone Surveillance", kind: "arena", role: "게임 공간 스킨", tier: "RARE", credit: 2800, artRoot: "board", art: "space_drone_v1.png", arenaStyle: "drone", description: "감시 드론이 전장을 둘러싼 시스템 공간" },
+    { id: "arena-golden", name: "Golden Verdict", kind: "arena", role: "게임 공간 스킨", tier: "SOVEREIGN", shards: 220, artRoot: "board", art: "space_golden_v1.png", arenaStyle: "golden", description: "황금 판결광으로 장식된 최고급 공간" },
+    { id: "arena-home", name: "XENA Safehouse", kind: "arena", role: "게임 공간 스킨", tier: "RARE", credit: 2400, artRoot: "board", art: "space_home_v1.png", arenaStyle: "home", description: "반란군의 따뜻한 은신처를 표현한 공간" },
+    { id: "arena-pinkclub", name: "Pink Glitch Club", kind: "arena", role: "게임 공간 스킨", tier: "EPIC", credit: 4300, artRoot: "board", art: "space_pinkclub_v1.png", arenaStyle: "pinkclub", description: "핑크 글리치 조명이 흐르는 클럽 공간" },
+    { id: "arena-rain", name: "Rain Protocol", kind: "arena", role: "게임 공간 스킨", tier: "RARE", credit: 2600, artRoot: "board", art: "space_rain_v1.png", arenaStyle: "rain", description: "도시의 빗줄기와 네온 반사가 흐르는 공간" },
+    { id: "arena-rooftop", name: "Sector Nine Rooftop", kind: "arena", role: "게임 공간 스킨", tier: "EPIC", credit: 4500, artRoot: "board", art: "space_rooftop_v1.png", arenaStyle: "rooftop", description: "섹터 나인의 옥상에서 내려다보는 전투 공간" },
+    { id: "arena-sky", name: "Skyline Anomaly", kind: "arena", role: "게임 공간 스킨", tier: "LEGACY", shards: 160, artRoot: "board", art: "space_sky_v1.png", arenaStyle: "sky", description: "하늘에 열린 변칙 균열을 배경으로 한 공간" },
+    { id: "arena-studio", name: "Signal Studio", kind: "arena", role: "게임 공간 스킨", tier: "RARE", credit: 2200, artRoot: "board", art: "space_studio_v1.png", arenaStyle: "studio", description: "방송 스튜디오와 신호 장비가 어우러진 공간" },
+    { id: "arena-zerog", name: "Zero-G Archive", kind: "arena", role: "게임 공간 스킨", tier: "SECRET", shards: 260, artRoot: "board", art: "space_zerog_v1.png", arenaStyle: "zerog", description: "중력이 끊긴 기억 저장소의 전투 공간" },
+    { id: "arena-cyan-concert", name: "Cyan Concert Grid", kind: "arena", role: "게임 공간 스킨", tier: "EPIC", credit: 5200, artRoot: "board", art: "space_cyan_concert_v1.png", arenaStyle: "cyan-concert", description: "시안 그리드와 콘서트 광원이 결합된 공간" },
+    { id: "arena-system-court", name: "System Court Red Eclipse", kind: "arena", role: "게임 공간 스킨", tier: "BOSS", shards: 280, artRoot: "board", art: "space_system_court_v1.png", arenaStyle: "system-court", description: "붉은 일식 아래 시스템 재판이 열리는 공간" },
+    { id: "arena-memory-vault", name: "Memory Vault Prism", kind: "arena", role: "게임 공간 스킨", tier: "LEGACY", shards: 220, artRoot: "board", art: "space_memory_vault_v1.png", arenaStyle: "memory-vault", description: "프리즘 기억 보관소의 잔상이 흐르는 공간" },
+    { id: "arena-neon-rain", name: "Neon Rain Rooftop", kind: "arena", role: "게임 공간 스킨", tier: "EPIC", credit: 4800, artRoot: "board", art: "space_neon_rain_v1.png", arenaStyle: "neon-rain", description: "네온 빗속 섹터 나인 옥상 전투 공간" },
+    { id: "arena-anomaly-cathedral", name: "Anomaly Cathedral", kind: "arena", role: "게임 공간 스킨", tier: "OVERRIDE", shards: 360, artRoot: "board", art: "space_anomaly_cathedral_v1.png", arenaStyle: "anomaly-cathedral", description: "오버라이드 변칙광이 성당처럼 솟은 공간" },
     { id: "cyan-xena", name: "XENA · Cyan Sovereign", kind: "skin", role: "캐릭터 스킨", tier: "SOVEREIGN", targetCharacter: "XENA", credit: 8000, artRoot: "skin", art: "skin_xena_cyan_sovereign_v1.png", description: "시안 왕관광과 기계 장갑으로 재구성된 제나 전용 스킨" },
     { id: "white-xena", name: "XENA · White Ethereal", kind: "skin", role: "캐릭터 스킨", tier: "EPIC", targetCharacter: "XENA", shards: 260, artRoot: "skin", art: "skin_xena_white_ethereal_v1.png", description: "백색 신호광과 유령 주파수를 두른 제나 전용 스킨" },
     { id: "black-xena", name: "XENA · Black Signal", kind: "skin", role: "캐릭터 스킨", tier: "EPIC", targetCharacter: "XENA", credit: 7000, artRoot: "skin", art: "skin_xena_black_signal_v1.png", description: "검은 신호 잠입 장비를 착용한 제나 전용 스킨" },
@@ -263,6 +284,15 @@
     { id: "echo-grid", name: "Echo Grid Board", kind: "board", role: "전장", tier: "EPIC", credit: 10500, artRoot: "board", art: "board_echo_grid_v1.png", description: "주파수 스캔 라인이 흐르는 에코 전장" },
     { id: "dragoon-core", name: "Dragoon Core Board", kind: "board", role: "전장", tier: "EPIC", credit: 11000, artRoot: "board", art: "board_dragoon_core_v1.png", description: "중장갑 경보등으로 점등된 드라군 코어 전장" },
     { id: "mothership-sky", name: "Mothership Sky Board", kind: "board", role: "전장", tier: "BOSS", shards: 300, artRoot: "board", art: "board_mothership_sky_v1.png", description: "상공의 보랏빛 폭격 항로가 열린 모선 전장" },
+    { id: "battlefield-alley", name: "Neon Alley Battlefield", kind: "board", role: "전장", tier: "RARE", credit: 3200, artRoot: "board", art: "battlefield_alley_v1.png", description: "네온 골목의 반사광 위에서 펼쳐지는 전장" },
+    { id: "battlefield-core", name: "Core Breach Battlefield", kind: "board", role: "전장", tier: "EPIC", credit: 5200, artRoot: "board", art: "battlefield_core_v1.png", description: "붕괴하는 시스템 코어 중심 전장" },
+    { id: "battlefield-crystal", name: "Crystal Memory Battlefield", kind: "board", role: "전장", tier: "LEGACY", shards: 180, artRoot: "board", art: "battlefield_crystal_v1.png", description: "결정화 기억이 바닥을 이루는 전장" },
+    { id: "battlefield-golden", name: "Golden Verdict Battlefield", kind: "board", role: "전장", tier: "SOVEREIGN", shards: 240, artRoot: "board", art: "battlefield_golden_v1.png", description: "황금 판결광이 전장을 가르는 최고급 보드" },
+    { id: "battlefield-pinkclub", name: "Pink Glitch Battlefield", kind: "board", role: "전장", tier: "EPIC", credit: 4800, artRoot: "board", art: "battlefield_pinkclub_v1.png", description: "핑크 글리치 네온이 흐르는 전장" },
+    { id: "battlefield-rooftop", name: "Sector Rooftop Battlefield", kind: "board", role: "전장", tier: "EPIC", credit: 5000, artRoot: "board", art: "battlefield_rooftop_v1.png", description: "도시 옥상과 먼지 낀 네온 하늘의 전장" },
+    { id: "battlefield-ground", name: "Null Ground Battlefield", kind: "board", role: "전장", tier: "RARE", credit: 2800, artRoot: "board", art: "battlefield_ground_v1.png", description: "아무것도 남지 않은 시스템 바닥의 전장" },
+    { id: "battlefield-future", name: "Future Signal Battlefield", kind: "board", role: "전장", tier: "EPIC", credit: 4600, artRoot: "board", art: "battlefield_future_v1.png", description: "미래 신호가 교차하는 고층 전장" },
+    { id: "battlefield-city", name: "City Pulse Battlefield", kind: "board", role: "전장", tier: "EPIC", credit: 4400, artRoot: "board", art: "battlefield_city_v1.png", description: "도시의 맥박이 바닥을 타고 흐르는 전장" },
     { id: "frame-cyan-circuit", name: "Cyan Circuit Frame", kind: "frame", role: "말 테두리", tier: "RARE", credit: 2800, frameStyle: "cyan-circuit", artRoot: "ui", art: "frame_cyan_circuit_preview_v1.png", description: "아군 말에 이중 시안 회로와 신호광 테두리를 적용" },
     { id: "frame-violet-glitch", name: "Violet Glitch Frame", kind: "frame", role: "말 테두리", tier: "EPIC", credit: 4200, frameStyle: "violet-glitch", artRoot: "ui", art: "frame_violet_glitch_preview_v1.png", description: "아군 말 테두리에 보랏빛 글리치 분할광을 적용" },
     { id: "frame-gold-sovereign", name: "Sovereign Gold Frame", kind: "frame", role: "말 테두리", tier: "SOVEREIGN", shards: 160, frameStyle: "gold-sovereign", artRoot: "ui", art: "frame_gold_sovereign_preview_v1.png", description: "아군 말에 백금·금빛 왕관 회로 테두리를 적용" },
@@ -415,6 +445,7 @@
   let lineupPack = committedStarter || "xena";
   let dailyLogin = safeJson(storage.get("og_daily_login"), {}) || {};
   let activity = safeJson(storage.get("og_activity"), { totalMinutes: 0, games: {}, lastGame: "" }) || { totalMinutes: 0, games: {}, lastGame: "" };
+  let records = safeJson(storage.get("og_records"), null) || { ai: { wins: 0, losses: 0, draws: 0 }, human: { wins: 0, losses: 0, draws: 0 }, rating: 0 };
   let codexOwned = [...new Set(storedArray("og_codex_owned").map((id) => LEGACY_CODEX_MAP[id] || id).filter((id) => CODEX_CARDS.some((card) => card.id === id)))];
   let showOpponentThreats = storage.get("og_show_opponent_threats") === "1";
   let showcase = null;
@@ -447,7 +478,7 @@
   let timerWarningKey = "";
   let activityStartedAt = 0;
   let audioEnabled = storage.get("og_audio_enabled") !== "0";
-  const audioState = { unlocked: false, bgm: null, bgmKey: "", lastSfxAt: 0 };
+  const audioState = { unlocked: false, bgm: null, bgmKey: "", voice: null, lastSfxAt: 0 };
   const BGM = {
     setup: "bgm_lobby_signal_v1.mp3",
     store: "bgm_store_override_boutique_v1.mp3",
@@ -485,6 +516,22 @@
     systemLock: "battle_skill_system_lock_v1.mp3",
     publicErasure: "battle_skill_public_erasure_v1.mp3",
   };
+  const VOICE = {
+    xena: {
+      move: ["xena_move_01.mp3", "xena_move_02.mp3", "xena_move_03.mp3", "xena_move_04.mp3"],
+      capture: ["xena_capture_01.mp3", "xena_capture_02.mp3", "xena_capture_03.mp3", "xena_capture_04.mp3"],
+      skill: ["xena_skill_shift.mp3", "xena_skill_override.mp3"],
+      awaken: ["xena_awaken_01.mp3", "xena_awaken_02.mp3"],
+      victory: ["xena_victory_01.mp3"], defeat: ["xena_defeat_01.mp3"], check: ["xena_check_01.mp3", "xena_check_02.mp3"],
+    },
+    sovran: {
+      move: ["sovran_move_01.mp3", "sovran_move_02.mp3", "sovran_move_03.mp3", "sovran_move_04.mp3"],
+      capture: ["sovran_capture_01.mp3", "sovran_capture_02.mp3", "sovran_capture_03.mp3", "sovran_capture_04.mp3"],
+      skill: ["sovran_skill_lock.mp3", "sovran_skill_erasure.mp3"],
+      awaken: ["sovran_awaken_01.mp3", "sovran_awaken_02.mp3"],
+      victory: ["sovran_victory_01.mp3"], defeat: ["sovran_defeat_01.mp3"], check: ["sovran_check_01.mp3", "sovran_check_02.mp3"],
+    },
+  };
 
   function saveAudioPreference() {
     storage.set("og_audio_enabled", audioEnabled ? "1" : "0");
@@ -501,6 +548,7 @@
 
   function stopAudioForBackground() {
     if (audioState.bgm) audioState.bgm.pause();
+    if (audioState.voice) audioState.voice.pause();
   }
 
   function resumeAudioAfterForeground() {
@@ -520,6 +568,18 @@
     audioState.lastSfxAt = now;
     const audio = new Audio(audioUrl(SFX[key]));
     audio.volume = volume ?? 0.42;
+    audio.play().catch(() => {});
+  }
+
+  function playVoice(faction, event) {
+    if (!audioEnabled || !audioState.unlocked) return;
+    const files = VOICE[faction]?.[event];
+    if (!files || !files.length) return;
+    if (audioState.voice) audioState.voice.pause();
+    const file = files[Math.floor(Math.random() * files.length)];
+    const audio = new Audio(`${ASSET_ROOTS.voice}${faction}/${file}`);
+    audio.volume = 0.72;
+    audioState.voice = audio;
     audio.play().catch(() => {});
   }
 
@@ -594,6 +654,7 @@
     storage.set("og_unit_effects", JSON.stringify(unitEffects));
     storage.set("og_daily_login", JSON.stringify(dailyLogin));
     storage.set("og_activity", JSON.stringify(activity));
+    storage.set("og_records", JSON.stringify(records));
     storage.set("og_codex_owned", JSON.stringify(codexOwned));
     storage.set("og_show_opponent_threats", showOpponentThreats ? "1" : "0");
   }
@@ -675,7 +736,7 @@
   function backupCode(options) {
     const includeWallet = !options || options.includeWallet !== false;
     const data = {
-      committedStarter, owned, timeRule, gameMode, language, aiDifficulty, eventClaims, gridRating, cosmeticOwned, activeBoard, activeArena, activeFrame, unitLineups, unitSkins, unitEffects, dailyLogin, codexOwned,
+      committedStarter, owned, timeRule, gameMode, language, aiDifficulty, eventClaims, gridRating, records, cosmeticOwned, activeBoard, activeArena, activeFrame, unitLineups, unitSkins, unitEffects, dailyLogin, codexOwned,
     };
     if (includeWallet) { data.credits = credits; data.shards = shards; }
     return encodeBackup({
@@ -718,6 +779,7 @@
     aiDifficulty = DIFFICULTIES[data.aiDifficulty] ? data.aiDifficulty : "normal";
     eventClaims = data.eventClaims && typeof data.eventClaims === "object" ? data.eventClaims : {};
     gridRating = Math.max(0, Number(data.gridRating) || 0);
+    records = data.records && typeof data.records === "object" ? data.records : { ai: { wins: 0, losses: 0, draws: 0 }, human: { wins: 0, losses: 0, draws: 0 }, rating: 0 };
     cosmeticOwned = Array.isArray(data.cosmeticOwned) ? [...new Set(data.cosmeticOwned.filter((id) => SHOP_ITEMS.some((item) => item.id === id)))] : [];
     const restoredBoard = data.activeBoard || data.activeCosmetic || "";
     activeBoard = cosmeticOwned.includes(restoredBoard) && SHOP_ITEMS.some((item) => item.id === restoredBoard && item.kind === "board") ? restoredBoard : "";
@@ -770,7 +832,7 @@
   function accountMarkup() {
     const localLabel = storage.available ? (language === "en" ? "Saved on this device" : "이 기기에 저장 중") : (language === "en" ? "Temporary session" : "임시 세션");
     const cloud = window.XenaCloudSync ? window.XenaCloudSync.snapshot() : null;
-    return `<div class="account-overlay" data-close-account><section class="account-modal" role="dialog" aria-modal="true" aria-label="Prototype profile" data-account-panel><button class="showcase-close" data-close-account aria-label="닫기">×</button><small>WEB PROTOTYPE PROFILE</small><h2>${profile.nickname}</h2><div class="profile-id"><span>${localLabel}</span><b>${profile.id}</b></div><p>${language === "en" ? "Your current progress is saved in this browser. Keep the save code as a manual backup." : "현재 진행 기록은 이 브라우저에 저장됩니다. 아래 저장 코드는 수동 백업용으로 보관할 수 있습니다."}</p><div data-cloud-account>${cloudAccountMarkup(cloud)}</div><label>${language === "en" ? "MANUAL SAVE / RESTORE CODE" : "수동 저장·복구 코드"}<textarea data-account-code spellcheck="false"></textarea></label><div class="account-actions"><button class="secondary" data-copy-save>${language === "en" ? "Copy save code" : "저장 코드 복사"}</button><button class="primary" data-restore-save ${screen === "game" ? "disabled" : ""}>${language === "en" ? "Restore on this device" : "이 기기에 복구"}</button></div><span class="account-warning">${language === "en" ? "Prototype cloud sync is optional. Real-money payments and premium balances remain disabled." : "체험판 클라우드 동기화는 선택 사항입니다. 실제 결제와 유료 재화 연동은 비활성화 상태입니다."}</span></section></div>`;
+    return `<div class="account-overlay" data-close-account><section class="account-modal" role="dialog" aria-modal="true" aria-label="Prototype profile" data-account-panel><button class="showcase-close" data-close-account aria-label="닫기">×</button><small>WEB PROTOTYPE PROFILE</small><h2>${profile.nickname}</h2><div class="profile-id"><span>${localLabel}</span><b>${profile.id}</b></div>${profileStatsMarkup()}<p>${language === "en" ? "Your current progress is saved in this browser. Keep the save code as a manual backup." : "현재 진행 기록은 이 브라우저에 저장됩니다. 아래 저장 코드는 수동 백업용으로 보관할 수 있습니다."}</p><div data-cloud-account>${cloudAccountMarkup(cloud)}</div><label>${language === "en" ? "MANUAL SAVE / RESTORE CODE" : "수동 저장·복구 코드"}<textarea data-account-code spellcheck="false"></textarea></label><div class="account-actions"><button class="secondary" data-copy-save>${language === "en" ? "Copy save code" : "저장 코드 복사"}</button><button class="primary" data-restore-save ${screen === "game" ? "disabled" : ""}>${language === "en" ? "Restore on this device" : "이 기기에 복구"}</button></div><span class="account-warning">${language === "en" ? "Prototype cloud sync is optional. Real-money payments and premium balances remain disabled." : "체험판 클라우드 동기화는 선택 사항입니다. 실제 결제와 유료 재화 연동은 비활성화 상태입니다."}</span></section></div>`;
   }
 
   function openAccount() {
@@ -788,6 +850,17 @@
     overlay.querySelectorAll("[data-close-account]").forEach((element) => element.addEventListener("click", (event) => {
       if (event.target === element || event.target.closest(".showcase-close")) closeAccount();
     }));
+    overlay.querySelector("[data-reset-records]")?.addEventListener("click", () => {
+      if (credits < 500) return alert(language === "en" ? "You need 500 XC." : "XC 500이 필요합니다.");
+      if (!confirm(language === "en" ? "Reset human records and rank for 500 XC?" : "500 XC를 사용해 사람 전적과 등급을 초기화할까요?")) return;
+      credits -= 500;
+      records.human = { wins: 0, losses: 0, draws: 0 };
+      records.rating = 0;
+      saveMeta();
+      closeAccount(false);
+      openAccount();
+      refreshCurrentScreen();
+    });
     overlay.querySelector("[data-copy-save]").addEventListener("click", async (event) => {
       textarea.select();
       try { await navigator.clipboard.writeText(textarea.value); }
@@ -862,6 +935,27 @@
     if (gridRating >= 200) return "LUCID";
     if (gridRating >= 80) return "SIGNAL";
     return "TRACE IV";
+  }
+
+  const HUMAN_RANKS = [
+    { min: 0, label: "TRACE IV", badge: "T4", color: "#8792a8" },
+    { min: 800, label: "SIGNAL III", badge: "S3", color: "#62d9ef" },
+    { min: 950, label: "SIGNAL II", badge: "S2", color: "#62d9ef" },
+    { min: 1100, label: "LUCID I", badge: "L1", color: "#a77bff" },
+    { min: 1250, label: "REBEL", badge: "RB", color: "#b7ff3c" },
+    { min: 1400, label: "OVERRIDE", badge: "OVR", color: "#ffd66b" },
+  ];
+
+  function humanRating() { return Math.max(0, Number(records.rating) || 0); }
+  function humanRank() { return [...HUMAN_RANKS].reverse().find((rank) => humanRating() >= rank.min) || HUMAN_RANKS[0]; }
+  function recordTotal(record) { return record.wins + record.losses + record.draws; }
+  function winRate(record) { const total = recordTotal(record); return total ? Math.round((record.wins / total) * 100) : 0; }
+  function profileStatsMarkup() {
+    const rank = humanRank();
+    const ai = records.ai;
+    const human = records.human;
+    const placement = Math.min(5, recordTotal(human));
+    return `<div class="profile-rank-card" style="--rank-color:${rank.color}"><div class="profile-badge"><b>${rank.badge}</b><span>${escapeMarkup(profile.nickname)}</span></div><div><small>HUMAN RANK</small><strong>${rank.label}</strong><em>${placement < 5 ? `배치전 ${placement}/5` : `${humanRating()} RP`}</em></div></div><div class="profile-stat-grid"><div><small>AI 전적</small><b>${ai.wins}승 ${ai.losses}패 ${ai.draws}무</b><span>승률 ${winRate(ai)}%</span></div><div><small>사람 전적</small><b>${human.wins}승 ${human.losses}패 ${human.draws}무</b><span>승률 ${winRate(human)}%</span></div></div><button class="secondary profile-reset" data-reset-records>사람 전적·등급 리셋 · 500 XC</button><p class="profile-help">사람 대전 5판으로 배치되며, 승리 +25 RP / 패배 -20 RP / 무승부 +5 RP입니다. AI 전적은 등급에 반영되지 않습니다.</p>`;
   }
 
   function todayKey() {
@@ -967,8 +1061,8 @@
     });
     const reset = document.getElementById("reset");
     if (reset) reset.addEventListener("click", () => {
-      ["og_starter", "og_owned", "og_credits", "og_shards", "og_event_claims", "og_grid_rating", "og_cosmetics", "og_active_cosmetic", "og_active_board", "og_active_arena", "og_active_frame", "og_unit_lineups", "og_unit_skins", "og_unit_effects", "og_daily_login", "og_codex_owned"].forEach((key) => storage.remove(key));
-      committedStarter = null; chosen = "xena"; owned = []; credits = 0; shards = 0; eventClaims = {}; gridRating = 0; cosmeticOwned = []; activeBoard = ""; activeArena = ""; activeFrame = ""; unitLineups = normalizedLineups({}); unitSkins = {}; unitEffects = {}; dailyLogin = {}; codexOwned = []; showcase = null; saveMeta(); renderSetup();
+      ["og_starter", "og_owned", "og_credits", "og_shards", "og_event_claims", "og_grid_rating", "og_records", "og_cosmetics", "og_active_cosmetic", "og_active_board", "og_active_arena", "og_active_frame", "og_unit_lineups", "og_unit_skins", "og_unit_effects", "og_daily_login", "og_codex_owned"].forEach((key) => storage.remove(key));
+      committedStarter = null; chosen = "xena"; owned = []; credits = 0; shards = 0; eventClaims = {}; gridRating = 0; records = { ai: { wins: 0, losses: 0, draws: 0 }, human: { wins: 0, losses: 0, draws: 0 }, rating: 0 }; cosmeticOwned = []; activeBoard = ""; activeArena = ""; activeFrame = ""; unitLineups = normalizedLineups({}); unitSkins = {}; unitEffects = {}; dailyLogin = {}; codexOwned = []; showcase = null; saveMeta(); renderSetup();
     });
     syncBgm();
   }
@@ -1004,6 +1098,9 @@
   function applyCosmeticTheme() {
     document.body.dataset.cosmetic = activeBoard;
     document.body.dataset.arena = activeArena;
+    const arena = SHOP_ITEMS.find((item) => item.id === activeArena && item.kind === "arena");
+    if (arena) document.body.style.setProperty("--arena-image", `url("${itemArtSrc(arena)}")`);
+    else document.body.style.removeProperty("--arena-image");
   }
 
   function unitForCharacter(character) {
@@ -1731,9 +1828,17 @@
       if (recoveries.length) { state = G.applyRecovery(state, recoveries[0]); recordSnapshot(); }
       const difficulty = gameMode === "event" ? eventDifficulty : aiDifficulty;
       const move = G.chooseAIMove(state, { difficulty });
-      thinking = false;
-      if (move) performMove(move);
-      else afterMove();
+      if (move) {
+        const preview = makeVisualAction(move, state);
+        playActionSfx(preview);
+        setTimeout(() => {
+          thinking = false;
+          performMove(move, { skipAudio: true });
+        }, 3000);
+      } else {
+        thinking = false;
+        afterMove();
+      }
     }, 1750);
   }
 
@@ -1749,6 +1854,15 @@
     const draw = winner === "draw";
     const localGame = gameMode === "local";
     const win = winner === playerColor;
+    const record = (gameMode === "local" || gameMode === "online") ? records.human : records.ai;
+    if (draw) record.draws += 1;
+    else if (win) record.wins += 1;
+    else record.losses += 1;
+    if (gameMode === "local" || gameMode === "online") {
+      records.rating = Math.max(0, humanRating() + (draw ? 5 : win ? 25 : -20));
+    }
+    saveMeta();
+    if (!draw) playVoice(win ? "xena" : "sovran", win ? "victory" : "defeat");
     let creditReward = 0;
     let shardReward = 0;
     let eventBonus = 0;
@@ -1844,13 +1958,16 @@
 
   function playActionSfx(action) {
     if (!action) return;
+    const faction = action.color === "black" ? "sovran" : "xena";
     if (action.skill && SFX[action.skill]) {
       playSfx(action.skill, 0.58);
+      playVoice(faction, "skill");
       return;
     }
     if (action.targetType === "catalyst") {
       playSfx("catalystLost", 0.56);
       playSfx(action.targetLeader && String(action.targetLeader).startsWith("SOVRAN") ? "awakenSovran" : "awakenXena", 0.42);
+      playVoice(faction, "awaken");
       return;
     }
     if (action.promoteId) {
@@ -1859,20 +1976,22 @@
     }
     if (action.capture) {
       playSfx(action.color === "white" ? "captureCyan" : "captureCrimson", 0.56);
+      playVoice(faction, "capture");
       return;
     }
     if (action.pieceType === "signal") playSfx("moveSignal", 0.35);
     else if (action.pieceType === "glitch") playSfx("moveGlitch", 0.38);
     else playSfx("moveHeavy", 0.36);
+    playVoice(faction, "move");
   }
 
-  function performMove(move) {
+  function performMove(move, options = {}) {
     const before = state;
     const action = makeVisualAction(move, before);
     selected = null; selectedSkill = null; legal = []; promotionChoices = [];
     const cinematic = Boolean(action.capture || action.skill);
     if (!cinematic) {
-      playActionSfx(action);
+      if (!options.skipAudio) playActionSfx(action);
       state = G.applyMove(state, move);
       recordSnapshot();
       recordVisualMove(action);
@@ -1882,7 +2001,7 @@
     }
     animating = true;
     cinematicAction = action;
-    playActionSfx(action);
+    if (!options.skipAudio) playActionSfx(action);
     if (window.OverrideGridScene) window.OverrideGridScene.playAction(action);
     renderGame();
     setTimeout(() => {
