@@ -277,6 +277,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
     <div class="col-rate" id="col-rate">0 / 0 (0%)</div>
   </div>
   <div class="tabs" id="tabs">
+    <button class="tab" data-g="MINE"><span lang="en">MY CARDS</span><span lang="ko">내 카드</span></button>
     <button class="tab sel" data-g="ALL"><span lang="en">ALL</span><span lang="ko">전체</span></button>
     <button class="tab" data-g="N">N</button>
     <button class="tab" data-g="R">R</button>
@@ -546,9 +547,12 @@ document.querySelectorAll('.tab').forEach(function(b){
 function renderAlbum(){
   var grid = $('album');
   grid.innerHTML = '';
+  var shown = 0;
   AVAIL.forEach(function(c){
-    if(curTab !== 'ALL' && c.grade !== curTab) return;
     var n = st.owned[c.id] || 0;
+    if(curTab === 'MINE'){ if(n <= 0) return; }
+    else if(curTab !== 'ALL' && c.grade !== curTab) return;
+    shown++;
     var cell = document.createElement('div');
     cell.className = 'ccard '+(n>0?('owned gframe-'+c.grade):'locked');
     cell.innerHTML =
@@ -559,6 +563,12 @@ function renderAlbum(){
     if(n>0){ cell.addEventListener('click', function(){ openDetail(c); }); }
     grid.appendChild(cell);
   });
+  if(curTab === 'MINE' && shown === 0){
+    var empty = document.createElement('div');
+    empty.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--text-dim);font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;line-height:1.9;';
+    empty.textContent = t('No cards yet — open a pack above to start your collection!', '아직 카드가 없습니다 — 위에서 팩을 열어 컬렉션을 시작하세요!');
+    grid.appendChild(empty);
+  }
 }
 function renderRate(){
   var owned = AVAIL.filter(function(c){return st.owned[c.id];}).length;

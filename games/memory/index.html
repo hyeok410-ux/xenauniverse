@@ -47,10 +47,18 @@ a{color:inherit;text-decoration:none;}
   background-image:repeating-linear-gradient(45deg, rgba(255,47,176,.05) 0 2px, transparent 2px 36px),repeating-linear-gradient(-45deg, rgba(160,107,255,.04) 0 2px, transparent 2px 52px);
   mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);
   -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 35%, #000 30%, transparent 100%);}
-.rotate-ov{display:none;position:fixed;inset:0;z-index:200;background:rgba(2,1,5,.96);align-items:center;justify-content:center;text-align:center;}
-.rotate-ov b{display:block;font-size:2.4rem;margin-bottom:14px;}
-.rotate-ov span{font-size:.95rem;color:var(--text-dim);letter-spacing:.04em;}
+.rotate-ov{display:none;position:fixed;inset:0;z-index:200;background:rgba(2,1,5,.96);align-items:center;justify-content:center;text-align:center;padding:24px;}
+.rotate-ov b{display:block;font-size:2.6rem;margin-bottom:16px;animation:rotateHint 2s ease-in-out infinite;}
+@keyframes rotateHint{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+.rotate-ov .rl1{display:block;font-size:1rem;color:var(--silver);letter-spacing:.04em;margin-bottom:8px;}
+.rotate-ov .rl2{display:block;font-size:.82rem;color:var(--cyan);letter-spacing:.04em;}
 @media (max-width:900px) and (orientation:portrait){ body.playing .rotate-ov{display:flex;} }
+/* 확대/축소 컨트롤 */
+.zoom-ctl{display:none;position:fixed;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:60;flex-direction:column;gap:6px;}
+body.playing .zoom-ctl{display:flex;}
+.zoom-ctl button{width:42px;height:42px;border-radius:12px;border:1px solid var(--hair);background:rgba(8,8,14,.82);color:var(--silver);font-size:1.2rem;font-weight:700;backdrop-filter:blur(10px);transition:.2s ease;line-height:1;}
+.zoom-ctl button:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
+.zoom-ctl button.mid{font-size:.9rem;}
 .grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation:grain 8s steps(10) infinite;}
@@ -90,8 +98,10 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 .hud .timer.low b{color:var(--magenta);animation:blink 1s steps(2) infinite;}
 @keyframes blink{50%{opacity:.35}}
 .hud .miss b{color:var(--gold);}
+.board-scale{width:100%;transform-origin:top center;transition:transform .15s ease;}
 .board{display:grid;gap:10px;margin:0 auto;width:100%;max-width:560px;}
 @media (min-width:1100px){ .board{max-width:800px;gap:12px;} }
+@media (min-width:900px){ #screen-play.on{justify-content:center;} }
 .mcard{position:relative;aspect-ratio:3/4;perspective:800px;cursor:pointer;border:none;background:transparent;padding:0;}
 .mcard .inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.2,.8,.3,1);}
 .mcard.open .inner, .mcard.matched .inner{transform:rotateY(180deg);}
@@ -168,7 +178,7 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
       <div class="pill timer" id="hud-timer-box">⏱ <b id="hud-timer">30</b>s</div>
       <div class="pill miss">✖ <b id="hud-miss">0</b>/<span id="hud-miss-max">5</span></div>
     </div>
-    <div class="board" id="board"></div>
+    <div class="board-scale" id="board-scale"><div class="board" id="board"></div></div>
   </section>
 
   <!-- 결과 -->
@@ -184,7 +194,18 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="rotate-ov" id="rotate-ov"><div><b>📱↻</b><span lang="en">Please rotate your device to landscape</span><span lang="ko">기기를 가로로 돌려주세요</span></div></div>
+<div class="zoom-ctl" id="zoom-ctl">
+  <button id="zoom-in" aria-label="zoom in">+</button>
+  <button class="mid" id="zoom-reset" aria-label="fit">⤢</button>
+  <button id="zoom-out" aria-label="zoom out">−</button>
+</div>
+<div class="rotate-ov" id="rotate-ov"><div>
+  <b>📱</b>
+  <span class="rl1" lang="en">Please rotate your device to landscape</span>
+  <span class="rl1" lang="ko">기기를 가로로 돌려주세요</span>
+  <span class="rl2" lang="en">The game starts when you rotate to landscape</span>
+  <span class="rl2" lang="ko">화면을 가로로 돌리면 게임이 시작됩니다</span>
+</div></div>
 
 <script src="../gacha/cards.js"></script>
 <script>
@@ -243,9 +264,46 @@ function toast(msg){
 var screens = {intro:$('screen-intro'), play:$('screen-play'), result:$('screen-result')};
 function show(name){
   Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('on', k===name); });
-  if(name === 'intro'){ document.body.classList.remove('playing'); }
+  if(name === 'intro'){ document.body.classList.remove('playing'); exitFs(); }
   window.scrollTo(0,0);
 }
+
+/* ── 모바일 전체화면 + 가로 강제 ── */
+function isMobile(){ return window.matchMedia('(max-width:900px)').matches || 'ontouchstart' in window; }
+function lockLandscape(){ try{ if(screen.orientation && screen.orientation.lock){ screen.orientation.lock('landscape').catch(function(){}); } }catch(e){} }
+function enterFs(){
+  if(!isMobile()) return;
+  try{
+    var el = document.documentElement;
+    var req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if(req){ var p = req.call(el); if(p && p.then){ p.then(lockLandscape).catch(lockLandscape); } else { lockLandscape(); } }
+    else { lockLandscape(); }
+  }catch(e){ lockLandscape(); }
+}
+function exitFs(){
+  try{
+    if(screen.orientation && screen.orientation.unlock){ screen.orientation.unlock(); }
+    if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(function(){}); }
+    else if(document.webkitFullscreenElement && document.webkitExitFullscreen){ document.webkitExitFullscreen(); }
+  }catch(e){}
+}
+
+/* ── 확대/축소 ── */
+var zoom = 1;
+function applyZoom(){ var bs = $('board-scale'); if(bs){ bs.style.transform = 'scale('+zoom.toFixed(2)+')'; } }
+function fitZoom(){
+  var bs = $('board-scale'); if(!bs) return;
+  bs.style.transform = 'scale(1)';
+  var boardH = bs.getBoundingClientRect().height;
+  var hud = document.querySelector('#screen-play .hud');
+  var hudH = hud ? hud.getBoundingClientRect().height : 0;
+  var avail = window.innerHeight - hudH - 90;
+  zoom = boardH > 0 ? Math.min(1, Math.max(0.45, avail / boardH)) : 1;
+  applyZoom();
+}
+$('zoom-in').addEventListener('click', function(){ zoom = Math.min(2, zoom + 0.15); applyZoom(); });
+$('zoom-out').addEventListener('click', function(){ zoom = Math.max(0.4, zoom - 0.15); applyZoom(); });
+$('zoom-reset').addEventListener('click', function(){ fitZoom(); });
 function shuffle(a){
   a = a.slice();
   for(var i=a.length-1;i>0;i--){
@@ -300,6 +358,7 @@ function start(idx){
   st.daily.plays[idx+1] = used + 1;
   save(SAVE_KEY, st);
   document.body.classList.add('playing');
+  enterFs();
   var s = STAGES[idx];
   var pairs = s.cards/2;
   var picks = shuffle(CARDS).slice(0, pairs);
@@ -326,8 +385,10 @@ function start(idx){
     board.appendChild(el);
   });
   show('play');
+  setTimeout(fitZoom, 60);
   cur.timer = setInterval(tick, 1000);
 }
+window.addEventListener('resize', function(){ if(document.body.classList.contains('playing')) fitZoom(); });
 function tick(){
   if(!cur) return;
   cur.left--;

@@ -283,21 +283,18 @@ var SITE_URL = 'https://xenauniverse.com/games/world-cup/';
 /* ══════════ 사진 풀 편집 구역 (대표님이 직접 수정하는 곳) ══════════
  * 1) 갤러리 사진 빼기: 아래 목록에서 빼고 싶은 번호를 지우면 됩니다.
  *    예) answer에서 3번 컷 빼기 → [1,2,4,5,...] 로 수정
- * 2) XENA CARDS 사진 차출: EXTRA_CARD_IDS 에 카드ID를 추가하면 됩니다.
- *    (가챠 cards.js에서 사용가능(1) 상태인 카드만 등장. N등급 위주 권장)
- *    예) var EXTRA_CARD_IDS = ['XA-N-01','NX-N-02'];
+ * 2) XENA CARDS 인물 사진(R/S/SR)은 자동으로 전부 들어옵니다.
+ *    - PERSON_PREFIXES: 사람이 나오는 카드 종류만 포함 (배경/기물 제외)
+ *    - WC_GRADES: R/S/SR만 (N·SSR 제외 — 대표님 지시 2026-07-19)
  * ════════════════════════════════════════════════════════════ */
 var GALLERY_PHOTOS = {
   answer:   [1,2,3,4,5,6,7,8,9,10],
   bright:   [1,2,3,4,5,7,8,9,10],        /* 6번 제외 (대표님 X표시 2026-07-18) */
   dopamine: [1,2,3,7,8,10]               /* 4·5·6·9번 제외 (〃) */
 };
-var EXTRA_CARD_IDS = [
-  /* XENA CARDS N등급 차출분 (2026-07-18) — 빼려면 줄 삭제, 추가하려면 카드ID 추가 */
-  'XA-N-03','XA-N-05','XA-N-06','XA-N-07','XA-N-09','XA-N-10',
-  'NX-N-02','NX-N-03','NX-N-04','NX-N-05','NX-N-06',
-  'XC-N-04'
-];
+/* 사람이 나오는 카드 접두사만 (기물/드론/모함/배경씬 등은 제외) */
+var PERSON_PREFIXES = ['XA','XB','XC','NX','LY','NV','EC','AM','DC','MW','FW','L5','L6','NM','BK','TA'];
+var WC_GRADES = ['R','S','SR'];
 
 /* ── 언어 ── */
 var lang = document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 'en';
@@ -325,10 +322,13 @@ TRACKS.forEach(function(tr){
     POOL.push({id:tr.key+'-'+i, src:GALLERY+tr.key+'-'+i+'.jpg', track:tr.title, name:'CUT #'+String(i).padStart(2,'0'), desc:tr.desc, close:tr.close});
   });
 });
-/* XENA CARDS 차출분 */
-if(window.ZENA_CARD_DEFS && EXTRA_CARD_IDS.length){
+/* XENA CARDS 인물 카드(R/S/SR) 전량 자동 차출 */
+if(window.ZENA_CARD_DEFS){
   window.ZENA_CARD_DEFS.forEach(function(d){
-    if(EXTRA_CARD_IDS.indexOf(d[0]) === -1 || d[4] !== 1) return;
+    if(d[4] !== 1) return;                                  /* 사용가능 카드만 */
+    if(WC_GRADES.indexOf(d[2]) === -1) return;              /* R/S/SR만 */
+    var prefix = String(d[0]).split('-')[0];
+    if(PERSON_PREFIXES.indexOf(prefix) === -1) return;      /* 사람 카드만 */
     var src = d[3].indexOf('../../') === 0 ? d[3] : '../gacha/' + d[3];
     POOL.push({id:'card-'+d[0], src:src, track:'XENA CARDS', name:d[1], desc:CARD_META.desc, close:CARD_META.close});
   });
