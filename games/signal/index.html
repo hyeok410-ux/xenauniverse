@@ -212,6 +212,7 @@ var st = load(SAVE_KEY, {});
 function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
 var toastTimer = null;
 function toast(msg){
+  if (window.XenaAudio) window.XenaAudio.sfx('toast');
   var el = $('toast');
   el.textContent = msg;
   el.classList.add('show');
@@ -328,6 +329,7 @@ $('flip-zone').addEventListener('click', function(){
     toast(t('Collect more cards like this in XENA CARDS! 🃏', 'XENA CARDS에서 이런 카드를 직접 뽑고 모아보세요! 🃏'));
     return;
   }
+  if (window.XenaAudio) window.XenaAudio.sfx('signal_claim');
   reveal();
 });
 /* 이미지 우클릭/드래그 보호 + 안내 멘트 */
@@ -345,6 +347,7 @@ $('btn-claim').addEventListener('click', function(){
   var bonus = (st.streak > 0 && st.streak % 7 === 0) ? 20 : 0;
   wallet.xc += 5 + bonus;
   save(SAVE_KEY, st); save(WALLET_KEY, wallet);
+  if (window.XenaAudio){ window.XenaAudio.sfx('quest_claim'); window.XenaAudio.sfx('xc_gain'); }
   renderWallet(); renderClaimBtn(); renderQuests();
   toast(bonus
     ? t('+5 XC + streak bonus +'+bonus+' XC!', '+5 XC + 7일 연속 보너스 +'+bonus+' XC!')
@@ -500,13 +503,14 @@ function renderQuests(){
   bindQuestActions();
 }
 function bindQuestActions(){
+  function questSfx(){ if (window.XenaAudio){ window.XenaAudio.sfx('quest_claim'); window.XenaAudio.sfx('xc_gain'); } }
   var map = {
-    chess: function(){ wallet.xc += CHESS_BONUS; st.chessBonusClaimed = true; save(SAVE_KEY, st); toast(t('+'+CHESS_BONUS+' XC — OVERRIDE GRID quest complete!', '+'+CHESS_BONUS+' XC — OVERRIDE GRID 퀘스트 완료!')); },
-    gacha: function(){ wallet.xc += GACHA_BONUS; setClaimedFlag('gachaBonusClaim'); toast(t('+'+GACHA_BONUS+' XC — XENA CARDS quest complete!', '+'+GACHA_BONUS+' XC — XENA CARDS 퀘스트 완료!')); },
-    worldcup: function(){ wallet.xc += WC_BONUS; setClaimedFlag('wcBonusClaim'); toast(t('+'+WC_BONUS+' XC — World Cup quest complete!', '+'+WC_BONUS+' XC — 월드컵 퀘스트 완료!')); },
-    memory: function(){ wallet.xc += MEMORY_BONUS; setClaimedFlag('memBonusClaim'); toast(t('+'+MEMORY_BONUS+' XC — Memory Grid quest complete!', '+'+MEMORY_BONUS+' XC — 메모리 그리드 퀘스트 완료!')); },
-    shisen: function(){ wallet.xc += SHISEN_BONUS; setClaimedFlag('shBonusClaim'); toast(t('+'+SHISEN_BONUS+' XC — Signal Link quest complete!', '+'+SHISEN_BONUS+' XC — 시그널 링크 퀘스트 완료!')); },
-    allbonus: function(){ wallet.xc += ALL_BONUS; setClaimedFlag('allBonusClaim'); toast(t('+'+ALL_BONUS+' XC — all quests bonus!', '+'+ALL_BONUS+' XC — 전체 완료 보너스!')); }
+    chess: function(){ wallet.xc += CHESS_BONUS; st.chessBonusClaimed = true; save(SAVE_KEY, st); questSfx(); toast(t('+'+CHESS_BONUS+' XC — OVERRIDE GRID quest complete!', '+'+CHESS_BONUS+' XC — OVERRIDE GRID 퀘스트 완료!')); },
+    gacha: function(){ wallet.xc += GACHA_BONUS; setClaimedFlag('gachaBonusClaim'); questSfx(); toast(t('+'+GACHA_BONUS+' XC — XENA CARDS quest complete!', '+'+GACHA_BONUS+' XC — XENA CARDS 퀘스트 완료!')); },
+    worldcup: function(){ wallet.xc += WC_BONUS; setClaimedFlag('wcBonusClaim'); questSfx(); toast(t('+'+WC_BONUS+' XC — World Cup quest complete!', '+'+WC_BONUS+' XC — 월드컵 퀘스트 완료!')); },
+    memory: function(){ wallet.xc += MEMORY_BONUS; setClaimedFlag('memBonusClaim'); questSfx(); toast(t('+'+MEMORY_BONUS+' XC — Memory Grid quest complete!', '+'+MEMORY_BONUS+' XC — 메모리 그리드 퀘스트 완료!')); },
+    shisen: function(){ wallet.xc += SHISEN_BONUS; setClaimedFlag('shBonusClaim'); questSfx(); toast(t('+'+SHISEN_BONUS+' XC — Signal Link quest complete!', '+'+SHISEN_BONUS+' XC — 시그널 링크 퀘스트 완료!')); },
+    allbonus: function(){ wallet.xc += ALL_BONUS; setClaimedFlag('allBonusClaim'); if (window.XenaAudio) window.XenaAudio.sfx('quest_all_complete'); toast(t('+'+ALL_BONUS+' XC — all quests bonus!', '+'+ALL_BONUS+' XC — 전체 완료 보너스!')); }
   };
   document.querySelectorAll('button[data-act]').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -551,5 +555,12 @@ if(revealed){ reveal(); }
 })();
 </script>
 <script src="../shared-profile.js"></script>
+<script src="../shared-audio.js"></script>
+<script>
+if (window.XenaAudio) window.XenaAudio.init('signal');
+document.querySelectorAll('button').forEach(function(el){
+  el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
+});
+</script>
 </body>
 </html>

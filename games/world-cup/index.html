@@ -415,6 +415,7 @@ function pick(side){
   state.locked = true;
   var pair = currentPair();
   var winner = side===0 ? pair[0] : pair[1];
+  if (window.XenaAudio){ window.XenaAudio.sfx('photo_pick'); window.XenaAudio.sfx('photo_eliminated'); }
   (side===0?fa:fb).classList.add('win');
   (side===0?fb:fa).classList.add('lose');
   state.next.push(winner);
@@ -425,6 +426,7 @@ function pick(side){
       // 라운드 종료
       if(state.next.length === 1){
         state.champion = state.next[0];
+        if (window.XenaAudio) window.XenaAudio.sfx('final_win');
         finish();
         return;
       }
@@ -585,6 +587,7 @@ function renderHistory(){
 /* ── 토스트 ── */
 var toastTimer = null;
 function toast(msg){
+  if (window.XenaAudio) window.XenaAudio.sfx('toast');
   var t = $('toast');
   t.textContent = msg;
   t.classList.add('show');
@@ -601,6 +604,7 @@ function shareText(){
   );
 }
 $('btn-share').addEventListener('click', function(){
+  if (window.XenaAudio) window.XenaAudio.sfx('share_result');
   var full = shareText()+'\n'+SITE_URL;
   /* 문구+링크를 항상 클립보드에 먼저 복사 → 어디든 붙여넣기 가능 */
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -705,5 +709,12 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 })();
 </script>
 <script src="../shared-profile.js"></script>
+<script src="../shared-audio.js"></script>
+<script>
+if (window.XenaAudio) window.XenaAudio.init('worldcup');
+document.querySelectorAll('button').forEach(function(el){
+  el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
+});
+</script>
 </body>
 </html>

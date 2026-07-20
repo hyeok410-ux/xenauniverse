@@ -261,6 +261,7 @@ function cardSrc(d){ return d[3].indexOf('../../') === 0 ? d[3] : '../gacha/' + 
 function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
 var toastTimer = null;
 function toast(msg){
+  if (window.XenaAudio) window.XenaAudio.sfx('toast');
   var el = $('toast');
   el.textContent = msg;
   el.classList.add('show');
@@ -430,6 +431,7 @@ function tick(){
   cur.time--;
   $('hud-timer').textContent = Math.max(0, cur.time);
   if(cur.time <= 15) $('hud-timer-box').classList.add('low');
+  if(cur.time === 10 && window.XenaAudio) window.XenaAudio.sfx('time_warning');
   if(cur.time <= 0) finish(false, t('Time\'s up!', '시간 초과!'));
 }
 
@@ -526,6 +528,7 @@ function onTile(e){
   if(!cur.sel){
     cur.sel = [x, y];
     el.classList.add('sel');
+    if (window.XenaAudio) window.XenaAudio.sfx('tile_select');
     return;
   }
   var sx = cur.sel[0], sy = cur.sel[1];
@@ -536,10 +539,12 @@ function onTile(e){
     sEl.classList.remove('sel');
     cur.sel = [x, y];
     el.classList.add('sel');
+    if (window.XenaAudio) window.XenaAudio.sfx('tile_select');
     return;
   }
   var path = findPath(sx, sy, x, y);
   if(!path){
+    if (window.XenaAudio) window.XenaAudio.sfx('match_fail_b');
     el.classList.add('deny'); sEl.classList.add('deny');
     setTimeout(function(){ el.classList.remove('deny'); sEl.classList.remove('deny'); }, 320);
     sEl.classList.remove('sel');
@@ -547,6 +552,7 @@ function onTile(e){
     return;
   }
   /* 매치! */
+  if (window.XenaAudio){ window.XenaAudio.sfx('line_connect'); window.XenaAudio.sfx('match_success_b'); }
   cur.locked = true;
   drawLink(path);
   sEl.classList.remove('sel');
@@ -595,6 +601,7 @@ $('btn-hint').addEventListener('click', function(){
   if(!cur || cur.hints <= 0) return;
   var pair = anyPair();
   if(!pair) return;
+  if (window.XenaAudio) window.XenaAudio.sfx('hint_use');
   cur.hints--;
   $('hud-hint').textContent = cur.hints;
   if(cur.hints <= 0) $('btn-hint').disabled = true;
@@ -610,6 +617,7 @@ function finish(win, reason){
   var idx = cur.idx, s = cur.s;
   var title = $('r-title'), sub = $('r-sub'), next = $('r-next');
   if(win){
+    if (window.XenaAudio) window.XenaAudio.sfx('stage_clear_b');
     var timeUsed = s.time - cur.time;
     title.className = 'win';
     title.textContent = t('LINK RESTORED!', '회선 복구 완료!');
@@ -619,6 +627,7 @@ function finish(win, reason){
       var rw = stageReward(idx);
       wallet.xc += rw;
       save(WALLET_KEY, wallet);
+      if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
       rewardMsg = t(' · <b>+'+rw+' XC</b> (first clear today)', ' · <b>+'+rw+' XC</b> (오늘 첫 클리어)');
     }
     if(idx+2 > st.unlocked){ st.unlocked = Math.min(STAGES.length, idx+2); }
@@ -667,5 +676,12 @@ renderStages();
 })();
 </script>
 <script src="../shared-profile.js"></script>
+<script src="../shared-audio.js"></script>
+<script>
+if (window.XenaAudio) window.XenaAudio.init('shisen');
+document.querySelectorAll('.pill, .lang-toggle button').forEach(function(el){
+  el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
+});
+</script>
 </body>
 </html>

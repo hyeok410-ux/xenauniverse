@@ -388,6 +388,7 @@ if(!st.welcomed){
 var $ = function(id){ return document.getElementById(id); };
 var toastTimer = null;
 function toast(msg){
+  if (window.XenaAudio) window.XenaAudio.sfx('toast');
   var el = $('toast');
   el.textContent = msg;
   el.classList.add('show');
@@ -424,6 +425,7 @@ function pickCard(grade){
 var lastDrawn = null; /* [{card, isNew}, ...] x3 */
 function draw(pack, useXC){
   if(!AVAIL.length){ toast(t('Cards are being prepared', '카드 준비 중입니다')); return; }
+  if (window.XenaAudio) window.XenaAudio.sfx('pack_tap');
   var now = Date.now();
   if(useXC){
     if(wallet.xc < PACKS[pack].price){ toast(t('Not enough XC — check Daily Signal quests', 'XC가 부족합니다 — 데일리 시그널 퀘스트를 확인하세요')); return; }
@@ -475,11 +477,23 @@ $('flip-zone').addEventListener('click', function(){
   if(flipped || !lastDrawn) return;
   flipped = true;
   var hasRare = false;
+  var bestGrade = 'N';
   document.querySelectorAll('.flip-card').forEach(function(el, i){
     if(i >= lastDrawn.length) return;
-    setTimeout(function(){ el.classList.add('flipped'); }, i*180);
+    setTimeout(function(){
+      el.classList.add('flipped');
+      if (window.XenaAudio) window.XenaAudio.sfx('card_flip_a');
+    }, i*180);
     if(lastDrawn[i].card.grade === 'SR' || lastDrawn[i].card.grade === 'SSR') hasRare = true;
+    if(GRADE_RANK[lastDrawn[i].card.grade] > GRADE_RANK[bestGrade]) bestGrade = lastDrawn[i].card.grade;
   });
+  if (window.XenaAudio){
+    setTimeout(function(){
+      var name = bestGrade === 'SSR' ? 'card_reveal_ssr' : bestGrade === 'SR' ? 'card_reveal_sr'
+        : bestGrade === 'S' ? 'card_reveal_s' : 'card_reveal_nr';
+      window.XenaAudio.sfx(name);
+    }, 750 + (lastDrawn.length-1)*180);
+  }
   if(hasRare){
     setTimeout(function(){
       var fl = $('flash');
@@ -497,7 +511,7 @@ $('flip-zone').addEventListener('click', function(){
   }, 750 + (lastDrawn.length-1)*180);
 });
 $('rv-close').addEventListener('click', function(){ $('reveal').classList.remove('on'); });
-$('rv-share').addEventListener('click', function(){ if(lastDrawn) shareCards(lastDrawn); });
+$('rv-share').addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('share_result'); if(lastDrawn) shareCards(lastDrawn); });
 $('rv-save').addEventListener('click', function(){ if(lastDrawn) downloadCards(lastDrawn.map(function(p){return p.card;})); });
 
 /* ── 쿨다운 표시 ── */
@@ -603,6 +617,7 @@ $('dt-dust').addEventListener('click', function(){
   st.owned[detailCard.id] = 1;
   wallet.xc += gain;
   save(SAVE_KEY, st); save(WALLET_KEY, wallet);
+  if (window.XenaAudio){ window.XenaAudio.sfx('card_dismantle'); window.XenaAudio.sfx('xc_gain'); }
   toast(t('Dusted '+(n-1)+' duplicate(s) → +'+gain+' XC', '중복 '+(n-1)+'장 분해 → +'+gain+' XC'));
   $('detail').classList.remove('on');
   renderAll();
@@ -742,5 +757,12 @@ renderAll();
 })();
 </script>
 <script src="../shared-profile.js"></script>
+<script src="../shared-audio.js"></script>
+<script>
+if (window.XenaAudio) window.XenaAudio.init('gacha');
+document.querySelectorAll('button').forEach(function(el){
+  el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
+});
+</script>
 </body>
 </html>

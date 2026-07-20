@@ -365,6 +365,13 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 });
 </script>
 <script src="./shared-profile.js"></script>
+<script src="./shared-audio.js"></script>
+<script>
+if (window.XenaAudio) window.XenaAudio.init('hub');
+document.querySelectorAll('.game-card, a, button').forEach(function(el){
+  el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
+});
+</script>
 </body>
 </html>
 
