@@ -296,6 +296,19 @@
     { id: "frame-crimson-eclipse", name: "Crimson Eclipse Frame", kind: "frame", role: "말 테두리", tier: "BOSS", credit: 4800, frameStyle: "crimson-eclipse", artRoot: "ui", art: "frame_crimson_eclipse_preview_v1.png", description: "아군 말에 붉은 일식과 판결 회로 테두리를 적용" },
     { id: "emote-signal", name: "XENA Reaction Pack", kind: "emote", role: "캐릭터 이모트", tier: "EPIC", credit: 3600, artRoot: "emote", art: "emote_xena_good_game_v1.png", description: "제나의 웃음·눈물·도발·존중·압박·엄지 인사 리액션 6종" },
   ];
+  SHOP_ITEMS.push(
+    { id: "arena-aurora-lounge", name: "Aurora Signal Lounge", kind: "arena", role: "게임 공간 스킨", tier: "SECRET", credit: 5600, artRoot: "board", art: "space_aurora_lounge_v1.png", arenaStyle: "aurora-lounge", description: "오로라 신호와 고급 라운지 조명이 겹쳐지는 게임 공간" },
+    { id: "battlefield-upload-7557", name: "Neon Atrium Battlefield", kind: "board", role: "전장", tier: "EPIC", credit: 4600, artRoot: "board", art: "battlefield_upload_7557edc8-f39a-4d88-b179-ddbb7c0d53d9.png", description: "빛의 아트리움 위에 열린 신호 전장" },
+    { id: "battlefield-upload-7969", name: "Crimson Transit Battlefield", kind: "board", role: "전장", tier: "EPIC", credit: 4800, artRoot: "board", art: "battlefield_upload_7969c327-f427-4e40-b72f-99e2dedcaa04.png", description: "붉은 교차로와 전광 신호가 흐르는 전장" },
+    { id: "battlefield-upload-816c", name: "Memory Rain Battlefield", kind: "board", role: "전장", tier: "LEGACY", shards: 210, artRoot: "board", art: "battlefield_upload_816c9ed1-3ebf-4889-817e-d7a19e9ac6ba.png", description: "기억의 빗줄기가 격자에 번지는 전장" },
+    { id: "battlefield-upload-9afe", name: "Violet Core Battlefield", kind: "board", role: "전장", tier: "OVERRIDE", shards: 280, artRoot: "board", art: "battlefield_upload_9afecd45-9900-4f37-9006-8b2f029288ab.png", description: "보랏빛 코어가 중앙선을 점유한 전장" },
+    { id: "battlefield-upload-add1", name: "Golden Dawn Battlefield", kind: "board", role: "전장", tier: "SOVEREIGN", shards: 250, artRoot: "board", art: "battlefield_upload_add1b884-1326-484a-a486-80d8ebde269d.png", description: "황금 여명이 판결선을 비추는 전장" },
+    { id: "battlefield-upload-b16f", name: "Deep Signal Battlefield", kind: "board", role: "전장", tier: "EPIC", credit: 5000, artRoot: "board", art: "battlefield_upload_b16feec7-447b-4c2f-a87c-3bc3990989fe.png", description: "깊은 신호가 바닥 아래에서 점멸하는 전장" },
+    { id: "battlefield-upload-df1a", name: "Afterglow Battlefield", kind: "board", role: "전장", tier: "SECRET", credit: 6200, artRoot: "board", art: "battlefield_upload_df1a1a1b-7669-4356-b3dc-c178c1afb31f.png", description: "붕괴 뒤의 잔광이 남은 최종 전장" },
+    ...[
+      ["12f4e589", "Prism Relay Frame", "EPIC", 4200], ["145f37c3", "Obsidian Pulse Frame", "EPIC", 4400], ["287b63db", "Cyan Lattice Frame", "RARE", 3200], ["37789099", "Violet Halo Frame", "LEGACY", 0], ["5310db15", "Gold Archive Frame", "SOVEREIGN", 0], ["78bbb43a", "Redline Frame", "BOSS", 5200], ["7ab2513c", "Signal Glass Frame", "RARE", 3000], ["87209c97", "Anomaly Edge Frame", "EPIC", 4600], ["9c417e91", "Blue Static Frame", "RARE", 3000], ["a25abf2d", "Crimson Prism Frame", "EPIC", 4600], ["c2e0a616", "Night Circuit Frame", "RARE", 3000], ["da6ad35a", "Solar Verdict Frame", "SOVEREIGN", 0], ["ea11dc20", "Ethereal Bloom Frame", "SECRET", 0], ["ea2f720d", "Electric Veil Frame", "EPIC", 4400], ["ef1f6106", "System Crown Frame", "BOSS", 5200], ["f223b044", "Violet Break Frame", "OVERRIDE", 0],
+    ].map(([code, name, tier, credit], index) => ({ id: `frame-upload-${code}`, name, kind: "frame", role: "말 테두리", tier, ...(credit ? { credit } : { shards: 180 + index * 8 }), frameStyle: `upload-${code}`, artRoot: "ui", art: `frame_upload_${code}.png`, description: "정사각 캐릭터 프레임 전체를 감싸는 신규 말 테두리" }))
+  );
   const SHOP_DETAILS = {
     "cyan-xena": { role: "캐릭터 스킨", tier: "SOVEREIGN", order: 8 },
     "crimson-sovran": { role: "캐릭터 스킨", tier: "SOVEREIGN", order: 8 },
@@ -408,6 +421,7 @@
 
   let screen = "setup";
   let storeFilter = "skin";
+  let codexFilter = "all";
   let pendingRoomCode = "";
   let profile = safeJson(storage.get("og_profile"), null) || createGuestProfile();
   const hubNickname = storage.get("xena_nickname");
@@ -1231,7 +1245,9 @@
       return `<button class="codex-entry ${isOwned ? "owned" : "locked"}" data-preview-codex="${card.id}"><span class="codex-art"><img src="${itemArtSrc(card)}" alt="${card.name}" loading="lazy" decoding="async"></span><span class="codex-meta"><small>${card.faction} · ${card.rarity}</small><b>${card.name}</b><em>${roleLabel(card.role)}</em><span>${isOwned ? "보유 중" : `시그널 ${card.credit.toLocaleString()}`}</span></span></button>`;
     };
     const factionGroup = (packId, title) => `<section class="codex-faction"><div class="section-title"><h2>${title}</h2><span>${owned.includes(packId) ? "팩 보유 · 12명 자동 해금" : "미보유 캐릭터는 개별 해금 가능"}</span></div><div class="codex-grid">${CODEX_CARDS.filter((card) => card.pack === packId).map(entry).join("")}</div></section>`;
-    app.innerHTML = `<div class="shell codex-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="codex-page"><div class="store-heading"><div><small>ALL CHARACTER ARCHIVE · WEB PROTOTYPE</small><h1>UNIT <span>CODEX</span></h1><p>현재 게임의 모든 캐릭터를 확인하고 해금하는 곳입니다. 보유 캐릭터는 컬러, 미보유 캐릭터는 무채색으로 표시됩니다.</p></div><div class="header-actions"><button class="primary" data-open-units>내 유닛</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><div class="codex-progress"><span>전체 캐릭터 컬렉션</span><b>${unlocked} / ${CODEX_CARDS.length} 보유</b></div>${factionGroup("xena", "XENA · REBEL MEMORY")}${factionGroup("sovran", "SOVRAN · SYSTEM DOMINION")}${factionGroup("crystal", "STAY BRIGHT · CRYSTAL REBELLION")}</section></div>`;
+    const codexTabs = [["all", "전체"], ["xena", "제나 반란군"], ["sovran", "소브란 시스템"], ["crystal", "Stay Bright"]];
+    const groups = codexFilter === "all" ? codexTabs.slice(1) : codexTabs.filter(([id]) => id !== "all" && id === codexFilter);
+    app.innerHTML = `<div class="shell codex-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="codex-page"><div class="store-heading"><div><small>ALL CHARACTER ARCHIVE · WEB PROTOTYPE</small><h1>UNIT <span>CODEX</span></h1><p>현재 게임의 모든 캐릭터를 확인하고 해금하는 곳입니다. 보유 캐릭터는 컬러, 미보유 캐릭터는 무채색으로 표시됩니다.</p></div><div class="header-actions"><button class="primary" data-open-units>내 유닛</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><nav class="codex-tabs" aria-label="도감 필터">${codexTabs.map(([id, label]) => `<button type="button" class="${codexFilter === id ? "active" : ""}" data-codex-filter="${id}">${label}</button>`).join("")}</nav><div class="codex-progress"><span>${codexFilter === "all" ? "전체 캐릭터 컬렉션" : "선택 팩 캐릭터 컬렉션"}</span><b>${unlocked} / ${CODEX_CARDS.length} 보유</b></div>${groups.map(([id, label]) => factionGroup(id, label.toUpperCase())).join("")}</section></div>`;
     if (showcase && showcase.source === "codex") {
       const card = CODEX_CARDS.find((entry) => entry.id === showcase.id);
       if (card) app.insertAdjacentHTML("beforeend", showcaseMarkup(card, "codex"));
@@ -1239,6 +1255,7 @@
     bindStoreButton();
     document.getElementById("back-to-setup").addEventListener("click", () => { showcase = null; screen = "setup"; renderSetup(); });
     app.querySelectorAll("[data-preview-codex]").forEach((button) => button.addEventListener("click", () => { showcase = { source: "codex", id: button.dataset.previewCodex }; renderCodex(); }));
+    app.querySelectorAll("[data-codex-filter]").forEach((button) => button.addEventListener("click", () => { codexFilter = button.dataset.codexFilter; showcase = null; renderCodex(); }));
     app.querySelectorAll("[data-close-showcase]").forEach((element) => element.addEventListener("click", (event) => { if (event.target === element || event.target.closest("[data-close-showcase]")) { showcase = null; renderCodex(); } }));
     app.querySelectorAll("[data-modal-buy-card]").forEach((button) => button.addEventListener("click", () => buyCodexCard(button.dataset.modalBuyCard)));
     app.querySelectorAll("[data-go-my-units]").forEach((button) => button.addEventListener("click", () => { showcase = null; renderMyUnits(); }));
@@ -1303,7 +1320,7 @@
       renderMyUnits();
     }));
     app.querySelectorAll("[data-apply-skin]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.applySkin; if (id) unitSkins[selectedCharacter] = id; else delete unitSkins[selectedCharacter]; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
-    app.querySelectorAll("[data-apply-effect]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.applyEffect; if (id) unitEffects[selectedCharacter] = { id, enabled: true }; else delete unitEffects[selectedCharacter]; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
+    app.querySelectorAll("[data-apply-effect]").forEach((button) => button.addEventListener("click", () => { const effectGrid = app.querySelector(".unit-config .config-block:last-child .appearance-grid"); const effectScrollTop = effectGrid ? effectGrid.scrollTop : 0; const id = button.dataset.applyEffect; if (id) unitEffects[selectedCharacter] = { id, enabled: true }; else delete unitEffects[selectedCharacter]; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); requestAnimationFrame(() => { const nextEffectGrid = app.querySelector(".unit-config .config-block:last-child .appearance-grid"); if (nextEffectGrid) nextEffectGrid.scrollTop = effectScrollTop; }); }));
     app.querySelectorAll("[data-apply-board]").forEach((button) => button.addEventListener("click", () => { activeBoard = button.dataset.applyBoard; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
     app.querySelectorAll("[data-apply-arena]").forEach((button) => button.addEventListener("click", () => { activeArena = button.dataset.applyArena; playSfx("equip", 0.48); saveMeta(); applyCosmeticTheme(); renderMyUnits(); }));
     app.querySelectorAll("[data-apply-frame]").forEach((button) => button.addEventListener("click", () => { activeFrame = button.dataset.applyFrame; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
@@ -1873,7 +1890,7 @@
       records.rating = Math.max(0, humanRating() + (draw ? 5 : win ? 25 : -20));
     }
     saveMeta();
-    if (!draw) playVoice(win ? "xena" : "sovran", win ? "victory" : "defeat");
+    if (!draw) playVoice(voiceFactionForColor(win ? playerColor : (playerColor === "white" ? "black" : "white")), win ? "victory" : "defeat");
     let creditReward = 0;
     let shardReward = 0;
     let eventBonus = 0;
@@ -1942,6 +1959,11 @@
     }
   }
 
+  function voiceFactionForColor(color, board = state?.board) {
+    const leader = board?.find((piece) => piece && piece.color === color && piece.type === "leader");
+    return leader && String(leader.character).toUpperCase().startsWith("SOVRAN") ? "sovran" : "xena";
+  }
+
   function makeVisualAction(move, before) {
     const mover = Number.isInteger(move.from) ? before.board[move.from] : null;
     const target = Number.isInteger(move.to) ? before.board[move.to] : null;
@@ -1959,6 +1981,7 @@
       targetType: target && target.type,
       targetColor: target && target.color,
       targetLeader: targetLeader && targetLeader.character,
+      voiceFaction: voiceFactionForColor(before.turn, before.board),
       effectStyle: effectItem && effectItem.effectStyle,
       effectColor: effectItem && effectItem.effectColor,
       effectImage: effectItem && itemArtSrc(effectItem),
@@ -1969,7 +1992,7 @@
 
   function playActionSfx(action) {
     if (!action) return;
-    const faction = action.color === "black" ? "sovran" : "xena";
+    const faction = action.voiceFaction || (action.color === "black" ? "sovran" : "xena");
     if (action.skill && SFX[action.skill]) {
       playSfx(action.skill, 0.58);
       playVoice(faction, "skill");
