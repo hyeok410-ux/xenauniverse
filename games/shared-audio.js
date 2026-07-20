@@ -96,10 +96,12 @@
     var url = ASSET_BASE + 'bg/' + file;
     var style = document.createElement('style');
     style.textContent =
-      'body::before{content:"";position:fixed;inset:0;z-index:-2;' +
-      'background:url("'+url+'") center/cover no-repeat fixed;}' +
-      'body::after{content:"";position:fixed;inset:0;z-index:-1;' +
-      'background:linear-gradient(180deg, rgba(5,6,10,.82), rgba(5,6,10,.93));}';
+      'body::before{content:"";position:fixed;inset:0;z-index:-3;' +
+      'background:url("'+url+'") center/cover no-repeat fixed;filter:brightness(1.05) saturate(1.15);}' +
+      'body::after{content:"";position:fixed;inset:0;z-index:-2;' +
+      'background:linear-gradient(180deg, rgba(5,6,10,.32), rgba(5,6,10,.5));}' +
+      'body{background:transparent !important;}' +
+      '.bg-fx, .bg-grid{opacity:.55;}';
     document.head.appendChild(style);
   }
 
