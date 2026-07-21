@@ -309,6 +309,12 @@
       ["12f4e589", "Prism Relay Frame", "EPIC", 4200], ["145f37c3", "Obsidian Pulse Frame", "EPIC", 4400], ["287b63db", "Cyan Lattice Frame", "RARE", 3200], ["37789099", "Violet Halo Frame", "LEGACY", 0], ["5310db15", "Gold Archive Frame", "SOVEREIGN", 0], ["78bbb43a", "Redline Frame", "BOSS", 5200], ["7ab2513c", "Signal Glass Frame", "RARE", 3000], ["87209c97", "Anomaly Edge Frame", "EPIC", 4600], ["9c417e91", "Blue Static Frame", "RARE", 3000], ["a25abf2d", "Crimson Prism Frame", "EPIC", 4600], ["c2e0a616", "Night Circuit Frame", "RARE", 3000], ["da6ad35a", "Solar Verdict Frame", "SOVEREIGN", 0], ["ea11dc20", "Ethereal Bloom Frame", "SECRET", 0], ["ea2f720d", "Electric Veil Frame", "EPIC", 4400], ["ef1f6106", "System Crown Frame", "BOSS", 5200], ["f223b044", "Violet Break Frame", "OVERRIDE", 0],
     ].map(([code, name, tier, credit], index) => ({ id: `frame-upload-${code}`, name, kind: "frame", role: "말 테두리", tier, ...(credit ? { credit } : { shards: 180 + index * 8 }), frameStyle: `upload-${code}`, artRoot: "ui", art: `frame_upload_${code}.png`, description: "정사각 캐릭터 프레임 전체를 감싸는 신규 말 테두리" }))
   );
+  let premiumSkinIndex = 0;
+  let premiumArenaIndex = 0;
+  SHOP_ITEMS.forEach((item) => {
+    if (item.kind === "skin") { item.credit = 18000 + premiumSkinIndex * 700; delete item.shards; premiumSkinIndex += 1; }
+    if (item.kind === "arena") { item.credit = 26000 + premiumArenaIndex * 700; delete item.shards; premiumArenaIndex += 1; }
+  });
   const SHOP_DETAILS = {
     "cyan-xena": { role: "캐릭터 스킨", tier: "SOVEREIGN", order: 8 },
     "crimson-sovran": { role: "캐릭터 스킨", tier: "SOVEREIGN", order: 8 },
@@ -1342,7 +1348,7 @@
     const loadoutToggle = app.querySelector("[data-toggle-loadout]");
     if (loadoutToggle) loadoutToggle.addEventListener("click", () => { showLoadoutOptions = !showLoadoutOptions; renderMyUnits(); });
     document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
-    app.querySelectorAll("[data-lineup-pack]").forEach((button) => button.addEventListener("click", () => { lineupPack = button.dataset.lineupPack; selectedUnitSlot = "leader"; renderMyUnits(); }));
+    app.querySelectorAll("[data-lineup-pack]").forEach((button) => button.addEventListener("click", () => { lineupPack = button.dataset.lineupPack; unitLineups[lineupPack] = defaultLineup(lineupPack); selectedUnitSlot = "leader"; saveMeta(); renderMyUnits(); }));
     app.querySelectorAll("[data-unit-slot]").forEach((button) => button.addEventListener("click", () => { selectedUnitSlot = button.dataset.unitSlot; renderMyUnits(); }));
     app.querySelectorAll("[data-equip-character]").forEach((button) => button.addEventListener("click", () => {
       const character = button.dataset.equipCharacter;
@@ -1368,13 +1374,6 @@
       if (item.kind === "frame") activeFrame = item.id;
       if (item.kind === "arena") activeArena = item.id;
       playSfx("equip", 0.48); saveMeta(); applyCosmeticTheme(); renderMyUnits();
-    }));
-    app.querySelectorAll(".formation-slot > .unit-portrait").forEach((portrait) => portrait.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const slotKey = portrait.closest("[data-unit-slot]")?.dataset.unitSlot;
-      const character = slotKey ? unitLineups[lineupPack][slotKey] : "";
-      const card = CODEX_CARDS.find((entry) => entry.character === character);
-      if (card) { showcase = { source: "units", id: card.id }; renderMyUnits(); }
     }));
     app.querySelectorAll("[data-close-showcase]").forEach((element) => element.addEventListener("click", (event) => { if (event.target === element || event.target.closest("[data-close-showcase]")) { showcase = null; renderMyUnits(); } }));
     app.querySelectorAll("[data-modal-equip-units]").forEach((button) => button.addEventListener("click", () => {

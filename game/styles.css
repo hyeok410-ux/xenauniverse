@@ -156,9 +156,9 @@ body[data-arena="arena-crystal-bastion"] .game-layout { background: linear-gradi
 body[data-arena="arena-echo-grid"] .game-layout { background: linear-gradient(90deg, rgba(3,8,15,.74), rgba(19,10,34,.38), rgba(3,8,15,.74)), url("./assets/boards/board_echo_grid_v1.webp") center / cover; }
 body[data-arena="arena-mothership"] .game-layout { background: linear-gradient(90deg, rgba(3,8,15,.78), rgba(34,8,18,.34), rgba(3,8,15,.78)), url("./assets/boards/board_mothership_sky_v1.webp") center / cover; }
 body[data-arena] .side-panel { background: rgba(5,8,15,.68); backdrop-filter: blur(2px); }
-body[data-arena]:not([data-arena=""]) .game-layout { background: linear-gradient(90deg, rgba(3,8,15,.38), rgba(15,24,42,.08), rgba(3,8,15,.38)), var(--arena-image) center / cover; }
+body[data-arena]:not([data-arena=""]) .game-layout { background: transparent; }
 body[data-arena]:not([data-arena=""]) .arena { background: rgba(3,6,12,.08); }
-body[data-arena]:not([data-arena=""]) .game-layout::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--arena-image) center / cover; opacity: .5; filter: saturate(1.2) brightness(1.18); pointer-events: none; }
+body[data-arena]:not([data-arena=""]) .game-layout::before { display: none; }
 body[data-arena]:not([data-arena=""]) { background-image: linear-gradient(rgba(3,6,12,.18), rgba(3,6,12,.22)), var(--arena-image); background-position: center; background-size: cover; background-attachment: fixed; }
 .arena-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #858da1; font-size: 10px; }
 .replay-actions { display: flex; gap: 6px; }
@@ -388,12 +388,11 @@ body[data-arena]:not([data-arena=""]) { background-image: linear-gradient(rgba(3
 .units-layout { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
 .units-layout > section, .unit-config { min-width: 0; padding: 15px; border: 1px solid var(--line); background: rgba(7,10,17,.88); }
 .formation-grid { display: grid; grid-template-columns: repeat(6, minmax(108px, 1fr)); gap: 7px; min-width: 720px; }
-.formation-slot { min-width: 0; min-height: 132px; display: grid; grid-template-rows: 90px minmax(0, 1fr); align-items: center; gap: 6px; overflow: hidden; padding: 6px; color: #eaf0fb; border: 1px solid var(--line); background: #0a0e17; text-align: left; cursor: pointer; }
+.formation-slot { min-width: 0; min-height: 132px; display: grid; grid-template-rows: auto minmax(0, 1fr); align-items: center; gap: 6px; overflow: hidden; padding: 6px; color: #eaf0fb; border: 1px solid var(--line); background: #0a0e17; text-align: left; cursor: pointer; }
 .formation-slot.selected { border-color: var(--lime); box-shadow: inset 0 0 16px rgba(183,255,60,.08); }
 .unit-portrait { position: relative; display: block; overflow: hidden; width: 48px; height: 48px; background: #06090f; border: 1px solid rgba(50,230,239,.25); }
 .unit-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; transform: translateY(var(--face-shift, 0%)) scale(var(--face-scale, 2.85)); filter: saturate(1.14) contrast(1.08); }
-.formation-slot > .unit-portrait { width: 100%; height: 90px; }
-.formation-slot > .unit-portrait { aspect-ratio: 1; height: auto; }
+.formation-slot > .unit-portrait { width: 100%; aspect-ratio: 1 / 1; height: auto; }
 .formation-slot > .unit-portrait img { transform: translateY(0) scale(1) !important; object-position: center 20%; }
 .appearance-choice img { width: 100%; height: 100%; object-fit: cover; object-position: center 18%; filter: saturate(1.12) contrast(1.05); }
 .formation-slot span, .unit-choice span, .appearance-choice span { min-width: 0; }
@@ -635,8 +634,8 @@ body[data-cosmetic="legacy-nova"] { --cyan: #d292ff; --lime: #ffcb66; --violet: 
   .store-guide > *:nth-last-child(-n + 2) { border-bottom: 1px solid var(--line); }
   .store-guide > *:last-child { border-bottom: 0; }
   .formation-grid { grid-template-columns: repeat(6, minmax(82px, 1fr)); min-width: 540px; }
-  .formation-slot { min-height: 108px; grid-template-rows: 70px minmax(0, 1fr); }
-  .formation-slot > .unit-portrait { height: 70px; }
+  .formation-slot { min-height: 108px; grid-template-rows: auto minmax(0, 1fr); }
+  .formation-slot > .unit-portrait { aspect-ratio: 1 / 1; height: auto; }
   .unit-choice-grid, .appearance-grid { grid-template-columns: 1fr; }
   .global-cosmetic-grid { grid-template-columns: 1fr; }
 }
