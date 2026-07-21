@@ -14,6 +14,7 @@
 (function(){
   'use strict';
   var PKEY = 'xena_local_v1'; /* 아바타/뱃지/플레이타임 등 로컬 전용 데이터 */
+  var ADMIN_UID = 'PiegXmg9KjNJS9JDS3piP0agUB02'; /* UI 노출 여부만 결정 — 실제 권한은 서버(functions)가 재검증 */
   var DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#181022"/><circle cx="32" cy="24" r="12" fill="#5a4a7a"/><path d="M10 58c0-14 10-22 22-22s22 8 22 22" fill="#5a4a7a"/></svg>'
   );
@@ -246,6 +247,13 @@
     '.xprof-badge .xprof-tip{display:none;position:absolute;bottom:105%;left:50%;transform:translateX(-50%);background:#000;color:#fff;font-size:9px;padding:5px 7px;border-radius:6px;white-space:nowrap;z-index:5;}'+
     '.xprof-badge:hover .xprof-tip{display:block;}'+
     '.xprof-signout{margin-top:16px;width:100%;font-family:inherit;font-size:10.5px;letter-spacing:.08em;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#9a97b5;cursor:pointer;}'+
+    '.xprof-admin{display:none;margin-top:16px;padding:12px;border-radius:10px;border:1px dashed rgba(255,107,138,.4);background:rgba(255,107,138,.06);text-align:left;}'+
+    '.xprof-admin.show{display:block;}'+
+    '.xprof-admin-title{font-size:10px;letter-spacing:.1em;color:#ff8fa8;margin-bottom:8px;}'+
+    '.xprof-admin-row{display:flex;gap:6px;margin-bottom:6px;}'+
+    '.xprof-admin-row input{flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px 8px;color:#fff;font-family:inherit;font-size:10px;}'+
+    '.xprof-admin-row button{font-family:inherit;font-size:9.5px;font-weight:700;padding:6px 10px;border-radius:6px;border:none;background:#ff6b8a;color:#2a0410;cursor:pointer;white-space:nowrap;}'+
+    '.xprof-admin-out{font-size:9px;color:#c4c1da;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow:auto;margin-top:6px;}'+
     '#xprof-toast{position:fixed;top:56px;right:12px;z-index:600;background:linear-gradient(135deg,#a06bff,#3fe0ff);color:#0a0912;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;padding:10px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;transform:translateY(-8px);transition:.35s ease;pointer-events:none;}'+
     '#xprof-toast.on{opacity:1;transform:translateY(0);}';
   document.head.appendChild(style);
@@ -283,6 +291,13 @@
       '</div>'+
       '<div class="xprof-badge-title">🏆 '+tt({ko:'영광의 도감',en:'Hall of Fame'})+'</div>'+
       '<div class="xprof-badges" id="xprof-badge-grid"></div>'+
+      '<div class="xprof-admin" id="xprof-admin">'+
+        '<div class="xprof-admin-title">⚙ ADMIN</div>'+
+        '<div class="xprof-admin-row"><input id="xa-uid" placeholder="target UID (비우면 나 자신)"></div>'+
+        '<div class="xprof-admin-row"><input id="xa-amount" placeholder="credits (예: 1000, -500)"><button id="xa-grant">지급</button></div>'+
+        '<div class="xprof-admin-row"><button id="xa-list">비정상 재화 조회</button><button id="xa-reset">대상 UID 초기화</button></div>'+
+        '<div class="xprof-admin-out" id="xa-out"></div>'+
+      '</div>'+
       '<button class="xprof-signout" id="xprof-signout">'+tt({ko:'로그아웃',en:'Sign out'})+'</button>'+
     '</div>';
   document.body.appendChild(overlay);
@@ -312,7 +327,45 @@
       grid.appendChild(d);
     });
     renderClaimBox();
+    renderAdminBox();
   }
+
+  function callFn(name, data){
+    return ctx().then(function(c){
+      if (!c.functionsApi || !c.functionsInstance) return Promise.reject(new Error('FUNCTIONS_UNAVAILABLE'));
+      return c.functionsApi.httpsCallable(c.functionsInstance, name)(data || {}).then(function(r){ return r.data; });
+    });
+  }
+  function renderAdminBox(){
+    var box = document.getElementById('xprof-admin');
+    box.classList.toggle('show', !!(authUser && authUser.uid === ADMIN_UID));
+  }
+  var xaOut = null;
+  function adminLog(v){
+    if (!xaOut) xaOut = document.getElementById('xa-out');
+    xaOut.textContent = typeof v === 'string' ? v : JSON.stringify(v, null, 1);
+  }
+  var xaGrant = document.getElementById('xa-grant');
+  var xaList = document.getElementById('xa-list');
+  var xaReset = document.getElementById('xa-reset');
+  if (xaGrant) xaGrant.addEventListener('click', function(){
+    var targetUid = document.getElementById('xa-uid').value.trim() || (authUser && authUser.uid);
+    var amount = Number(document.getElementById('xa-amount').value);
+    if (!targetUid || !amount){ adminLog('targetUid/amount 확인'); return; }
+    adminLog('처리 중…');
+    callFn('adminGrantCredits', {targetUid:targetUid, amount:amount}).then(adminLog).catch(function(e){ adminLog('오류: '+(e.message||e)); });
+  });
+  if (xaList) xaList.addEventListener('click', function(){
+    adminLog('조회 중…');
+    callFn('adminListWallets', {threshold:500}).then(adminLog).catch(function(e){ adminLog('오류: '+(e.message||e)); });
+  });
+  if (xaReset) xaReset.addEventListener('click', function(){
+    var targetUid = document.getElementById('xa-uid').value.trim();
+    if (!targetUid){ adminLog('초기화할 대상 UID를 입력하세요'); return; }
+    if (!window.confirm('정말 '+targetUid+' 의 재화를 0으로 초기화할까요?')) return;
+    adminLog('처리 중…');
+    callFn('adminResetWallet', {targetUid:targetUid}).then(adminLog).catch(function(e){ adminLog('오류: '+(e.message||e)); });
+  });
 
   function renderClaimBox(){
     var box = document.getElementById('xprof-claim');

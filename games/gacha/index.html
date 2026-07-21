@@ -92,6 +92,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .pack.signal .pack-kind{color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);}
 .pack.sov .pack-kind{color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);}
 .pack.elite .pack-kind{color:var(--magenta);text-shadow:0 0 12px rgba(255,47,176,.4);}
+.pack.week .pack-kind{color:var(--purple-light);text-shadow:0 0 12px rgba(160,107,255,.4);}
 .pack h3{font-size:1.2rem;font-weight:800;letter-spacing:.05em;margin-bottom:6px;}
 .pack .cool{font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:16px;letter-spacing:.06em;}
 .pack-art{width:112px;height:156px;margin:0 auto 18px;border-radius:12px;position:relative;overflow:hidden;
@@ -262,7 +263,16 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
       <button class="draw-btn" id="btn-sov">FREE DRAW</button>
       <button class="xc-btn" id="btn-sov-xc"><span lang="en">Extra draw · 150 XC</span><span lang="ko">150 XC로 추가 뽑기</span></button>
-      <div class="odds"><span class="oR">R 84.5%</span> · <span class="oS">S 10%</span> · <span class="oSR">SR 5%</span> · <span class="oSSR">SSR 0.5%</span></div>
+      <div class="odds"><span class="oN">N 40%</span> · <span class="oR">R 44.5%</span> · <span class="oS">S 10%</span> · <span class="oSR">SR 5%</span> · <span class="oSSR">SSR 0.5%</span></div>
+    </div>
+    <div class="pack week">
+      <span class="pack-x3">×3</span>
+      <div class="pack-kind"><span lang="en">Weekly · Resets Monday</span><span lang="ko">주간 · 매주 월요일 초기화</span></div>
+      <h3>WEEKLY PACK</h3>
+      <div class="cool" id="cool-weekly">—</div>
+      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
+      <button class="draw-btn" id="btn-weekly-pack">FREE DRAW</button>
+      <div class="odds"><span class="oN">N 25%</span> · <span class="oR">R 30%</span> · <span class="oS">S 30%</span> · <span class="oSR">SR 10%</span> · <span class="oSSR">SSR 5%</span></div>
     </div>
     <div class="pack elite">
       <span class="pack-x3">×3</span>
@@ -361,10 +371,33 @@ var PACKS = {
   signal: {label:'SIGNAL PACK', coolMs:8*3600*1000, price:50,
     odds:[['SR',0.001],['S',0.03],['R',0.269],['N',0.700]]},
   sov: {label:'SOVEREIGN PACK', coolMs:12*3600*1000, price:150,
-    odds:[['SSR',0.005],['SR',0.05],['S',0.10],['R',0.845]]},
+    odds:[['SSR',0.005],['SR',0.05],['S',0.10],['R',0.445],['N',0.40]]},
   elite: {label:'OVERRIDE PACK', coolMs:24*3600*1000, price:300,
-    odds:[['SSR',0.01],['SR',0.06],['S',0.15],['R',0.78]]}
+    odds:[['SSR',0.01],['SR',0.06],['S',0.15],['R',0.78]]},
+  weekly: {label:'WEEKLY PACK', weekly:true,
+    odds:[['SSR',0.05],['SR',0.10],['S',0.30],['R',0.30],['N',0.25]]}
 };
+
+/* 주간 팩 전용: 미국 동부시간(뉴욕) 기준 월요일 자정 리셋.
+   그 주 "월요일 날짜"(YYYY-MM-DD)를 키로 써서, 키가 바뀌면 다시 뽑을 수 있다. */
+function nyWeekMondayKey(){
+  var f = new Intl.DateTimeFormat('en-CA', {timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit'});
+  var parts = f.formatToParts(new Date()).reduce(function(acc,p){ if(p.type!=='literal') acc[p.type]=p.value; return acc; }, {});
+  var d = new Date(parts.year+'-'+parts.month+'-'+parts.day+'T00:00:00');
+  var dow = (d.getDay()+6) % 7; /* 0=월 ... 6=일 */
+  d.setDate(d.getDate()-dow);
+  var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+function nyNextMondayMs(){
+  var f = new Intl.DateTimeFormat('en-CA', {timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+  var parts = f.formatToParts(new Date()).reduce(function(acc,p){ if(p.type!=='literal') acc[p.type]=p.value; return acc; }, {});
+  var nowNY = new Date(parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute+':'+parts.second);
+  var dow = (nowNY.getDay()+6) % 7;
+  var daysLeft = (7 - dow) % 7 || 7;
+  var target = new Date(nowNY); target.setDate(nowNY.getDate()+daysLeft); target.setHours(0,0,0,0);
+  return Date.now() + (target - nowNY);
+}
 var FALLBACK = {SSR:'SR', SR:'S', S:'R', R:'N', N:null};
 
 /* 카드 풀 */
@@ -435,7 +468,11 @@ function draw(pack, useXC){
   if(!AVAIL.length){ toast(t('Cards are being prepared', '카드 준비 중입니다')); return; }
   if (window.XenaAudio) window.XenaAudio.sfx('pack_tap');
   var now = Date.now();
-  if(useXC){
+  if(PACKS[pack].weekly){
+    var wk = nyWeekMondayKey();
+    if(st.packs.weeklyClaimed === wk) return;
+    st.packs.weeklyClaimed = wk;
+  } else if(useXC){
     if(wallet.xc < PACKS[pack].price){ toast(t('Not enough XC — check Daily Signal quests', 'XC가 부족합니다 — 데일리 시그널 퀘스트를 확인하세요')); return; }
     wallet.xc -= PACKS[pack].price;
     save(WALLET_KEY, wallet);
@@ -546,12 +583,26 @@ function tickCooldowns(){
     var xcBtn = $('btn-'+p+'-xc');
     xcBtn.disabled = wallet.xc < PACKS[p].price;
   });
+  /* 주간 팩: 뉴욕시간 월요일 자정 리셋 */
+  var wBtn = $('btn-weekly-pack'), wCool = $('cool-weekly');
+  var claimed = st.packs.weeklyClaimed === nyWeekMondayKey();
+  if(!claimed){
+    wBtn.disabled = false;
+    wBtn.textContent = t('FREE DRAW', '무료 뽑기');
+    wCool.textContent = t('Free draw available now!', '지금 무료 뽑기 가능!');
+  } else {
+    var leftW = nyNextMondayMs() - Date.now();
+    wBtn.disabled = true;
+    wBtn.textContent = t('Claimed this week', '이번 주 수령 완료');
+    wCool.textContent = t('Next reset in '+fmtLeft(leftW), '다음 초기화까지 '+fmtLeft(leftW));
+  }
 }
 setInterval(tickCooldowns, 1000);
 
 $('btn-signal').addEventListener('click', function(){ draw('signal', false); });
 $('btn-sov').addEventListener('click', function(){ draw('sov', false); });
 $('btn-elite').addEventListener('click', function(){ draw('elite', false); });
+$('btn-weekly-pack').addEventListener('click', function(){ draw('weekly', false); });
 $('btn-signal-xc').addEventListener('click', function(){ draw('signal', true); });
 $('btn-sov-xc').addEventListener('click', function(){ draw('sov', true); });
 $('btn-elite-xc').addEventListener('click', function(){ draw('elite', true); });

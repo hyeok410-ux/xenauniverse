@@ -11,7 +11,7 @@ const FieldValue = admin.firestore.FieldValue;
 
 // 대표님 전용 관리자 UID. 로그인 후 프로필 패널에 표시되는 UID를 여기에 채워 넣어야
 // adminGrantCredits / adminListWallets 가 동작한다. 비어 있으면 항상 거부된다.
-const ADMIN_UID = "";
+const ADMIN_UID = "PiegXmg9KjNJS9JDS3piP0agUB02";
 
 const MATCH_REWARDS = Object.freeze({
   ai_easy_win: { credits: 20, shards: 0 },
