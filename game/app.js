@@ -1190,16 +1190,19 @@
 
   function showcaseMarkup(item, source) {
     const isCodex = source === "codex";
-    const ownedItem = isCodex ? ownsCodexCard(item) : cosmeticOwned.includes(item.id);
+    const isUnit = source === "units" && !item.kind;
+    const ownedItem = isCodex || isUnit ? true : cosmeticOwned.includes(item.id);
     const price = isCodex ? `시그널 ${item.credit.toLocaleString()}` : cosmeticPrice(item);
-    const details = isCodex ? null : shopDetails(item);
-    const description = isCodex ? `${item.faction} · ${roleLabel(item.role)} · ${item.rarity}` : `${details.role} · ${details.tier} · ${item.description}`;
+    const details = isCodex || isUnit ? null : shopDetails(item);
+    const description = isCodex || isUnit ? `${item.faction} · ${roleLabel(item.role)} · ${item.rarity}` : `${details.role} · ${details.tier} · ${item.description}`;
     let action;
     if (isCodex) action = ownedItem ? `<button class="secondary" data-go-my-units>내 유닛에서 장착</button>` : `<button class="primary" data-modal-buy-card="${item.id}">${price}로 해금</button>`;
+    else if (isUnit) action = `<span class="showcase-owned">현재 편성 캐릭터 · 슬롯 선택은 아래에서 진행</span>`;
     else if (!ownedItem) action = `<button class="primary" data-modal-buy-cosmetic="${item.id}">${t("purchase")} · ${price}</button>`;
+    else if (source === "units") action = `<button class="primary" data-modal-equip-units="${item.id}">장착</button>`;
     else if (["board", "arena", "frame", "skin", "effect"].includes(item.kind)) action = `<button class="secondary" data-go-my-units>내 유닛에서 장착</button>`;
     else action = `<span class="showcase-owned">보유 중 · 자동 활성화</span>`;
-    return `<div class="showcase-overlay" data-close-showcase><section class="showcase-modal kind-${item.kind || "unit"}" role="dialog" aria-modal="true" aria-label="${item.name}" data-showcase-panel><button class="showcase-close" data-close-showcase aria-label="닫기">×</button><div class="showcase-radiance"></div><div class="showcase-art"><img src="${itemArtSrc(item)}"${fallbackAttr(item.artRoot || "card", item.fallbackArt)} alt="${item.name}"></div><div class="showcase-copy"><small>${isCodex ? "SIGNAL ARCHIVE" : `${details.role} · ${details.tier}`}</small><h2>${item.name}</h2><p>${description}</p><b>${ownedItem ? "OWNED" : price}</b><div class="showcase-action">${action}</div></div></section></div>`;
+    return `<div class="showcase-overlay" data-close-showcase><section class="showcase-modal kind-${item.kind || "unit"}" role="dialog" aria-modal="true" aria-label="${item.name}" data-showcase-panel><button class="showcase-close" data-close-showcase aria-label="닫기">×</button><div class="showcase-radiance"></div><div class="showcase-art"><img src="${itemArtSrc(item)}"${fallbackAttr(item.artRoot || "card", item.fallbackArt)} alt="${item.name}"></div><div class="showcase-copy"><small>${isCodex || isUnit ? "SIGNAL ARCHIVE" : `${details.role} · ${details.tier}`}</small><h2>${item.name}</h2><p>${description}</p><b>${ownedItem ? "OWNED" : price}</b><div class="showcase-action">${action}</div></div></section></div>`;
   }
 
   function renderStore() {
@@ -1263,7 +1266,8 @@
   }
 
   function renderMyUnits() {
-    clearInterval(timer); screen = "units"; showcase = null; applyCosmeticTheme();
+    const activeUnitShowcase = showcase && showcase.source === "units" ? showcase : null;
+    clearInterval(timer); screen = "units"; showcase = activeUnitShowcase; applyCosmeticTheme();
     if (!committedStarter && !owned.length) {
       app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>내 <span>유닛</span></h1><p>보유 캐릭터를 같은 직업 슬롯에 장착하고, 캐릭터별 스킨과 공격 이펙트를 설정합니다.</p></div><div class="header-actions"><button class="secondary" data-open-codex>도감</button><button class="secondary" data-open-store>상점</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><section class="loadout-empty"><small>STARTER REQUIRED</small><h2>스타터 팩을 먼저 확정해 주세요</h2><p>첫 대전을 시작하면 선택한 진영의 12명이 자동으로 해금됩니다. 이후 이곳에서 같은 직업의 보유 캐릭터를 교체하고 스킨과 공격 이펙트를 설정할 수 있습니다.</p><button class="primary" id="choose-starter">스타터 선택으로 이동</button></section></section></div>`;
       bindStoreButton();
@@ -1303,6 +1307,37 @@
     app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>내 <span>유닛</span></h1><p>보유 캐릭터를 편성하고, 전장·말 테두리·스킨·공격 이펙트를 장착합니다.</p></div><div class="header-actions"><button class="secondary" data-open-codex>도감</button><button class="secondary" data-open-store>상점</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><div class="loadout-pack-tabs">${availablePacks.map((packId) => `<button class="${lineupPack === packId ? "active" : ""}" data-lineup-pack="${packId}">${G.PACKS[packId].leaderName} · ${G.PACKS[packId].name}</button>`).join("")}</div><section class="global-loadout ${showLoadoutOptions ? "expanded" : "collapsed"}"><div class="global-loadout-block"><div class="section-title"><h2>전장 장착</h2><span>상점에서 구매한 전장을 여기서 변경</span></div><div class="global-cosmetic-grid"><button class="global-cosmetic-choice ${activeBoard ? "" : "selected"}" data-apply-board=""><span class="default-cosmetic">GRID</span><span><b>기본 전장</b><small>보유</small></span></button>${boardItems.map(boardChoice).join("")}</div></div><div class="global-loadout-block"><div class="section-title"><h2>아군 말 테두리</h2><span>능력치 변화 없는 계정 공용 외형</span></div><div class="global-cosmetic-grid"><button class="global-cosmetic-choice ${activeFrame ? "" : "selected"}" data-apply-frame=""><span class="default-cosmetic">BASE</span><span><b>기본 진영 테두리</b><small>보유</small></span></button>${frameItems.map(frameChoice).join("")}</div></div></section><button class="secondary loadout-more" data-toggle-loadout>${showLoadoutOptions ? "닫기" : "더보기"}</button><div class="units-layout"><section><div class="section-title"><h2>12 UNIT FORMATION</h2><span>폰은 위쪽, 룩·비숍·트리거·리더·비숍·나이트는 아래쪽</span></div><div class="formation-grid">${FORMATION_SLOTS.map(slotCard).join("")}</div></section><aside class="unit-config"><div class="selected-unit-hero">${unitPortraitMarkup(selectedCharacter, "hero-portrait")}<div><small>${slot.label}</small><h2>${selectedUnit ? selectedUnit.name : selectedCharacter}</h2><span>${selectedUnit ? selectedUnit.faction : ""}</span></div></div><div class="config-block"><div class="section-title"><h3>캐릭터 교체</h3><span>같은 직업 중 현재 편성되지 않은 보유 캐릭터만 표시</span></div><div class="unit-choice-grid">${candidates.map(choiceCard).join("")}</div></div><div class="config-block"><div class="section-title"><h3>스킨</h3><span>상점에서 구매한 전용 외형</span></div><div class="appearance-grid"><button class="appearance-choice ${unitSkins[selectedCharacter] ? "" : "selected"}" data-apply-skin=""><span><b>기본 외형</b><small>보유</small></span></button>${skinItems.map(skinChoice).join("")}</div></div><div class="config-block"><div class="section-title"><h3>공격 이펙트</h3><button class="secondary effect-equip-all" data-equip-all-effects>전체 장착</button><label class="effect-toggle"><input type="checkbox" data-toggle-effect ${effectSetting.id && effectSetting.enabled !== false ? "checked" : ""} ${effectSetting.id ? "" : "disabled"}><span>효과 ${effectSetting.enabled !== false && effectSetting.id ? "ON" : "OFF"}</span></label></div><p class="effect-broadcast">모든 캐릭터가 <b>${selectedEffectName}</b> 이펙터를 사용합니다.</p><div class="appearance-grid"><button class="appearance-choice ${effectSetting.id ? "" : "selected"}" data-apply-effect=""><span><b>캐릭터 기본 효과</b><small>기본</small></span></button>${effectItems.map(effectChoice).join("")}</div></div></aside></div></section></div>`;
     const globalLoadout = app.querySelector(".global-loadout");
     if (globalLoadout) globalLoadout.insertAdjacentHTML("beforeend", `<div class="global-loadout-block"><div class="section-title"><h2>게임 공간 스킨</h2><span>좌우 패널과 전투 배경을 함께 변경</span></div><div class="global-cosmetic-grid">${arenaItems.map((item) => `<button class="global-cosmetic-choice ${activeArena === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-arena="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`).join("")}</div></div>`);
+    const packTabs = app.querySelector(".loadout-pack-tabs");
+    const formationArea = app.querySelector(".units-layout");
+    if (packTabs && formationArea) formationArea.parentElement.insertBefore(packTabs, formationArea);
+    const cosmeticGroups = [
+      ["data-apply-board", "board"],
+      ["data-apply-frame", "frame"],
+      ["data-apply-arena", "arena"],
+    ];
+    cosmeticGroups.forEach(([attribute, kind]) => {
+      app.querySelectorAll(`[${attribute}]`).forEach((button) => {
+        const id = button.getAttribute(attribute);
+        if (!id) return;
+        const wrapper = document.createElement("div");
+        wrapper.className = "cosmetic-choice-wrap";
+        button.parentNode.insertBefore(wrapper, button);
+        wrapper.appendChild(button);
+        button.removeAttribute(attribute);
+        button.dataset.previewUnitCosmetic = id;
+        button.dataset.previewUnitKind = kind;
+        const equip = document.createElement("button");
+        equip.type = "button";
+        equip.className = "secondary cosmetic-equip";
+        equip.dataset.equipCosmetic = id;
+        equip.textContent = "장착";
+        wrapper.appendChild(equip);
+      });
+    });
+    if (activeUnitShowcase) {
+      const item = SHOP_ITEMS.find((entry) => entry.id === activeUnitShowcase.id) || CODEX_CARDS.find((entry) => entry.id === activeUnitShowcase.id);
+      if (item) app.insertAdjacentHTML("beforeend", showcaseMarkup(item, "units"));
+    }
     bindStoreButton();
     const loadoutToggle = app.querySelector("[data-toggle-loadout]");
     if (loadoutToggle) loadoutToggle.addEventListener("click", () => { showLoadoutOptions = !showLoadoutOptions; renderMyUnits(); });
@@ -1324,14 +1359,42 @@
     app.querySelectorAll("[data-apply-board]").forEach((button) => button.addEventListener("click", () => { activeBoard = button.dataset.applyBoard; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
     app.querySelectorAll("[data-apply-arena]").forEach((button) => button.addEventListener("click", () => { activeArena = button.dataset.applyArena; playSfx("equip", 0.48); saveMeta(); applyCosmeticTheme(); renderMyUnits(); }));
     app.querySelectorAll("[data-apply-frame]").forEach((button) => button.addEventListener("click", () => { activeFrame = button.dataset.applyFrame; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
+    app.querySelectorAll("[data-preview-unit-cosmetic]").forEach((button) => button.addEventListener("click", () => { showcase = { source: "units", id: button.dataset.previewUnitCosmetic }; renderMyUnits(); }));
+    app.querySelectorAll("[data-equip-cosmetic]").forEach((button) => button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const item = SHOP_ITEMS.find((entry) => entry.id === button.dataset.equipCosmetic);
+      if (!item || !cosmeticOwned.includes(item.id)) return;
+      if (item.kind === "board") activeBoard = item.id;
+      if (item.kind === "frame") activeFrame = item.id;
+      if (item.kind === "arena") activeArena = item.id;
+      playSfx("equip", 0.48); saveMeta(); applyCosmeticTheme(); renderMyUnits();
+    }));
+    app.querySelectorAll(".formation-slot > .unit-portrait").forEach((portrait) => portrait.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const slotKey = portrait.closest("[data-unit-slot]")?.dataset.unitSlot;
+      const character = slotKey ? unitLineups[lineupPack][slotKey] : "";
+      const card = CODEX_CARDS.find((entry) => entry.character === character);
+      if (card) { showcase = { source: "units", id: card.id }; renderMyUnits(); }
+    }));
+    app.querySelectorAll("[data-close-showcase]").forEach((element) => element.addEventListener("click", (event) => { if (event.target === element || event.target.closest("[data-close-showcase]")) { showcase = null; renderMyUnits(); } }));
+    app.querySelectorAll("[data-modal-equip-units]").forEach((button) => button.addEventListener("click", () => {
+      const item = SHOP_ITEMS.find((entry) => entry.id === button.dataset.modalEquipUnits);
+      if (!item || !cosmeticOwned.includes(item.id)) return;
+      if (item.kind === "board") activeBoard = item.id;
+      if (item.kind === "frame") activeFrame = item.id;
+      if (item.kind === "arena") activeArena = item.id;
+      showcase = null; playSfx("equip", 0.48); saveMeta(); applyCosmeticTheme(); renderMyUnits();
+    }));
     const allEffects = app.querySelector("[data-equip-all-effects]");
     if (allEffects) allEffects.addEventListener("click", () => {
+      const effectGrid = app.querySelector(".unit-config .config-block:last-child .appearance-grid");
+      const effectScrollTop = effectGrid ? effectGrid.scrollTop : 0;
       const selectedId = unitEffects[selectedCharacter]?.id;
       const selectedItem = effectItems.find((item) => item.id === selectedId && cosmeticOwned.includes(item.id));
       if (!selectedItem) return alert("먼저 현재 캐릭터에 적용할 이펙트를 하나 선택해주세요.");
       const characters = [...new Set(Object.values(unitLineups[lineupPack]))];
       characters.forEach((character) => { unitEffects[character] = { id: selectedItem.id, enabled: true }; });
-      playSfx("equip", 0.5); saveMeta(); renderMyUnits();
+      playSfx("equip", 0.5); saveMeta(); renderMyUnits(); requestAnimationFrame(() => { const nextEffectGrid = app.querySelector(".unit-config .config-block:last-child .appearance-grid"); if (nextEffectGrid) nextEffectGrid.scrollTop = effectScrollTop; });
     });
     const toggle = app.querySelector("[data-toggle-effect]");
     if (toggle) toggle.addEventListener("change", () => { if (unitEffects[selectedCharacter]) unitEffects[selectedCharacter].enabled = toggle.checked; saveMeta(); renderMyUnits(); });
@@ -1545,7 +1608,8 @@
     const enemy = gameMode === "ai" && G.PACKS[aiOpponentPack] ? aiOpponentPack : chosen === "xena" ? "sovran" : "xena";
     state = G.createInitialState({ whitePack: chosen, blackPack: enemy });
     applyLineupToState(state, "white", chosen);
-    if ((gameMode === "local" && owned.includes(enemy)) || gameMode === "ai") applyLineupToState(state, "black", enemy);
+    if (gameMode === "local" && owned.includes(enemy)) applyLineupToState(state, "black", enemy);
+    if (gameMode === "ai") applyLineupToState(state, "black", enemy, defaultLineup(enemy));
     const awakenPreview = new URLSearchParams(window.location.search).get("awaken");
     if (awakenPreview === "white" || awakenPreview === "black") state.awakened[awakenPreview] = true;
     snapshots = [cloneState(state)];
@@ -1559,8 +1623,8 @@
     }
   }
 
-  function applyLineupToState(targetState, color, packId) {
-    const lineup = unitLineups[packId] || defaultLineup(packId);
+  function applyLineupToState(targetState, color, packId, forcedLineup = null) {
+    const lineup = forcedLineup || unitLineups[packId] || defaultLineup(packId);
     const backKeys = color === "white"
       ? ["bastion", "vector1", "catalyst", "leader", "vector2", "glitch"]
       : ["glitch", "vector2", "leader", "catalyst", "vector1", "bastion"];
