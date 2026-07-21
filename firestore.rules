@@ -108,36 +108,20 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Leaderboard entries are written only by the submitScore Cloud Function
+    // (Admin SDK bypasses these rules). The client can no longer self-report
+    // a score directly — this closes the "anyone can POST a fake time" hole.
     match /leaderboards/{boardId}/entries/{userId} {
-      function signedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner() {
-        return signedIn() && request.auth.uid == userId;
-      }
-
-      function validLeaderboardEntry() {
-        return request.resource.data.keys().hasOnly([
-            'uid', 'nickname', 'game', 'week', 'stage', 'score', 'updatedAt'
-          ])
-          && request.resource.data.uid == userId
-          && request.resource.data.game in ['memory', 'shisen']
-          && request.resource.data.week is string
-          && request.resource.data.week.size() <= 12
-          && request.resource.data.stage is string
-          && request.resource.data.stage.size() <= 40
-          && request.resource.data.score is number
-          && request.resource.data.score >= 0
-          && request.resource.data.score <= 999999999
-          && request.resource.data.nickname is string
-          && request.resource.data.nickname.size() <= 16
-          && request.resource.data.updatedAt is timestamp;
-      }
-
       allow read: if true;
-      allow create, update: if isOwner() && validLeaderboardEntry();
-      allow delete: if false;
+      allow write: if false;
+    }
+
+    // Server-computed weekly point totals + reward winners (written by the
+    // weekly cron function). Read-only for players so they can see their own
+    // standing; claiming moves the reward into wallets/{uid} via a callable.
+    match /weeklyRewards/{rewardId} {
+      allow read: if true;
+      allow write: if false;
     }
 
     match /matches/{roomCode} {

@@ -41,7 +41,7 @@
     #xena-xc{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;font-weight:700;letter-spacing:.1em;
       color:#e8c468;padding:8px 13px;border:1px solid rgba(232,196,104,.45);border-radius:20px;
       background:rgba(4,6,12,.86);backdrop-filter:blur(10px);white-space:nowrap;}
-    /* shared-profile.js 가 만든 고정 버튼을 이 줄 안으로 편입 */
+    /* shared-identity.js 가 만든 고정 버튼을 이 줄 안으로 편입 */
     #xena-topcenter #xprof-btn{position:static !important;top:auto !important;right:auto !important;
       left:auto !important;transform:none !important;margin:0 !important;}
     @media(max-width:560px){
@@ -64,7 +64,8 @@
   <script src="./firebase-config.js?v=20260719c"></script>
   <script src="./cloud-sync.js?v=20260719c"></script>
   <script src="./app.js?v=20260719c"></script>
-  <script src="../games/shared-profile.js?v=20260721"></script>
+  <script src="../games/shared-identity.js?v=20260721"></script>
+  <script src="../games/shared-gate.js?v=20260721"></script>
   <script src="../games/shared-audio.js?v=20260721"></script>
   <script>
     /* XC 잔액 표시 — 미니게임과 동일한 xena_wallet_v1 지갑을 읽어 실시간 갱신 */
@@ -87,7 +88,7 @@
       setInterval(render, 2000);
       window.addEventListener('storage', render);
 
-      /* shared-profile.js 가 body 에 붙인 프로필 버튼을 상단 가운데 줄로 이동 */
+      /* shared-identity.js 가 body 에 붙인 프로필 버튼을 상단 가운데 줄로 이동 */
       var row = document.getElementById('xena-topcenter');
       function adopt(){
         var btn = document.getElementById('xprof-btn');

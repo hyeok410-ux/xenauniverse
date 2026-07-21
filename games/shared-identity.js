@@ -1,58 +1,164 @@
-/* XENA GAMES 공용 프로필 · 뱃지 시스템 (게임제작부서)
-   모든 게임 페이지에 <script src="../shared-profile.js"></script> 로 삽입.
-   localStorage만 사용 (제로 예산 원칙). */
+/* XENA GAMES 통합 프로필/로그인 시스템 (게임제작부서)
+   shared-profile.js 를 대체한다. 예전에는 우측상단 프로필(로컬 닉네임)과
+   허브 상단중앙 계정버튼(Google 로그인 + 별도 닉네임)이 따로 있었는데,
+   여기서 Google 로그인 하나로 통합한다 — 우측상단 버튼이 유일한 진입점.
+
+   닉네임은 Firestore users/{uid} 문서에 최초 1회만 쓸 수 있고(firestore.rules
+   validCreateUser/validUpdateUser 가 이후 변경을 막음) 이후로는 절대 수정 불가
+   (추후 유료 재화로 변경권을 팔 예정이므로 여기서 미리 잠가둔다).
+
+   <script src="../game/firebase-config.js"></script>
+   <script src="../game/cloud-sync.js"></script>
+   <script src="../shared-identity.js"></script>  ← 이 순서로 로드해야 한다.
+*/
 (function(){
   'use strict';
-  var PKEY = 'xena_profile_v1';
+  var PKEY = 'xena_local_v1'; /* 아바타/뱃지/플레이타임 등 로컬 전용 데이터 */
   var DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#181022"/><circle cx="32" cy="24" r="12" fill="#5a4a7a"/><path d="M10 58c0-14 10-22 22-22s22 8 22 22" fill="#5a4a7a"/></svg>'
   );
 
-  function load(){
-    try{
-      var p = JSON.parse(localStorage.getItem(PKEY) || 'null');
-      if(!p) p = {};
-    }catch(e){ p = {}; }
-    if(!p.nickname) p.nickname = 'XENA FAN #' + Math.floor(1000 + Math.random()*9000);
+  function loadLocal(){
+    var p; try{ p = JSON.parse(localStorage.getItem(PKEY) || 'null') || {}; }catch(e){ p = {}; }
+    /* 구버전 shared-profile.js 가 쓰던 로컬 저장소에서 아바타/뱃지/플레이타임 1회 이관 */
+    if (!p.__migrated){
+      try{
+        var old = JSON.parse(localStorage.getItem('xena_profile_v1') || 'null');
+        if (old){
+          if (old.avatar) p.avatar = old.avatar;
+          if (typeof old.lifetimeEarned === 'number') p.lifetimeEarned = old.lifetimeEarned;
+          if (typeof old.lastSeenXC === 'number') p.lastSeenXC = old.lastSeenXC;
+          if (typeof old.playtimeMin === 'number') p.playtimeMin = old.playtimeMin;
+          if (old.badges) p.badges = old.badges;
+        }
+      }catch(e){}
+      p.__migrated = true;
+    }
     if(!p.avatar) p.avatar = DEFAULT_AVATAR;
     if(typeof p.lifetimeEarned !== 'number') p.lifetimeEarned = 0;
     if(typeof p.lastSeenXC !== 'number') p.lastSeenXC = -1;
     if(typeof p.playtimeMin !== 'number') p.playtimeMin = 0;
     if(!p.badges) p.badges = {};
-    if(!p.createdAt) p.createdAt = Date.now();
     return p;
   }
-  function save(p){ localStorage.setItem(PKEY, JSON.stringify(p)); }
-  var P = load();
+  function saveLocal(p){ localStorage.setItem(PKEY, JSON.stringify(p)); }
+  var L = loadLocal();
 
   function getJSON(key, fallback){
     try{ var v = JSON.parse(localStorage.getItem(key)); return (v && typeof v==='object') ? v : fallback; }
     catch(e){ return fallback; }
   }
   function num(v){ return typeof v === 'number' && !isNaN(v) ? v : 0; }
+  function lang(){ return (document.documentElement.lang === 'en') ? 'en' : 'ko'; }
+  function tt(obj){ return obj[lang()] || obj.ko; }
 
-  /* ── XC 획득 누적 추적 (증가분만 감지 — 지출은 감소이므로 무시됨) ── */
+  /* ── 로그인 상태 / 닉네임 (Firestore users/{uid}) ── */
+  var cloudReady = null;
+  var authUser = null;        /* Firebase Auth user (uid, displayName, photoURL...) */
+  var nickname = null;        /* 확정된 닉네임 (없으면 null = 아직 설정 전) */
+  var nicknameChecked = false;
+  var subs = [];
+  function notify(){ subs.forEach(function(fn){ try{ fn(state()); }catch(e){} }); }
+  function state(){ return { signedIn: !!authUser, uid: authUser ? authUser.uid : null, nickname: nickname, avatar: L.avatar }; }
+
+  function ctx(){
+    if (!window.XenaCloudSync) return Promise.reject(new Error('CLOUD_UNAVAILABLE'));
+    if (!cloudReady) cloudReady = window.XenaCloudSync.context();
+    return cloudReady;
+  }
+
+  function validNickname(v){
+    return typeof v === 'string' && v.length >= 2 && v.length <= 16 && /^[A-Za-z0-9가-힣 _-]+$/.test(v);
+  }
+
+  function fetchOrCreateNickname(uid){
+    return ctx().then(function(c){
+      var fs = c.firestoreApi, db = c.db;
+      var ref = fs.doc(db, 'users', uid);
+      return fs.getDoc(ref).then(function(snap){
+        if (snap.exists() && snap.data().nickname){
+          nickname = snap.data().nickname;
+          nicknameChecked = true;
+          notify();
+          return nickname;
+        }
+        return promptForNickname(ref, fs);
+      });
+    });
+  }
+
+  function promptForNickname(ref, fs){
+    var msg = tt({
+      ko: '처음 오셨네요! 사용할 닉네임을 정해주세요.\n2~16자, 한글/영문/숫자/공백/-/_ 만 가능합니다.\n한 번 정하면 이후 무료로 변경할 수 없습니다.',
+      en: 'Welcome! Choose a nickname.\n2-16 chars, letters/numbers/space/-/_ only.\nOnce set, it cannot be changed for free.'
+    });
+    var entered = null;
+    while (true){
+      entered = window.prompt(msg, '');
+      if (entered === null) return null; /* 취소 — 로그인은 유지, 다음 진입 때 다시 물어봄 */
+      entered = entered.trim();
+      if (validNickname(entered)) break;
+      msg = tt({ko:'2~16자, 한글/영문/숫자/공백/-/_ 만 가능합니다. 다시 입력해주세요.', en:'2-16 chars, letters/numbers/space/-/_ only. Try again.'}) ;
+    }
+    var now = fs.serverTimestamp();
+    return fs.setDoc(ref, {
+      uid: authUser.uid,
+      nickname: entered,
+      nicknameLower: entered.toLowerCase(),
+      nicknameLocked: true,
+      createdAt: now,
+      updatedAt: now
+    }).then(function(){
+      nickname = entered;
+      nicknameChecked = true;
+      notify();
+      return entered;
+    }).catch(function(){ return null; });
+  }
+
+  function init(){
+    if (!window.XenaCloudSync) return;
+    window.XenaCloudSync.subscribe(function(snap){
+      var was = authUser;
+      authUser = snap.user;
+      if (authUser && (!was || was.uid !== authUser.uid)){
+        nickname = null; nicknameChecked = false;
+        fetchOrCreateNickname(authUser.uid);
+      } else if (!authUser){
+        nickname = null; nicknameChecked = false;
+      }
+      notify();
+      renderButton();
+    });
+    window.XenaCloudSync.connect().catch(function(){});
+  }
+
+  function signIn(){
+    if (!window.XenaCloudSync) return Promise.reject(new Error('CLOUD_UNAVAILABLE'));
+    return window.XenaCloudSync.signIn();
+  }
+  function signOut(){
+    if (!window.XenaCloudSync) return Promise.resolve();
+    return window.XenaCloudSync.signOut();
+  }
+
+  /* ── XC 누적 / 플레이타임 (로컬 통계 — 뱃지용) ── */
   function pollWallet(){
     var w = getJSON('xena_wallet_v1', {xc:0});
     var xc = num(w.xc);
-    if(P.lastSeenXC < 0) P.lastSeenXC = xc;
-    if(xc > P.lastSeenXC) P.lifetimeEarned += (xc - P.lastSeenXC);
-    P.lastSeenXC = xc;
-    save(P);
+    if (L.lastSeenXC < 0) L.lastSeenXC = xc;
+    if (xc > L.lastSeenXC) L.lifetimeEarned += (xc - L.lastSeenXC);
+    L.lastSeenXC = xc;
+    saveLocal(L);
   }
   pollWallet();
   setInterval(pollWallet, 4000);
-  window.addEventListener('storage', function(e){ if(e.key === 'xena_wallet_v1') pollWallet(); });
-
-  /* ── 플레이 시간 누적 (탭이 보이는 동안만) ── */
+  window.addEventListener('storage', function(e){ if (e.key === 'xena_wallet_v1') pollWallet(); });
   setInterval(function(){
-    if(document.visibilityState === 'visible'){
-      P.playtimeMin += 0.5;
-      save(P);
-    }
+    if (document.visibilityState === 'visible'){ L.playtimeMin += 0.5; saveLocal(L); }
   }, 30000);
 
-  /* ── 뱃지 조건 정의 ── */
+  /* ── 뱃지 ── */
   function collectStats(){
     var worldcup = getJSON('xena_worldcup_stats_v1', {});
     var memory = getJSON('xena_memory_v1', {});
@@ -61,19 +167,15 @@
     var gachaOwned = 0;
     try{
       var g = getJSON('zena_gacha_v1', {});
-      if(g && g.owned) gachaOwned = Object.keys(g.owned).filter(function(k){ return g.owned[k] > 0; }).length;
+      if (g && g.owned) gachaOwned = Object.keys(g.owned).filter(function(k){ return g.owned[k] > 0; }).length;
     }catch(e){}
     var chessRating = 0;
     try{ chessRating = num(parseInt(localStorage.getItem('og_grid_rating'), 10)); }catch(e){}
     return {
-      playtimeMin: P.playtimeMin,
-      lifetimeEarned: P.lifetimeEarned,
-      worldcupFinishes: num(worldcup.totalFinishes),
-      memoryUnlocked: num(memory.unlocked),
-      shisenUnlocked: num(shisen.unlocked),
-      signalStreak: num(signal.streak),
-      gachaOwned: gachaOwned,
-      chessRating: chessRating
+      playtimeMin: L.playtimeMin, lifetimeEarned: L.lifetimeEarned,
+      worldcupFinishes: num(worldcup.totalFinishes), memoryUnlocked: num(memory.unlocked),
+      shisenUnlocked: num(shisen.unlocked), signalStreak: num(signal.streak),
+      gachaOwned: gachaOwned, chessRating: chessRating
     };
   }
 
@@ -103,37 +205,38 @@
     var s = collectStats();
     BADGES.forEach(function(b){
       var got = !!b.need(s);
-      if(got && !P.badges[b.id]){
-        P.badges[b.id] = Date.now();
-        newlyUnlocked.push(b);
-      }
+      if (got && !L.badges[b.id]){ L.badges[b.id] = Date.now(); newlyUnlocked.push(b); }
     });
-    save(P);
+    saveLocal(L);
   }
   evalBadges();
 
-  function lang(){ return (document.documentElement.lang === 'en') ? 'en' : 'ko'; }
-  function tt(obj){ return obj[lang()] || obj.ko; }
-
-  /* ── UI 삽입 ── */
+  /* ── UI ── */
   var style = document.createElement('style');
   style.textContent =
     '#xprof-btn{position:fixed;top:10px;right:12px;z-index:400;width:38px;height:38px;border-radius:50%;overflow:hidden;'+
     'border:2px solid rgba(63,224,255,.55);background:rgba(4,6,12,.86);cursor:pointer;padding:0;box-shadow:0 0 12px rgba(63,224,255,.25);}'+
     '#xprof-btn img{width:100%;height:100%;object-fit:cover;display:block;}'+
+    '#xprof-btn.guest{border-color:rgba(255,255,255,.35);}'+
     '#xprof-overlay{position:fixed;inset:0;z-index:500;background:rgba(3,4,8,.86);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:60px 14px 40px;}'+
     '#xprof-overlay.on{display:flex;}'+
     '#xprof-modal{width:100%;max-width:520px;background:linear-gradient(180deg,#12101c,#0a0912);border:1px solid rgba(63,224,255,.3);border-radius:16px;padding:22px;font-family:"JetBrains Mono",ui-monospace,monospace;color:#e8e6f2;}'+
     '#xprof-modal h2{margin:0 0 16px;font-size:15px;letter-spacing:.1em;color:#3fe0ff;display:flex;justify-content:space-between;align-items:center;}'+
     '#xprof-close{background:none;border:none;color:#9a97b5;font-size:18px;cursor:pointer;}'+
-    '.xprof-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;}'+
+    '.xprof-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;}'+
     '.xprof-avatar-wrap{position:relative;width:72px;height:72px;border-radius:50%;overflow:hidden;border:2px solid rgba(63,224,255,.5);flex:0 0 auto;cursor:pointer;}'+
     '.xprof-avatar-wrap img{width:100%;height:100%;object-fit:cover;}'+
     '.xprof-avatar-wrap span{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);font-size:9px;text-align:center;padding:2px 0;}'+
-    '#xprof-nick{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:9px 11px;color:#fff;font-family:inherit;font-size:13px;}'+
-    '.xprof-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;font-size:11px;color:#c4c1da;}'+
+    '.xprof-nick-row{flex:1;}'+
+    '.xprof-nick{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;}'+
+    '.xprof-nick-lock{font-size:9.5px;color:#9a97b5;line-height:1.5;}'+
+    '.xprof-uid{font-size:8.5px;color:#5b586e;margin-top:6px;word-break:break-all;}'+
+    '.xprof-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;font-size:11px;color:#c4c1da;}'+
     '.xprof-stats div{background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px;}'+
     '.xprof-stats b{color:#3fe0ff;display:block;font-size:14px;}'+
+    '.xprof-claim{display:none;margin-bottom:14px;padding:10px 12px;border-radius:10px;border:1px solid rgba(232,196,104,.4);background:rgba(232,196,104,.08);font-size:11px;color:#ffd97a;}'+
+    '.xprof-claim.show{display:block;}'+
+    '.xprof-claim button{margin-top:8px;font-family:inherit;font-size:10.5px;font-weight:700;padding:7px 14px;border-radius:14px;border:none;background:var(--gold,#e8c468);color:#1a1206;}'+
     '.xprof-badge-title{font-size:12px;letter-spacing:.08em;color:#a06bff;margin:4px 0 10px;}'+
     '.xprof-badges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}'+
     '.xprof-badge{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);position:relative;cursor:default;}'+
@@ -142,14 +245,16 @@
     '.xprof-badge small{font-size:7.5px;margin-top:3px;text-align:center;line-height:1.2;padding:0 2px;color:#c4c1da;}'+
     '.xprof-badge .xprof-tip{display:none;position:absolute;bottom:105%;left:50%;transform:translateX(-50%);background:#000;color:#fff;font-size:9px;padding:5px 7px;border-radius:6px;white-space:nowrap;z-index:5;}'+
     '.xprof-badge:hover .xprof-tip{display:block;}'+
+    '.xprof-signout{margin-top:16px;width:100%;font-family:inherit;font-size:10.5px;letter-spacing:.08em;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#9a97b5;cursor:pointer;}'+
     '#xprof-toast{position:fixed;top:56px;right:12px;z-index:600;background:linear-gradient(135deg,#a06bff,#3fe0ff);color:#0a0912;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;padding:10px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;transform:translateY(-8px);transition:.35s ease;pointer-events:none;}'+
     '#xprof-toast.on{opacity:1;transform:translateY(0);}';
   document.head.appendChild(style);
 
   var btn = document.createElement('button');
   btn.id = 'xprof-btn';
-  btn.title = tt({ko:'프로필',en:'Profile'});
-  btn.innerHTML = '<img id="xprof-btn-img" src="'+P.avatar+'">';
+  btn.className = 'guest';
+  btn.title = tt({ko:'로그인 / 프로필',en:'Sign in / Profile'});
+  btn.innerHTML = '<img id="xprof-btn-img" src="'+L.avatar+'">';
   document.body.appendChild(btn);
 
   var overlay = document.createElement('div');
@@ -158,9 +263,17 @@
     '<div id="xprof-modal">'+
       '<h2>'+tt({ko:'👤 내 프로필',en:'👤 My Profile'})+'<button id="xprof-close">✕</button></h2>'+
       '<div class="xprof-head">'+
-        '<div class="xprof-avatar-wrap" id="xprof-avatar-wrap"><img id="xprof-avatar-img" src="'+P.avatar+'"><span>'+tt({ko:'변경',en:'Change'})+'</span></div>'+
-        '<input type="text" id="xprof-nick" maxlength="16" value="">'+
+        '<div class="xprof-avatar-wrap" id="xprof-avatar-wrap"><img id="xprof-avatar-img" src="'+L.avatar+'"><span>'+tt({ko:'변경',en:'Change'})+'</span></div>'+
+        '<div class="xprof-nick-row">'+
+          '<div class="xprof-nick" id="xprof-nick-text">—</div>'+
+          '<div class="xprof-nick-lock">'+tt({ko:'닉네임은 최초 설정 후 변경할 수 없습니다.',en:'Nickname cannot be changed once set.'})+'</div>'+
+          '<div class="xprof-uid" id="xprof-uid"></div>'+
+        '</div>'+
         '<input type="file" id="xprof-file" accept="image/*" style="display:none;">'+
+      '</div>'+
+      '<div class="xprof-claim" id="xprof-claim">'+
+        '<div id="xprof-claim-text"></div>'+
+        '<button id="xprof-claim-btn">'+tt({ko:'수령하기',en:'CLAIM'})+'</button>'+
       '</div>'+
       '<div class="xprof-stats">'+
         '<div>'+tt({ko:'누적 플레이',en:'Playtime'})+'<b id="xprof-s-time">0h</b></div>'+
@@ -170,6 +283,7 @@
       '</div>'+
       '<div class="xprof-badge-title">🏆 '+tt({ko:'영광의 도감',en:'Hall of Fame'})+'</div>'+
       '<div class="xprof-badges" id="xprof-badge-grid"></div>'+
+      '<button class="xprof-signout" id="xprof-signout">'+tt({ko:'로그아웃',en:'Sign out'})+'</button>'+
     '</div>';
   document.body.appendChild(overlay);
 
@@ -181,33 +295,52 @@
 
   function renderModal(){
     var s = collectStats();
-    document.getElementById('xprof-nick').value = P.nickname;
-    document.getElementById('xprof-s-time').textContent = fmtHours(P.playtimeMin);
-    document.getElementById('xprof-s-xc').textContent = P.lifetimeEarned;
+    document.getElementById('xprof-nick-text').textContent = nickname || tt({ko:'닉네임 설정 중…',en:'Setting nickname…'});
+    document.getElementById('xprof-uid').textContent = authUser ? ('UID: ' + authUser.uid) : '';
+    document.getElementById('xprof-s-time').textContent = fmtHours(L.playtimeMin);
+    document.getElementById('xprof-s-xc').textContent = L.lifetimeEarned;
     document.getElementById('xprof-s-cards').textContent = s.gachaOwned;
-    var gotCount = Object.keys(P.badges).length;
+    var gotCount = Object.keys(L.badges).length;
     document.getElementById('xprof-s-badges').textContent = gotCount+'/'+BADGES.length;
     var grid = document.getElementById('xprof-badge-grid');
     grid.innerHTML = '';
     BADGES.forEach(function(b){
-      var got = !!P.badges[b.id];
+      var got = !!L.badges[b.id];
       var d = document.createElement('div');
       d.className = 'xprof-badge ' + (got ? 'got' : 'locked');
       d.innerHTML = (got ? b.icon : '🔒') + '<small>'+tt(b.name)+'</small><span class="xprof-tip">'+tt(b.desc)+'</span>';
       grid.appendChild(d);
     });
+    renderClaimBox();
   }
 
-  function openModal(){ evalBadges(); renderModal(); overlay.classList.add('on'); }
+  function renderClaimBox(){
+    var box = document.getElementById('xprof-claim');
+    if (!window.XenaLeaderboard || !window.XenaLeaderboard.available() || !authUser){ box.classList.remove('show'); return; }
+    window.XenaLeaderboard.claimWeeklyReward().then(function(r){
+      if (r && r.claimedTotal > 0){
+        box.classList.add('show');
+        document.getElementById('xprof-claim-text').textContent =
+          tt({ko:'🏆 지난주 랭킹 보상 '+r.claimedTotal+' 크레딧이 도착했습니다! (체스 지갑에 반영됨)',
+              en:'🏆 Last week\'s ranking reward: '+r.claimedTotal+' credits arrived! (added to your chess wallet)'});
+      } else {
+        box.classList.remove('show');
+      }
+    });
+  }
+  document.getElementById('xprof-claim-btn') && document.getElementById('xprof-claim-btn').addEventListener('click', function(){
+    document.getElementById('xprof-claim').classList.remove('show');
+  });
+
+  function openModal(){
+    if (!authUser){ signIn().catch(function(){}); return; }
+    evalBadges(); renderModal(); overlay.classList.add('on');
+  }
   function closeModal(){ overlay.classList.remove('on'); }
   btn.addEventListener('click', openModal);
   document.getElementById('xprof-close').addEventListener('click', closeModal);
   overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModal(); });
-
-  document.getElementById('xprof-nick').addEventListener('change', function(e){
-    var v = e.target.value.trim();
-    if(v){ P.nickname = v.slice(0,16); save(P); document.getElementById('xprof-btn-img').src = P.avatar; }
-  });
+  document.getElementById('xprof-signout').addEventListener('click', function(){ signOut(); closeModal(); });
 
   document.getElementById('xprof-avatar-wrap').addEventListener('click', function(){
     document.getElementById('xprof-file').click();
@@ -222,13 +355,12 @@
         var size = 160;
         var canvas = document.createElement('canvas');
         canvas.width = size; canvas.height = size;
-        var ctx = canvas.getContext('2d');
+        var c2d = canvas.getContext('2d');
         var side = Math.min(img.width, img.height);
         var sx = (img.width - side)/2, sy = (img.height - side)/2;
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+        c2d.drawImage(img, sx, sy, side, side, 0, 0, size, size);
         var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        P.avatar = dataUrl;
-        save(P);
+        L.avatar = dataUrl; saveLocal(L);
         document.getElementById('xprof-avatar-img').src = dataUrl;
         document.getElementById('xprof-btn-img').src = dataUrl;
       };
@@ -237,38 +369,50 @@
     reader.readAsDataURL(file);
   });
 
+  function renderButton(){
+    btn.classList.toggle('guest', !authUser);
+    btn.title = authUser ? (nickname || tt({ko:'프로필',en:'Profile'})) : tt({ko:'로그인',en:'Sign in'});
+  }
+
   function showToast(b){
     toast.innerHTML = '🎉 ' + tt({ko:'새 뱃지 획득! ',en:'New badge! '}) + b.icon + ' ' + tt(b.name);
     toast.classList.add('on');
     setTimeout(function(){ toast.classList.remove('on'); }, 3800);
   }
-  if(newlyUnlocked.length){
+  if (newlyUnlocked.length){
     var i = 0;
     (function next(){
-      if(i >= newlyUnlocked.length) return;
+      if (i >= newlyUnlocked.length) return;
       showToast(newlyUnlocked[i]); i++;
       setTimeout(next, 4200);
     })();
   }
-
-  /* 다른 게임 페이지에서 재평가 트리거(예: 뱃지 조건 즉시 반영) */
   setInterval(function(){
-    var before = Object.keys(P.badges).length;
+    var before = Object.keys(L.badges).length;
     evalBadges();
-    if(Object.keys(P.badges).length > before && !overlay.classList.contains('on')){
-      newlyUnlocked.forEach(showToast);
-      newlyUnlocked = [];
+    if (Object.keys(L.badges).length > before && !overlay.classList.contains('on')){
+      newlyUnlocked.forEach(showToast); newlyUnlocked = [];
     }
   }, 10000);
 
-  /* 주간기록 옆 프로필칩 렌더용 API */
+  init();
+  renderButton();
+
+  /* 주간기록 옆 프로필칩 렌더용 API + 로그인 게이트(shared-gate.js)에서 쓰는 API */
   window.XenaProfile = {
     chipHTML: function(){
       return '<span class="xprof-chip" style="display:inline-flex;align-items:center;gap:4px;vertical-align:middle;">'+
-        '<img src="'+P.avatar+'" style="width:16px;height:16px;border-radius:50%;object-fit:cover;">'+
-        '<span style="font-size:9px;color:#9a97b5;">'+P.nickname+'</span></span>';
+        '<img src="'+L.avatar+'" style="width:16px;height:16px;border-radius:50%;object-fit:cover;">'+
+        '<span style="font-size:9px;color:#9a97b5;">'+(nickname || 'XENA FAN')+'</span></span>';
     },
-    getNickname: function(){ return P.nickname; },
-    getAvatar: function(){ return P.avatar; }
+    getNickname: function(){ return nickname || 'XENA FAN'; },
+    getAvatar: function(){ return L.avatar; }
+  };
+  window.XenaIdentity = {
+    subscribe: function(fn){ subs.push(fn); fn(state()); return function(){ subs = subs.filter(function(x){return x!==fn;}); }; },
+    getState: state,
+    signIn: signIn,
+    signOut: signOut,
+    openProfile: openModal
   };
 })();

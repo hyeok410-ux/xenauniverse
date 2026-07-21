@@ -1,12 +1,11 @@
-/* XENA GAMES 공용 주간 랭킹 (Firebase Firestore) — 게임제작부서
+/* XENA GAMES 공용 주간 랭킹 (Firebase Firestore + Cloud Functions) — 게임제작부서
    경로: leaderboards/{game}_{week}_s{stage}/entries/{uid}
 
-   ⚠ 문서 스키마는 이미 배포된 firestore.rules 의 validLeaderboardEntry() 를 그대로 따른다.
-     허용 필드: uid / nickname / game / week / stage / score / updatedAt  (이 외 필드는 거부됨)
-     - game 은 'memory' | 'shisen' 만 허용
-     - stage 는 문자열, score 는 숫자(여기서는 클리어 초 — 작을수록 상위)
-     - nickname 은 16자 이하
-   읽기는 누구나(비로그인 포함), 쓰기는 본인 uid 문서만 가능.
+   ⚠ 기록 제출은 더 이상 클라이언트가 직접 Firestore 에 쓰지 않는다.
+     서버(functions/index.js 의 submitScore)가 스테이지별 물리적 최소/최대 시간과
+     대조해 조작된 기록을 거부한 뒤에만 저장한다 (firestore.rules 도 클라이언트
+     직접 쓰기를 전부 막아둠 — 이 파일이 우회할 방법은 없다).
+   읽기는 누구나(비로그인 포함) 가능.
    Firebase 실패는 전부 삼켜서 게임 진행에 영향을 주지 않는다.
 */
 (function(){
@@ -17,7 +16,7 @@
     var d = new Date();
     var onejan = new Date(d.getFullYear(), 0, 1);
     var wk = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-    return d.getFullYear() + '-W' + wk;   /* 예: 2026-W30 (rules 상 12자 이하) */
+    return d.getFullYear() + '-W' + wk;
   }
 
   function boardId(game, stage){
@@ -41,54 +40,29 @@
     }catch(e){ return null; }
   }
 
-  /* rules: nickname 은 16자 이하 문자열 */
-  function nickname(){
-    var n = '';
-    try{
-      if (window.XenaProfile && window.XenaProfile.getNickname) n = window.XenaProfile.getNickname() || '';
-    }catch(e){}
-    if (!n){
-      var u = currentUser();
-      n = (u && u.displayName) ? u.displayName : 'XENA FAN';
-    }
-    return String(n).slice(0, 16);
+  function callFn(name, data){
+    return ctx().then(function(c){
+      if (!c.functionsApi || !c.functionsInstance) return Promise.reject(new Error('FUNCTIONS_UNAVAILABLE'));
+      var callable = c.functionsApi.httpsCallable(c.functionsInstance, name);
+      return callable(data || {}).then(function(r){ return r.data; });
+    });
   }
 
-  /* ── 기록 제출: 기존 기록보다 빠를 때만 갱신 ── */
+  /* ── 기록 제출: 서버(submitScore)가 검증 후 저장. 기존 기록보다 빠를 때만 갱신 ── */
   function submit(game, stage, seconds){
     if (!available()) return Promise.resolve({ok:false, reason:'CLOUD_UNAVAILABLE'});
     if (ALLOWED_GAMES.indexOf(game) === -1) return Promise.resolve({ok:false, reason:'BAD_GAME'});
     if (!(typeof seconds === 'number' && isFinite(seconds) && seconds >= 0)) {
       return Promise.resolve({ok:false, reason:'BAD_TIME'});
     }
-    var user = currentUser();
-    if (!user) return Promise.resolve({ok:false, reason:'AUTH_REQUIRED'});
+    if (!currentUser()) return Promise.resolve({ok:false, reason:'AUTH_REQUIRED'});
 
-    return ctx().then(function(c){
-      var fs = c.firestoreApi, db = c.db;
-      var ref = fs.doc(db, 'leaderboards', boardId(game, stage), 'entries', user.uid);
-      return fs.getDoc(ref).then(function(snap){
-        if (snap.exists()){
-          var prev = snap.data().score;
-          if (typeof prev === 'number' && prev <= seconds) return {ok:true, improved:false, best:prev};
-        }
-        /* rules 의 hasOnly([...]) 때문에 아래 7개 필드만 정확히 보내야 한다 */
-        return fs.setDoc(ref, {
-          uid: user.uid,
-          nickname: nickname(),
-          game: game,
-          week: weekKey(),
-          stage: String(stage),
-          score: seconds,
-          updatedAt: fs.serverTimestamp()
-        }).then(function(){ return {ok:true, improved:true, best:seconds}; });
-      });
-    }).catch(function(e){
-      return {ok:false, reason:(e && (e.code || e.message)) || 'ERROR'};
-    });
+    return callFn('submitScore', {game:game, stage:Number(stage), seconds:seconds})
+      .then(function(r){ return {ok:true, improved:!!r.improved, best:r.best}; })
+      .catch(function(e){ return {ok:false, reason:(e && (e.code || e.message)) || 'ERROR'}; });
   }
 
-  /* ── 특정 스테이지 상위 N명 (score 오름차순 = 빠른 순) ── */
+  /* ── 특정 스테이지 상위 N명 (score 오름차순 = 빠른 순) — 읽기는 클라이언트에서 직접 ── */
   function top(game, stage, n){
     n = n || 20;
     if (!available()) return Promise.resolve([]);
@@ -119,6 +93,12 @@
     return Promise.all(jobs).catch(function(){ return []; });
   }
 
+  /* ── 주간 보상 수령 (1/2/3등 credits 를 wallets/{uid} 로 반영) ── */
+  function claimWeeklyReward(){
+    if (!available() || !currentUser()) return Promise.resolve({claimedTotal:0, claimedList:[]});
+    return callFn('claimWeeklyReward', {}).catch(function(){ return {claimedTotal:0, claimedList:[]}; });
+  }
+
   window.XenaLeaderboard = {
     submit: submit,
     top: top,
@@ -126,6 +106,7 @@
     weekKey: weekKey,
     available: available,
     currentUser: currentUser,
+    claimWeeklyReward: claimWeeklyReward,
     signIn: function(){
       if (!available()) return Promise.reject(new Error('CLOUD_UNAVAILABLE'));
       return window.XenaCloudSync.signIn();

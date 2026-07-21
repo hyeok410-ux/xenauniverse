@@ -132,7 +132,6 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
         <button data-set="en">EN</button>
         <button data-set="ko">KO</button>
       </div>
-      <button class="account-link" id="hub-account" type="button"><span id="hub-account-label">GOOGLE LOGIN</span><small id="hub-credit-label">SIGNAL 0</small></button>
       <div class="top-mark">XENA <span>GAMES</span></div>
     </div>
   </div>
@@ -290,71 +289,11 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
   </div>
 </div>
 
-<script src="../game/firebase-config.js?v=20260718b"></script>
-<script src="../game/cloud-sync.js?v=20260718b"></script>
+<script src="../game/firebase-config.js?v=20260721"></script>
+<script src="../game/cloud-sync.js?v=20260721"></script>
 <script>
-var hubAccount = document.getElementById('hub-account');
-var hubLabel = document.getElementById('hub-account-label');
-var hubCredit = document.getElementById('hub-credit-label');
-function hubProfileName(){ try{return localStorage.getItem('xena_nickname') || '';}catch(e){return '';} }
-function hubSetNickname(user){
-  var current = hubProfileName();
-  var confirmed = false;
-  try{ confirmed = localStorage.getItem('xena_nickname_confirmed') === '1'; }catch(e){}
-  if(current && confirmed) return current;
-  var entered = window.prompt('처음 방문입니다. 사용할 닉네임을 정해주세요.\n닉네임은 정한 뒤 변경할 수 없습니다.');
-  entered = (entered || '').trim().replace(/[^\p{L}\p{N} _-]/gu,'').slice(0,20);
-  if(!entered) return '';
-  try{ localStorage.setItem('xena_nickname', entered); }catch(e){}
-  try{ localStorage.setItem('xena_nickname_confirmed', '1'); }catch(e){}
-  return entered;
-}
-function hubRefresh(state){
-  var user = state && state.user;
-  var name = hubProfileName();
-  if(user){
-    var confirmed = false;
-    try{ confirmed = localStorage.getItem('xena_nickname_confirmed') === '1'; }catch(e){}
-    if(!confirmed && !window.__xenaNicknamePrompting){
-      window.__xenaNicknamePrompting = true;
-      setTimeout(async function(){
-        var current = window.XenaCloudSync && window.XenaCloudSync.snapshot();
-        if(current && current.user && !hubSetNickname(current.user)) await window.XenaCloudSync.signOut();
-        window.__xenaNicknamePrompting = false;
-        hubRefresh(window.XenaCloudSync ? window.XenaCloudSync.snapshot() : {});
-      }, 0);
-    }
-  }
-  hubAccount.classList.toggle('signed', !!user);
-  hubLabel.textContent = user ? (name || user.displayName || 'SIGNED IN') : 'GOOGLE LOGIN';
-  var credits = 0; try{ credits = Number(localStorage.getItem('og_credits') || 0); }catch(e){}
-  hubCredit.textContent = 'SIGNAL ' + credits.toLocaleString();
-  hubAccount.title = user ? 'Profile settings: nickname is locked.' : 'Sign in with Google to enter XENA Games';
-}
-if(window.XenaCloudSync){
-  window.XenaCloudSync.subscribe(hubRefresh);
-  window.XenaCloudSync.connect().catch(function(){});
-}
-hubAccount.addEventListener('click', async function(){
-  var cloud = window.XenaCloudSync;
-  if(!cloud) return;
-  var state = cloud.snapshot();
-  if(!state.user){
-    try{ var signed = await cloud.signIn(); if(!hubSetNickname(signed.user)) { await cloud.signOut(); return; } hubRefresh(cloud.snapshot()); }
-    catch(e){ alert('Google 로그인을 완료하지 못했습니다. 팝업 차단을 확인해주세요.'); }
-  } else {
-    alert((hubProfileName() || state.user.displayName || 'SIGNAL PLAYER') + '\nGoogle ID: ' + (state.user.email || state.user.uid) + '\n닉네임은 최초 설정 후 변경할 수 없습니다.');
-  }
-});
-document.querySelectorAll('.play-btn').forEach(function(link){
-  link.addEventListener('click', async function(event){
-    var cloud = window.XenaCloudSync;
-    if(!cloud || cloud.snapshot().user) return;
-    event.preventDefault();
-    try{ var signed = await cloud.signIn(); if(!hubSetNickname(signed.user)) { await cloud.signOut(); return; } hubRefresh(cloud.snapshot()); window.location.href = link.href; }
-    catch(e){ alert('게임을 시작하려면 먼저 Google 로그인이 필요합니다.'); }
-  });
-});
+/* 로그인/닉네임/프로필은 shared-identity.js + shared-gate.js 가 전담한다
+   (우측상단 프로필 버튼 하나로 통합 — 예전의 상단중앙 계정버튼은 제거됨). */
 document.querySelectorAll('.lang-toggle button').forEach(function(b){
   b.addEventListener('click', function(){
     var l = b.getAttribute('data-set');
@@ -364,7 +303,8 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
   });
 });
 </script>
-<script src="./shared-profile.js?v=20260721"></script>
+<script src="./shared-identity.js?v=20260721"></script>
+<script src="./shared-gate.js?v=20260721"></script>
 <script src="./shared-audio.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('hub');

@@ -25,7 +25,7 @@ window.ZENA_CARD_DEFS = [
   ['GA-BR-07','BRIGHT · GALLERY #07','R','../../images/gallery/bright-7.jpg',1],
   ['GA-BR-08','BRIGHT · GALLERY #08','R','../../images/gallery/bright-8.jpg',1],
   ['GA-BR-09','BRIGHT · GALLERY #09','S','../../images/gallery/bright-9.jpg',1],
-  ['GA-BR-10','BRIGHT · GALLERY #10','S','../../images/gallery/bright-10.jpg',1],
+  ['GA-BR-10','BRIGHT · GALLERY #10','S','../../images/gallery/bright-10.jpg',0], /* 사진 손가락 오류로 영구 제외 */
   ['GA-DP-01','DOPAMINE · GALLERY #01','N','../../images/gallery/dopamine-1.jpg',1],
   ['GA-DP-02','DOPAMINE · GALLERY #02','N','../../images/gallery/dopamine-2.jpg',1],
   ['GA-DP-03','DOPAMINE · GALLERY #03','N','../../images/gallery/dopamine-3.jpg',1],
