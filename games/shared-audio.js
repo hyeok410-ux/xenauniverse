@@ -9,7 +9,8 @@
   var ASSET_BASE = (function(){
     var scripts = document.getElementsByTagName('script');
     for (var i=0;i<scripts.length;i++){
-      var src = scripts[i].getAttribute('src')||'';
+      /* ?v=... 캐시버스팅 쿼리를 먼저 떼어내야 경로가 깨지지 않는다 */
+      var src = (scripts[i].getAttribute('src')||'').split('?')[0];
       if (src.indexOf('shared-audio.js') !== -1){
         return src.replace('shared-audio.js','') + '_assets/';
       }

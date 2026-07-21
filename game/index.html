@@ -34,21 +34,27 @@
       background:rgba(4,6,12,.86);backdrop-filter:blur(10px);white-space:nowrap;transition:.25s ease;}
     #xena-games-back:hover{color:#3fe0ff;border-color:#3fe0ff;box-shadow:0 0 16px rgba(63,224,255,.3);}
     .topbar{padding-left:160px !important;}
-    /* XC 잔액 표시 (미니게임과 동일한 지갑 공유) */
-    #xena-xc{position:fixed;top:10px;right:58px;z-index:300;
-      font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;font-weight:700;letter-spacing:.1em;
+    /* 프로필 + XC 를 화면 상단 가운데로 (우측 상단 상점/사운드 버튼과 겹치지 않게).
+       position:absolute 이므로 스크롤하면 같이 올라간다 — 고정되지 않음. */
+    #xena-topcenter{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:120;
+      display:flex;align-items:center;gap:8px;pointer-events:auto;}
+    #xena-xc{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;font-weight:700;letter-spacing:.1em;
       color:#e8c468;padding:8px 13px;border:1px solid rgba(232,196,104,.45);border-radius:20px;
       background:rgba(4,6,12,.86);backdrop-filter:blur(10px);white-space:nowrap;}
+    /* shared-profile.js 가 만든 고정 버튼을 이 줄 안으로 편입 */
+    #xena-topcenter #xprof-btn{position:static !important;top:auto !important;right:auto !important;
+      left:auto !important;transform:none !important;margin:0 !important;}
     @media(max-width:560px){
       #xena-games-back{top:8px;left:8px;font-size:10px;padding:6px 9px;letter-spacing:.08em;}
       .topbar{padding-left:104px !important;}
-      #xena-xc{top:8px;right:48px;font-size:10px;padding:6px 9px;letter-spacing:.05em;}
+      #xena-topcenter{top:8px;gap:6px;}
+      #xena-xc{font-size:10px;padding:6px 9px;letter-spacing:.05em;}
     }
   </style>
 </head>
 <body>
   <a href="../games/" id="xena-games-back">&larr; XENA GAMES</a>
-  <div id="xena-xc">0 XC</div>
+  <div id="xena-topcenter"><div id="xena-xc">0 XC</div></div>
   <main id="app"></main>
   <noscript>이 게임을 실행하려면 브라우저에서 JavaScript를 켜주세요.</noscript>
   <script src="./three.min.js?v=20260719c"></script>
@@ -80,6 +86,20 @@
       render();
       setInterval(render, 2000);
       window.addEventListener('storage', render);
+
+      /* shared-profile.js 가 body 에 붙인 프로필 버튼을 상단 가운데 줄로 이동 */
+      var row = document.getElementById('xena-topcenter');
+      function adopt(){
+        var btn = document.getElementById('xprof-btn');
+        if (btn && btn.parentNode !== row){ row.insertBefore(btn, row.firstChild); return true; }
+        return !!btn;
+      }
+      if (!adopt()){
+        var tries = 0;
+        var iv = setInterval(function(){
+          if (adopt() || ++tries > 40) clearInterval(iv);
+        }, 100);
+      }
     })();
   </script>
 </body>

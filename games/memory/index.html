@@ -170,6 +170,23 @@ h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;lin
 .wk-row .wk-st{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;color:#dce6f5;}
 .wk-row .wk-tm{font-family:var(--font-mono);font-size:.78rem;font-weight:700;color:var(--gold);}
 .wk-row.none .wk-tm{color:#6b7789;font-weight:400;}
+/* 전역 랭킹 */
+.wk-row.clickable{cursor:pointer;}
+.wk-row.clickable:hover{border-color:rgba(255,47,176,.5);background:rgba(255,47,176,.07);}
+.wk-who{display:flex;align-items:center;gap:7px;min-width:0;flex:1;justify-content:flex-end;}
+.wk-ava{width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:.6rem;font-weight:700;background:rgba(255,47,176,.25);color:#ffc9e8;}
+.wk-who .wk-nick{font-size:.68rem;color:#e6eefc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px;}
+.wk-rank{font-family:var(--font-mono);font-size:.72rem;font-weight:700;width:30px;text-align:left;flex:none;color:#9fb0c6;}
+.wk-row.r1 .wk-rank{color:#ffd97a;}
+.wk-row.r2 .wk-rank{color:#d6dee8;}
+.wk-row.r3 .wk-rank{color:#e0a878;}
+.wk-row.me{border-color:rgba(255,47,176,.65);background:rgba(255,47,176,.1);}
+.wk-auth{margin-bottom:16px;padding:14px;border-radius:12px;border:1px dashed rgba(255,47,176,.4);background:rgba(255,47,176,.05);}
+.wk-auth p{font-size:.72rem;color:#cfe0f2;line-height:1.6;margin-bottom:10px;}
+.wk-auth button{font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.08em;
+  padding:9px 18px;border-radius:18px;border:none;background:var(--magenta);color:#2a0418;}
+.wk-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.wk-loading{font-family:var(--font-mono);font-size:.7rem;color:#8fa2b8;padding:18px 0;letter-spacing:.1em;}
 
 .toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:120;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;color:var(--silver);background:rgba(8,8,14,.92);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);max-width:88vw;text-align:center;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -236,10 +253,15 @@ h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;lin
 
 <div class="wk-overlay" id="wk-overlay">
   <div class="wk-modal">
-    <h3><span lang="en">THIS WEEK'S RECORDS</span><span lang="ko">이번주 순위</span></h3>
-    <p class="wk-sub"><span lang="en">Your best clear time per stage this week.</span><span lang="ko">이번 주 스테이지별 나의 최고 기록입니다.</span></p>
+    <h3 id="wk-title"></h3>
+    <p class="wk-sub" id="wk-sub"></p>
+    <div class="wk-auth" id="wk-auth" hidden></div>
     <div class="wk-list" id="wk-list"></div>
-    <button class="r-btn" id="wk-close"><span lang="en">CLOSE</span><span lang="ko">닫기</span></button>
+    <div class="wk-list" id="wk-detail" hidden></div>
+    <div class="wk-actions">
+      <button class="r-btn" id="wk-back" hidden><span lang="en">&larr; ALL STAGES</span><span lang="ko">&larr; 전체 스테이지</span></button>
+      <button class="r-btn" id="wk-close"><span lang="en">CLOSE</span><span lang="ko">닫기</span></button>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -396,25 +418,108 @@ $('btn-reset-plays').addEventListener('click', function(){
   toast(t('-'+RESET_COST+' XC — all stage plays reset!', '-'+RESET_COST+' XC — 모든 스테이지 횟수가 초기화됐습니다!'));
 });
 
-/* ── 이번주 스테이지별 최고기록 ── */
-function renderWeekly(){
-  var list = $('wk-list');
-  list.innerHTML = '';
-  STAGES.forEach(function(s, i){
-    var n = i+1;
-    var best = st.weekly.best[n];
-    var row = document.createElement('div');
-    row.className = 'wk-row ' + (best ? 'has' : 'none');
-    row.innerHTML =
-      '<span class="wk-st">'+t('STAGE '+n, n+' 스테이지')+' <small style="opacity:.55">'+s.cards+t(' cards',' 장')+'</small></span>' +
-      '<span class="wk-tm">'+(best ? best+t('s','초') : t('— no record','— 기록 없음'))+'</span>';
-    list.appendChild(row);
+/* ── 이번주 전체 랭킹 (Firebase) ── */
+var GAME_ID = 'memory';
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+/* 랭킹 문서에는 사진을 저장하지 않으므로(보안 규칙상 허용 필드 아님)
+   닉네임 첫 글자를 딴 원형 배지로 표시한다 */
+function avatarHTML(r){
+  var ch = (r.nick || '?').trim().charAt(0).toUpperCase();
+  return '<span class="wk-ava">'+esc(ch)+'</span>';
+}
+function renderAuthBox(){
+  var box = $('wk-auth');
+  if(!window.XenaLeaderboard || !window.XenaLeaderboard.available()){
+    box.hidden = false;
+    box.innerHTML = '<p>'+t('Ranking server is unavailable right now. Showing your local records.',
+                            '랭킹 서버에 연결할 수 없어 내 로컬 기록만 표시합니다.')+'</p>';
+    return;
+  }
+  if(window.XenaLeaderboard.currentUser()){ box.hidden = true; return; }
+  box.hidden = false;
+  box.innerHTML = '<p>'+t('Sign in with Google to put your times on the weekly ranking.',
+                          'Google 로그인을 하면 내 기록이 이번주 전체 랭킹에 등록됩니다.')+'</p>' +
+                  '<button id="wk-signin">'+t('SIGN IN','로그인')+'</button>';
+  $('wk-signin').addEventListener('click', function(){
+    window.XenaLeaderboard.signIn().then(function(){ openWeekly(); })
+      .catch(function(){ toast(t('Sign-in failed','로그인에 실패했습니다')); });
   });
 }
-$('btn-weekly').addEventListener('click', function(){
-  renderWeekly();
-  $('wk-overlay').classList.add('on');
-});
+function renderWeekly(){
+  $('wk-title').textContent = t("THIS WEEK'S RANKING", '이번주 순위');
+  $('wk-sub').textContent = t('Fastest clear per stage, all players. Tap a stage for the full top 20.',
+                              '스테이지별 전체 이용자 1위 기록입니다. 스테이지를 누르면 상위 20위까지 볼 수 있습니다.');
+  $('wk-back').hidden = true;
+  $('wk-detail').hidden = true;
+  var list = $('wk-list');
+  list.hidden = false;
+  list.innerHTML = '<div class="wk-loading">'+t('LOADING…','불러오는 중…')+'</div>';
+  renderAuthBox();
+
+  var lb = window.XenaLeaderboard;
+  var job = (lb && lb.available()) ? lb.topAll(GAME_ID, STAGES.length)
+                                   : Promise.resolve(STAGES.map(function(){ return null; }));
+  job.then(function(tops){
+    list.innerHTML = '';
+    var me = lb && lb.currentUser();
+    STAGES.forEach(function(s, i){
+      var n = i+1;
+      var first = tops[i];
+      var mine = st.weekly.best[n];
+      var row = document.createElement('div');
+      row.className = 'wk-row clickable ' + (first ? 'has r1' : 'none') +
+                      ((first && me && first.uid === me.uid) ? ' me' : '');
+      var right = first
+        ? '<span class="wk-who">'+avatarHTML(first)+'<span class="wk-nick">'+esc(first.nick)+'</span></span>'+
+          '<span class="wk-tm">'+first.seconds+t('s','초')+'</span>'
+        : '<span class="wk-tm">'+t('— no record yet','— 기록 없음')+'</span>';
+      row.innerHTML =
+        '<span class="wk-st">'+t('STAGE '+n, n+' 스테이지')+
+          ' <small style="opacity:.55">'+s.cards+t(' cards',' 장')+'</small>'+
+          (mine ? '<br><small style="opacity:.6;font-size:.58rem;">'+t('my best '+mine+'s','내 기록 '+mine+'초')+'</small>' : '')+
+        '</span>' + right;
+      row.addEventListener('click', function(){ openStage(n); });
+      list.appendChild(row);
+    });
+  });
+}
+function openStage(n){
+  $('wk-title').textContent = t('STAGE '+n+' — TOP 20', n+' 스테이지 — 상위 20위');
+  $('wk-sub').textContent = t('Fastest clear times this week.', '이번 주 가장 빠른 클리어 기록입니다.');
+  $('wk-list').hidden = true;
+  $('wk-back').hidden = false;
+  var d = $('wk-detail');
+  d.hidden = false;
+  d.innerHTML = '<div class="wk-loading">'+t('LOADING…','불러오는 중…')+'</div>';
+  var lb = window.XenaLeaderboard;
+  if(!lb || !lb.available()){
+    d.innerHTML = '<div class="wk-loading">'+t('Ranking server unavailable','랭킹 서버에 연결할 수 없습니다')+'</div>';
+    return;
+  }
+  lb.top(GAME_ID, n, 20).then(function(rows){
+    var me = lb.currentUser();
+    if(!rows.length){
+      d.innerHTML = '<div class="wk-loading">'+t('No records yet — be the first!','아직 기록이 없습니다 — 1등에 도전하세요!')+'</div>';
+      return;
+    }
+    d.innerHTML = '';
+    rows.forEach(function(r, i){
+      var rank = i+1;
+      var row = document.createElement('div');
+      row.className = 'wk-row has r'+rank + ((me && r.uid === me.uid) ? ' me' : '');
+      row.innerHTML =
+        '<span class="wk-rank">'+(rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank)+'</span>'+
+        '<span class="wk-who" style="justify-content:flex-start;">'+avatarHTML(r)+
+          '<span class="wk-nick">'+esc(r.nick)+'</span></span>'+
+        '<span class="wk-tm">'+r.seconds+t('s','초')+'</span>';
+      d.appendChild(row);
+    });
+  });
+}
+function openWeekly(){ renderWeekly(); $('wk-overlay').classList.add('on'); }
+$('btn-weekly').addEventListener('click', openWeekly);
+$('wk-back').addEventListener('click', renderWeekly);
 $('wk-close').addEventListener('click', function(){ $('wk-overlay').classList.remove('on'); });
 $('wk-overlay').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
 
@@ -524,6 +629,12 @@ function finish(win, reason){
     if(!st.best[idx+1] || timeUsed < st.best[idx+1]) st.best[idx+1] = timeUsed;
     if(!st.weekly.best[idx+1] || timeUsed < st.weekly.best[idx+1]) st.weekly.best[idx+1] = timeUsed;
     save(SAVE_KEY, st);
+    /* 전체 주간 랭킹에 기록 제출 (실패해도 게임 진행에는 영향 없음) */
+    if(window.XenaLeaderboard){
+      window.XenaLeaderboard.submit(GAME_ID, idx+1, timeUsed).then(function(r){
+        if(r && r.ok && r.improved) toast(t('Weekly ranking updated!','이번주 랭킹에 기록이 등록됐습니다!'));
+      });
+    }
     sub.innerHTML = t(
       'Time '+timeUsed+'s · mistakes '+cur.miss+'/'+s.miss+rewardMsg+'<br>Best: '+st.best[idx+1]+'s',
       '기록 '+timeUsed+'초 · 실수 '+cur.miss+'/'+s.miss+rewardMsg+'<br>최고 기록: '+st.best[idx+1]+'초'
@@ -564,6 +675,9 @@ renderWallet();
 renderStages();
 })();
 </script>
+<script src="../../game/firebase-config.js?v=20260721"></script>
+<script src="../../game/cloud-sync.js?v=20260721"></script>
+<script src="../shared-leaderboard.js?v=20260721"></script>
 <script src="../shared-profile.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
 <script>
