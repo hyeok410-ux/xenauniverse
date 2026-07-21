@@ -67,26 +67,18 @@
   <script src="../games/shared-identity.js?v=20260721"></script>
   <script src="../games/shared-gate.js?v=20260721"></script>
   <script src="../games/shared-audio.js?v=20260721"></script>
+  <script src="../games/shared-wallet.js?v=20260721"></script>
   <script>
-    /* XC 잔액 표시 — 미니게임과 동일한 xena_wallet_v1 지갑을 읽어 실시간 갱신 */
+    /* XC 잔액 표시 — 이제 미니게임과 완전히 같은 서버 지갑(wallets/{uid}.credits)을 그대로 보여준다.
+       체스 자체 재화(크레딧)와 미니게임 XC가 이 시점부터 진짜로 같은 숫자다. */
     (function(){
       var el = document.getElementById('xena-xc');
-      function read(){
-        try{
-          var w = JSON.parse(localStorage.getItem('xena_wallet_v1') || '{}');
-          return (typeof w.xc === 'number') ? w.xc : 0;
-        }catch(e){ return 0; }
-      }
-      var last = null;
       function render(){
-        var v = read();
-        if (v === last) return;
-        last = v;
-        el.textContent = v + ' XC';
+        var bal = window.XenaWallet ? window.XenaWallet.getBalance() : null;
+        el.textContent = (bal === null ? '…' : bal) + ' XC';
       }
       render();
-      setInterval(render, 2000);
-      window.addEventListener('storage', render);
+      if (window.XenaWallet) window.XenaWallet.subscribe(render);
 
       /* shared-identity.js 가 body 에 붙인 프로필 버튼을 상단 가운데 줄로 이동 */
       var row = document.getElementById('xena-topcenter');

@@ -210,12 +210,27 @@ function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || de
 function save(key, v){ try{ localStorage.setItem(key, JSON.stringify(v)); }catch(e){} }
 function today(){ return new Date().toISOString().slice(0,10); }
 
-var wallet = load(WALLET_KEY, {});
-if(typeof wallet.xc !== 'number') wallet.xc = 0;
-if(!wallet.daily || wallet.daily.date !== today()) wallet.daily = {date: today()};
+/* XC 서버화 1단계: 잔액은 더 이상 로컬에서 계산하지 않고 서버 지갑(wallets/{uid}.credits)을
+   실시간 구독한다. wallet.xc 는 화면표시용 캐시일 뿐, 실제 증감은 전부 shared-wallet.js 의
+   서버 함수 호출로만 일어난다. */
+var wallet = { xc: 0 };
 var st = load(SAVE_KEY, {});
+/* shared-wallet.js 는 이 스크립트보다 나중(</body> 직전)에 로드되므로, 여기서 바로
+   window.XenaWallet 를 구독하면 아직 undefined 다. wireWallet() 을 전역에 걸어두고
+   shared-wallet.js 로드가 끝난 뒤 맨 아래 스크립트에서 호출한다. */
+window.__wireSignalWallet = function(){
+  window.XenaWallet.subscribe(function(bal){
+    wallet.xc = (bal === null) ? 0 : bal;
+    renderWallet();
+  });
+  window.XenaWallet.getStreak().then(function(s){ st.streak = s; renderStreak(); });
+  detectChessMatch();
+};
 
-function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
+function renderWallet(){
+  var bal = window.XenaWallet ? window.XenaWallet.getBalance() : null;
+  $('wallet').textContent = (bal === null ? '…' : bal) + ' XC';
+}
 var toastTimer = null;
 function toast(msg){
   if (window.XenaAudio) window.XenaAudio.sfx('toast');
@@ -347,17 +362,24 @@ document.addEventListener('contextmenu', function(e){
   }
 });
 $('btn-claim').addEventListener('click', function(){
-  if(claimed) return;
+  if(claimed || !window.XenaWallet) return;
   claimed = true;
-  st.lastClaim = today();
-  var bonus = (st.streak > 0 && st.streak % 7 === 0) ? 20 : 0;
-  wallet.xc += 5 + bonus;
-  save(SAVE_KEY, st); save(WALLET_KEY, wallet);
-  if (window.XenaAudio){ window.XenaAudio.sfx('quest_claim'); window.XenaAudio.sfx('xc_gain'); }
-  renderWallet(); renderClaimBtn(); renderQuests();
-  toast(bonus
-    ? t('+5 XC + streak bonus +'+bonus+' XC!', '+5 XC + 7일 연속 보너스 +'+bonus+' XC!')
-    : t('+5 XC claimed — see you tomorrow!', '+5 XC 수령 — 내일 또 만나요!'));
+  renderClaimBtn();
+  window.XenaWallet.claimDailySignal().then(function(r){
+    st.lastClaim = today();
+    st.streak = r.streak;
+    save(SAVE_KEY, st);
+    if (window.XenaAudio){ window.XenaAudio.sfx('quest_claim'); window.XenaAudio.sfx('xc_gain'); }
+    renderClaimBtn(); renderQuests(); renderStreak();
+    toast(r.bonus
+      ? t('+5 XC + streak bonus +'+r.bonus+' XC!', '+5 XC + 7일 연속 보너스 +'+r.bonus+' XC!')
+      : t('+5 XC claimed — see you tomorrow!', '+5 XC 수령 — 내일 또 만나요!'));
+  }).catch(function(e){
+    if (e && e.code === 'already-exists'){ st.lastClaim = today(); save(SAVE_KEY, st); renderClaimBtn(); return; }
+    claimed = false;
+    renderClaimBtn();
+    toast(t('Could not claim — try again in a moment', '수령에 실패했습니다 — 잠시 후 다시 시도해주세요'));
+  });
 });
 $('btn-share').addEventListener('click', function(){
   var text = todayCard ? t(
@@ -390,19 +412,22 @@ if(!st.chessDay || st.chessDay !== today()){
   st.chessBonusClaimed = false;
   save(SAVE_KEY, st);
 }
-/* 페이지를 열 때마다 체스 상태 변화를 감지해서 매치 1회로 자동 환산(최대 3회/일) */
-(function detectChessMatch(){
+/* 페이지를 열 때마다 체스 상태 변화를 감지해서 매치 1회로 자동 환산(최대 3회/일)
+   — window.XenaWallet 는 이 스크립트 뒤에 로드되므로 __wireSignalWallet() 에서 호출한다. */
+function detectChessMatch(){
   if(st.chessMatches < CHESS_MAX){
     var snap = chessSnapshot();
     if(snap !== st.chessLastSnap){
       st.chessLastSnap = snap;
-      st.chessMatches++;
-      wallet.xc += CHESS_PER_MATCH;
-      save(SAVE_KEY, st); save(WALLET_KEY, wallet);
-      setTimeout(function(){ toast(t('+'+CHESS_PER_MATCH+' XC — OVERRIDE GRID match detected! ('+st.chessMatches+'/'+CHESS_MAX+')', '+'+CHESS_PER_MATCH+' XC — OVERRIDE GRID 플레이 감지! ('+st.chessMatches+'/'+CHESS_MAX+')')); }, 900);
+      save(SAVE_KEY, st);
+      window.XenaWallet.claimChessMatch().then(function(r){
+        st.chessMatches = r.count;
+        save(SAVE_KEY, st);
+        setTimeout(function(){ toast(t('+'+r.granted+' XC — OVERRIDE GRID match detected! ('+r.count+'/'+r.limit+')', '+'+r.granted+' XC — OVERRIDE GRID 플레이 감지! ('+r.count+'/'+r.limit+')')); }, 900);
+      }).catch(function(){ /* 이미 한도 도달 — 조용히 무시 */ });
     }
   }
-})();
+}
 
 function gachaFreeDrawnToday(){
   var g = load('zena_gacha_v1', {});
@@ -511,22 +536,35 @@ function renderQuests(){
 }
 function bindQuestActions(){
   function questSfx(){ if (window.XenaAudio){ window.XenaAudio.sfx('quest_claim'); window.XenaAudio.sfx('xc_gain'); } }
+  function claimQuest(questId, flagKey, amountForMsg, msgEn, msgKo, allSfx){
+    if (!window.XenaWallet) return;
+    window.XenaWallet.claimQuestBonus(questId).then(function(r){
+      if (flagKey === 'chessBonusClaimed') st.chessBonusClaimed = true; else setClaimedFlag(flagKey);
+      save(SAVE_KEY, st);
+      if (allSfx && window.XenaAudio) window.XenaAudio.sfx('quest_all_complete'); else questSfx();
+      toast(t('+'+r.granted+' XC — '+msgEn, '+'+r.granted+' XC — '+msgKo));
+      renderQuests();
+    }).catch(function(e){
+      if (e && e.code === 'already-exists'){
+        if (flagKey === 'chessBonusClaimed') st.chessBonusClaimed = true; else setClaimedFlag(flagKey);
+        save(SAVE_KEY, st); renderQuests();
+      }
+    });
+  }
   var map = {
-    chess: function(){ wallet.xc += CHESS_BONUS; st.chessBonusClaimed = true; save(SAVE_KEY, st); questSfx(); toast(t('+'+CHESS_BONUS+' XC — OVERRIDE GRID quest complete!', '+'+CHESS_BONUS+' XC — OVERRIDE GRID 퀘스트 완료!')); },
-    gacha: function(){ wallet.xc += GACHA_BONUS; setClaimedFlag('gachaBonusClaim'); questSfx(); toast(t('+'+GACHA_BONUS+' XC — XENA CARDS quest complete!', '+'+GACHA_BONUS+' XC — XENA CARDS 퀘스트 완료!')); },
-    worldcup: function(){ wallet.xc += WC_BONUS; setClaimedFlag('wcBonusClaim'); questSfx(); toast(t('+'+WC_BONUS+' XC — World Cup quest complete!', '+'+WC_BONUS+' XC — 월드컵 퀘스트 완료!')); },
-    memory: function(){ wallet.xc += MEMORY_BONUS; setClaimedFlag('memBonusClaim'); questSfx(); toast(t('+'+MEMORY_BONUS+' XC — Memory Grid quest complete!', '+'+MEMORY_BONUS+' XC — 메모리 그리드 퀘스트 완료!')); },
-    shisen: function(){ wallet.xc += SHISEN_BONUS; setClaimedFlag('shBonusClaim'); questSfx(); toast(t('+'+SHISEN_BONUS+' XC — Signal Link quest complete!', '+'+SHISEN_BONUS+' XC — 시그널 링크 퀘스트 완료!')); },
-    allbonus: function(){ wallet.xc += ALL_BONUS; setClaimedFlag('allBonusClaim'); if (window.XenaAudio) window.XenaAudio.sfx('quest_all_complete'); toast(t('+'+ALL_BONUS+' XC — all quests bonus!', '+'+ALL_BONUS+' XC — 전체 완료 보너스!')); }
+    chess: function(){ claimQuest('chess', 'chessBonusClaimed', CHESS_BONUS, 'OVERRIDE GRID quest complete!', 'OVERRIDE GRID 퀘스트 완료!'); },
+    gacha: function(){ claimQuest('gacha', 'gachaBonusClaim', GACHA_BONUS, 'XENA CARDS quest complete!', 'XENA CARDS 퀘스트 완료!'); },
+    worldcup: function(){ claimQuest('worldcup', 'wcBonusClaim', WC_BONUS, 'World Cup quest complete!', '월드컵 퀘스트 완료!'); },
+    memory: function(){ claimQuest('memory', 'memBonusClaim', MEMORY_BONUS, 'Memory Grid quest complete!', '메모리 그리드 퀘스트 완료!'); },
+    shisen: function(){ claimQuest('shisen', 'shBonusClaim', SHISEN_BONUS, 'Signal Link quest complete!', '시그널 링크 퀘스트 완료!'); },
+    allbonus: function(){ claimQuest('allbonus', 'allBonusClaim', ALL_BONUS, 'all quests bonus!', '전체 완료 보너스!', true); }
   };
   document.querySelectorAll('button[data-act]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var act = btn.getAttribute('data-act');
       if(!map[act]) return;
+      btn.disabled = true; /* 서버 응답 오기 전 중복 클릭 방지 — claimQuest 가 성공/실패 후 renderQuests() 로 다시 그림 */
       map[act]();
-      save(WALLET_KEY, wallet);
-      renderWallet();
-      renderQuests();
     });
   });
 }
@@ -547,12 +585,7 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
   });
 });
 
-window.addEventListener('storage', function(e){
-  if(e.key === WALLET_KEY){
-    wallet = load(WALLET_KEY, {xc:0});
-    renderWallet(); renderQuests();
-  }
-});
+/* 잔액은 이제 shared-wallet.js 의 서버 실시간 구독이 탭 간 동기화까지 처리한다 */
 
 renderDate();
 renderWallet();
@@ -566,8 +599,10 @@ if(revealed){ reveal(); }
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-gate.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
+<script src="../shared-wallet.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('signal');
+if (window.__wireSignalWallet) window.__wireSignalWallet();
 document.querySelectorAll('button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });

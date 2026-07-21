@@ -492,26 +492,15 @@ function bumpLifetimeFinishes(){
   }catch(e){}
 }
 
-/* ── XC 통합 크레딧 적립 (하루 3회 × 5XC) ── */
-var WALLET_KEY = 'xena_wallet_v1';
+/* ── XC 통합 크레딧 적립 (하루 3회 × 5XC, 서버 검증) ── */
 function awardXC(){
-  try{
-    var w = null;
-    try{ w = JSON.parse(localStorage.getItem(WALLET_KEY)); }catch(e){}
-    if(!w || typeof w.xc !== 'number'){ w = {xc:0, daily:{}}; }
-    if(!w.daily) w.daily = {};
-    var today = new Date().toISOString().slice(0,10);
-    if(w.daily.date !== today){ w.daily = {date:today}; }
-    var n = w.daily.worldcup || 0;
-    if(n >= 3) return;
-    w.daily.worldcup = n + 1;
-    w.xc += 5;
-    localStorage.setItem(WALLET_KEY, JSON.stringify(w));
+  if (!window.XenaWallet) return;
+  window.XenaWallet.claimWorldcupFinish().then(function(r){
     setTimeout(function(){ toast(t(
-      '+5 XC earned! ('+w.daily.worldcup+'/3 today · balance '+w.xc+' XC) — spend it on XENA CARDS',
-      '+5 XC 적립! ('+w.daily.worldcup+'/3 · 보유 '+w.xc+' XC) — XENA CARDS 뽑기에 사용'
+      '+'+r.granted+' XC earned! ('+r.count+'/'+r.limit+' today · balance '+r.credits+' XC) — spend it on XENA CARDS',
+      '+'+r.granted+' XC 적립! ('+r.count+'/'+r.limit+' · 보유 '+r.credits+' XC) — XENA CARDS 뽑기에 사용'
     )); }, 900);
-  }catch(e){}
+  }).catch(function(){ /* 하루 한도 도달 — 조용히 무시 */ });
 }
 
 /* ── 누적 득표 (전 사진 1표 시딩 → 최종픽마다 +1) ── */
@@ -721,6 +710,7 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-gate.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
+<script src="../shared-wallet.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('worldcup');
 document.querySelectorAll('button').forEach(function(el){

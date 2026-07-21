@@ -172,21 +172,238 @@ exports.submitScore = onCall(async (request) => {
   const week = weekKeyUTC();
   const boardId = `${game}_${week}_s${stage}`;
   const entryRef = db.doc(`leaderboards/${boardId}/entries/${uid}`);
+  const dayKey = newYorkDateKey();
+  const clearRef = db.doc(`dailyClears/${uid}_${dayKey}`);
 
   const result = await db.runTransaction(async (tx) => {
     const snap = await tx.get(entryRef);
+    let improved = true, best = seconds;
     if (snap.exists) {
       const prev = snap.get("score");
-      if (typeof prev === "number" && prev <= seconds) return { improved: false, best: prev };
+      if (typeof prev === "number" && prev <= seconds) { improved = false; best = prev; }
     }
-    tx.set(entryRef, {
-      uid, nickname, game, week, stage: String(stage), score: seconds,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
-    return { improved: true, best: seconds };
+    if (improved) {
+      tx.set(entryRef, {
+        uid, nickname, game, week, stage: String(stage), score: seconds,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+    // 오늘 이 게임/스테이지를 실제로 클리어했다는 서버 기록 (claimStageReward 가 이 값으로만 보상을 내줌)
+    tx.set(clearRef, { uid, dayKey, [`${game}_${stage}`]: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { improved, best };
   });
 
   return { ok: true, ...result };
+});
+
+/* ── 스테이지 클리어 하루 첫 보상 (memory/shisen) ──
+   submitScore 가 오늘 실제로 그 스테이지를 클리어했다고 남긴 dailyClears 기록이
+   있을 때만 지급한다 — 클라이언트가 그냥 "클리어했다"고 우기는 걸로는 못 받는다. */
+const STAGE_REWARD = Object.freeze({
+  shisen: (stage) => stage * 2,
+  memory: (stage) => stage,
+});
+exports.claimStageReward = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const game = String(request.data && request.data.game || "");
+  const stage = Number(request.data && request.data.stage);
+  const rewardFn = STAGE_REWARD[game];
+  if (!rewardFn || !STAGE_TIME_LIMITS[game] || !STAGE_TIME_LIMITS[game][stage]) {
+    throw new HttpsError("invalid-argument", "Unknown game/stage.");
+  }
+  const dayKey = newYorkDateKey();
+  const clearRef = db.doc(`dailyClears/${uid}_${dayKey}`);
+  const claimRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+  const reward = rewardFn(stage);
+  const flagKey = `${game}_${stage}`;
+
+  const result = await db.runTransaction(async (tx) => {
+    const clear = await tx.get(clearRef);
+    if (!clear.exists || !clear.get(flagKey)) {
+      throw new HttpsError("failed-precondition", "No verified clear for this stage today.");
+    }
+    const claim = await tx.get(claimRef);
+    const stageRewards = (claim.exists && claim.get("stageRewards")) || {};
+    const claimKey = `${game}_${stage}`;
+    if (stageRewards[claimKey]) return { granted: 0 };
+    tx.set(claimRef, { uid, dayKey, stageRewards: { ...stageRewards, [claimKey]: true }, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(walletRef, { uid, credits: FieldValue.increment(reward), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted: reward };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 데일리 시그널 수령 (+5 XC, 7일 연속이면 +20 보너스) ──
+   연속 출석일수도 서버가 직접 센다 — localStorage 조작으로는 스트릭도 늘릴 수 없다. */
+exports.claimDailySignal = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const dayKey = newYorkDateKey();
+  const claimRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
+  const streakRef = db.doc(`signalStreaks/${uid}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+
+  const result = await db.runTransaction(async (tx) => {
+    const claim = await tx.get(claimRef);
+    if (claim.exists && claim.get("signalClaimed")) {
+      throw new HttpsError("already-exists", "Already claimed today.");
+    }
+    const streakDoc = await tx.get(streakRef);
+    const prevDay = streakDoc.exists ? streakDoc.get("lastDayKey") : null;
+    const prevStreak = (streakDoc.exists && streakDoc.get("streak")) || 0;
+    const yesterday = newYorkDateKey(new Date(Date.now() - 86400000));
+    const streak = prevDay === yesterday ? prevStreak + 1 : 1;
+    const bonus = (streak > 0 && streak % 7 === 0) ? 20 : 0;
+    const total = 5 + bonus;
+
+    tx.set(claimRef, { uid, dayKey, signalClaimed: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(streakRef, { uid, streak, lastDayKey: dayKey, updatedAt: FieldValue.serverTimestamp() });
+    tx.set(walletRef, { uid, credits: FieldValue.increment(total), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted: total, streak, bonus };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 데일리 시그널 페이지의 5개 퀘스트 보너스 + 전체완료 보너스 ──
+   ⚠ 아직 각 게임을 "진짜로 오늘 했는지"까지 서버가 재검증하지는 않는다 (그러려면
+   게임마다 별도 서버 로직이 더 필요함 — 다음 단계 작업). 지금 단계에서 막는 것은
+   "하루에 여러 번 받기"(localStorage 조작으로 무한 반복 수령) 하나이며, 이것만으로도
+   기존의 완전 무제한 조작보다는 크게 개선된다. */
+const QUEST_BONUS = Object.freeze({
+  chess: 10, gacha: 8, worldcup: 10, memory: 8, shisen: 8, allbonus: 25,
+});
+exports.claimQuestBonus = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const questId = String(request.data && request.data.questId || "");
+  const amount = QUEST_BONUS[questId];
+  if (!amount) throw new HttpsError("invalid-argument", "Unknown quest.");
+  const dayKey = newYorkDateKey();
+  const claimRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+
+  const result = await db.runTransaction(async (tx) => {
+    const claim = await tx.get(claimRef);
+    const quests = (claim.exists && claim.get("quests")) || {};
+    if (quests[questId]) throw new HttpsError("already-exists", "Already claimed today.");
+    tx.set(claimRef, { uid, dayKey, quests: { ...quests, [questId]: true }, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(walletRef, { uid, credits: FieldValue.increment(amount), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted: amount };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 제나카드 웰컴 보너스: 평생 1회, +50 XC ── */
+exports.claimWelcomeBonus = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const walletRef = db.doc(`wallets/${uid}`);
+  const AMOUNT = 50;
+  const result = await db.runTransaction(async (tx) => {
+    const wallet = await tx.get(walletRef);
+    if (wallet.exists && wallet.get("welcomeClaimed")) return { granted: 0 };
+    tx.set(walletRef, { uid, credits: FieldValue.increment(AMOUNT), welcomeClaimed: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted: AMOUNT };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 제나카드 중복 카드 분해 (dust) ──
+   카드 소유 자체는 아직 서버에 없으므로(다음 단계 작업), 등급별 단가는 서버가 신뢰하는
+   표로 고정하고 "몇 장을 분해했는지"만 클라이언트 값을 받아 상한을 두고 계산한다.
+   완전한 검증은 아니지만 최소한 "등급 단가 조작"은 막는다. */
+const DUST_VALUE = Object.freeze({ N: 1, R: 3, S: 10, SR: 30, SSR: 100 });
+exports.claimGachaDust = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const grade = String(request.data && request.data.grade || "");
+  const count = Number(request.data && request.data.count);
+  const unit = DUST_VALUE[grade];
+  if (!unit) throw new HttpsError("invalid-argument", "Unknown grade.");
+  if (!Number.isInteger(count) || count <= 0 || count > 500) {
+    throw new HttpsError("invalid-argument", "Invalid count.");
+  }
+  const amount = unit * count;
+  const walletRef = db.doc(`wallets/${uid}`);
+  await walletRef.set({ uid, credits: FieldValue.increment(amount), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  const wallet = await walletRef.get();
+  return { granted: amount, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 이상형 월드컵 완주 보상: 5 XC, 하루 3회 한도 ── */
+exports.claimWorldcupFinish = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const dayKey = newYorkDateKey();
+  const claimRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+  const LIMIT = 3, AMOUNT = 5;
+
+  const result = await db.runTransaction(async (tx) => {
+    const claim = await tx.get(claimRef);
+    const count = (claim.exists && claim.get("worldcupCount")) || 0;
+    if (count >= LIMIT) throw new HttpsError("resource-exhausted", "Daily limit reached.");
+    tx.set(claimRef, { uid, dayKey, worldcupCount: count + 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(walletRef, { uid, credits: FieldValue.increment(AMOUNT), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted: AMOUNT, count: count + 1, limit: LIMIT };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 오버라이드 그리드 플레이 감지 보상: 8 XC, 하루 3회 한도 ── */
+exports.claimChessMatch = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const dayKey = newYorkDateKey();
+  const claimRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+  const LIMIT = 3, AMOUNT = 8;
+
+  const result = await db.runTransaction(async (tx) => {
+    const claim = await tx.get(claimRef);
+    const count = (claim.exists && claim.get("chessMatchCount")) || 0;
+    if (count >= LIMIT) throw new HttpsError("resource-exhausted", "Daily limit reached.");
+    tx.set(claimRef, { uid, dayKey, chessMatchCount: count + 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(walletRef, { uid, credits: FieldValue.increment(AMOUNT), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted: AMOUNT, count: count + 1, limit: LIMIT };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 범용 소비: 가챠 팩 XC 구매, 리셋 비용 등 잔액이 충분할 때만 원자적으로 차감 ──
+   무엇을 얻는지(카드 등)는 아직 클라이언트가 계산 — 여기서는 "잔액 조작 방지"만 보장한다. */
+exports.spendCredits = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const amount = Number(request.data && request.data.amount);
+  const reason = String(request.data && request.data.reason || "").slice(0, 40);
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 100000) {
+    throw new HttpsError("invalid-argument", "Invalid amount.");
+  }
+  const walletRef = db.doc(`wallets/${uid}`);
+  const result = await db.runTransaction(async (tx) => {
+    const wallet = await tx.get(walletRef);
+    const current = (wallet.exists && wallet.get("credits")) || 0;
+    if (current < amount) throw new HttpsError("failed-precondition", "Insufficient balance.");
+    tx.set(walletRef, { uid, credits: FieldValue.increment(-amount), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { spent: amount, reason };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 잔액 + 연속출석 조회 ── */
+exports.getWallet = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const [wallet, streakDoc] = await Promise.all([
+    db.doc(`wallets/${uid}`).get(),
+    db.doc(`signalStreaks/${uid}`).get(),
+  ]);
+  const dayKey = newYorkDateKey();
+  const yesterday = newYorkDateKey(new Date(Date.now() - 86400000));
+  const lastDay = streakDoc.exists ? streakDoc.get("lastDayKey") : null;
+  const streak = (lastDay === dayKey || lastDay === yesterday) ? ((streakDoc.exists && streakDoc.get("streak")) || 0) : 0;
+  return { credits: wallet.get("credits") || 0, shards: wallet.get("shards") || 0, streak };
 });
 
 /* ── 주간 랭킹 마감 + 포인트 합산 + 1~3등 보상 지급 ──

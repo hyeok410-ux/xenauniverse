@@ -311,8 +311,13 @@ var WALLET_KEY = 'xena_wallet_v1', SAVE_KEY = 'xena_shisen_v1';
 function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(e){ return def; } }
 function save(key, v){ try{ localStorage.setItem(key, JSON.stringify(v)); }catch(e){} }
 function today(){ return new Date().toISOString().slice(0,10); }
-var wallet = load(WALLET_KEY, {});
-if(typeof wallet.xc !== 'number') wallet.xc = 0;
+var wallet = { xc: 0 };
+window.__wireShisenWallet = function(){
+  window.XenaWallet.subscribe(function(bal){
+    wallet.xc = (bal === null) ? 0 : bal;
+    renderWallet(); renderStages();
+  });
+};
 var st = load(SAVE_KEY, {});
 if(!st.unlocked) st.unlocked = 1;
 if(!st.daily || st.daily.date !== today()) st.daily = {date: today(), cleared: [], plays: {}};
@@ -328,7 +333,10 @@ if(!st.weekly || st.weekly.week !== weekKey()) st.weekly = {week: weekKey(), bes
 var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1; });
 function cardSrc(d){ return d[3].indexOf('../../') === 0 ? d[3] : '../gacha/' + d[3]; }
 
-function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
+function renderWallet(){
+  var bal = window.XenaWallet ? window.XenaWallet.getBalance() : null;
+  $('wallet').textContent = (bal === null ? '…' : bal) + ' XC';
+}
 var toastTimer = null;
 function toast(msg){
   if (window.XenaAudio) window.XenaAudio.sfx('toast');
@@ -416,12 +424,15 @@ function renderStages(){
   rb.style.opacity = rb.disabled ? '.4' : '1';
 }
 $('btn-reset-plays').addEventListener('click', function(){
-  if(wallet.xc < RESET_COST) return;
-  wallet.xc -= RESET_COST;
-  st.daily.plays = {};
-  save(WALLET_KEY, wallet); save(SAVE_KEY, st);
-  renderWallet(); renderStages();
-  toast(t('-'+RESET_COST+' XC — all stage plays reset!', '-'+RESET_COST+' XC — 모든 스테이지 횟수가 초기화됐습니다!'));
+  if(wallet.xc < RESET_COST || !window.XenaWallet) return;
+  window.XenaWallet.spend(RESET_COST, 'shisen_reset').then(function(){
+    st.daily.plays = {};
+    save(SAVE_KEY, st);
+    renderStages();
+    toast(t('-'+RESET_COST+' XC — all stage plays reset!', '-'+RESET_COST+' XC — 모든 스테이지 횟수가 초기화됐습니다!'));
+  }).catch(function(){
+    toast(t('Not enough XC', 'XC가 부족합니다'));
+  });
 });
 
 /* ── 이번주 전체 랭킹 (Firebase) ── */
@@ -798,29 +809,31 @@ function finish(win, reason){
     var timeUsed = s.time - cur.time;
     title.className = 'win';
     title.textContent = t('LINK RESTORED!', '회선 복구 완료!');
-    var rewardMsg = '';
-    if(st.daily.cleared.indexOf(idx+1) === -1){
-      st.daily.cleared.push(idx+1);
-      var rw = stageReward(idx);
-      wallet.xc += rw;
-      save(WALLET_KEY, wallet);
-      if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
-      rewardMsg = t(' · <b>+'+rw+' XC</b> (first clear today)', ' · <b>+'+rw+' XC</b> (오늘 첫 클리어)');
-    }
+    var firstClearToday = st.daily.cleared.indexOf(idx+1) === -1;
+    if(firstClearToday) st.daily.cleared.push(idx+1);
     if(idx+2 > st.unlocked){ st.unlocked = Math.min(STAGES.length, idx+2); }
     if(!st.best) st.best = {};
     if(!st.best[idx+1] || timeUsed < st.best[idx+1]) st.best[idx+1] = timeUsed;
     if(!st.weekly.best[idx+1] || timeUsed < st.weekly.best[idx+1]) st.weekly.best[idx+1] = timeUsed;
     save(SAVE_KEY, st);
-    /* 전체 주간 랭킹에 기록 제출 (실패해도 게임 진행에는 영향 없음) */
+    /* 전체 주간 랭킹에 기록 제출 → 성공하면 서버가 "오늘 진짜 클리어했다"는 걸 알게 되고,
+       그걸 근거로만 하루 첫클리어 XC 보상을 내준다 */
     if(window.XenaLeaderboard){
       window.XenaLeaderboard.submit(GAME_ID, idx+1, timeUsed).then(function(r){
         if(r && r.ok && r.improved) toast(t('Weekly ranking updated!','이번주 랭킹에 기록이 등록됐습니다!'));
+        if(firstClearToday && window.XenaWallet){
+          window.XenaWallet.claimStageReward(GAME_ID, idx+1).then(function(rw){
+            if(rw.granted > 0){
+              if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
+              sub.innerHTML += t(' · <b>+'+rw.granted+' XC</b> (first clear today)', ' · <b>+'+rw.granted+' XC</b> (오늘 첫 클리어)');
+            }
+          }).catch(function(){});
+        }
       });
     }
     sub.innerHTML = t(
-      'Stage '+(idx+1)+' clear in '+timeUsed+'s'+rewardMsg+'<br>Best: '+st.best[idx+1]+'s',
-      '스테이지 '+(idx+1)+' 클리어 · '+timeUsed+'초'+rewardMsg+'<br>최고 기록: '+st.best[idx+1]+'초'
+      'Stage '+(idx+1)+' clear in '+timeUsed+'s<br>Best: '+st.best[idx+1]+'s',
+      '스테이지 '+(idx+1)+' 클리어 · '+timeUsed+'초<br>최고 기록: '+st.best[idx+1]+'초'
     );
     if(idx+1 < STAGES.length){
       next.hidden = false;
@@ -864,8 +877,10 @@ renderStages();
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-gate.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
+<script src="../shared-wallet.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('shisen');
+if (window.__wireShisenWallet) window.__wireShisenWallet();
 document.querySelectorAll('.pill, .lang-toggle button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });

@@ -44,6 +44,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // submitScore 가 남기는 "오늘 이 스테이지를 실제로 클리어했다" 서버 기록.
+    // claimStageReward 가 이 값으로만 보상을 내주므로 클라이언트 쓰기는 막아둔다.
+    match /dailyClears/{clearId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // 데일리 시그널 연속 출석일수 — 서버가 직접 센다.
+    match /signalStreaks/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
     match /rewardEvents/{eventId} {
       allow read, write: if false;
     }

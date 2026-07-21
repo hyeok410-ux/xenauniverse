@@ -421,15 +421,20 @@ var st = load(SAVE_KEY, {});
 if(!st.owned) st.owned = {};
 if(!st.packs) st.packs = {};
 ['signal','sov','elite'].forEach(function(p){ if(typeof st.packs[p] !== 'number') st.packs[p] = 0; });
-var wallet = load(WALLET_KEY, {});
-if(typeof wallet.xc !== 'number') wallet.xc = 0;
-if(!st.welcomed){
-  st.welcomed = true;
-  wallet.xc += 50;
-  save(WALLET_KEY, wallet);
-  save(SAVE_KEY, st);
-  setTimeout(function(){ toast(t('Welcome bonus +50 XC!', '웰컴 보너스 +50 XC!')); }, 700);
-}
+var wallet = { xc: 0 };
+window.__wireGachaWallet = function(){
+  window.XenaWallet.subscribe(function(bal){
+    wallet.xc = (bal === null) ? 0 : bal;
+    renderAll();
+  });
+  if(!st.welcomed){
+    st.welcomed = true;
+    save(SAVE_KEY, st);
+    window.XenaWallet.claimWelcomeBonus().then(function(r){
+      if(r.granted > 0) setTimeout(function(){ toast(t('Welcome bonus +'+r.granted+' XC!', '웰컴 보너스 +'+r.granted+' XC!')); }, 700);
+    }).catch(function(){});
+  }
+};
 
 var $ = function(id){ return document.getElementById(id); };
 var toastTimer = null;
@@ -441,7 +446,10 @@ function toast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2600);
 }
-function renderWallet(){ $('wallet').textContent = wallet.xc + ' XC'; }
+function renderWallet(){
+  var bal = window.XenaWallet ? window.XenaWallet.getBalance() : null;
+  $('wallet').textContent = (bal === null ? '…' : bal) + ' XC';
+}
 
 /* 이미지 우클릭/드래그 보호 (도감·상세·연출 전역) */
 document.addEventListener('contextmenu', function(e){
@@ -469,22 +477,7 @@ function pickCard(grade){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 var lastDrawn = null; /* [{card, isNew}, ...] x3 */
-function draw(pack, useXC){
-  if(!AVAIL.length){ toast(t('Cards are being prepared', '카드 준비 중입니다')); return; }
-  if (window.XenaAudio) window.XenaAudio.sfx('pack_tap');
-  var now = Date.now();
-  if(PACKS[pack].weekly){
-    var wk = nyWeekMondayKey();
-    if(st.packs.weeklyClaimed === wk) return;
-    st.packs.weeklyClaimed = wk;
-  } else if(useXC){
-    if(wallet.xc < PACKS[pack].price){ toast(t('Not enough XC — check Daily Signal quests', 'XC가 부족합니다 — 데일리 시그널 퀘스트를 확인하세요')); return; }
-    wallet.xc -= PACKS[pack].price;
-    save(WALLET_KEY, wallet);
-  } else {
-    if(now - (st.packs[pack]||0) < PACKS[pack].coolMs) return;
-    st.packs[pack] = now;
-  }
+function doPull(pack){
   var pulls = [];
   for(var i=0;i<DRAW_COUNT;i++){
     var card = pickCard(rollGrade(pack));
@@ -498,6 +491,28 @@ function draw(pack, useXC){
   lastDrawn = pulls;
   openReveal(pulls, PACKS[pack].label);
   renderAll();
+}
+function draw(pack, useXC){
+  if(!AVAIL.length){ toast(t('Cards are being prepared', '카드 준비 중입니다')); return; }
+  if (window.XenaAudio) window.XenaAudio.sfx('pack_tap');
+  var now = Date.now();
+  if(PACKS[pack].weekly){
+    var wk = nyWeekMondayKey();
+    if(st.packs.weeklyClaimed === wk) return;
+    st.packs.weeklyClaimed = wk;
+    doPull(pack);
+  } else if(useXC){
+    if(wallet.xc < PACKS[pack].price || !window.XenaWallet) { toast(t('Not enough XC — check Daily Signal quests', 'XC가 부족합니다 — 데일리 시그널 퀘스트를 확인하세요')); return; }
+    window.XenaWallet.spend(PACKS[pack].price, 'gacha_'+pack).then(function(){
+      doPull(pack);
+    }).catch(function(){
+      toast(t('Not enough XC — check Daily Signal quests', 'XC가 부족합니다 — 데일리 시그널 퀘스트를 확인하세요'));
+    });
+  } else {
+    if(now - (st.packs[pack]||0) < PACKS[pack].coolMs) return;
+    st.packs[pack] = now;
+    doPull(pack);
+  }
 }
 
 /* ── 연출 (3장 동시 공개) ── */
@@ -674,15 +689,16 @@ function openDetail(c){
 $('dt-close').addEventListener('click', function(){ $('detail').classList.remove('on'); });
 $('detail').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
 $('dt-dust').addEventListener('click', function(){
-  if(!detailCard) return;
+  if(!detailCard || !window.XenaWallet) return;
   var n = st.owned[detailCard.id] || 0;
   if(n < 2) return;
-  var gain = DUST[detailCard.grade] * (n-1);
+  var grade = detailCard.grade, dupeCount = n-1;
   st.owned[detailCard.id] = 1;
-  wallet.xc += gain;
-  save(SAVE_KEY, st); save(WALLET_KEY, wallet);
-  if (window.XenaAudio){ window.XenaAudio.sfx('card_dismantle'); window.XenaAudio.sfx('xc_gain'); }
-  toast(t('Dusted '+(n-1)+' duplicate(s) → +'+gain+' XC', '중복 '+(n-1)+'장 분해 → +'+gain+' XC'));
+  save(SAVE_KEY, st);
+  window.XenaWallet.claimGachaDust(grade, dupeCount).then(function(r){
+    if (window.XenaAudio){ window.XenaAudio.sfx('card_dismantle'); window.XenaAudio.sfx('xc_gain'); }
+    toast(t('Dusted '+dupeCount+' duplicate(s) → +'+r.granted+' XC', '중복 '+dupeCount+'장 분해 → +'+r.granted+' XC'));
+  }).catch(function(){ toast(t('Could not dust — try again', '분해에 실패했습니다 — 다시 시도해주세요')); });
   $('detail').classList.remove('on');
   renderAll();
 });
@@ -825,8 +841,10 @@ renderAll();
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-gate.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
+<script src="../shared-wallet.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('gacha');
+if (window.__wireGachaWallet) window.__wireGachaWallet();
 document.querySelectorAll('button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });
