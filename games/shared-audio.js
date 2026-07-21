@@ -24,11 +24,12 @@
     memory:   ['memory_1.mp3','memory_2.mp3'],
     shisen:   ['shisen_1.mp3','shisen_2.mp3'],
     signal:   ['signal_1.mp3','signal_2.mp3'],
-    worldcup: ['worldcup_1.mp3','worldcup_2.mp3']
+    worldcup: ['worldcup_1.mp3','worldcup_2.mp3'],
+    merge:    ['merge_1.mp3']
   };
   var BG_FILES = {
     hub:'hub.jpg', gacha:'gacha.jpg', memory:'memory.jpg',
-    shisen:'shisen.jpg', signal:'signal.jpg', worldcup:'worldcup.jpg'
+    shisen:'shisen.jpg', signal:'signal.jpg', worldcup:'worldcup.jpg', merge:'merge.jpg'
   };
   /* center = 가운데 어둡기(높을수록 어두움), edge = 양 사이드 어둡기(낮을수록 밝음) */
   var BG_TUNE = {
@@ -37,7 +38,8 @@
     memory:   {center:.88, edge:.24, bright:1.02},
     shisen:   {center:.88, edge:.24, bright:1.02},
     signal:   {center:.62, edge:.32, bright:1.08},
-    worldcup: {center:.86, edge:.24, bright:1.02}
+    worldcup: {center:.86, edge:.24, bright:1.02},
+    merge:    {center:.55, edge:.28, bright:1.05}
   };
 
   function loadState(){

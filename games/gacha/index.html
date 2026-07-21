@@ -82,12 +82,15 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
   text-shadow:0 2px 8px rgba(0,0,0,.95), 0 0 22px rgba(0,0,0,.7);}
 
 /* ── 팩 (3종) ── */
-.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;max-width:1000px;margin:0 auto 14px;}
+.packs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;max-width:1200px;margin:0 auto 14px;}
+@media(max-width:960px){ .packs{grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:560px){ .packs{grid-template-columns:1fr;} }
 .pack{position:relative;border-radius:20px;border:1px solid var(--hair);padding:26px 22px 24px;text-align:center;
   background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.012));backdrop-filter:blur(16px);transition:.3s ease;}
 .pack.signal:hover{border-color:rgba(63,224,255,.45);box-shadow:0 14px 44px rgba(63,224,255,.12);}
 .pack.sov:hover{border-color:rgba(232,196,104,.45);box-shadow:0 14px 44px rgba(232,196,104,.12);}
 .pack.elite:hover{border-color:rgba(255,47,176,.45);box-shadow:0 14px 44px rgba(255,47,176,.14);}
+.pack.week:hover{border-color:rgba(160,107,255,.45);box-shadow:0 14px 44px rgba(160,107,255,.14);}
 .pack-kind{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;margin-bottom:10px;}
 .pack.signal .pack-kind{color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);}
 .pack.sov .pack-kind{color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);}
@@ -100,10 +103,12 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .pack.signal .pack-art{background:linear-gradient(150deg,#04121a,#062a3a 45%,#04121a);box-shadow:inset 0 0 34px rgba(63,224,255,.25), 0 6px 24px rgba(0,0,0,.5);}
 .pack.sov .pack-art{background:linear-gradient(150deg,#150d02,#3a2a06 45%,#150d02);box-shadow:inset 0 0 34px rgba(232,196,104,.28), 0 6px 24px rgba(0,0,0,.5);}
 .pack.elite .pack-art{background:linear-gradient(150deg,#160410,#3a0a28 45%,#160410);box-shadow:inset 0 0 34px rgba(255,47,176,.3), 0 6px 24px rgba(0,0,0,.5);}
+.pack.week .pack-art{background:linear-gradient(150deg,#0e0620,#2c1650 45%,#0e0620);box-shadow:inset 0 0 34px rgba(160,107,255,.32), 0 6px 24px rgba(0,0,0,.5);}
 .pack-art b{font-family:var(--font-sans);font-weight:800;font-size:1.8rem;letter-spacing:.04em;}
 .pack.signal .pack-art b{color:var(--cyan);text-shadow:0 0 22px rgba(63,224,255,.8);}
 .pack.sov .pack-art b{color:var(--gold);text-shadow:0 0 22px rgba(232,196,104,.8);}
 .pack.elite .pack-art b{color:var(--magenta);text-shadow:0 0 22px rgba(255,47,176,.85);}
+.pack.week .pack-art b{color:var(--purple-light);text-shadow:0 0 22px rgba(160,107,255,.85);}
 .pack-art small{position:absolute;bottom:8px;left:0;right:0;font-family:var(--font-mono);font-size:.5rem;letter-spacing:.2em;color:rgba(255,255,255,.5);}
 .pack-x3{position:absolute;top:8px;right:8px;font-family:var(--font-mono);font-size:.56rem;font-weight:700;letter-spacing:.06em;padding:3px 7px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.25);}
 .draw-btn{width:100%;font-weight:700;font-size:.9rem;letter-spacing:.08em;padding:14px 0;border-radius:28px;border:none;transition:.3s ease;margin-bottom:8px;}
@@ -245,6 +250,15 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
   </div>
 
   <div class="packs">
+    <div class="pack week">
+      <span class="pack-x3">×3</span>
+      <div class="pack-kind"><span lang="en">Weekly · Resets Monday</span><span lang="ko">주간 · 매주 월요일 초기화</span></div>
+      <h3>WEEKLY PACK</h3>
+      <div class="cool" id="cool-weekly">—</div>
+      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
+      <button class="draw-btn" id="btn-weekly-pack">FREE DRAW</button>
+      <div class="odds"><span class="oN">N 25%</span> · <span class="oR">R 30%</span> · <span class="oS">S 30%</span> · <span class="oSR">SR 10%</span> · <span class="oSSR">SSR 5%</span></div>
+    </div>
     <div class="pack signal">
       <span class="pack-x3">×3</span>
       <div class="pack-kind">Basic · Every 8 Hours</div>
@@ -255,25 +269,6 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <button class="xc-btn" id="btn-signal-xc"><span lang="en">Extra draw · 50 XC</span><span lang="ko">50 XC로 추가 뽑기</span></button>
       <div class="odds"><span class="oN">N 70%</span> · <span class="oR">R 26.9%</span> · <span class="oS">S 3%</span> · <span class="oSR">SR 0.1%</span></div>
     </div>
-    <div class="pack sov">
-      <span class="pack-x3">×3</span>
-      <div class="pack-kind">Advanced · Every 12 Hours</div>
-      <h3>SOVEREIGN PACK</h3>
-      <div class="cool" id="cool-sov">—</div>
-      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
-      <button class="draw-btn" id="btn-sov">FREE DRAW</button>
-      <button class="xc-btn" id="btn-sov-xc"><span lang="en">Extra draw · 150 XC</span><span lang="ko">150 XC로 추가 뽑기</span></button>
-      <div class="odds"><span class="oN">N 40%</span> · <span class="oR">R 44.5%</span> · <span class="oS">S 10%</span> · <span class="oSR">SR 5%</span> · <span class="oSSR">SSR 0.5%</span></div>
-    </div>
-    <div class="pack week">
-      <span class="pack-x3">×3</span>
-      <div class="pack-kind"><span lang="en">Weekly · Resets Monday</span><span lang="ko">주간 · 매주 월요일 초기화</span></div>
-      <h3>WEEKLY PACK</h3>
-      <div class="cool" id="cool-weekly">—</div>
-      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
-      <button class="draw-btn" id="btn-weekly-pack">FREE DRAW</button>
-      <div class="odds"><span class="oN">N 25%</span> · <span class="oR">R 30%</span> · <span class="oS">S 30%</span> · <span class="oSR">SR 10%</span> · <span class="oSSR">SSR 5%</span></div>
-    </div>
     <div class="pack elite">
       <span class="pack-x3">×3</span>
       <div class="pack-kind">Elite · Every 24 Hours</div>
@@ -283,6 +278,16 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <button class="draw-btn" id="btn-elite">FREE DRAW</button>
       <button class="xc-btn" id="btn-elite-xc"><span lang="en">Extra draw · 300 XC</span><span lang="ko">300 XC로 추가 뽑기</span></button>
       <div class="odds"><span class="oR">R 78%</span> · <span class="oS">S 15%</span> · <span class="oSR">SR 6%</span> · <span class="oSSR">SSR 1%</span></div>
+    </div>
+    <div class="pack sov">
+      <span class="pack-x3">×3</span>
+      <div class="pack-kind">Advanced · Every 12 Hours</div>
+      <h3>SOVEREIGN PACK</h3>
+      <div class="cool" id="cool-sov">—</div>
+      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
+      <button class="draw-btn" id="btn-sov">FREE DRAW</button>
+      <button class="xc-btn" id="btn-sov-xc"><span lang="en">Extra draw · 150 XC</span><span lang="ko">150 XC로 추가 뽑기</span></button>
+      <div class="odds"><span class="oN">N 40%</span> · <span class="oR">R 44.5%</span> · <span class="oS">S 10%</span> · <span class="oSR">SR 5%</span> · <span class="oSSR">SSR 0.5%</span></div>
     </div>
   </div>
   <p class="note-line">
