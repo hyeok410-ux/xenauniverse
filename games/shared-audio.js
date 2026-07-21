@@ -1,12 +1,12 @@
-/* XENA GAMES 공용 오디오 매니저 — 게임제작부서
-   - 페이지별 BGM 2곡 중 랜덤 재생, 곡이 끝나면 다시 랜덤으로 다음 곡 선택 (연속 반복이어도 상관없음)
-   - 공용 효과음(SFX) 재생 함수 제공
-   - localStorage에 음소거/볼륨 상태 저장, 우측 상단 프로필 버튼 옆에 음소거 토글 제공
+/* XENA GAMES 공용 오디오/배경 매니저 — 게임제작부서
+   - 페이지별 BGM 2곡 중 랜덤 재생, 곡이 끝나면 다시 랜덤 선택 (연속 반복 허용)
+   - 공용 효과음(SFX) 재생
+   - 화면잠금/탭전환 시 모든 소리 완전 정지 (BGM + 페이지 내 모든 audio/video + WebAudio)
+   - 배경아트 적용: 가운데는 어둡게(게임화면 가독성), 양 사이드는 밝게
 */
 (function(){
   var LS_KEY = 'xena_audio_v1';
   var ASSET_BASE = (function(){
-    // games/ 하위 어느 폴더에서 로드되든 games/_assets/ 를 절대 상대경로로 찾음
     var scripts = document.getElementsByTagName('script');
     for (var i=0;i<scripts.length;i++){
       var src = scripts[i].getAttribute('src')||'';
@@ -29,6 +29,15 @@
     hub:'hub.jpg', gacha:'gacha.jpg', memory:'memory.jpg',
     shisen:'shisen.jpg', signal:'signal.jpg', worldcup:'worldcup.jpg'
   };
+  /* center = 가운데 어둡기(높을수록 어두움), edge = 양 사이드 어둡기(낮을수록 밝음) */
+  var BG_TUNE = {
+    hub:      {center:.70, edge:.26, bright:1.06},
+    gacha:    {center:.88, edge:.24, bright:1.02},
+    memory:   {center:.88, edge:.24, bright:1.02},
+    shisen:   {center:.88, edge:.24, bright:1.02},
+    signal:   {center:.62, edge:.32, bright:1.08},
+    worldcup: {center:.86, edge:.24, bright:1.02}
+  };
 
   function loadState(){
     try{
@@ -43,11 +52,12 @@
   var bgmAudio = null;
   var currentSetKey = null;
   var sfxCache = {};
+  var suspended = false;      /* 화면잠금/탭전환으로 정지된 상태 */
+  var wasPlaying = false;
 
   function pickNext(list, excludeSrc){
-    if (list.length === 1) return list[0];
-    var candidates = list.filter(function(f){ return excludeSrc.indexOf(f) === -1 || list.length === 1; });
-    var pool = list.length > 1 ? list.filter(function(f){ return ASSET_BASE+'bgm/'+f !== excludeSrc; }) : list;
+    if (list.length <= 1) return list[0];
+    var pool = list.filter(function(f){ return ASSET_BASE+'bgm/'+f !== excludeSrc; });
     if (!pool.length) pool = list;
     return pool[Math.floor(Math.random()*pool.length)];
   }
@@ -59,29 +69,26 @@
     if (!bgmAudio){
       bgmAudio = new Audio();
       bgmAudio.addEventListener('ended', function(){
-        if (!currentSetKey) return;
-        var l = BGM_SETS[currentSetKey];
-        var next = pickNext(l, bgmAudio.src);
-        startTrack(next);
+        if (!currentSetKey || suspended) return;
+        startTrack(pickNext(BGM_SETS[currentSetKey], bgmAudio.src));
       });
     }
-    var first = list[Math.floor(Math.random()*list.length)];
-    startTrack(first);
+    startTrack(list[Math.floor(Math.random()*list.length)]);
   }
 
   function startTrack(file){
+    if (suspended) return;
     bgmAudio.src = ASSET_BASE + 'bgm/' + file;
     bgmAudio.volume = state.muted ? 0 : state.volume;
-    bgmAudio.play().catch(function(){ /* 오토플레이 차단 시 첫 클릭에서 재시도 */ });
+    bgmAudio.play().catch(function(){});
   }
 
   function sfx(name){
-    if (state.muted) return;
-    var key = name;
-    var a = sfxCache[key];
+    if (state.muted || suspended || document.hidden) return;
+    var a = sfxCache[name];
     if (!a){
       a = new Audio(ASSET_BASE + 'sfx/' + name + '.mp3');
-      sfxCache[key] = a;
+      sfxCache[name] = a;
     }
     try{
       var node = a.cloneNode();
@@ -90,18 +97,74 @@
     }catch(e){}
   }
 
+  /* ── 화면잠금 / 탭전환 시 전체 음소거 ──
+     폰에서 화면을 잠그면 document.hidden 이 true 가 되지만 <audio> 는 계속 재생되므로
+     BGM, 페이지 내 모든 미디어, WebAudio 컨텍스트를 전부 정지시킨다. */
+  function allMedia(){
+    var out = [];
+    try{
+      document.querySelectorAll('audio, video').forEach(function(el){ out.push(el); });
+    }catch(e){}
+    return out;
+  }
+  function audioContexts(){
+    return (window.__xAudioCtxs && window.__xAudioCtxs.length) ? window.__xAudioCtxs : [];
+  }
+  function suspendAll(){
+    if (suspended) return;
+    suspended = true;
+    if (bgmAudio && !bgmAudio.paused){ wasPlaying = true; bgmAudio.pause(); }
+    allMedia().forEach(function(el){
+      if (el !== bgmAudio && !el.paused){ el.__xPaused = true; try{ el.pause(); }catch(e){} }
+    });
+    audioContexts().forEach(function(ctx){
+      try{ if (ctx.state === 'running'){ ctx.__xSusp = true; ctx.suspend(); } }catch(e){}
+    });
+  }
+  function resumeAll(){
+    if (!suspended) return;
+    suspended = false;
+    if (wasPlaying && bgmAudio){ wasPlaying = false; bgmAudio.play().catch(function(){}); }
+    allMedia().forEach(function(el){
+      if (el.__xPaused){ el.__xPaused = false; try{ el.play().catch(function(){}); }catch(e){} }
+    });
+    audioContexts().forEach(function(ctx){
+      try{ if (ctx.__xSusp){ ctx.__xSusp = false; ctx.resume(); } }catch(e){}
+    });
+  }
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) suspendAll(); else resumeAll();
+  });
+  /* iOS 등 일부 환경에서 잠금 시 visibilitychange 가 늦거나 안 오는 경우 대비 */
+  window.addEventListener('pagehide', suspendAll);
+  window.addEventListener('blur', function(){ if (document.hidden) suspendAll(); });
+  window.addEventListener('pageshow', function(){ if (!document.hidden) resumeAll(); });
+  window.addEventListener('focus', function(){ if (!document.hidden) resumeAll(); });
+
+  /* ── 배경아트 (가운데 어둡게 / 사이드 밝게) + 글자 가독성 ── */
   function setBackground(setKey){
     var file = BG_FILES[setKey];
     if (!file) return;
+    var tune = BG_TUNE[setKey] || {center:.85, edge:.28, bright:1.02};
     var url = ASSET_BASE + 'bg/' + file;
+    var mid = ((tune.center + tune.edge) / 2).toFixed(2);
     var style = document.createElement('style');
+    style.id = 'xaud-bg';
     style.textContent =
       'body::before{content:"";position:fixed;inset:0;z-index:-3;' +
-      'background:url("'+url+'") center/cover no-repeat fixed;filter:brightness(1.05) saturate(1.15);}' +
+        'background:url("'+url+'") center/cover no-repeat fixed;' +
+        'filter:brightness('+tune.bright+') saturate(1.12);}' +
+      /* 가운데(게임 영역)는 진하게, 좌우 가장자리로 갈수록 옅게 */
       'body::after{content:"";position:fixed;inset:0;z-index:-2;' +
-      'background:linear-gradient(180deg, rgba(5,6,10,.32), rgba(5,6,10,.5));}' +
+        'background:radial-gradient(ellipse 60% 82% at 50% 48%,' +
+          'rgba(5,6,10,'+tune.center+') 0%,' +
+          'rgba(5,6,10,'+mid+') 52%,' +
+          'rgba(5,6,10,'+tune.edge+') 100%);}' +
       'body{background:transparent !important;}' +
-      '.bg-fx, .bg-grid{opacity:.55;}';
+      /* 기존 장식 레이어는 배경사진을 가리지 않도록 약화 */
+      '.bg-fx, .bg-grid{opacity:.45;}' +
+      /* 사진 위 글자 가독성 */
+      'h1,h2,h3,.hero p,.lede,.sub,.tag,.desc{text-shadow:0 2px 10px rgba(0,0,0,.75);}';
     document.head.appendChild(style);
   }
 
@@ -137,7 +200,7 @@
 
   function unlockOnFirstGesture(){
     var handler = function(){
-      if (bgmAudio && bgmAudio.paused && currentSetKey) bgmAudio.play().catch(function(){});
+      if (bgmAudio && bgmAudio.paused && currentSetKey && !suspended) bgmAudio.play().catch(function(){});
       document.removeEventListener('click', handler);
       document.removeEventListener('touchstart', handler);
     };
@@ -152,6 +215,8 @@
       playBgm(setKey);
       unlockOnFirstGesture();
     },
-    sfx: sfx
+    sfx: sfx,
+    suspendAll: suspendAll,
+    resumeAll: resumeAll
   };
 })();

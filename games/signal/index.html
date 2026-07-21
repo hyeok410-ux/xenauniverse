@@ -113,6 +113,12 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 .q.done .qr{color:#5cffc0;}
 .q a.golink, .q button.golink{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;color:var(--cyan);border:1px solid rgba(63,224,255,.4);padding:8px 14px;border-radius:18px;background:transparent;transition:.3s ease;white-space:nowrap;}
 .q a.golink:hover, .q button.golink:hover{background:rgba(63,224,255,.1);}
+/* 받기(수령 가능) 버튼 — 속을 채워서 눈에 확 띄게, 글씨는 진한 배경 위 검정으로 또렷하게 */
+.q button.golink.claimable{background:linear-gradient(120deg, var(--gold), #ffd97a);border:1px solid var(--gold);
+  color:#1a1206;font-weight:800;font-size:.68rem;letter-spacing:.1em;padding:9px 18px;
+  box-shadow:0 0 16px rgba(232,196,104,.45);animation:claimPulse 1.8s ease-in-out infinite;}
+.q button.golink.claimable:hover{background:linear-gradient(120deg,#ffd97a,var(--gold));box-shadow:0 0 24px rgba(232,196,104,.7);}
+@keyframes claimPulse{50%{box-shadow:0 0 26px rgba(232,196,104,.75);}}
 .q-note{margin-top:14px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.1em;color:var(--text-dim);opacity:.7;line-height:1.9;}
 .all-bonus{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
   background:linear-gradient(120deg, rgba(232,196,104,.14), rgba(255,47,176,.1));border:1px solid rgba(232,196,104,.4);border-radius:14px;padding:14px 18px;}
@@ -479,9 +485,10 @@ function renderQuests(){
     el.className = 'q' + (q.done ? ' done' : '');
     var action = '';
     if(!q.done && q.act){
-      action = '<button class="golink" data-act="'+q.act+'">'+t('CLAIM','받기')+'</button>';
+      action = '<button class="golink claimable" data-act="'+q.act+'">'+t('CLAIM','받기')+'</button>';
     } else if(!q.done && q.link){
-      action = '<a class="golink" href="'+q.link+'" target="_blank" rel="noopener">'+t('GO','이동')+'</a>';
+      /* 같은 창에서 이동 — 새 창이면 BGM 이 두 개 겹쳐서 재생됨 */
+      action = '<a class="golink" href="'+q.link+'">'+t('GO','이동')+'</a>';
     }
     el.innerHTML = '<div class="qi">'+q.icon+'</div><div class="qt"><b>'+q.title+'</b><span>'+q.sub+'</span></div><div class="qr">'+(q.done?'✓ ':'')+q.reward+'</div>'+action;
     list.appendChild(el);
@@ -492,7 +499,7 @@ function renderQuests(){
   var allBanner = $('all-bonus');
   if(allDone && !claimedFlag('allBonusClaim')){
     allBanner.hidden = false;
-    allBanner.innerHTML = '<span>'+t('All quests complete!', '모든 퀘스트 완료!')+'</span><button class="golink" data-act="allbonus">'+t('CLAIM +'+ALL_BONUS+' XC','+'+ALL_BONUS+' XC 받기')+'</button>';
+    allBanner.innerHTML = '<span>'+t('All quests complete!', '모든 퀘스트 완료!')+'</span><button class="golink claimable" data-act="allbonus">'+t('CLAIM +'+ALL_BONUS+' XC','+'+ALL_BONUS+' XC 받기')+'</button>';
   } else if(claimedFlag('allBonusClaim')){
     allBanner.hidden = false;
     allBanner.innerHTML = '<span>✓ '+t('All quests bonus claimed today', '오늘의 전체 완료 보너스 수령 완료')+'</span>';
@@ -554,8 +561,8 @@ renderQuests();
 if(revealed){ reveal(); }
 })();
 </script>
-<script src="../shared-profile.js"></script>
-<script src="../shared-audio.js"></script>
+<script src="../shared-profile.js?v=20260721"></script>
+<script src="../shared-audio.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('signal');
 document.querySelectorAll('button').forEach(function(el){

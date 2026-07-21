@@ -77,17 +77,32 @@ body.playing .zoom-ctl{display:flex;}
 .zoom-ctl button:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
 .zoom-ctl button.mid{font-size:.9rem;}
 
-/* 인트로 */
-.intro{align-items:center;justify-content:center;text-align:center;padding:20px 0 50px;}
-.eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;text-shadow:0 0 16px rgba(63,224,255,.5);}
-h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-height:1.1;margin-bottom:12px;
-  background:linear-gradient(135deg,#fff 30%,var(--cyan) 75%,var(--purple-light));-webkit-background-clip:text;background-clip:text;color:transparent;}
-.intro p{color:var(--text-dim);font-size:.92rem;max-width:460px;line-height:1.75;margin-bottom:26px;}
-.intro p b{color:var(--cyan);font-weight:600;}
-.stage-grid{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:26px;}
-.stage-btn{position:relative;font-family:var(--font-mono);width:104px;padding:14px 0 12px;border-radius:14px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--silver);transition:.3s ease;backdrop-filter:blur(10px);}
-.stage-btn b{display:block;font-size:1rem;font-weight:700;}
-.stage-btn span{display:block;font-size:.54rem;color:var(--text-dim);margin-top:3px;letter-spacing:.06em;}
+/* 인트로 — 배경사진 위 가독성 확보: 암막 + 글씨 확대/밝기 상향 */
+.intro{align-items:center;justify-content:center;text-align:center;padding:20px 0 50px;position:relative;}
+.intro::before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);
+  width:min(860px,98vw);height:100%;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 50% 46% at 50% 34%, rgba(3,5,10,.9) 0%, rgba(3,5,10,.66) 55%, rgba(3,5,10,0) 100%);}
+.intro > *{position:relative;}
+.eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.4em;text-transform:uppercase;color:#7ff0ff;margin-bottom:14px;
+  text-shadow:0 0 18px rgba(63,224,255,.75), 0 2px 6px rgba(0,0,0,.9);}
+h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;line-height:1.1;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff 30%,var(--cyan) 75%,var(--purple-light));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 10px rgba(0,0,0,.95));}
+.intro p{color:#e2ecfa;font-size:1.05rem;font-weight:500;max-width:520px;line-height:1.8;margin-bottom:26px;
+  text-shadow:0 2px 8px rgba(0,0,0,.95), 0 0 22px rgba(0,0,0,.7);}
+.intro p b{color:#7ff0ff;font-weight:700;}
+/* 10 스테이지를 위 5 / 아래 5 로 줄맞춤 */
+.stage-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;justify-content:center;
+  margin:0 auto 26px;max-width:576px;width:100%;}
+.stage-btn{position:relative;font-family:var(--font-mono);width:100%;padding:14px 0 12px;border-radius:14px;border:1px solid var(--hair);background:rgba(6,10,18,.55);color:var(--silver);transition:.3s ease;backdrop-filter:blur(10px);}
+.stage-btn b{display:block;font-size:1.05rem;font-weight:700;color:#f2f7ff;}
+.stage-btn span{display:block;font-size:.58rem;color:#b8c6da;margin-top:3px;letter-spacing:.06em;}
+@media(max-width:560px){
+  .stage-grid{gap:6px;}
+  .stage-btn{padding:11px 0 9px;border-radius:11px;}
+  .stage-btn b{font-size:.9rem;}
+  .stage-btn span{font-size:.5rem;letter-spacing:.02em;}
+}
 .stage-btn span:last-of-type{color:var(--gold);}
 .stage-btn:not(:disabled):hover{border-color:rgba(63,224,255,.5);box-shadow:0 0 18px rgba(63,224,255,.2);transform:translateY(-2px);}
 .stage-btn:disabled{opacity:.35;cursor:default;}
@@ -133,6 +148,27 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
 .r-btn:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
 .r-btn.primary{background:var(--silver);color:var(--black);border:none;font-family:var(--font-sans);font-weight:700;font-size:.9rem;}
 .r-btn.primary:hover{background:#fff;}
+/* 인트로 하단 버튼 줄 (초기화 / 이번주 순위) */
+.intro-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;}
+.intro-actions .r-btn{background:rgba(6,10,18,.62);}
+#btn-weekly{color:var(--gold);border-color:rgba(232,196,104,.45);}
+#btn-weekly:hover{color:#ffd97a;border-color:var(--gold);box-shadow:0 0 16px rgba(232,196,104,.3);}
+/* 이번주 기록 모달 */
+.wk-overlay{position:fixed;inset:0;z-index:520;background:rgba(3,4,8,.86);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;padding:20px;}
+.wk-overlay.on{display:flex;}
+.wk-modal{width:min(420px,100%);max-height:82vh;overflow-y:auto;text-align:center;
+  background:linear-gradient(160deg, rgba(14,18,30,.98), rgba(8,10,18,.98));
+  border:1px solid rgba(232,196,104,.35);border-radius:18px;padding:26px 22px;}
+.wk-modal h3{font-family:var(--font-mono);font-size:.92rem;letter-spacing:.2em;color:var(--gold);margin-bottom:8px;}
+.wk-sub{font-size:.74rem;color:#b8c6da;line-height:1.6;margin-bottom:18px;}
+.wk-list{display:flex;flex-direction:column;gap:7px;margin-bottom:20px;}
+.wk-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 14px;border-radius:11px;border:1px solid var(--hair);background:rgba(255,255,255,.04);}
+.wk-row.has{border-color:rgba(232,196,104,.4);background:rgba(232,196,104,.07);}
+.wk-row .wk-st{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;color:#dce6f5;}
+.wk-row .wk-tm{font-family:var(--font-mono);font-size:.78rem;font-weight:700;color:var(--gold);}
+.wk-row.none .wk-tm{color:#6b7789;font-weight:400;}
 
 .toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:120;font-family:var(--font-mono);font-size:.7rem;letter-spacing:.06em;color:var(--silver);background:rgba(8,8,14,.92);border:1px solid rgba(63,224,255,.4);padding:12px 22px;border-radius:24px;opacity:0;pointer-events:none;transition:.35s ease;backdrop-filter:blur(12px);max-width:88vw;text-align:center;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -165,7 +201,10 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
       <span lang="ko">도시의 시그널 회선이 끊겼다. 다시 이어라:<br>같은 그림 타일 2개를 <b>꺾임 2번 이하</b>, 다른 타일을 지나지 않는 선으로 연결하면 제거됩니다.</span>
     </p>
     <div class="stage-grid" id="stage-grid"></div>
-    <button class="r-btn" id="btn-reset-plays" style="margin-bottom:20px;"></button>
+    <div class="intro-actions">
+      <button class="r-btn" id="btn-reset-plays"></button>
+      <button class="r-btn" id="btn-weekly"><span lang="en">🏆 THIS WEEK'S RECORDS</span><span lang="ko">🏆 이번주 순위</span></button>
+    </div>
     <p class="intro-note">
       <span lang="en">First clear each day: Stage n = +n×2 XC (up to +110/day) · Hints 3 per stage<br>5 plays per stage per day · Weekly best times per stage<br>Auto-reshuffle when no moves remain</span>
       <span lang="ko">하루 첫 클리어: n스테이지 = +n×2 XC (하루 최대 +110) · 힌트 스테이지당 3회<br>스테이지당 하루 5판 · 스테이지별 이번 주 최고기록 표시<br>연결 가능한 짝이 없으면 자동 셔플</span>
@@ -198,6 +237,14 @@ h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-
   </section>
 </div>
 
+<div class="wk-overlay" id="wk-overlay">
+  <div class="wk-modal">
+    <h3><span lang="en">THIS WEEK'S RECORDS</span><span lang="ko">이번주 순위</span></h3>
+    <p class="wk-sub"><span lang="en">Your best clear time per stage this week.</span><span lang="ko">이번 주 스테이지별 나의 최고 기록입니다.</span></p>
+    <div class="wk-list" id="wk-list"></div>
+    <button class="r-btn" id="wk-close"><span lang="en">CLOSE</span><span lang="ko">닫기</span></button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <div class="zoom-ctl" id="zoom-ctl">
   <button id="zoom-in" aria-label="zoom in">+</button>
@@ -221,7 +268,10 @@ function t(en, ko){ return lang === 'ko' ? ko : en; }
 var $ = function(id){ return document.getElementById(id); };
 
 /* 스테이지: 가로x세로, 시간. 타일 수 = w*h (짝수) — 작은 판부터 큰 판까지 10단계 */
+/* 10 스테이지 — 입문 2단계(8/12타일) 추가, 최고 난이도는 84타일(12x7)에서 마감 */
 var STAGES = [
+  {w:4, h:2, time:50,  kinds:4},
+  {w:4, h:3, time:65,  kinds:6},
   {w:4, h:4, time:80,  kinds:6},
   {w:6, h:4, time:110, kinds:8},
   {w:6, h:5, time:140, kinds:10},
@@ -229,9 +279,7 @@ var STAGES = [
   {w:8, h:6, time:200, kinds:14},
   {w:10, h:6, time:230, kinds:16},
   {w:10, h:7, time:260, kinds:18},
-  {w:12, h:7, time:290, kinds:20},
-  {w:12, h:8, time:320, kinds:22},
-  {w:14, h:8, time:360, kinds:24}
+  {w:12, h:7, time:290, kinds:20}
 ];
 function stageReward(idx){ return (idx+1)*2; }
 var HINTS_PER_STAGE = 3;
@@ -353,6 +401,28 @@ $('btn-reset-plays').addEventListener('click', function(){
   renderWallet(); renderStages();
   toast(t('-'+RESET_COST+' XC — all stage plays reset!', '-'+RESET_COST+' XC — 모든 스테이지 횟수가 초기화됐습니다!'));
 });
+
+/* ── 이번주 스테이지별 최고기록 ── */
+function renderWeekly(){
+  var list = $('wk-list');
+  list.innerHTML = '';
+  STAGES.forEach(function(s, i){
+    var n = i+1;
+    var best = st.weekly.best[n];
+    var row = document.createElement('div');
+    row.className = 'wk-row ' + (best ? 'has' : 'none');
+    row.innerHTML =
+      '<span class="wk-st">'+t('STAGE '+n, n+' 스테이지')+' <small style="opacity:.55">'+s.w+'×'+s.h+'</small></span>' +
+      '<span class="wk-tm">'+(best ? best+t('s','초') : t('— no record','— 기록 없음'))+'</span>';
+    list.appendChild(row);
+  });
+}
+$('btn-weekly').addEventListener('click', function(){
+  renderWeekly();
+  $('wk-overlay').classList.add('on');
+});
+$('wk-close').addEventListener('click', function(){ $('wk-overlay').classList.remove('on'); });
+$('wk-overlay').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
 
 /* ── 보드 상태 ──
  * grid[y][x] = 타일 종류번호 (0 = 빈칸). 실제 보드 밖 1칸 여백 포함: 크기 (w+2)x(h+2)
@@ -675,8 +745,8 @@ renderWallet();
 renderStages();
 })();
 </script>
-<script src="../shared-profile.js"></script>
-<script src="../shared-audio.js"></script>
+<script src="../shared-profile.js?v=20260721"></script>
+<script src="../shared-audio.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('shisen');
 document.querySelectorAll('.pill, .lang-toggle button').forEach(function(el){

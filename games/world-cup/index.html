@@ -74,12 +74,20 @@ a{color:inherit;text-decoration:none;}
 /* ── 인트로 화면 ── */
 .screen{display:none;flex:1;flex-direction:column;}
 .screen.on{display:flex;}
-.intro{align-items:center;justify-content:center;text-align:center;padding:30px 0 60px;}
-.intro-eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:18px;text-shadow:0 0 16px rgba(63,224,255,.5);}
-.intro h1{font-size:clamp(2.1rem,7vw,3.6rem);font-weight:800;letter-spacing:.04em;line-height:1.12;margin-bottom:14px;
-  background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
-.intro p{color:var(--text-dim);font-size:.95rem;max-width:420px;line-height:1.75;margin-bottom:34px;}
-.intro p b{color:var(--silver);font-weight:500;}
+/* 인트로 — 배경사진 위 가독성 확보: 암막 + 글씨 확대/밝기 상향 */
+.intro{align-items:center;justify-content:center;text-align:center;padding:30px 0 60px;position:relative;}
+.intro::before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);
+  width:min(860px,98vw);height:100%;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 50% 46% at 50% 36%, rgba(3,5,10,.9) 0%, rgba(3,5,10,.66) 55%, rgba(3,5,10,0) 100%);}
+.intro > *{position:relative;}
+.intro-eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.4em;text-transform:uppercase;color:#7ff0ff;margin-bottom:18px;
+  text-shadow:0 0 18px rgba(63,224,255,.75), 0 2px 6px rgba(0,0,0,.9);}
+.intro h1{font-size:clamp(2.3rem,7.4vw,3.8rem);font-weight:800;letter-spacing:.04em;line-height:1.12;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 10px rgba(0,0,0,.95));}
+.intro p{color:#e2ecfa;font-size:1.05rem;font-weight:500;max-width:500px;line-height:1.8;margin-bottom:34px;
+  text-shadow:0 2px 8px rgba(0,0,0,.95), 0 0 22px rgba(0,0,0,.7);}
+.intro p b{color:#ffffff;font-weight:700;}
 .round-pick{display:flex;gap:12px;margin-bottom:26px;}
 .round-btn{font-family:var(--font-mono);font-size:.8rem;font-weight:500;letter-spacing:.1em;padding:12px 26px;border-radius:26px;border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--text-dim);transition:.3s ease;backdrop-filter:blur(10px);}
 .round-btn.sel{color:var(--cyan);border-color:rgba(63,224,255,.55);box-shadow:0 0 22px rgba(63,224,255,.25), inset 0 0 14px rgba(63,224,255,.08);}
@@ -708,8 +716,8 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 });
 })();
 </script>
-<script src="../shared-profile.js"></script>
-<script src="../shared-audio.js"></script>
+<script src="../shared-profile.js?v=20260721"></script>
+<script src="../shared-audio.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('worldcup');
 document.querySelectorAll('button').forEach(function(el){

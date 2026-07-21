@@ -67,11 +67,19 @@ a{color:inherit;text-decoration:none;}
 .back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
 .wallet{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;color:var(--gold);border:1px solid rgba(232,196,104,.4);padding:8px 16px;border-radius:20px;background:rgba(232,196,104,.06);text-shadow:0 0 12px rgba(232,196,104,.4);font-variant-numeric:tabular-nums;}
 
-.head{text-align:center;padding:30px 0 26px;}
-.eyebrow{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.4em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;text-shadow:0 0 16px rgba(63,224,255,.5);}
-h1{font-size:clamp(2rem,6.5vw,3.2rem);font-weight:800;letter-spacing:.05em;line-height:1.1;margin-bottom:12px;
-  background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
-.head p{color:var(--text-dim);font-size:.92rem;max-width:460px;margin:0 auto;line-height:1.7;}
+/* 배경사진 위에서도 읽히도록 헤드 영역에 부드러운 암막을 깔고 글씨를 밝게 */
+.head{text-align:center;padding:30px 0 26px;position:relative;}
+.head::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(760px,96vw);height:130%;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%, rgba(3,5,10,.88) 0%, rgba(3,5,10,.62) 55%, rgba(3,5,10,0) 100%);}
+.head > *{position:relative;}
+.eyebrow{font-family:var(--font-mono);font-size:.76rem;letter-spacing:.4em;text-transform:uppercase;color:#7ff0ff;margin-bottom:14px;
+  text-shadow:0 0 18px rgba(63,224,255,.75), 0 2px 6px rgba(0,0,0,.9);}
+h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;line-height:1.1;margin-bottom:12px;
+  background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 3px 10px rgba(0,0,0,.95));}
+.head p{color:#e2ecfa;font-size:1rem;font-weight:500;max-width:480px;margin:0 auto;line-height:1.75;
+  text-shadow:0 2px 8px rgba(0,0,0,.95), 0 0 22px rgba(0,0,0,.7);}
 
 /* ── 팩 (3종) ── */
 .packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;max-width:1000px;margin:0 auto 14px;}
@@ -756,8 +764,8 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 renderAll();
 })();
 </script>
-<script src="../shared-profile.js"></script>
-<script src="../shared-audio.js"></script>
+<script src="../shared-profile.js?v=20260721"></script>
+<script src="../shared-audio.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('gacha');
 document.querySelectorAll('button').forEach(function(el){

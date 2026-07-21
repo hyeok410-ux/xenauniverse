@@ -7,6 +7,24 @@
   <meta name="description" content="XENA: OVERRIDE GRID - Awaken your leader, break the system, and rule the 6x6 cyber battlefield.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2305060a'/%3E%3Cpath d='M12 32h40M32 12v40' stroke='%2332e6ef' stroke-width='6'/%3E%3C/svg%3E">
   <title>XENA: OVERRIDE GRID</title>
+  <script>
+    /* 화면잠금 시 게임 사운드까지 정지시키기 위해 AudioContext 생성을 미리 등록해 둔다.
+       (shared-audio.js 가 이 목록을 읽어 suspend/resume 처리) */
+    (function(){
+      window.__xAudioCtxs = [];
+      ['AudioContext','webkitAudioContext'].forEach(function(k){
+        var Orig = window[k];
+        if (!Orig) return;
+        function Patched(){
+          var ctx = new Orig(arguments[0]);
+          try{ window.__xAudioCtxs.push(ctx); }catch(e){}
+          return ctx;
+        }
+        Patched.prototype = Orig.prototype;
+        window[k] = Patched;
+      });
+    })();
+  </script>
   <link rel="stylesheet" href="./styles.css?v=20260719c">
   <style>
     /* XENA GAMES 복귀 버튼 (게임제작부서 추가 — app.js 재렌더에도 유지되도록 body 직속) */
@@ -16,14 +34,21 @@
       background:rgba(4,6,12,.86);backdrop-filter:blur(10px);white-space:nowrap;transition:.25s ease;}
     #xena-games-back:hover{color:#3fe0ff;border-color:#3fe0ff;box-shadow:0 0 16px rgba(63,224,255,.3);}
     .topbar{padding-left:160px !important;}
+    /* XC 잔액 표시 (미니게임과 동일한 지갑 공유) */
+    #xena-xc{position:fixed;top:10px;right:58px;z-index:300;
+      font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;font-weight:700;letter-spacing:.1em;
+      color:#e8c468;padding:8px 13px;border:1px solid rgba(232,196,104,.45);border-radius:20px;
+      background:rgba(4,6,12,.86);backdrop-filter:blur(10px);white-space:nowrap;}
     @media(max-width:560px){
       #xena-games-back{top:8px;left:8px;font-size:10px;padding:6px 9px;letter-spacing:.08em;}
       .topbar{padding-left:104px !important;}
+      #xena-xc{top:8px;right:48px;font-size:10px;padding:6px 9px;letter-spacing:.05em;}
     }
   </style>
 </head>
 <body>
   <a href="../games/" id="xena-games-back">&larr; XENA GAMES</a>
+  <div id="xena-xc">0 XC</div>
   <main id="app"></main>
   <noscript>이 게임을 실행하려면 브라우저에서 JavaScript를 켜주세요.</noscript>
   <script src="./three.min.js?v=20260719c"></script>
@@ -33,6 +58,29 @@
   <script src="./firebase-config.js?v=20260719c"></script>
   <script src="./cloud-sync.js?v=20260719c"></script>
   <script src="./app.js?v=20260719c"></script>
-  <script src="../games/shared-profile.js"></script>
+  <script src="../games/shared-profile.js?v=20260721"></script>
+  <script src="../games/shared-audio.js?v=20260721"></script>
+  <script>
+    /* XC 잔액 표시 — 미니게임과 동일한 xena_wallet_v1 지갑을 읽어 실시간 갱신 */
+    (function(){
+      var el = document.getElementById('xena-xc');
+      function read(){
+        try{
+          var w = JSON.parse(localStorage.getItem('xena_wallet_v1') || '{}');
+          return (typeof w.xc === 'number') ? w.xc : 0;
+        }catch(e){ return 0; }
+      }
+      var last = null;
+      function render(){
+        var v = read();
+        if (v === last) return;
+        last = v;
+        el.textContent = v + ' XC';
+      }
+      render();
+      setInterval(render, 2000);
+      window.addEventListener('storage', render);
+    })();
+  </script>
 </body>
 </html>
