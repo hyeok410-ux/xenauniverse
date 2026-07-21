@@ -81,7 +81,31 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
   background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
 .head p{color:var(--text-dim);font-size:.95rem;max-width:460px;margin:0 auto;line-height:1.75;}
 
+/* 카테고리 필터 버튼 */
+.cat-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 auto 28px;max-width:860px;}
+.cat-btn{font-family:var(--font-mono);font-size:.7rem;font-weight:600;letter-spacing:.06em;padding:9px 16px;border-radius:20px;
+  border:1px solid var(--hair);background:rgba(255,255,255,.04);color:var(--text-dim);cursor:pointer;transition:.25s ease;backdrop-filter:blur(10px);}
+.cat-btn:hover{border-color:rgba(160,107,255,.4);color:#fff;}
+.cat-btn.sel{background:linear-gradient(120deg, rgba(160,107,255,.24), rgba(63,224,255,.16));border-color:rgba(160,107,255,.55);color:#fff;box-shadow:0 0 16px rgba(160,107,255,.25);}
+
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:860px;margin:0 auto;}
+/* 인기 탭: 요청하신 대로 가로 한 줄(데스크톱 기준) */
+.grid.cat-popular{grid-template-columns:repeat(3,minmax(0,1fr));max-width:900px;}
+@media(max-width:760px){ .grid.cat-popular{grid-template-columns:1fr; max-width:420px;} }
+.gcard[hidden]{display:none;}
+
+/* 데일리 시그널 — 표지 없는 위젯. 우측 상단 프로필 줄 바로 아래, 스크롤해도 항상 따라오도록 고정 */
+.signal-pin{position:fixed;top:56px;right:12px;z-index:110;display:flex;align-items:center;gap:10px;
+  padding:9px 14px;border-radius:20px;border:1px solid rgba(160,107,255,.35);
+  background:rgba(8,6,16,.82);backdrop-filter:blur(12px);box-shadow:0 8px 22px rgba(0,0,0,.35);}
+.signal-pin .sp-title{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;color:#c9b3ff;white-space:nowrap;}
+.signal-pin .sp-btn{font-family:var(--font-mono);font-size:.62rem;font-weight:700;letter-spacing:.06em;
+  padding:6px 12px;border-radius:14px;border:none;background:linear-gradient(120deg,#a06bff,#3fe0ff);color:#0a0912;white-space:nowrap;}
+@media(max-width:560px){
+  .signal-pin{top:52px;right:8px;padding:7px 10px;gap:7px;}
+  .signal-pin .sp-title{font-size:.56rem;}
+  .signal-pin .sp-btn{font-size:.56rem;padding:5px 9px;}
+}
 .gcard{position:relative;display:flex;flex-direction:column;border-radius:20px;overflow:hidden;border:1px solid rgba(160,107,255,.16);
   background:linear-gradient(165deg, rgba(160,107,255,.09), rgba(255,255,255,.02));backdrop-filter:blur(16px);
   transition:transform .35s ease, box-shadow .35s ease, border-color .35s ease;}
@@ -136,6 +160,11 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
     </div>
   </div>
 
+  <div class="signal-pin">
+    <span class="sp-title"><span lang="en">DAILY SIGNAL</span><span lang="ko">데일리 시그널</span></span>
+    <a class="sp-btn" href="signal/"><span lang="en">CLAIM →</span><span lang="ko">시그널 받기 →</span></a>
+  </div>
+
   <div class="head">
     <div class="eyebrow">Free Web Arcade</div>
     <h1>XENA GAMES</h1>
@@ -145,26 +174,16 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
     </p>
   </div>
 
-  <div class="grid">
-    <!-- 1. DAILY SIGNAL -->
-    <div class="gcard live cup-theme">
-      <div class="thumb">
-        <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/thumbs/thumb-signal.jpg" alt="Daily Signal">
-      </div>
-      <div class="gbody">
-        <div class="gkind" style="color:var(--purple-light);text-shadow:0 0 12px rgba(160,107,255,.4);">Daily Check-in</div>
-        <h3>DAILY SIGNAL</h3>
-        <p>
-          <span lang="en">One card, one fortune, every day. Claim daily XC and track quests across every XENA game.</span>
-          <span lang="ko">하루 한 장의 카드와 한 줄의 시그널. 매일 XC를 받고 전체 게임 퀘스트를 확인하세요.</span>
-        </p>
-        <a class="play-btn" href="signal/"><span lang="en">CHECK IN →</span><span lang="ko">시그널 받기 →</span></a>
-      </div>
-    </div>
+  <div class="cat-bar" id="cat-bar">
+    <button class="cat-btn sel" data-cat="all"><span lang="en">ALL</span><span lang="ko">전체</span></button>
+    <button class="cat-btn" data-cat="popular">🔥 <span lang="en">POPULAR</span><span lang="ko">인기</span></button>
+    <button class="cat-btn" data-cat="photo">📸 <span lang="en">PHOTO &amp; VIBES</span><span lang="ko">포토 &amp; 감성</span></button>
+    <button class="cat-btn" data-cat="puzzle">🧩 <span lang="en">PUZZLE &amp; STRATEGY</span><span lang="ko">퍼즐 &amp; 전략</span></button>
+  </div>
 
-    <!-- 2. OVERRIDE GRID -->
-    <div class="gcard live grid-theme">
+  <div class="grid" id="game-grid">
+    <!-- OVERRIDE GRID -->
+    <div class="gcard live grid-theme" data-id="grid" data-cat="popular,puzzle">
       <div class="thumb">
         <span class="badge live-b">&#9679; LIVE</span>
         <img src="../images/thumbs/thumb-grid.jpg" alt="OVERRIDE GRID">
@@ -180,8 +199,8 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- 3. XENA CARDS 가챠 -->
-    <div class="gcard live gacha-theme">
+    <!-- XENA CARDS 가챠 -->
+    <div class="gcard live gacha-theme" data-id="cards" data-cat="popular,photo">
       <div class="thumb">
         <span class="badge live-b">&#9679; LIVE</span>
         <img src="../images/thumbs/thumb-gacha.jpg" alt="XENA CARDS photo card gacha">
@@ -197,8 +216,8 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- 4. SIGNAL LINK -->
-    <div class="gcard live grid-theme">
+    <!-- SIGNAL LINK -->
+    <div class="gcard live grid-theme" data-id="shisen" data-cat="puzzle">
       <div class="thumb">
         <span class="badge live-b">&#9679; LIVE</span>
         <img src="../images/thumbs/thumb-shisen.jpg" alt="Signal Link tile connect">
@@ -214,8 +233,8 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- 5. MEMORY GRID -->
-    <div class="gcard live gacha-theme">
+    <!-- MEMORY GRID -->
+    <div class="gcard live gacha-theme" data-id="memory" data-cat="puzzle">
       <div class="thumb">
         <span class="badge live-b">&#9679; LIVE</span>
         <img src="../images/thumbs/thumb-memory.jpg" alt="Memory Grid card match">
@@ -231,8 +250,8 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- 6. PHOTO WORLD CUP -->
-    <div class="gcard live cup-theme">
+    <!-- PHOTO WORLD CUP -->
+    <div class="gcard live cup-theme" data-id="worldcup" data-cat="photo">
       <div class="thumb">
         <span class="badge live-b">&#9679; LIVE</span>
         <img src="../images/thumbs/thumb-worldcup.jpg" alt="XENA Photo World Cup">
@@ -248,37 +267,20 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- COMING SOON: GUESS THE CUT -->
-    <div class="gcard soon">
+    <!-- XENA MERGE (베타) -->
+    <div class="gcard live cup-theme" data-id="merge" data-cat="puzzle">
       <div class="thumb">
-        <span class="badge soon-b">COMING SOON</span>
-        <div class="soon-art">&#128269;</div>
+        <span class="badge live-b" style="background:rgba(160,107,255,.18);border-color:rgba(160,107,255,.55);color:#c9b3ff;">&#9679; BETA</span>
+        <div class="soon-art">🍉</div>
       </div>
       <div class="gbody">
-        <div class="gkind">Detail Quiz</div>
-        <h3>GUESS THE CUT</h3>
+        <div class="gkind" style="color:var(--purple-light);text-shadow:0 0 12px rgba(160,107,255,.4);">Merge Puzzle</div>
+        <h3>XENA MERGE</h3>
         <p>
-          <span lang="en">A tiny zoomed detail — which card is it from? The ultimate true-fan test.</span>
-          <span lang="ko">아주 작은 디테일 확대컷 — 어느 카드의 한 조각일까? 찐팬 판별 퀴즈.</span>
+          <span lang="en">Drop and merge matching orbs before the jar overflows. Same rules everyone knows, XENA skin — early build, more content coming.</span>
+          <span lang="ko">같은 구슬을 합쳐서 더 큰 구슬로 — 병이 넘치면 게임오버. 다들 아는 그 룰, XENA 스킨. 초기 베타라 계속 추가됩니다.</span>
         </p>
-        <span class="soon-label"><span lang="en">IN PRODUCTION</span><span lang="ko">준비 중</span></span>
-      </div>
-    </div>
-
-    <!-- COMING SOON: 성격테스트 -->
-    <div class="gcard soon">
-      <div class="thumb">
-        <span class="badge soon-b">COMING SOON</span>
-        <div class="soon-art">&#10024;</div>
-      </div>
-      <div class="gbody">
-        <div class="gkind">Personality Test</div>
-        <h3><span lang="en">WHO ARE YOU?</span><span lang="ko">당신은 누구인가</span></h3>
-        <p>
-          <span lang="en">Answer the questions and find your place in the XENA universe — a Season 1 character match test.</span>
-          <span lang="ko">질문에 답하면 XENA 유니버스 속 당신의 자리가 밝혀진다. 시즌1 인물 매칭 성격유형 테스트.</span>
-        </p>
-        <span class="soon-label"><span lang="en">IN PRODUCTION</span><span lang="ko">준비 중</span></span>
+        <a class="play-btn" href="merge/"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
       </div>
     </div>
   </div>
@@ -300,6 +302,38 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
     document.documentElement.setAttribute('data-lang', l);
     document.documentElement.setAttribute('lang', l);
     try{ localStorage.setItem('xena-lang', l); }catch(e){}
+  });
+});
+
+/* ── 카테고리 필터: 카테고리별 지정 순서대로 재배치 + 그 외는 숨김 ── */
+var CAT_ORDER = {
+  popular: ['grid','cards'],
+  photo:   ['cards','worldcup'],
+  puzzle:  ['grid','shisen','memory','merge']
+};
+var grid = document.getElementById('game-grid');
+var allCards = Array.prototype.slice.call(grid.children);
+function applyCategory(cat){
+  grid.classList.toggle('cat-popular', cat === 'popular');
+  if(cat === 'all'){
+    allCards.forEach(function(c){ c.hidden = false; });
+    return;
+  }
+  var order = CAT_ORDER[cat] || [];
+  order.forEach(function(id){
+    var el = allCards.filter(function(c){ return c.getAttribute('data-id') === id; })[0];
+    if(el) grid.appendChild(el);
+  });
+  allCards.forEach(function(c){
+    c.hidden = order.indexOf(c.getAttribute('data-id')) === -1;
+  });
+}
+document.querySelectorAll('.cat-btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.cat-btn').forEach(function(x){ x.classList.remove('sel'); });
+    b.classList.add('sel');
+    applyCategory(b.getAttribute('data-cat'));
+    if (window.XenaAudio) window.XenaAudio.sfx('btn_click');
   });
 });
 </script>
