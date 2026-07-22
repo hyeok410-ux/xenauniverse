@@ -80,6 +80,11 @@ html,body{background:#07040f;}
 h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-height:1.12;margin-bottom:14px;
   background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
 .head p{color:var(--text-dim);font-size:.95rem;max-width:460px;margin:0 auto;line-height:1.75;}
+.pilot-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;max-width:900px;margin:0 auto 28px;border:1px solid rgba(160,107,255,.22);background:rgba(160,107,255,.12);box-shadow:0 10px 30px rgba(0,0,0,.22);}
+.pilot-strip>div{display:grid;gap:6px;min-height:82px;padding:15px 17px;background:rgba(7,4,15,.78);}
+.pilot-strip b{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.14em;color:var(--gold);}
+.pilot-strip span{color:var(--text-dim);font-size:.78rem;line-height:1.45;}
+@media(max-width:640px){.pilot-strip{grid-template-columns:1fr;margin-bottom:22px;}.pilot-strip>div{min-height:0;padding:12px 14px;}}
 
 /* 카테고리 필터 버튼 */
 .cat-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 auto 28px;max-width:860px;}
@@ -173,6 +178,12 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       <span lang="en">Free web games from the XENA universe.<br>No install — play right in your browser.</span>
       <span lang="ko">XENA 유니버스의 무료 웹게임 아케이드.<br>설치 없이 브라우저에서 바로 플레이하세요.</span>
     </p>
+  </div>
+
+  <div class="pilot-strip" role="note">
+    <div><b>FREE PILOT</b><span lang="en">Play the XENA web arcade during the open test.</span><span lang="ko">XENA 웹게임을 무료 체험판으로 플레이하세요.</span></div>
+    <div><b>01</b><span lang="en">Sign in once to keep your records.</span><span lang="ko">한 번 로그인하면 플레이 기록이 이어집니다.</span></div>
+    <div><b>02</b><span lang="en">No install. No cash payments yet.</span><span lang="ko">설치 없이 바로 플레이 · 현금 결제는 아직 없습니다.</span></div>
   </div>
 
   <div class="cat-bar" id="cat-bar">

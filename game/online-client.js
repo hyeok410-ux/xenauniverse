@@ -14,6 +14,7 @@
   };
 
   let roomUnsubscribe = null;
+  let roomRetryTimer = null;
   let cloudContext = null;
 
   function snapshot() {
@@ -109,7 +110,12 @@
       if (role !== "spectator") localStorage.setItem(ROOM_STORAGE_KEY, code);
       notify({ status: room.status === "waiting" ? "waiting" : room.status, roomCode: code, role, color, room, lastError: "" });
     }, (error) => {
-      notify({ status: "connected", lastError: errorCode(error) });
+      notify({ status: "offline", lastError: errorCode(error) });
+      if (roomRetryTimer) clearTimeout(roomRetryTimer);
+      roomRetryTimer = setTimeout(() => {
+        roomRetryTimer = null;
+        if (state.roomCode && currentUser()) watchRoom(state.roomCode);
+      }, 4500);
     });
   }
 
@@ -273,6 +279,8 @@
   }
 
   async function leave() {
+    if (roomRetryTimer) clearTimeout(roomRetryTimer);
+    roomRetryTimer = null;
     if (state.roomCode && state.room && state.role === "host" && state.room.status === "waiting" && cloudContext) {
       try {
         await cloudContext.firestoreApi.updateDoc(roomReference(state.roomCode), {
@@ -303,4 +311,10 @@
       return () => listeners.delete(listener);
     },
   });
+
+  window.addEventListener("online", () => {
+    if (state.roomCode && currentUser()) watchRoom(state.roomCode);
+    else if (currentUser()) connect().catch(() => {});
+  });
+  window.addEventListener("offline", () => notify({ status: "offline", lastError: "NETWORK_ERROR" }));
 })();

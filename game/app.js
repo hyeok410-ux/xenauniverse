@@ -684,6 +684,18 @@
     return { totalMinutes: Math.max(0, Number(activity.totalMinutes) || 0), games: activity.games || {}, lastGame: activity.lastGame || "" };
   }
 
+  function recordsMeta() {
+    return {
+      ai: { wins: Math.max(0, Number(records.ai?.wins) || 0), losses: Math.max(0, Number(records.ai?.losses) || 0), draws: Math.max(0, Number(records.ai?.draws) || 0) },
+      human: { wins: Math.max(0, Number(records.human?.wins) || 0), losses: Math.max(0, Number(records.human?.losses) || 0), draws: Math.max(0, Number(records.human?.draws) || 0) },
+      rating: Math.max(0, Number(records.rating) || 0),
+    };
+  }
+
+  function cloudProgressMeta() {
+    return { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta(), records: recordsMeta() };
+  }
+
   function recordActivity(gameName, startedAt) {
     const elapsed = Math.max(0, Math.round((Date.now() - startedAt) / 60000));
     activity.totalMinutes = (Number(activity.totalMinutes) || 0) + elapsed;
@@ -691,7 +703,7 @@
     activity.lastGame = new Date().toISOString();
     saveMeta();
     const cloud = window.XenaCloudSync;
-    if (cloud && cloud.snapshot().user) cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
+    if (cloud && cloud.snapshot().user) cloud.save(backupCode({ includeWallet: false }), cloudProgressMeta()).catch(() => {});
   }
 
   async function syncTrustedWallet() {
@@ -912,7 +924,7 @@
           await syncTrustedWallet();
           const remote = await cloud.load();
           if (!remote) {
-            await cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
+            await cloud.save(backupCode({ includeWallet: false }), cloudProgressMeta());
             alert(language === "en" ? "This device save is now backed up to the cloud." : "이 기기의 저장 기록을 클라우드에 처음 백업했습니다.");
           } else if (screen !== "game" && confirm(language === "en" ? "A cloud save already exists. Load it on this device now?" : "기존 클라우드 저장이 있습니다. 지금 이 기기에 불러올까요?")) {
             restoreBackup(remote.saveCode, { trustedWallet: false });
@@ -925,7 +937,7 @@
       if (upload) upload.addEventListener("click", async () => {
         if (cloudState.remoteExists && !confirm(language === "en" ? "Replace the cloud save with this device's progress?" : "클라우드 저장을 이 기기의 진행 기록으로 덮어쓸까요?")) return;
         try {
-          await cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
+          await cloud.save(backupCode({ includeWallet: false }), cloudProgressMeta());
           alert(language === "en" ? "Cloud save complete." : "클라우드 저장을 완료했습니다.");
         } catch (_) { /* The cloud panel shows a localized error. */ }
       });
@@ -1487,7 +1499,7 @@
     } else if (online.room && online.room.status === "waiting") {
       controls = `<div class="online-room-card"><small>INVITE CODE</small><button class="online-room-code" data-copy-room>${online.roomCode}</button><p>${language === "en" ? "Select the code to copy an invite link. The match starts when the opponent joins." : "코드를 누르면 초대 링크가 복사됩니다. 상대가 입장하면 대전이 시작됩니다."}</p><button class="secondary" data-leave-room>${language === "en" ? "Cancel waiting" : "대기 취소"}</button></div>`;
     } else {
-      controls = `<div class="online-actions"><button class="primary" data-create-room>${t("createRoom")}</button><div class="online-join"><input data-room-code value="${pendingRoomCode}" maxlength="8" inputmode="text" autocomplete="off" placeholder="8-DIGIT CODE" aria-label="Invite code"><button class="secondary" data-join-room>${t("joinRoom")}</button></div><button class="secondary" disabled>${t("quickMatch")} · ${language === "en" ? "NEXT PHASE" : "다음 단계"}</button></div>`;
+      controls = `<div class="online-actions"><button class="primary" data-create-room>${t("createRoom")}</button><div class="online-join"><input data-room-code value="${pendingRoomCode}" maxlength="8" inputmode="text" autocomplete="off" placeholder="8-DIGIT CODE" aria-label="Invite code"><button class="secondary" data-join-room>${t("joinRoom")}</button></div><button class="secondary" disabled>${t("quickMatch")} · ${language === "en" ? "NEXT PHASE" : "다음 단계"}</button>${online.status === "offline" ? `<button class="secondary online-retry" data-online-retry>${language === "en" ? "RETRY CONNECTION" : "연결 재시도"}</button>` : ""}</div>`;
     }
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="online-page"><div class="online-heading"><small>${t("onlineLobby")} · FIRESTORE PILOT</small><h1>${t("onlineTitle")}</h1><p>${t("onlineNote")}</p></div><div class="online-status ${online.status}"><span>${t("connection")}</span><b>${statusText}</b><small>${statusDetail}</small></div>${controls}<div class="online-contract"><div><b>01</b><span>${language === "en" ? "Google identity seats" : "Google 계정 좌석 확인"}</span></div><div><b>02</b><span>${language === "en" ? "Turn revision synchronization" : "수순 번호 동기화"}</span></div><div><b>03</b><span>${language === "en" ? "No ranked rewards in pilot" : "체험판 랭크 보상 없음"}</span></div></div><button class="secondary" id="back-to-setup">${t("play")}</button></section></div>`;
     bindStoreButton();
@@ -1533,6 +1545,12 @@
     });
     const leaveRoom = app.querySelector("[data-leave-room]");
     if (leaveRoom) leaveRoom.addEventListener("click", () => client.leave());
+    const retry = app.querySelector("[data-online-retry]");
+    if (retry) retry.addEventListener("click", async () => {
+      retry.disabled = true;
+      try { await client.connect(); } catch (_) {}
+      renderOnlineLobby();
+    });
     document.getElementById("back-to-setup").addEventListener("click", () => { if (online.room) client.leave(); screen = "setup"; renderSetup(); });
     syncBgm();
   }
@@ -2336,7 +2354,14 @@
         setTimeout(() => syncTrustedWallet(), 5000);
       }
       const remote = await window.XenaCloudSync.load().catch(() => null);
-      if (!remote) window.XenaCloudSync.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
+      if (remote?.records) {
+        const remoteRecords = remote.records;
+        records.ai = { wins: Math.max(records.ai.wins, Number(remoteRecords.ai?.wins) || 0), losses: Math.max(records.ai.losses, Number(remoteRecords.ai?.losses) || 0), draws: Math.max(records.ai.draws, Number(remoteRecords.ai?.draws) || 0) };
+        records.human = { wins: Math.max(records.human.wins, Number(remoteRecords.human?.wins) || 0), losses: Math.max(records.human.losses, Number(remoteRecords.human?.losses) || 0), draws: Math.max(records.human.draws, Number(remoteRecords.human?.draws) || 0) };
+        records.rating = Math.max(records.rating, Number(remoteRecords.rating) || 0);
+        saveMeta();
+      }
+      if (!remote) window.XenaCloudSync.save(backupCode({ includeWallet: false }), cloudProgressMeta()).catch(() => {});
     }).catch(() => {});
   }
   if (launchParams.get("account") === "1") setTimeout(openAccount, 0);

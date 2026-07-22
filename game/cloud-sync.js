@@ -157,7 +157,7 @@
       const data = result.data();
       if (![1, 2].includes(data.schemaVersion) || typeof data.saveCode !== "string") throw new Error("UNSUPPORTED_CLOUD_SAVE");
       setState({ phase: "signed-in", remoteExists: true, lastSyncedAt: data.clientUpdatedAt || "" });
-      return { saveCode: data.saveCode, clientUpdatedAt: data.clientUpdatedAt || "", profile: data.profile || null, activity: data.activity || null };
+      return { saveCode: data.saveCode, clientUpdatedAt: data.clientUpdatedAt || "", profile: data.profile || null, activity: data.activity || null, records: data.records || null };
     } catch (error) {
       setState({ phase: "signed-in", error: friendlyError(error) });
       throw error;
@@ -181,6 +181,7 @@
       };
       if (meta && meta.profile) payload.profile = meta.profile;
       if (meta && meta.activity) payload.activity = meta.activity;
+      if (meta && meta.records) payload.records = meta.records;
       await firestoreApi.setDoc(reference, payload, { merge: true });
       setState({ phase: "signed-in", remoteExists: true, lastSyncedAt: clientUpdatedAt });
       return snapshot();

@@ -13,6 +13,8 @@
 }
 
 * { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+button, input, textarea, select { touch-action: manipulation; }
 html, body { margin: 0; min-height: 100%; overflow-x: hidden; }
 body {
   min-height: 100vh;
@@ -524,6 +526,7 @@ body[data-arena]:not([data-arena=""]) { background-image: linear-gradient(rgba(3
 .online-status.connecting b { color: var(--cyan); }
 .online-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 12px 0 18px; }
 .online-actions button { min-height: 54px; }
+.online-retry { grid-column: 1 / -1; border-color: rgba(255,118,146,.55); color: #ff9ab0; }
 .online-join { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; border: 1px solid var(--line); background: rgba(5,8,14,.92); }
 .online-join input { min-width: 0; width: 100%; padding: 0 13px; color: #eef5ff; border: 0; outline: 0; background: transparent; font: 900 13px/1 Consolas, monospace; text-transform: uppercase; }
 .online-join input:focus { box-shadow: inset 0 0 0 1px var(--cyan); }
@@ -567,7 +570,7 @@ body[data-cosmetic="legacy-nova"] { --cyan: #d292ff; --lime: #ffcb66; --violet: 
   .wallet-store { width: 100%; }
   .profile-button { max-width: none; }
   .lead { max-width: 100%; word-break: keep-all; overflow-wrap: break-word; }
-  .game-layout { width: 100%; max-width: 100%; height: auto; display: flex; flex-direction: column; overflow: auto; padding: 8px; }
+  .game-layout { width: 100%; max-width: 100%; min-height: calc(100dvh - 96px); height: auto; display: flex; flex-direction: column; overflow: auto; padding: 8px; overscroll-behavior-y: contain; }
   .game-layout > *, .side-panel, .arena, .combatant { width: 100%; min-width: 0; max-width: 100%; }
   .side-panel { min-height: auto; padding: 12px; gap: 10px; }
   .side-panel.enemy-panel { order: -1; }
@@ -630,6 +633,8 @@ body[data-cosmetic="legacy-nova"] { --cyan: #d292ff; --lime: #ffcb66; --violet: 
 }
 
 @media (max-width: 520px) {
+  .game-layout { padding: 6px; gap: 8px; }
+  .board-wrap { width: calc(100vw - 20px) !important; max-width: 620px; }
   .store-guide { grid-template-columns: 1fr; }
   .store-guide > *:nth-last-child(-n + 2) { border-bottom: 1px solid var(--line); }
   .store-guide > *:last-child { border-bottom: 0; }
