@@ -80,11 +80,6 @@ html,body{background:#07040f;}
 h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-height:1.12;margin-bottom:14px;
   background:linear-gradient(135deg,#fff 30%,var(--purple-light) 70%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent;}
 .head p{color:var(--text-dim);font-size:.95rem;max-width:460px;margin:0 auto;line-height:1.75;}
-.pilot-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;max-width:900px;margin:0 auto 28px;border:1px solid rgba(160,107,255,.22);background:rgba(160,107,255,.12);box-shadow:0 10px 30px rgba(0,0,0,.22);}
-.pilot-strip>div{display:grid;gap:6px;min-height:82px;padding:15px 17px;background:rgba(7,4,15,.78);}
-.pilot-strip b{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.14em;color:var(--gold);}
-.pilot-strip span{color:var(--text-dim);font-size:.78rem;line-height:1.45;}
-@media(max-width:640px){.pilot-strip{grid-template-columns:1fr;margin-bottom:22px;}.pilot-strip>div{min-height:0;padding:12px 14px;}}
 
 /* 카테고리 필터 버튼 */
 .cat-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 auto 28px;max-width:860px;}
@@ -178,12 +173,6 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       <span lang="en">Free web games from the XENA universe.<br>No install — play right in your browser.</span>
       <span lang="ko">XENA 유니버스의 무료 웹게임 아케이드.<br>설치 없이 브라우저에서 바로 플레이하세요.</span>
     </p>
-  </div>
-
-  <div class="pilot-strip" role="note">
-    <div><b>FREE PILOT</b><span lang="en">Play the XENA web arcade during the open test.</span><span lang="ko">XENA 웹게임을 무료 체험판으로 플레이하세요.</span></div>
-    <div><b>01</b><span lang="en">Sign in once to keep your records.</span><span lang="ko">한 번 로그인하면 플레이 기록이 이어집니다.</span></div>
-    <div><b>02</b><span lang="en">No install. No cash payments yet.</span><span lang="ko">설치 없이 바로 플레이 · 현금 결제는 아직 없습니다.</span></div>
   </div>
 
   <div class="cat-bar" id="cat-bar">
@@ -295,6 +284,40 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
         <a class="play-btn" href="merge/"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
       </div>
     </div>
+
+    <!-- SIGNAL CLASH (베타) -->
+    <div class="gcard live grid-theme" data-id="tcg" data-cat="popular,puzzle">
+      <div class="thumb">
+        <span class="badge live-b" style="background:rgba(63,224,255,.18);border-color:rgba(63,224,255,.55);color:#9fe9ff;">&#9679; BETA</span>
+        <div class="soon-art">🃏</div>
+      </div>
+      <div class="gbody">
+        <div class="gkind" style="color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);">Card Battle</div>
+        <h3>SIGNAL CLASH</h3>
+        <p>
+          <span lang="en">6 turns, 3 zones, win two of three. A XENA card battle skeleton — no abilities yet, pure cost/power strategy.</span>
+          <span lang="ko">6턴, 3구역, 2곳 이상 우세 시 승리. 아직 카드 능력은 없는 코스트/파워 전략 뼈대입니다.</span>
+        </p>
+        <a class="play-btn" href="tcg/"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
+      </div>
+    </div>
+
+    <!-- LIVE TOUR (베타) -->
+    <div class="gcard live gacha-theme" data-id="idle" data-cat="popular">
+      <div class="thumb">
+        <span class="badge live-b" style="background:rgba(232,196,104,.18);border-color:rgba(232,196,104,.55);color:#ffd97a;">&#9679; BETA</span>
+        <div class="soon-art">✈️</div>
+      </div>
+      <div class="gbody">
+        <div class="gkind" style="color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);">Idle Dispatch</div>
+        <h3>LIVE TOUR</h3>
+        <p>
+          <span lang="en">Send your cards on tour to Seoul, Tokyo, New York, London. Come back later to collect XC — no need to stay online.</span>
+          <span lang="ko">보유 카드를 서울·도쿄·뉴욕·런던으로 투어 보내고, 나중에 돌아와서 XC를 수령하세요 — 접속 안 해도 진행됩니다.</span>
+        </p>
+        <a class="play-btn" href="idle/"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
+      </div>
+    </div>
   </div>
 
   <div class="foot-note">
@@ -319,9 +342,9 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 
 /* ── 카테고리 필터: 카테고리별 지정 순서대로 재배치 + 그 외는 숨김 ── */
 var CAT_ORDER = {
-  popular: ['grid','cards'],
+  popular: ['grid','cards','tcg','idle'],
   photo:   ['cards','worldcup'],
-  puzzle:  ['grid','shisen','memory','merge']
+  puzzle:  ['grid','shisen','memory','merge','tcg']
 };
 var grid = document.getElementById('game-grid');
 var allCards = Array.prototype.slice.call(grid.children);

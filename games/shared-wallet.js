@@ -76,6 +76,16 @@
   function claimWorldcupFinish(){ return callFn('claimWorldcupFinish', {}); }
   function claimChessMatch(){ return callFn('claimChessMatch', {}); }
   function spend(amount, reason){ return callFn('spendCredits', {amount: amount, reason: reason||''}); }
+
+  /* ── SIGNAL CLASH (TCG) / LIVE TOUR (방치형 디스패치) — 2026-07-22 추가 ── */
+  function claimTcgMatch(difficulty, outcome){ return callFn('claimTcgMatch', {difficulty: difficulty, outcome: outcome}); }
+  function unlockCity(city){ return callFn('unlockCity', {city: city}); }
+  function upgradeTourCapacity(){ return callFn('upgradeTourCapacity', {}); }
+  function startTour(city, grades){ return callFn('startTour', {city: city, grades: grades}); }
+  function claimTourReward(city){ return callFn('claimTourReward', {city: city}); }
+  function cancelTour(city){ return callFn('cancelTour', {city: city}); }
+  function getTours(){ return callFn('getTours', {}).then(function(r){ return r.tours || {}; }); }
+  function getWalletFull(){ return callFn('getWallet', {}); }
   /* Stripe 결제창 열기 → 결제 성공 시 서버(fulfillCheckoutSession)가 지갑에 크레딧을 넣는다.
      returnPath 는 결제 후 돌아올 페이지 (예: '/games/gacha/'). 유효하지 않으면 서버가 '/game/' 로 fallback. */
   function purchase(productId, returnPath){
@@ -96,6 +106,14 @@
     claimWorldcupFinish: claimWorldcupFinish,
     claimChessMatch: claimChessMatch,
     spend: spend,
-    purchase: purchase
+    purchase: purchase,
+    claimTcgMatch: claimTcgMatch,
+    unlockCity: unlockCity,
+    upgradeTourCapacity: upgradeTourCapacity,
+    startTour: startTour,
+    claimTourReward: claimTourReward,
+    cancelTour: cancelTour,
+    getTours: getTours,
+    getWalletFull: getWalletFull
   };
 })();

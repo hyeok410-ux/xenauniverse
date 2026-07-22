@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SIGNAL CLASH — XENA Card Battle</title>
+<meta name="description" content="6 turns. 3 zones. Win two of three. A XENA card battle.">
+<meta property="og:title" content="SIGNAL CLASH — XENA Card Battle">
+<meta property="og:description" content="6 turns. 3 zones. Win two of three.">
+<meta property="og:url" content="https://xenauniverse.com/games/tcg/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%233fe0ff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
+<script>
+(function(){
+  var saved = null;
+  try{ saved = localStorage.getItem('xena-lang'); }catch(e){}
+  document.documentElement.setAttribute('data-lang', saved === 'ko' ? 'ko' : 'en');
+  document.documentElement.setAttribute('lang', saved === 'ko' ? 'ko' : 'en');
+})();
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --black:#000000; --purple:#6e2fd9; --purple-light:#a06bff; --silver:#e6e6ee;
+  --cyan:#3fe0ff; --magenta:#ff2fb0; --gold:#e8c468;
+  --hair:rgba(255,255,255,.09); --text-dim:rgba(230,230,238,.55);
+  --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  --g-N:#b9b9c6; --g-R:#3fe0ff; --g-S:#a06bff; --g-SR:#ff2fb0; --g-SSR:#e8c468;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--black);color:var(--silver);font-family:var(--font-sans);font-weight:300;min-height:100%;overflow-x:hidden;}
+body{background-image:radial-gradient(ellipse at 20% 0%,rgba(63,224,255,.10),transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(110,47,217,.14),transparent 55%);background-attachment:fixed;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;}
+[data-lang="ko"] [lang="en"]{display:none;}
+[data-lang="en"] [lang="ko"]{display:none;}
+
+/* ── topbar ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:10px 14px;background:rgba(0,0,0,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--hair);}
+.back{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;color:var(--text-dim);border:1px solid var(--hair);
+  padding:6px 10px;border-radius:16px;transition:.25s;white-space:nowrap;}
+.back:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
+.tb-right{display:flex;align-items:center;gap:8px;}
+.xc-chip{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.06em;color:var(--gold);
+  border:1px solid rgba(232,196,104,.35);background:rgba(232,196,104,.08);padding:6px 11px;border-radius:16px;white-space:nowrap;}
+.lang-toggle{display:flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:20px;padding:3px;}
+.lang-toggle button{font-family:var(--font-mono);background:transparent;border:none;color:var(--text-dim);font-size:.6rem;
+  font-weight:500;letter-spacing:.1em;padding:4px 9px;border-radius:16px;transition:.3s;}
+[data-lang="ko"] .lang-toggle button[data-set="ko"],
+[data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(63,224,255,.16);color:var(--cyan);box-shadow:inset 0 0 0 1px rgba(63,224,255,.4);}
+
+.screen{display:none;}
+.screen.on{display:block;}
+main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
+
+/* ── intro ── */
+.hero-title{font-size:clamp(2rem,7vw,3.4rem);font-weight:800;letter-spacing:-.02em;line-height:1;margin-bottom:6px;
+  background:linear-gradient(100deg,var(--cyan),var(--purple-light) 50%,var(--magenta));
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero-sub{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.24em;color:var(--text-dim);margin-bottom:26px;}
+.diff-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:22px;}
+.diff-btn{border:1px solid var(--hair);border-radius:12px;padding:13px 8px;background:rgba(255,255,255,.02);
+  display:flex;flex-direction:column;align-items:center;gap:4px;transition:.2s;}
+.diff-btn:hover{border-color:rgba(63,224,255,.4);}
+.diff-btn.on{border-color:var(--cyan);background:rgba(63,224,255,.1);box-shadow:0 0 16px -4px var(--cyan);}
+.diff-btn .d-name{font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;}
+.diff-btn .d-desc{font-size:.62rem;color:var(--text-dim);text-align:center;}
+.diff-btn .d-reward{font-family:var(--font-mono);font-size:.62rem;color:var(--gold);margin-top:2px;}
+.rules{border:1px solid var(--hair);border-radius:14px;padding:18px 20px;background:rgba(255,255,255,.025);margin-bottom:22px;}
+.rules li{list-style:none;font-size:.86rem;line-height:1.85;color:rgba(230,230,238,.8);padding-left:18px;position:relative;}
+.rules li::before{content:'';position:absolute;left:0;top:.72em;width:5px;height:5px;border-radius:50%;background:var(--cyan);}
+.btn{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.16em;font-weight:500;
+  padding:13px 30px;border-radius:26px;border:1px solid rgba(63,224,255,.45);background:rgba(63,224,255,.1);
+  color:var(--cyan);transition:.25s;}
+.btn:hover{background:rgba(63,224,255,.2);box-shadow:0 0 22px rgba(63,224,255,.25);}
+.btn.ghost{border-color:var(--hair);background:transparent;color:var(--text-dim);}
+.btn.ghost:hover{color:var(--silver);border-color:rgba(255,255,255,.25);box-shadow:none;}
+.btn:disabled{opacity:.32;cursor:not-allowed;box-shadow:none;}
+
+/* ── status bar ── */
+.status{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  border:1px solid var(--hair);border-radius:12px;padding:9px 14px;background:rgba(255,255,255,.03);margin-bottom:12px;}
+.st-item{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;color:var(--text-dim);}
+.st-item b{color:var(--silver);font-weight:700;font-size:.82rem;margin-left:5px;}
+.st-item.mana b{color:var(--cyan);}
+.st-item.turn b{color:var(--purple-light);}
+
+/* ── board ── */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.zone{border:1px solid var(--hair);border-radius:14px;background:rgba(255,255,255,.022);padding:10px 8px;
+  display:flex;flex-direction:column;gap:8px;transition:.22s;}
+.zone.targetable{border-color:rgba(63,224,255,.55);background:rgba(63,224,255,.07);cursor:pointer;box-shadow:0 0 18px rgba(63,224,255,.14) inset;}
+.zone.full{opacity:.5;}
+.z-name{font-family:var(--font-mono);font-size:.56rem;letter-spacing:.12em;text-align:center;color:var(--text-dim);
+  padding-bottom:6px;border-bottom:1px solid var(--hair);}
+.z-score{display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--font-mono);font-size:.86rem;font-weight:700;padding:3px 0;}
+.z-score .me{color:var(--cyan);} .z-score .op{color:var(--magenta);} .z-score .vs{color:var(--text-dim);font-size:.6rem;font-weight:400;}
+.z-score.win-me{background:rgba(63,224,255,.12);border-radius:8px;}
+.z-score.win-op{background:rgba(255,47,176,.12);border-radius:8px;}
+.slots{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;min-height:56px;align-content:flex-start;}
+.slots.op{align-content:flex-end;}
+
+/* ── card ── */
+.card{position:relative;width:60px;height:82px;border-radius:8px;border:1px solid var(--hair);
+  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  display:flex;flex-direction:column;justify-content:space-between;padding:5px 4px;transition:.2s;flex-shrink:0;}
+.card.mini{width:52px;height:70px;}
+.card .c-cost,.card .c-pow{position:absolute;font-family:var(--font-mono);font-size:.66rem;font-weight:700;
+  width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.card .c-cost{top:-6px;left:-5px;background:#0a1a24;color:var(--cyan);border:1px solid rgba(63,224,255,.6);}
+.card .c-pow{bottom:-6px;right:-5px;background:#24081a;color:var(--magenta);border:1px solid rgba(255,47,176,.6);}
+.card .c-name{font-size:.5rem;line-height:1.25;text-align:center;letter-spacing:.02em;font-weight:600;
+  color:rgba(230,230,238,.82);margin:auto 0;padding:0 2px;word-break:keep-all;}
+.card[data-grade="N"]{border-color:rgba(185,185,198,.4);}
+.card[data-grade="R"]{border-color:rgba(63,224,255,.45);}
+.card[data-grade="S"]{border-color:rgba(160,107,255,.5);}
+.card[data-grade="SR"]{border-color:rgba(255,47,176,.5);box-shadow:0 0 10px rgba(255,47,176,.12);}
+.card.op{border-style:dashed;opacity:.94;}
+.card.reveal{animation:pop .38s ease-out;}
+@keyframes pop{0%{transform:translateY(-14px) scale(.8);opacity:0;}100%{transform:none;opacity:1;}}
+
+/* ── hand ── */
+.hand-wrap{border-top:1px solid var(--hair);padding-top:12px;}
+.hand-label{font-family:var(--font-mono);font-size:.56rem;letter-spacing:.14em;color:var(--text-dim);margin-bottom:8px;}
+.hand{display:flex;gap:8px;flex-wrap:wrap;min-height:88px;align-items:flex-start;}
+.hand .card{cursor:pointer;}
+.hand .card:hover{transform:translateY(-5px);border-color:rgba(63,224,255,.6);}
+.hand .card.selected{transform:translateY(-9px);border-color:var(--cyan);box-shadow:0 0 18px rgba(63,224,255,.35);}
+.hand .card.unaffordable{opacity:.34;cursor:not-allowed;}
+.hand .card.unaffordable:hover{transform:none;border-color:var(--hair);}
+.pending{outline:1px dashed rgba(63,224,255,.5);outline-offset:2px;cursor:pointer;}
+
+.actions{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.hint{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.06em;color:var(--text-dim);text-align:center;margin-top:10px;min-height:16px;}
+
+/* ── end screen ── */
+.result{text-align:center;padding:30px 0;}
+.result h2{font-size:clamp(1.8rem,6vw,2.8rem);font-weight:800;letter-spacing:-.01em;margin-bottom:8px;}
+.result.win h2{color:var(--cyan);} .result.lose h2{color:var(--magenta);} .result.draw h2{color:var(--text-dim);}
+.result .final{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;}
+.reward{font-family:var(--font-mono);font-size:.9rem;color:var(--gold);margin:14px 0 22px;}
+
+@media(max-width:620px){
+  main{padding:60px 9px 18px;}
+  .board{gap:6px;}
+  .zone{padding:8px 5px;}
+  .card{width:50px;height:70px;}
+  .card .c-name{font-size:.44rem;}
+  .card .c-cost,.card .c-pow{width:17px;height:17px;font-size:.58rem;}
+  .z-name{font-size:.5rem;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="../">← XENA GAMES</a>
+  <div class="tb-right">
+    <span class="xc-chip" id="xc-chip">XC 0</span>
+    <div class="lang-toggle">
+      <button data-set="en">EN</button><button data-set="ko">KO</button>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ══ INTRO ══ -->
+  <section class="screen on" id="screen-intro">
+    <h1 class="hero-title">SIGNAL CLASH</h1>
+    <p class="hero-sub">XENA CARD BATTLE · PROTOTYPE v0.1</p>
+    <div class="rules">
+      <ul>
+        <li><span lang="en"><b>6 turns.</b> Mana equals the turn number (1 → 6).</span><span lang="ko"><b>6턴</b> 진행. 마나는 턴 수와 같습니다 (1 → 6).</span></li>
+        <li><span lang="en"><b>3 zones.</b> Play cards into any zone — up to 4 cards each.</span><span lang="ko"><b>3개 구역.</b> 원하는 구역에 카드를 냅니다 — 구역당 최대 4장.</span></li>
+        <li><span lang="en"><b>Win 2 of 3 zones</b> by total Power when turn 6 ends.</span><span lang="ko">6턴 종료 시 파워 합계로 <b>3개 중 2개 구역</b>을 이기면 승리.</span></li>
+        <li><span lang="en">Tie on zones? Highest total Power wins.</span><span lang="ko">구역 수가 같으면 전체 파워 합계가 높은 쪽이 승리.</span></li>
+        <li><span lang="en">Cards have no abilities yet — pure cost &amp; power.</span><span lang="ko">아직 카드 능력은 없습니다 — 순수 비용/파워 대결.</span></li>
+      </ul>
+    </div>
+    <div class="diff-picker" id="diff-picker">
+      <button class="diff-btn" data-diff="easy">
+        <span class="d-name"><span lang="en">EASY</span><span lang="ko">쉬움</span></span>
+        <span class="d-desc"><span lang="en">Weak AI deck</span><span lang="ko">약한 AI 덱</span></span>
+        <span class="d-reward">+8 XC</span>
+      </button>
+      <button class="diff-btn on" data-diff="normal">
+        <span class="d-name"><span lang="en">NORMAL</span><span lang="ko">보통</span></span>
+        <span class="d-desc"><span lang="en">Even deck</span><span lang="ko">동일한 덱</span></span>
+        <span class="d-reward">+15 XC</span>
+      </button>
+      <button class="diff-btn" data-diff="hard">
+        <span class="d-name"><span lang="en">HARD</span><span lang="ko">어려움</span></span>
+        <span class="d-desc"><span lang="en">Strong AI deck</span><span lang="ko">강한 AI 덱</span></span>
+        <span class="d-reward">+30 XC</span>
+      </button>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btn-start"><span lang="en">START BATTLE</span><span lang="ko">배틀 시작</span></button>
+    </div>
+    <p class="hint" id="intro-hint"></p>
+  </section>
+
+  <!-- ══ PLAY ══ -->
+  <section class="screen" id="screen-play">
+    <div class="status">
+      <span class="st-item turn"><span lang="en">TURN</span><span lang="ko">턴</span><b id="st-turn">1 / 6</b></span>
+      <span class="st-item mana"><span lang="en">MANA</span><span lang="ko">마나</span><b id="st-mana">1 / 1</b></span>
+      <span class="st-item"><span lang="en">ZONES</span><span lang="ko">구역</span><b id="st-zones">0 - 0</b></span>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="hand-wrap">
+      <p class="hand-label"><span lang="en">YOUR HAND</span><span lang="ko">내 손패</span> — <span id="deck-left">9</span> <span lang="en">left in deck</span><span lang="ko">장 남음</span></p>
+      <div class="hand" id="hand"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="btn-end"><span lang="en">END TURN</span><span lang="ko">턴 종료</span></button>
+      <button class="btn ghost" id="btn-retreat"><span lang="en">RETREAT</span><span lang="ko">기권</span></button>
+    </div>
+    <p class="hint" id="hint"></p>
+  </section>
+
+  <!-- ══ END ══ -->
+  <section class="screen" id="screen-end">
+    <div class="result" id="result">
+      <h2 id="res-title"></h2>
+      <p class="final" id="res-zones"></p>
+      <p class="final" id="res-power"></p>
+      <p class="reward" id="res-reward"></p>
+      <div class="actions">
+        <button class="btn" id="btn-again"><span lang="en">PLAY AGAIN</span><span lang="ko">다시 하기</span></button>
+        <a class="btn ghost" href="../"><span lang="en">BACK TO GAMES</span><span lang="ko">게임 목록</span></a>
+      </div>
+      <p class="hint" id="end-hint"></p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   SIGNAL CLASH — TCG 뼈대 (v0.2 · 서버 지갑 연동 + 난이도 3단계)
+   능력 없음. 6턴 / 3구역 / 마나 증가 / 승패 판정만 검증하는 단계.
+   ─────────────────────────────────────────────────────────
+   XC는 games/shared-wallet.js 의 window.XenaWallet(서버) 이 유일한 출처.
+   보상 지급/일일 5판 한도는 Cloud Function claimTcgMatch 가 검증한다
+   (functions/index.js). 로그인(shared-gate.js) 없이는 이 페이지를 못 연다.
+   ※ 다음 단계(③)에서 CARD_POOL을 /shared/xena-cards.js 의
+     보유 카드(zena_gacha_v1)로 교체하면 그대로 실전이 됩니다.
+     그때 "어려움 = 덱 평균파워 6 이상 필요" 게이트도 함께 건다
+     (지금은 전원 같은 고정 데모 덱이라 게이트를 걸 실제 덱이 없음).
+   ═══════════════════════════════════════════════════════════ */
+
+var $ = function(id){ return document.getElementById(id); };
+function t(en, ko){ return document.documentElement.getAttribute('data-lang') === 'ko' ? ko : en; }
+
+var difficulty = 'normal';
+document.querySelectorAll('.diff-btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.diff-btn').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    difficulty = b.getAttribute('data-diff');
+  });
+});
+
+function paintXC(bal){ $('xc-chip').textContent = 'XC ' + (bal === null ? '…' : bal.toLocaleString()); }
+
+/* ── 카드 풀 (능력 없는 기본 4종 · 등급 파생 스탯) ─────── */
+/* cost / power 는 기획서 3-1 파생표 그대로: power = cost*2 + 1
+   (functions/index.js 의 GRADE_COST/GRADE_POWER 와 반드시 동일하게 유지) */
+var CARD_POOL = [
+  { id:'B-N-01',  name_en:'SIGNAL DRONE',  name_ko:'시그널 드론',   grade:'N',  cost:1, power:3 },
+  { id:'B-R-01',  name_en:'BACKUP DANCER', name_ko:'백업 댄서',     grade:'R',  cost:2, power:5 },
+  { id:'B-S-01',  name_en:'STAGE GUARD',   name_ko:'스테이지 가드', grade:'S',  cost:3, power:7 },
+  { id:'B-SR-01', name_en:'LEAD VOCAL',    name_ko:'리드 보컬',     grade:'SR', cost:4, power:9 }
+];
+/* 플레이어 덱은 난이도 무관 고정(데모). copies = 덱 장수 — 저코스트를 두텁게 깔아야
+   1턴이 죽지 않는다 (플레이테스트: 균등 3장씩이면 약 38% 확률로 1턴에 낼 카드가 없었음). */
+var PLAYER_COPIES = { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2 };   /* 12장 */
+/* AI 덱은 난이도별로 등급 비중을 다르게 — 기획서 §8-2 "AI를 똑똑하게 만들기보다
+   덱 구성을 바꾼다". 쉬움은 저코스트 위주(평균 파워 낮음), 어려움은 고코스트 위주. */
+var AI_COPIES = {
+  easy:   { 'B-N-01':6, 'B-R-01':4, 'B-S-01':2, 'B-SR-01':0 },   /* 평균 파워 3.7 */
+  normal: { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2 },   /* 평균 파워 5.5 (플레이어와 동일) */
+  hard:   { 'B-N-01':2, 'B-R-01':3, 'B-S-01':4, 'B-SR-01':3 }    /* 평균 파워 6.6 */
+};
+var ZONES = [
+  { en:'SIGNAL TOWER',   ko:'시그널 타워' },
+  { en:'NEON ALLEY',     ko:'네온 앨리' },
+  { en:'STAGE CORE',     ko:'스테이지 코어' }
+];
+var MAX_TURNS = 6, MAX_PER_ZONE = 4, START_HAND = 3;
+
+/* ── 게임 상태 ─────────────────────────────────────────── */
+var G = null;
+
+function buildDeck(copiesMap){
+  var d = [];
+  for(var i = 0; i < CARD_POOL.length; i++){
+    var n = copiesMap[CARD_POOL[i].id] || 0;
+    for(var c = 0; c < n; c++) d.push(CARD_POOL[i]);
+  }
+  /* Fisher-Yates */
+  for(var j = d.length - 1; j > 0; j--){
+    var k = Math.floor(Math.random() * (j + 1));
+    var tmp = d[j]; d[j] = d[k]; d[k] = tmp;
+  }
+  /* 오프닝 핸드 보장 — 상위 START_HAND장 안에 1코스트가 없으면 다시 섞는다.
+     (덱 최상단이 pop 되므로 뒤쪽 START_HAND장이 첫 손패) */
+  var guard = 0;
+  while(guard++ < 30){
+    var ok = false;
+    for(var h = d.length - START_HAND; h < d.length; h++){ if(d[h].cost <= 1) ok = true; }
+    if(ok) break;
+    for(var m = d.length - 1; m > 0; m--){
+      var n = Math.floor(Math.random() * (m + 1));
+      var tp = d[m]; d[m] = d[n]; d[n] = tp;
+    }
+  }
+  return d;
+}
+
+function newGame(){
+  G = {
+    turn: 1,
+    mana: 1,
+    manaUsed: 0,
+    pDeck: buildDeck(PLAYER_COPIES), aDeck: buildDeck(AI_COPIES[difficulty]),
+    difficulty: difficulty,
+    pHand: [], aHand: [],
+    zones: [ {p:[],a:[]}, {p:[],a:[]}, {p:[],a:[]} ],
+    pendingP: [],      /* 이번 턴 플레이어가 놓은 것 {card, zone} — 턴 종료 전까지 회수 가능 */
+    pendingA: [],
+    selected: -1,
+    locked: false
+  };
+  for(var i = 0; i < START_HAND; i++){ drawP(); drawA(); }
+  render();
+}
+
+function drawP(){ if(G.pDeck.length) G.pHand.push(G.pDeck.pop()); }
+function drawA(){ if(G.aDeck.length) G.aHand.push(G.aDeck.pop()); }
+
+/* ── 렌더 ─────────────────────────────────────────────── */
+function cardHTML(card, cls){
+  return '<div class="card ' + (cls || '') + '" data-grade="' + card.grade + '">' +
+           '<span class="c-cost">' + card.cost + '</span>' +
+           '<span class="c-name">' + t(card.name_en, card.name_ko) + '</span>' +
+           '<span class="c-pow">' + card.power + '</span>' +
+         '</div>';
+}
+
+function zonePower(z, side){
+  var arr = G.zones[z][side], s = 0;
+  for(var i = 0; i < arr.length; i++) s += arr[i].power;
+  return s;
+}
+function zoneCount(z, side){ return G.zones[z][side].length; }
+
+function zonesWon(){
+  var me = 0, op = 0;
+  for(var z = 0; z < 3; z++){
+    var a = zonePower(z, 'p'), b = zonePower(z, 'a');
+    if(a > b) me++; else if(b > a) op++;
+  }
+  return { me: me, op: op };
+}
+function totalPower(side){
+  var s = 0;
+  for(var z = 0; z < 3; z++) s += zonePower(z, side);
+  return s;
+}
+
+function render(){
+  /* 상태바 */
+  $('st-turn').textContent = G.turn + ' / ' + MAX_TURNS;
+  $('st-mana').textContent = (G.mana - G.manaUsed) + ' / ' + G.mana;
+  var w = zonesWon();
+  $('st-zones').textContent = w.me + ' - ' + w.op;
+  $('deck-left').textContent = G.pDeck.length;
+
+  /* 보드 */
+  var html = '';
+  for(var z = 0; z < 3; z++){
+    var pw = zonePower(z, 'p'), aw = zonePower(z, 'a');
+    var scoreCls = pw > aw ? 'win-me' : (aw > pw ? 'win-op' : '');
+    var full = zoneCount(z, 'p') >= MAX_PER_ZONE;
+    var targetable = G.selected >= 0 && !full && !G.locked &&
+                     G.pHand[G.selected].cost <= (G.mana - G.manaUsed);
+
+    html += '<div class="zone' + (targetable ? ' targetable' : '') + (full ? ' full' : '') + '" data-z="' + z + '">';
+    html +=   '<p class="z-name">' + t(ZONES[z].en, ZONES[z].ko) + '</p>';
+
+    /* 상대 슬롯 */
+    html +=   '<div class="slots op">';
+    for(var i = 0; i < G.zones[z].a.length; i++) html += cardHTML(G.zones[z].a[i], 'mini op');
+    html +=   '</div>';
+
+    /* 점수 */
+    html +=   '<div class="z-score ' + scoreCls + '"><span class="op">' + aw + '</span>' +
+              '<span class="vs">VS</span><span class="me">' + pw + '</span></div>';
+
+    /* 내 슬롯 */
+    html +=   '<div class="slots">';
+    for(var j = 0; j < G.zones[z].p.length; j++){
+      var isPending = false;
+      for(var k = 0; k < G.pendingP.length; k++){
+        if(G.pendingP[k].zone === z && G.pendingP[k].idx === j) isPending = true;
+      }
+      html += cardHTML(G.zones[z].p[j], 'mini' + (isPending ? ' pending' : ''));
+    }
+    html +=   '</div>';
+    html += '</div>';
+  }
+  $('board').innerHTML = html;
+
+  /* 손패 — 카드 노드에 직접 인덱스 부여 */
+  $('hand').innerHTML = '';
+  for(var m = 0; m < G.pHand.length; m++){
+    var card = G.pHand[m];
+    var ok = card.cost <= (G.mana - G.manaUsed);
+    var el = document.createElement('div');
+    el.innerHTML = cardHTML(card, (G.selected === m ? 'selected ' : '') + (ok ? '' : 'unaffordable'));
+    var node = el.firstChild;
+    node.setAttribute('data-h', m);
+    $('hand').appendChild(node);
+  }
+
+  $('btn-end').disabled = G.locked;
+}
+
+/* ── 입력: 손패 선택 ──────────────────────────────────── */
+$('hand').addEventListener('click', function(e){
+  if(G.locked) return;
+  var el = e.target.closest('.card');
+  if(!el) return;
+  var i = parseInt(el.getAttribute('data-h'), 10);
+  if(isNaN(i)) return;
+  if(G.pHand[i].cost > (G.mana - G.manaUsed)){
+    hint(t('Not enough mana.', '마나가 부족합니다.'));
+    return;
+  }
+  G.selected = (G.selected === i) ? -1 : i;
+  hint(G.selected >= 0 ? t('Now pick a zone.', '이제 구역을 선택하세요.') : '');
+  render();
+});
+
+/* ── 입력: 구역에 배치 / 회수 ─────────────────────────── */
+$('board').addEventListener('click', function(e){
+  if(G.locked) return;
+  var zEl = e.target.closest('.zone');
+  if(!zEl) return;
+  var z = parseInt(zEl.getAttribute('data-z'), 10);
+
+  /* 대기중인 내 카드를 클릭하면 회수 */
+  var cardEl = e.target.closest('.card.pending');
+  if(cardEl){
+    var slots = zEl.querySelectorAll('.slots:not(.op) .card');
+    for(var s = 0; s < slots.length; s++){
+      if(slots[s] === cardEl){ takeBack(z, s); return; }
+    }
+  }
+
+  if(G.selected < 0){ return; }
+  var card = G.pHand[G.selected];
+  if(card.cost > (G.mana - G.manaUsed)){ hint(t('Not enough mana.', '마나가 부족합니다.')); return; }
+  if(zoneCount(z, 'p') >= MAX_PER_ZONE){
+    hint(t('That zone is full (4 cards).', '이 구역은 가득 찼습니다 (4장).'));
+    return;
+  }
+
+  G.zones[z].p.push(card);
+  G.pendingP.push({ zone: z, idx: G.zones[z].p.length - 1, card: card });
+  G.manaUsed += card.cost;
+  G.pHand.splice(G.selected, 1);
+  G.selected = -1;
+  hint(t('Placed. Click it again to take it back.', '배치됨. 다시 누르면 회수됩니다.'));
+  render();
+});
+
+function takeBack(z, slotIdx){
+  for(var i = 0; i < G.pendingP.length; i++){
+    if(G.pendingP[i].zone === z && G.pendingP[i].idx === slotIdx){
+      var card = G.zones[z].p[slotIdx];
+      G.zones[z].p.splice(slotIdx, 1);
+      G.manaUsed -= card.cost;
+      G.pHand.push(card);
+      G.pendingP.splice(i, 1);
+      /* 같은 구역에서 뒤에 있던 pending 인덱스 보정 */
+      for(var j = 0; j < G.pendingP.length; j++){
+        if(G.pendingP[j].zone === z && G.pendingP[j].idx > slotIdx) G.pendingP[j].idx--;
+      }
+      hint(t('Taken back.', '회수했습니다.'));
+      render();
+      return;
+    }
+  }
+}
+
+/* ── AI (뼈대 수준: 탐욕적 소비 + 접전 구역 선호) ─────── */
+function aiTurn(){
+  var manaLeft = G.mana;
+  var placed = [];
+  var guard = 0;
+
+  while(guard++ < 12){
+    /* 낼 수 있는 카드 중 가장 비싼 것 (마나 효율 최대화) */
+    var best = -1;
+    for(var i = 0; i < G.aHand.length; i++){
+      if(G.aHand[i].cost <= manaLeft && (best < 0 || G.aHand[i].cost > G.aHand[best].cost)) best = i;
+    }
+    if(best < 0) break;
+
+    /* 구역 선택: 안 찬 구역 중 "지고 있지만 뒤집을 수 있는" 곳 우선 */
+    var pick = -1, bestScore = -Infinity;
+    for(var z = 0; z < 3; z++){
+      if(zoneCount(z, 'a') >= MAX_PER_ZONE) continue;
+      var diff = zonePower(z, 'p') - zonePower(z, 'a');   /* 양수면 AI가 지는 중 */
+      var score;
+      if(diff > 0) score = 100 - Math.abs(diff - G.aHand[best].power);  /* 역전 가능할수록 高 */
+      else score = 40 - Math.abs(diff);                                  /* 이미 이기면 격차 유지만 */
+      score += Math.random() * 12;                                       /* 예측 불가능성 */
+      if(score > bestScore){ bestScore = score; pick = z; }
+    }
+    if(pick < 0) break;
+
+    var card = G.aHand.splice(best, 1)[0];
+    manaLeft -= card.cost;
+    placed.push({ zone: pick, card: card });
+  }
+  return placed;
+}
+
+/* ── 턴 종료 → 공개 → 다음 턴 ─────────────────────────── */
+$('btn-end').addEventListener('click', function(){
+  if(G.locked) return;
+  G.locked = true;
+  G.selected = -1;
+  G.pendingP = [];              /* 확정 — 더 이상 회수 불가 */
+  hint(t('Revealing…', '공개 중…'));
+  render();
+
+  var aiPlays = aiTurn();
+  var i = 0;
+  (function revealNext(){
+    if(i >= aiPlays.length){ setTimeout(endOfTurn, 340); return; }
+    var pl = aiPlays[i++];
+    G.zones[pl.zone].a.push(pl.card);
+    render();
+    var el = $('board').querySelector('.zone[data-z="' + pl.zone + '"] .slots.op .card:last-child');
+    if(el) el.classList.add('reveal');
+    setTimeout(revealNext, 380);
+  })();
+});
+
+function endOfTurn(){
+  if(G.turn >= MAX_TURNS){ finish(); return; }
+  G.turn++;
+  G.mana = Math.min(G.turn, MAX_TURNS);
+  G.manaUsed = 0;
+  drawP(); drawA();
+  G.locked = false;
+  hint(t('Turn ' + G.turn + ' — mana ' + G.mana + '.', G.turn + '턴 — 마나 ' + G.mana + '.'));
+  render();
+}
+
+$('btn-retreat').addEventListener('click', function(){
+  if(!confirm(t('Retreat and forfeit this match?', '기권하시겠습니까?'))) return;
+  finish(true);
+});
+
+/* ── 승패 판정 ─────────────────────────────────────────── */
+function finish(retreated){
+  var w = zonesWon();
+  var myP = totalPower('p'), opP = totalPower('a');
+  var outcome;                                   /* 'win' | 'lose' | 'draw' */
+
+  if(retreated) outcome = 'lose';
+  else if(w.me > w.op) outcome = 'win';
+  else if(w.op > w.me) outcome = 'lose';
+  else if(myP > opP)  outcome = 'win';           /* 구역 동수 → 총 파워 */
+  else if(opP > myP)  outcome = 'lose';
+  else outcome = 'draw';
+
+  /* 화면 (보상 파트는 서버 응답 오면 채운다) */
+  var res = $('result');
+  res.className = 'result ' + outcome;
+  $('res-title').textContent = outcome === 'win'  ? t('VICTORY', '승리')
+                             : outcome === 'lose' ? t('DEFEAT', '패배')
+                             :                      t('DRAW', '무승부');
+  $('res-zones').textContent = t('Zones  ' + w.me + ' - ' + w.op, '구역  ' + w.me + ' - ' + w.op);
+  $('res-power').textContent = t('Total Power  ' + myP + ' - ' + opP, '총 파워  ' + myP + ' - ' + opP);
+  $('res-reward').textContent = t('Submitting result…', '결과 제출 중…');
+  $('end-hint').textContent = '';
+  show('end');
+
+  /* 무승부는 보상 없음(승/패만 서버가 인정) */
+  if(outcome === 'draw' || !window.XenaWallet){
+    $('res-reward').textContent = outcome === 'draw' ? t('No reward for a draw', '무승부는 보상이 없습니다') : '';
+    return;
+  }
+  window.XenaWallet.claimTcgMatch(G.difficulty, outcome === 'win' ? 'win' : 'loss').then(function(r){
+    var notes = [];
+    if(outcome === 'win'){
+      notes.push(t('Victory +' + (r.granted - (r.firstWin ? 20 : 0)), '승리 +' + (r.granted - (r.firstWin ? 20 : 0))));
+      if(r.firstWin) notes.push(t('First win of the day +20', '일일 첫 승 +20'));
+    } else {
+      notes.push(t('Participation +' + r.granted, '참여 +' + r.granted));
+    }
+    $('res-reward').textContent = '+' + r.granted + ' XC';
+    $('end-hint').textContent = notes.join(' · ') +
+      '  |  ' + t('Today ' + r.played + '/' + r.limit + ' rewarded', '오늘 ' + r.played + '/' + r.limit + '판 보상됨');
+  }).catch(function(err){
+    var code = err && err.code || '';
+    if(code.indexOf('resource-exhausted') >= 0){
+      $('res-reward').textContent = t('Daily reward limit reached', '일일 보상 한도 도달');
+    } else {
+      $('res-reward').textContent = t('Could not reach server — try again later', '서버 연결 실패 — 나중에 다시 시도해주세요');
+    }
+  });
+}
+
+/* ── 화면 전환 ─────────────────────────────────────────── */
+function show(name){
+  var ids = ['intro', 'play', 'end'];
+  for(var i = 0; i < ids.length; i++){
+    $('screen-' + ids[i]).classList.toggle('on', ids[i] === name);
+  }
+  window.scrollTo(0, 0);
+}
+function hint(msg){ $('hint').textContent = msg || ''; }
+
+$('btn-start').addEventListener('click', function(){ newGame(); show('play'); hint(t('Turn 1 — mana 1.', '1턴 — 마나 1.')); });
+$('btn-again').addEventListener('click', function(){ newGame(); show('play'); hint(t('Turn 1 — mana 1.', '1턴 — 마나 1.')); });
+
+/* ── 언어 토글 ─────────────────────────────────────────── */
+var toggles = document.querySelectorAll('.lang-toggle button');
+for(var i = 0; i < toggles.length; i++){
+  toggles[i].addEventListener('click', function(){
+    var lang = this.getAttribute('data-set');
+    document.documentElement.setAttribute('data-lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+    try{ localStorage.setItem('xena-lang', lang); }catch(e){}
+    if(G) render();
+  });
+}
+
+$('intro-hint').textContent = t('Up to 5 rewarded matches per day (any difficulty).', '난이도 무관 하루 최대 5판까지 보상됩니다.');
+</script>
+<script src="../../game/firebase-config.js?v=20260722"></script>
+<script src="../../game/cloud-sync.js?v=20260722"></script>
+<script src="../shared-identity.js?v=20260722"></script>
+<script src="../shared-gate.js?v=20260722"></script>
+<script src="../shared-audio.js?v=20260722"></script>
+<script src="../shared-wallet.js?v=20260722"></script>
+<script>
+if (window.XenaAudio) window.XenaAudio.init('tcg');
+if (window.XenaWallet) window.XenaWallet.subscribe(paintXC);
+document.querySelectorAll('button').forEach(function(el){
+  el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
+});
+</script>
+</body>
+</html>

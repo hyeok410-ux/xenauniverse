@@ -15,7 +15,6 @@ service cloud.firestore {
             'clientUpdatedAt',
             'profile',
             'activity',
-            'records',
             'updatedAt'
           ])
           && request.resource.data.uid == userId
@@ -25,7 +24,6 @@ service cloud.firestore {
           && request.resource.data.clientUpdatedAt is string
           && (!request.resource.data.keys().hasAny(['profile']) || (request.resource.data.profile is map && request.resource.data.profile.keys().hasOnly(['nickname', 'createdAt']) && request.resource.data.profile.nickname is string && request.resource.data.profile.nickname.size() <= 20))
           && (!request.resource.data.keys().hasAny(['activity']) || (request.resource.data.activity is map && request.resource.data.activity.keys().hasOnly(['totalMinutes', 'games', 'lastGame']) && request.resource.data.activity.totalMinutes is int && request.resource.data.activity.totalMinutes >= 0 && request.resource.data.activity.totalMinutes <= 1000000 && request.resource.data.activity.games is map && request.resource.data.activity.lastGame is string))
-          && (!request.resource.data.keys().hasAny(['records']) || (request.resource.data.records is map && request.resource.data.records.keys().hasOnly(['ai', 'human', 'rating']) && request.resource.data.records.ai is map && request.resource.data.records.human is map && request.resource.data.records.ai.keys().hasOnly(['wins', 'losses', 'draws']) && request.resource.data.records.human.keys().hasOnly(['wins', 'losses', 'draws']) && request.resource.data.records.ai.wins is int && request.resource.data.records.ai.losses is int && request.resource.data.records.ai.draws is int && request.resource.data.records.human.wins is int && request.resource.data.records.human.losses is int && request.resource.data.records.human.draws is int && request.resource.data.records.rating is int && request.resource.data.records.rating >= 0 && request.resource.data.records.rating <= 5000))
           && request.resource.data.updatedAt is timestamp;
       }
 
@@ -69,6 +67,12 @@ service cloud.firestore {
     match /signalStreaks/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if false;
+    }
+
+    // LIVE TOUR 진행 상태 — startTour/claimTourReward/cancelTour(Admin SDK)만 쓴다.
+    // 클라이언트는 getTours 콜러블로만 읽으므로 직접 접근은 전부 막는다.
+    match /tours/{tourId} {
+      allow read, write: if false;
     }
 
     match /rewardEvents/{eventId} {

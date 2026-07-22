@@ -573,6 +573,213 @@ exports.spendCredits = onCall(async (request) => {
   return { ...result, credits: wallet.get("credits") || 0 };
 });
 
+/* ══════════════════════════════════════════════════════════════
+   SIGNAL CLASH (TCG) · LIVE TOUR (방치형 디스패치) — 2026-07-22 추가
+   games/tcg/, games/idle/ 를 로컬 localStorage 지갑에서 서버 지갑으로
+   전환하며 신설. 카드 소유권 자체는 아직 서버에 없으므로(다음 단계 작업),
+   claimGachaDust 와 동일한 수준으로 "등급 문자열"만 클라이언트에게 받고
+   금액은 서버가 고정한 표로 계산한다 — 단가 조작만 막는 최소 검증.
+   ══════════════════════════════════════════════════════════════ */
+
+/* 카드 등급 → 코스트(시간)/파워. shared/xena-cards.js 의 GRADE_STATS 와 반드시 동일하게 유지.
+   ZENA_TCG_전체통합_카드DB_v1.md §3-2 canonical (2026-07-22): R=1/1, S=2/2, SR=3/4, SSR=4/6.
+   N은 그 문서에 없어(TCG는 R+만) 방치형 온보딩용으로 R과 동급 취급. */
+const GRADE_COST  = Object.freeze({ N: 1, R: 1, S: 2, SR: 3, SSR: 4 });
+const GRADE_POWER = Object.freeze({ N: 1, R: 1, S: 2, SR: 4, SSR: 6 });
+/* 카드 파워 수치가 확 낮아진 만큼(과거 SSR 11 → 6) 이전에 합의된 XC 페이스를 유지하려면
+   배율을 올려야 함 — 8 → 15 (SSR 3장 4시간 투어 기준 과거 규모와 비슷하게 재계산, 대표 확인 필요). */
+const REWARD_PER_POWER = 15;
+
+/* ── SIGNAL CLASH: AI 난이도별 승/패 보상. 하루 총 5판(난이도 무관 합산)까지만 지급.
+   승수는 하루 제한과 별개로 wallets/{uid}.tcgWins 에 영구 누적 — LIVE TOUR 4번째 슬롯 게이트가 이 값을 본다. */
+const TCG_REWARDS = Object.freeze({ easy: 8, normal: 15, hard: 30 });
+const TCG_LOSS_REWARD = 5;
+const TCG_FIRST_WIN_BONUS = 20;
+const TCG_DAILY_LIMIT = 5;
+
+exports.claimTcgMatch = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const difficulty = String(request.data && request.data.difficulty || "");
+  const outcome = String(request.data && request.data.outcome || "");
+  if (!TCG_REWARDS[difficulty]) throw new HttpsError("invalid-argument", "Unknown difficulty.");
+  if (outcome !== "win" && outcome !== "loss") throw new HttpsError("invalid-argument", "Unknown outcome.");
+
+  const dayKey = newYorkDateKey();
+  const claimRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+
+  const result = await db.runTransaction(async (tx) => {
+    const claim = await tx.get(claimRef);
+    const data = claim.exists ? claim.data() : {};
+    const played = Number(data.tcgMatches || 0);
+    if (played >= TCG_DAILY_LIMIT) throw new HttpsError("resource-exhausted", "Daily match reward limit reached.");
+
+    let granted = outcome === "win" ? TCG_REWARDS[difficulty] : TCG_LOSS_REWARD;
+    let firstWin = false;
+    if (outcome === "win" && !data.tcgFirstWin) { granted += TCG_FIRST_WIN_BONUS; firstWin = true; }
+
+    tx.set(claimRef, {
+      uid, dayKey, tcgMatches: played + 1,
+      tcgFirstWin: data.tcgFirstWin || firstWin,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    const walletUpdate = { uid, credits: FieldValue.increment(granted), updatedAt: FieldValue.serverTimestamp() };
+    if (outcome === "win") walletUpdate.tcgWins = FieldValue.increment(1);
+    tx.set(walletRef, walletUpdate, { merge: true });
+
+    return { granted, firstWin, played: played + 1, limit: TCG_DAILY_LIMIT };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── LIVE TOUR: 도시 해금 ── */
+const CITY_TABLE = Object.freeze({
+  seoul:  { mult: 1.00, cost: 0 },
+  tokyo:  { mult: 1.25, cost: 1200 },
+  ny:     { mult: 1.50, cost: 7000 },
+  london: { mult: 1.80, cost: 22000 },
+});
+exports.unlockCity = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const city = String(request.data && request.data.city || "");
+  const info = CITY_TABLE[city];
+  if (!info) throw new HttpsError("invalid-argument", "Unknown city.");
+  const walletRef = db.doc(`wallets/${uid}`);
+  const result = await db.runTransaction(async (tx) => {
+    const wallet = await tx.get(walletRef);
+    const data = wallet.exists ? wallet.data() : {};
+    const unlocked = data.unlockedCities || ["seoul"];
+    if (unlocked.indexOf(city) >= 0) return { already: true };
+    const credits = data.credits || 0;
+    if (credits < info.cost) throw new HttpsError("failed-precondition", "Insufficient balance.");
+    tx.set(walletRef, {
+      uid, credits: FieldValue.increment(-info.cost),
+      unlockedCities: FieldValue.arrayUnion(city),
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { unlocked: city };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0, unlockedCities: wallet.get("unlockedCities") || ["seoul"] };
+});
+
+/* ── LIVE TOUR: 투어 정원 확장(3→4장), 35,000 XC + SIGNAL CLASH 30승 ──
+   "도감 60%" 조건은 카드 소유권이 아직 서버에 없어 지금 단계에선 검증 불가 —
+   화면엔 계속 표시하되(목표 제시용) 서버는 XC+승수만 강제한다. */
+const CAPACITY_UPGRADE_COST = 35000;
+const CAPACITY_UPGRADE_WINS = 30;
+exports.upgradeTourCapacity = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const walletRef = db.doc(`wallets/${uid}`);
+  const result = await db.runTransaction(async (tx) => {
+    const wallet = await tx.get(walletRef);
+    const data = wallet.exists ? wallet.data() : {};
+    if (data.tourCapacity >= 4) return { already: true };
+    const wins = data.tcgWins || 0;
+    if (wins < CAPACITY_UPGRADE_WINS) throw new HttpsError("failed-precondition", "Not enough SIGNAL CLASH wins.");
+    const credits = data.credits || 0;
+    if (credits < CAPACITY_UPGRADE_COST) throw new HttpsError("failed-precondition", "Insufficient balance.");
+    tx.set(walletRef, {
+      uid, credits: FieldValue.increment(-CAPACITY_UPGRADE_COST), tourCapacity: 4,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { capacity: 4 };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0, capacity: wallet.get("tourCapacity") || 3 };
+});
+
+/* ── LIVE TOUR: 투어 시작/수령/취소 ──
+   시간은 서버 timestamp 가 기준이라 클라이언트가 기기 시계를 돌려도 소용없다.
+   카드 소유권이 아직 서버에 없으므로 "어떤 카드를 보냈는지"는 등급 문자열만 받고,
+   보상 금액은 서버가 고정한 등급별 파워표로 계산한다(단가 조작만 방지, claimGachaDust와 동일 수준). */
+exports.startTour = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const city = String(request.data && request.data.city || "");
+  const grades = Array.isArray(request.data && request.data.grades) ? request.data.grades : [];
+  const cityInfo = CITY_TABLE[city];
+  if (!cityInfo) throw new HttpsError("invalid-argument", "Unknown city.");
+  if (!grades.length || grades.length > 4 || grades.some((g) => !GRADE_COST[g])) {
+    throw new HttpsError("invalid-argument", "Invalid card grades.");
+  }
+
+  const walletRef = db.doc(`wallets/${uid}`);
+  const tourRef = db.doc(`tours/${uid}_${city}`);
+  const result = await db.runTransaction(async (tx) => {
+    const [wallet, tour] = await Promise.all([tx.get(walletRef), tx.get(tourRef)]);
+    const data = wallet.exists ? wallet.data() : {};
+    const unlocked = data.unlockedCities || ["seoul"];
+    if (unlocked.indexOf(city) < 0) throw new HttpsError("failed-precondition", "City is locked.");
+    const capacity = data.tourCapacity || 3;
+    if (grades.length > capacity) throw new HttpsError("failed-precondition", "Too many cards for current tour capacity.");
+    if (tour.exists) throw new HttpsError("already-exists", "A tour is already running for this city.");
+
+    const durationMs = Math.max.apply(null, grades.map((g) => GRADE_COST[g])) * 3600000;
+    tx.set(tourRef, {
+      uid, city, grades, durationMs,
+      startAt: FieldValue.serverTimestamp(),
+      claimedAt: null,
+    });
+    return { durationMs };
+  });
+  return result;
+});
+
+exports.claimTourReward = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const city = String(request.data && request.data.city || "");
+  const cityInfo = CITY_TABLE[city];
+  if (!cityInfo) throw new HttpsError("invalid-argument", "Unknown city.");
+
+  const walletRef = db.doc(`wallets/${uid}`);
+  const tourRef = db.doc(`tours/${uid}_${city}`);
+  const result = await db.runTransaction(async (tx) => {
+    const tour = await tx.get(tourRef);
+    if (!tour.exists) throw new HttpsError("not-found", "No tour running for this city.");
+    const t = tour.data();
+    if (t.uid !== uid) throw new HttpsError("permission-denied", "Not your tour.");
+    const startAtMs = t.startAt && t.startAt.toMillis ? t.startAt.toMillis() : 0;
+    if (Date.now() < startAtMs + t.durationMs) throw new HttpsError("failed-precondition", "Tour not finished yet.");
+
+    const sumPower = t.grades.reduce((s, g) => s + (GRADE_POWER[g] || 0), 0);
+    const granted = Math.floor(sumPower * REWARD_PER_POWER * cityInfo.mult);
+
+    tx.delete(tourRef);
+    tx.set(walletRef, { uid, credits: FieldValue.increment(granted), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+exports.cancelTour = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const city = String(request.data && request.data.city || "");
+  const tourRef = db.doc(`tours/${uid}_${city}`);
+  const tour = await tourRef.get();
+  if (!tour.exists) return { ok: true };
+  if (tour.get("uid") !== uid) throw new HttpsError("permission-denied", "Not your tour.");
+  await tourRef.delete();
+  return { ok: true };
+});
+
+/* ── LIVE TOUR: 현재 진행 중인 모든 투어 조회 (로컬 캐시 유실 시 복구용) ── */
+exports.getTours = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const snap = await db.collection("tours").where("uid", "==", uid).get();
+  const tours = {};
+  snap.forEach((doc) => {
+    const d = doc.data();
+    tours[d.city] = {
+      grades: d.grades, durationMs: d.durationMs,
+      startAt: d.startAt && d.startAt.toMillis ? d.startAt.toMillis() : Date.now(),
+    };
+  });
+  return { tours };
+});
+
 /* ── 잔액 + 연속출석 조회 ── */
 exports.getWallet = onCall(async (request) => {
   const uid = requireAuth(request);
@@ -584,7 +791,12 @@ exports.getWallet = onCall(async (request) => {
   const yesterday = newYorkDateKey(new Date(Date.now() - 86400000));
   const lastDay = streakDoc.exists ? streakDoc.get("lastDayKey") : null;
   const streak = (lastDay === dayKey || lastDay === yesterday) ? ((streakDoc.exists && streakDoc.get("streak")) || 0) : 0;
-  return { credits: wallet.get("credits") || 0, shards: wallet.get("shards") || 0, streak };
+  return {
+    credits: wallet.get("credits") || 0, shards: wallet.get("shards") || 0, streak,
+    unlockedCities: wallet.get("unlockedCities") || ["seoul"],
+    tourCapacity: wallet.get("tourCapacity") || 3,
+    tcgWins: wallet.get("tcgWins") || 0,
+  };
 });
 
 /* ── 주간 랭킹 마감 + 포인트 합산 + 1~3등 보상 지급 ──
