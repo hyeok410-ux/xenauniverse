@@ -1202,7 +1202,7 @@
     const details = isCodex || isUnit ? null : shopDetails(item);
     const description = isCodex || isUnit ? `${item.faction} · ${roleLabel(item.role)} · ${item.rarity}` : `${details.role} · ${details.tier} · ${item.description}`;
     let action;
-    if (isCodex) action = ownedItem ? `<button class="secondary" data-go-my-units>내 유닛에서 장착</button>` : `<button class="primary" data-modal-buy-card="${item.id}">${price}로 해금</button>`;
+    if (isCodex) action = ownedItem ? `<span class="showcase-owned">보유 중 · 편성은 내 유닛에서 진행</span>` : `<button class="primary" data-modal-buy-card="${item.id}">${price}로 해금</button>`;
     else if (isUnit) action = `<span class="showcase-owned">현재 편성 캐릭터 · 슬롯 선택은 아래에서 진행</span>`;
     else if (!ownedItem) action = `<button class="primary" data-modal-buy-cosmetic="${item.id}">${t("purchase")} · ${price}</button>`;
     else if (source === "units") action = `<button class="primary" data-modal-equip-units="${item.id}">장착</button>`;
