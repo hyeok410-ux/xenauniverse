@@ -76,6 +76,13 @@
   function claimWorldcupFinish(){ return callFn('claimWorldcupFinish', {}); }
   function claimChessMatch(){ return callFn('claimChessMatch', {}); }
   function spend(amount, reason){ return callFn('spendCredits', {amount: amount, reason: reason||''}); }
+  /* Stripe 결제창 열기 → 결제 성공 시 서버(fulfillCheckoutSession)가 지갑에 크레딧을 넣는다.
+     returnPath 는 결제 후 돌아올 페이지 (예: '/games/gacha/'). 유효하지 않으면 서버가 '/game/' 로 fallback. */
+  function purchase(productId, returnPath){
+    var orderId = 'ord-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    return callFn('createCheckoutSession', {productId: productId, orderId: orderId, returnPath: returnPath || '/game/'})
+      .then(function(r){ if (r && r.url) window.location.href = r.url; return r; });
+  }
 
   window.XenaWallet = {
     getBalance: function(){ return balance; }, /* null = 로딩중 */
@@ -88,6 +95,7 @@
     claimStageReward: claimStageReward,
     claimWorldcupFinish: claimWorldcupFinish,
     claimChessMatch: claimChessMatch,
-    spend: spend
+    spend: spend,
+    purchase: purchase
   };
 })();

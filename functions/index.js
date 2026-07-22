@@ -14,9 +14,15 @@ const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
 const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 const PAID_PRODUCTS = Object.freeze({
+  // 오버라이드 그리드용 프리미엄 재화 (Anomaly Shards) — 기존
   AS_120: { name: "Anomaly Shards 120", shards: 120, amountKrw: 1500 },
   AS_650: { name: "Anomaly Shards 700", shards: 700, amountKrw: 7500 },
   AS_1400: { name: "Anomaly Shards 1,600", shards: 1600, amountKrw: 15000 },
+  // 미니게임 통합 재화 (XC = wallets/{uid}.credits) — 새로 추가
+  // 큰 팩일수록 보너스 XC 비율 증가: 표준 1XC=1.5원 → 최상위 팩 1XC≈1원
+  XC_1000: { name: "XC 1,000", credits: 1000, amountKrw: 1500 },
+  XC_5500: { name: "XC 5,500 (10% bonus)", credits: 5500, amountKrw: 7500 },
+  XC_15000: { name: "XC 15,000 (25% bonus)", credits: 15000, amountKrw: 15000 },
 });
 
 function stripeRequest(path, params, idempotencyKey) {
@@ -101,12 +107,19 @@ exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (
     return { url: existing.get("checkoutUrl"), sessionId: existing.get("stripeSessionId") };
   }
 
+  // 결제 완료/취소 후 돌아갈 경로 — 클라이언트가 지정 (예: '/games/gacha/' 또는 '/game/').
+  // 서버는 오픈 리다이렉트 방지를 위해 상대경로 슬래시 시작 + '..' 없음 만 허용한다.
+  const rawReturn = String(request.data && request.data.returnPath || "/game/");
+  const returnPath = /^\/[a-zA-Z0-9/_-]{1,80}\/$/.test(rawReturn) ? rawReturn : "/game/";
+  const successUrl = `https://xenauniverse.com${returnPath}?payment=success&session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = `https://xenauniverse.com${returnPath}?payment=cancelled`;
+
   let session;
   try {
     session = await stripeRequest("/v1/checkout/sessions", {
       mode: "payment",
-      success_url: "https://xenauniverse.com/game/?payment=success&session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: "https://xenauniverse.com/game/?payment=cancelled",
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       "line_items[0][price_data][currency]": "krw",
       "line_items[0][price_data][product_data][name]": product.name,
       "line_items[0][price_data][unit_amount]": String(product.amountKrw),
@@ -122,7 +135,9 @@ exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (
 
   await orderRef.set({
     uid, productId, clientOrderId, stripeSessionId: session.id, checkoutUrl: session.url,
-    amountKrw: product.amountKrw, shards: product.shards, status: "created",
+    amountKrw: product.amountKrw,
+    shards: product.shards || 0, credits: product.credits || 0,
+    status: "created",
     createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
   }, { merge: true });
   return { url: session.url, sessionId: session.id };
@@ -134,6 +149,8 @@ async function fulfillCheckoutSession(session) {
   const productId = String(metadata.productId || "");
   const product = PAID_PRODUCTS[productId];
   if (!uid || !product || session.mode !== "payment" || session.payment_status !== "paid") return false;
+  const grantedShards = Number(product.shards || 0);
+  const grantedCredits = Number(product.credits || 0);
   const purchaseRef = db.doc(`purchases/${session.id}`);
   const walletRef = db.doc(`wallets/${uid}`);
   await db.runTransaction(async (tx) => {
@@ -142,10 +159,13 @@ async function fulfillCheckoutSession(session) {
     tx.set(purchaseRef, {
       uid, productId, stripeSessionId: session.id,
       stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
-      amountKrw: product.amountKrw, grantedShards: product.shards, status: "paid",
+      amountKrw: product.amountKrw, grantedShards, grantedCredits, status: "paid",
       paidAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
-    tx.set(walletRef, { uid, shards: FieldValue.increment(product.shards), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    const walletUpdate = { uid, updatedAt: FieldValue.serverTimestamp() };
+    if (grantedShards) walletUpdate.shards = FieldValue.increment(grantedShards);
+    if (grantedCredits) walletUpdate.credits = FieldValue.increment(grantedCredits);
+    tx.set(walletRef, walletUpdate, { merge: true });
     tx.set(db.doc(`paymentOrders/${uid}_${metadata.clientOrderId || session.id}`), { status: "paid", stripeSessionId: session.id, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
   });
   return true;
@@ -160,14 +180,31 @@ async function reverseRefund(paymentIntentId, chargeId) {
     const purchase = await tx.get(purchaseRef);
     if (!purchase.exists || purchase.get("status") === "refunded") return;
     const uid = purchase.get("uid");
-    const granted = Number(purchase.get("grantedShards") || 0);
+    const grantedShards = Number(purchase.get("grantedShards") || 0);
+    const grantedCredits = Number(purchase.get("grantedCredits") || 0);
     const walletRef = db.doc(`wallets/${uid}`);
     const wallet = await tx.get(walletRef);
-    const available = Math.max(0, Number(wallet.get("shards") || 0));
-    const debit = Math.min(available, granted);
-    const debt = granted - debit;
-    tx.set(walletRef, { shards: FieldValue.increment(-debit), premiumShardDebt: FieldValue.increment(debt), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    tx.set(purchaseRef, { status: "refunded", refundedAt: FieldValue.serverTimestamp(), refundDebit: debit, refundDebt: debt, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    // 두 통화 모두 잔액이 부족하면 그만큼 debt 로 기록 (사후 정산)
+    const refundUpdate = { updatedAt: FieldValue.serverTimestamp() };
+    const meta = {};
+    if (grantedShards > 0) {
+      const available = Math.max(0, Number(wallet.get("shards") || 0));
+      const debit = Math.min(available, grantedShards);
+      const debt = grantedShards - debit;
+      refundUpdate.shards = FieldValue.increment(-debit);
+      if (debt > 0) refundUpdate.premiumShardDebt = FieldValue.increment(debt);
+      meta.refundShardDebit = debit; meta.refundShardDebt = debt;
+    }
+    if (grantedCredits > 0) {
+      const available = Math.max(0, Number(wallet.get("credits") || 0));
+      const debit = Math.min(available, grantedCredits);
+      const debt = grantedCredits - debit;
+      refundUpdate.credits = FieldValue.increment(-debit);
+      if (debt > 0) refundUpdate.creditDebt = FieldValue.increment(debt);
+      meta.refundCreditDebit = debit; meta.refundCreditDebt = debt;
+    }
+    tx.set(walletRef, refundUpdate, { merge: true });
+    tx.set(purchaseRef, { status: "refunded", refundedAt: FieldValue.serverTimestamp(), ...meta, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
   });
   return true;
 }
