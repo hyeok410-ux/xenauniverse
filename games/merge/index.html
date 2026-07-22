@@ -54,6 +54,18 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 .next-row{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.6rem;color:var(--text-dim);letter-spacing:.1em;margin-bottom:8px;}
 #next-preview{width:26px;height:26px;border-radius:50%;flex:none;}
 
+.skill-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.skill-charge{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.08em;color:var(--gold);
+  border:1px solid rgba(232,196,104,.35);border-radius:16px;padding:6px 12px;background:rgba(232,196,104,.06);}
+.skill-charge b{color:#fff2c8;}
+.skill-btn{flex:1;min-width:130px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-family:var(--font-mono);border-radius:14px;padding:8px 10px;border:1px solid rgba(255,47,176,.35);
+  background:rgba(255,47,176,.08);color:#ffd9ee;transition:.25s ease;}
+.skill-btn .sk-name{font-size:.6rem;letter-spacing:.06em;}
+.skill-btn .sk-cost{font-size:.56rem;color:var(--gold);}
+.skill-btn:not(:disabled):hover{background:rgba(255,47,176,.18);box-shadow:0 0 16px rgba(255,47,176,.3);}
+.skill-btn:disabled{opacity:.32;cursor:not-allowed;}
+
 /* 데스크톱에서 게임판이 너무 작아보였음 → 420 → 560 로 확장.
    3:4 비율은 유지 (물리엔진이 캔버스 크기에 자동 맞춰지므로 gameplay 는 그대로) */
 #jar-wrap{position:relative;width:100%;aspect-ratio:3/4;max-width:560px;margin:0 auto;border-radius:18px;overflow:hidden;
@@ -109,6 +121,18 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     <div class="best"><span lang="en">BEST</span><span lang="ko">최고</span><br><b id="hud-best">0</b></div>
   </div>
 
+  <div class="skill-row">
+    <span class="skill-charge"><span lang="en">OVERRIDE</span><span lang="ko">오버라이드</span> ×<b id="zena-charge">0</b></span>
+    <button class="skill-btn" id="skill-a" disabled>
+      <span class="sk-name"><span lang="en">PUSH BACK FLOOR</span><span lang="ko">바닥 밀어내기</span></span>
+      <span class="sk-cost">×2</span>
+    </button>
+    <button class="skill-btn" id="skill-b" disabled>
+      <span class="sk-name"><span lang="en">CLEAR OVERRIDE ×4</span><span lang="ko">오버라이드 정리 ×4</span></span>
+      <span class="sk-cost">×4</span>
+    </button>
+  </div>
+
   <div id="jar-wrap">
     <div class="gameover-line"></div>
     <canvas id="jar"></canvas>
@@ -141,16 +165,36 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var lang = document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 'en';
   function t(en, ko){ return lang === 'ko' ? ko : en; }
 
-  /* ── 티어 정의 (반지름 px 기준, 캔버스 좌표계) ── */
+  /* ── 티어 정의 (반지름 px 기준, 캔버스 좌표계) ──
+     [2026-07-23] N 이전 단계(SEED)와 XENA 다음 단계(OVERRIDE)를 추가해 8단계로 확장.
+     성장감이 약하다는 피드백을 반영해 상위 단계로 갈수록 반지름이 더 크게 벌어지도록 재조정. */
   var TIERS = [
-    {r:14, color:'#e6e6ee', label:'N',   score:1},
-    {r:19, color:'#3fe0ff', label:'R',   score:3},
-    {r:25, color:'#5cffc0', label:'S',   score:8},
-    {r:32, color:'#a06bff', label:'SR',  score:20},
-    {r:40, color:'#e8c468', label:'SSR', score:50},
-    {r:49, color:'#ff2fb0', label:'XENA',score:120}
+    {r:11, color:'#8a8a96', label:'SEED', score:1},
+    {r:15, color:'#e6e6ee', label:'N',    score:2},
+    {r:20, color:'#3fe0ff', label:'R',    score:5},
+    {r:27, color:'#5cffc0', label:'S',    score:13},
+    {r:35, color:'#a06bff', label:'SR',   score:32},
+    {r:44, color:'#e8c468', label:'SSR',  score:75},
+    {r:55, color:'#ff2fb0', label:'XENA', score:170},
+    {r:70, color:'#fff2c8', label:'OVR',  score:380}
   ];
-  var SPAWN_MAX_TIER = 2; /* 처음 드롭 가능한 최고 티어 (0~2 = N/R/S) */
+  var OVERRIDE_TIER = TIERS.length - 1; /* 제나 오버라이드 — 최상위 티어 */
+  var SPAWN_MAX_TIER = 3; /* 처음 드롭 가능한 최고 티어 (0~3 = SEED/N/R/S) */
+
+  /* ── 캐릭터 얼굴 + 글래스 오브 스프라이트 ──
+     xena-mascot.jpg를 원형 클리핑해 얼굴을 채우고, 그 위에 orbs.png(6단계 글래스 오브
+     스프라이트)를 얇게 겹쳐 유리질 광택을 더한다. orbs.png는 N~XENA 6단계에만 대응되므로
+     SEED/OVERRIDE는 캔버스 자체 글로우로 대체한다. */
+  var mascotImg = new Image();
+  var mascotReady = false;
+  mascotImg.onload = function(){ mascotReady = true; };
+  mascotImg.src = 'xena-mascot.jpg';
+  var orbsImg = new Image();
+  var orbsReady = false;
+  orbsImg.onload = function(){ orbsReady = true; };
+  orbsImg.src = 'orbs.png';
+  var ORB_SPRITE_COUNT = 6; /* orbs.png 안의 오브 개수 (N,R,S,SR,SSR,XENA 순서) */
+  var ORB_TIER_OFFSET = 1;  /* TIERS[1]=N 부터 오브 스프라이트가 대응 시작 */
 
   var $ = function(id){ return document.getElementById(id); };
   var canvas = $('jar'), ctx = canvas.getContext('2d');
@@ -162,6 +206,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     canvas.width = W * DPR; canvas.height = H * DPR;
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     ctx.setTransform(DPR,0,0,DPR,0,0);
+    if (floorY > H) floorY = H; /* 창 크기 변경 중에도 바닥이 캔버스 밖으로 나가지 않도록 */
   }
   window.addEventListener('resize', resize);
 
@@ -184,6 +229,52 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var aimX = null;
   var dropCooldown = 0;
 
+  /* ── 테트리스 식 서서히 차오르는 바닥 ──
+     floorY 가 게임 시작 시 H(바닥)에서 시작해서 아주 천천히 위로("차올라") 줄어든다.
+     실질 플레이 높이가 줄어들수록 game-over 라인에 닿기 쉬워져 긴장감이 생긴다. */
+  var floorY = 0;
+  var floorRiseRate = 0;      /* px/s */
+  var FLOOR_MIN_MARGIN = 150; /* overLine으로부터 최소 이만큼은 항상 남겨둔다 */
+  var FLOOR_RISE_SECONDS = 240; /* 바닥이 최솟값까지 차오르는 데 걸리는 시간(초) — 4분, 아주 천천히 */
+
+  /* ── 제나 오버라이드 스킬 ──
+     OVERRIDE 티어를 새로 만들 때마다 charge +1. 2로 스킬A(바닥 밀어내기), 4로
+     스킬B(오버라이드 구슬 4개 정리)가 켜진다. 서로 독립적인 자원이라 A를 써도 B 조건엔 영향 없음. */
+  var zenaCharge = 0;
+  var SKILL_A_COST = 2, SKILL_B_COST = 4;
+  var FLOOR_RELIEF = 100; /* 스킬A 한 번에 바닥을 밀어내리는 양(px) */
+
+  function updateSkillUI(){
+    var elA = $('skill-a'), elB = $('skill-b'), elC = $('zena-charge');
+    if (!elA) return;
+    elC.textContent = zenaCharge;
+    elA.disabled = zenaCharge < SKILL_A_COST;
+    elB.disabled = zenaCharge < SKILL_B_COST;
+  }
+
+  function useSkillA(){
+    if (!running || zenaCharge < SKILL_A_COST) return;
+    zenaCharge -= SKILL_A_COST;
+    floorY = Math.min(H, floorY + FLOOR_RELIEF);
+    updateSkillUI();
+    if (window.XenaAudio) window.XenaAudio.sfx('signal_claim');
+  }
+  function useSkillB(){
+    if (!running || zenaCharge < SKILL_B_COST) return;
+    zenaCharge -= SKILL_B_COST;
+    var cleared = 0;
+    for (var i = balls.length - 1; i >= 0 && cleared < 4; i--){
+      if (balls[i].tier === OVERRIDE_TIER && !balls[i].merging){
+        balls.splice(i, 1);
+        cleared++;
+        score += 40;
+      }
+    }
+    $('hud-score').textContent = score;
+    updateSkillUI();
+    if (window.XenaAudio) window.XenaAudio.sfx('quest_all_complete');
+  }
+
   function randTier(){ return Math.floor(Math.random()*(SPAWN_MAX_TIER+1)); }
 
   function spawnPreviewUpdate(){
@@ -197,8 +288,12 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     score = 0;
     nextTier = randTier();
     overTimer = 0;
+    floorY = H;
+    floorRiseRate = Math.max(0, H - overLine - FLOOR_MIN_MARGIN) / FLOOR_RISE_SECONDS;
+    zenaCharge = 0;
     $('hud-score').textContent = '0';
     spawnPreviewUpdate();
+    updateSkillUI();
   }
 
   function addBall(x, y, tier){
@@ -232,6 +327,11 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     if (!running) return;
     if (dropCooldown > 0) dropCooldown -= dt;
 
+    /* 바닥이 아주 천천히 차오른다(테트리스 식 압박) — 스킬A로만 밀어낼 수 있다 */
+    if (floorY > overLine + FLOOR_MIN_MARGIN){
+      floorY = Math.max(overLine + FLOOR_MIN_MARGIN, floorY - floorRiseRate*dt);
+    }
+
     for (var i=0;i<balls.length;i++){
       var b = balls[i];
       if (b.merging) continue;
@@ -242,7 +342,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       /* 벽 */
       if (b.x - b.r < 0){ b.x = b.r; b.vx = -b.vx*RESTITUTION; }
       if (b.x + b.r > W){ b.x = W-b.r; b.vx = -b.vx*RESTITUTION; }
-      if (b.y + b.r > H){ b.y = H-b.r; b.vy = -b.vy*RESTITUTION; if (Math.abs(b.vy) < 30) b.vy = 0; }
+      if (b.y + b.r > floorY){ b.y = floorY-b.r; b.vy = -b.vy*RESTITUTION; if (Math.abs(b.vy) < 30) b.vy = 0; }
     }
 
     /* 공-공 충돌 (단순 위치보정 + 속도 반사) + 같은 티어 병합 */
@@ -286,6 +386,11 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
         score += TIERS[newTier].score;
         $('hud-score').textContent = score;
         if (window.XenaAudio) window.XenaAudio.sfx('match_success_a');
+        if (newTier === OVERRIDE_TIER){
+          zenaCharge++;
+          updateSkillUI();
+          if (window.XenaAudio) window.XenaAudio.sfx('card_reveal_ssr');
+        }
         setTimeout(function(){
           balls.splice(balls.indexOf(b1),1);
           balls.splice(balls.indexOf(b2),1);
@@ -304,8 +409,77 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     }
   }
 
+  function drawBallFace(b){
+    var r = b.r;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, r, 0, Math.PI*2);
+    ctx.clip();
+    /* 바탕색 (이미지 로딩 전/실패 대비 fallback) */
+    ctx.fillStyle = b.color || TIERS[b.tier].color;
+    ctx.fillRect(b.x-r, b.y-r, r*2, r*2);
+    /* 캐릭터 얼굴 — 마스코트 사진을 원형으로 꽉 채워 클리핑 */
+    if (mascotReady){
+      var iw = mascotImg.naturalWidth, ih = mascotImg.naturalHeight;
+      var side = Math.min(iw, ih);
+      var sx = (iw-side)/2, sy = ih*0.06; /* 위쪽 얼굴 위주로 크롭 */
+      sy = Math.min(sy, ih-side);
+      ctx.globalAlpha = 0.92;
+      ctx.drawImage(mascotImg, sx, sy, side, side, b.x-r, b.y-r, r*2, r*2);
+      ctx.globalAlpha = 1;
+    }
+    /* 등급 색 틴트 */
+    ctx.fillStyle = b.color || TIERS[b.tier].color;
+    ctx.globalAlpha = 0.22;
+    ctx.fillRect(b.x-r, b.y-r, r*2, r*2);
+    ctx.globalAlpha = 1;
+    /* 글래스 오브 스프라이트 겹치기 — N~XENA(티어1~6)만 대응 슬라이스가 있음 */
+    var orbIdx = b.tier - ORB_TIER_OFFSET;
+    if (orbsReady && orbIdx >= 0 && orbIdx < ORB_SPRITE_COUNT){
+      var sw = orbsImg.naturalWidth / ORB_SPRITE_COUNT, sh = orbsImg.naturalHeight;
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = 0.55;
+      ctx.drawImage(orbsImg, orbIdx*sw, 0, sw, sh, b.x-r, b.y-r, r*2, r*2);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+    /* 테두리 — 등급색, OVERRIDE는 특별히 두껍고 밝게 */
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, r-1, 0, Math.PI*2);
+    ctx.lineWidth = b.tier === OVERRIDE_TIER ? 3.5 : (b.tier === 0 ? 1 : 2);
+    ctx.strokeStyle = b.color || TIERS[b.tier].color;
+    if (b.tier === OVERRIDE_TIER){
+      ctx.shadowColor = TIERS[OVERRIDE_TIER].color;
+      ctx.shadowBlur = 18;
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    /* 등급 라벨 */
+    ctx.font = '800 '+Math.max(8, r*0.36)+'px JetBrains Mono, monospace';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(0,0,0,.9)';
+    ctx.shadowBlur = 3;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(TIERS[b.tier].label, b.x, b.y + r*0.62);
+    ctx.shadowBlur = 0;
+  }
+
+  function drawRisingFloor(){
+    if (floorY >= H - 0.5) return;
+    var grad = ctx.createLinearGradient(0, floorY, 0, H);
+    grad.addColorStop(0, 'rgba(255,107,138,.5)');
+    grad.addColorStop(1, 'rgba(120,10,30,.75)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, floorY, W, H-floorY);
+    ctx.strokeStyle = 'rgba(255,180,190,.85)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, floorY); ctx.lineTo(W, floorY); ctx.stroke();
+  }
+
   function draw(){
     ctx.clearRect(0,0,W,H);
+    drawRisingFloor();
     /* 조준선 */
     if (aimX !== null && running && dropCooldown <= 0){
       var r = TIERS[nextTier].r;
@@ -322,16 +496,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       ctx.fill();
       ctx.globalAlpha = 1;
     }
-    balls.forEach(function(b){
-      ctx.beginPath();
-      ctx.fillStyle = b.color || TIERS[b.tier].color;
-      ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
-      ctx.fill();
-      ctx.font = '700 '+Math.max(8, b.r*0.42)+'px JetBrains Mono, monospace';
-      ctx.fillStyle = 'rgba(0,0,0,.55)';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(TIERS[b.tier].label, b.x, b.y+1);
-    });
+    balls.forEach(drawBallFace);
   }
 
   function endGame(){
@@ -355,6 +520,9 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     draw();
     requestAnimationFrame(loop);
   }
+
+  $('skill-a').addEventListener('click', useSkillA);
+  $('skill-b').addEventListener('click', useSkillB);
 
   $('btn-start').addEventListener('click', function(){
     $('ov-start').classList.remove('on');
@@ -385,6 +553,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   });
 
   resize();
+  floorY = H; /* 시작 오버레이가 걷히기 전까지 바닥이 미리 차오른 것처럼 보이지 않도록 초기화 */
   spawnPreviewUpdate();
   requestAnimationFrame(loop);
 })();

@@ -73,6 +73,11 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .c-name{font-size:.92rem;font-weight:700;letter-spacing:-.01em;}
 .c-flag{font-size:1.1rem;margin-right:5px;}
 .c-mult{font-family:var(--font-mono);font-size:.62rem;font-weight:700;color:var(--ca);white-space:nowrap;}
+.c-info-btn{background:none;border:none;color:var(--text-dim);font-size:.85rem;line-height:1;vertical-align:middle;
+  padding:0;margin-left:2px;cursor:pointer;transition:.2s;}
+.c-info-btn:hover{color:var(--ca);}
+.synergy-list{font-size:.72rem;line-height:1.8;color:rgba(230,230,238,.85);padding-left:18px;margin-top:8px;}
+.synergy-list b{color:#5cffc0;}
 
 .c-body{position:relative;min-height:96px;display:flex;flex-direction:column;justify-content:center;}
 
@@ -142,7 +147,12 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .pick-summary{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:.66rem;
   padding:9px 12px;border:1px solid var(--hair);border-radius:10px;margin-bottom:12px;background:rgba(255,255,255,.02);}
 .pick-summary b{color:var(--gold);}
+#pick-preview.has-synergy{color:#5cffc0;font-weight:700;text-shadow:0 0 10px rgba(92,255,192,.5);}
 .picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px;}
+.picker-more-wrap{text-align:center;margin-top:12px;}
+.picker-more-btn{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;padding:9px 20px;border-radius:20px;
+  border:1px solid var(--hair);background:rgba(255,255,255,.03);color:var(--text-dim);transition:.2s;}
+.picker-more-btn:hover{border-color:rgba(63,224,255,.4);color:var(--cyan);}
 .pick{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;border:2px solid var(--hair);transition:.2s;}
 .pick img{width:100%;height:100%;object-fit:cover;}
 .pick:hover{border-color:var(--cyan);transform:translateY(-3px);}
@@ -218,9 +228,23 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
       <span id="pick-preview"></span>
     </div>
     <div class="picker" id="picker"></div>
+    <div class="picker-more-wrap" id="picker-more-wrap" style="display:none;">
+      <button class="picker-more-btn" id="picker-more-btn"></button>
+    </div>
     <div class="sheet-actions">
       <button class="btn primary" id="pick-send" disabled></button>
       <button class="btn" id="pick-close"><span lang="en">CANCEL</span><span lang="ko">취소</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- 국가 시너지 정보 -->
+<div class="modal" id="modal-info">
+  <div class="sheet" style="max-width:400px">
+    <h3 id="info-title"></h3>
+    <div id="info-body"></div>
+    <div class="sheet-actions">
+      <button class="btn" id="info-close"><span lang="en">CLOSE</span><span lang="ko">닫기</span></button>
     </div>
   </div>
 </div>
@@ -268,11 +292,24 @@ var CAP_UPGRADE_COST = 35000;      /* 투어 정원 확장 — 엔드게임 (기
 var CAP_UPGRADE_COLL = 0.60;       /* 도감 60% — 카드소유권이 아직 서버에 없어 클라이언트에서만 강제(연성 게이트) */
 var CAP_UPGRADE_WINS = 30;         /* SIGNAL CLASH 승수 — 서버 wallets/{uid}.tcgWins 로 실제 검증됨 */
 
+/* 국가별 시너지 속성 — 보낸 카드들의 element(SOUND/SOUL/DARK/LIGHT/METAL/BUG)가
+   이 도시의 element와 얼마나 겹치느냐로 보상 보너스가 붙는다. functions/index.js
+   CITY_TABLE.element / synergyBonus() 와 반드시 동일하게 유지(실제 지급은 서버가 재계산). */
+var SYNERGY_TIERS = [ {ratio:1.00, bonus:0.30}, {ratio:0.66, bonus:0.15} ];
+function synergyPreview(elements, cityElement){
+  if (!elements.length) return 0;
+  var matches = elements.filter(function(e){ return e === cityElement; }).length;
+  var ratio = matches / elements.length;
+  for (var i = 0; i < SYNERGY_TIERS.length; i++){ if (ratio >= SYNERGY_TIERS[i].ratio) return SYNERGY_TIERS[i].bonus; }
+  return 0;
+}
+var ELEMENT_LABEL = { SOUND:{en:'SOUND',ko:'사운드'}, SOUL:{en:'SOUL',ko:'소울'}, DARK:{en:'DARK',ko:'다크'},
+  LIGHT:{en:'LIGHT',ko:'라이트'}, METAL:{en:'METAL',ko:'메탈'}, BUG:{en:'BUG',ko:'버그'} };
 var CITIES = [
-  { key:'seoul', en:'SEOUL',     ko:'서울',   flag:'🇰🇷', mult:1.00, cost:0,     a:'#3fe0ff', b:'#6e2fd9' },
-  { key:'tokyo', en:'TOKYO',     ko:'도쿄',   flag:'🇯🇵', mult:1.25, cost:1200,  a:'#ff2fb0', b:'#ff6b3d' },
-  { key:'ny',    en:'NEW YORK',  ko:'뉴욕',   flag:'🇺🇸', mult:1.50, cost:7000,  a:'#e8c468', b:'#2b2b3d' },
-  { key:'london',en:'LONDON',    ko:'런던',   flag:'🇬🇧', mult:1.80, cost:22000, a:'#7fb8ff', b:'#1a1a2e' }
+  { key:'seoul', en:'SEOUL',     ko:'서울',   flag:'🇰🇷', mult:1.00, cost:0,     a:'#3fe0ff', b:'#6e2fd9', element:'SOUND' },
+  { key:'tokyo', en:'TOKYO',     ko:'도쿄',   flag:'🇯🇵', mult:1.25, cost:1200,  a:'#ff2fb0', b:'#ff6b3d', element:'SOUL'  },
+  { key:'ny',    en:'NEW YORK',  ko:'뉴욕',   flag:'🇺🇸', mult:1.50, cost:7000,  a:'#e8c468', b:'#2b2b3d', element:'METAL' },
+  { key:'london',en:'LONDON',    ko:'런던',   flag:'🇬🇧', mult:1.80, cost:22000, a:'#7fb8ff', b:'#1a1a2e', element:'LIGHT' }
 ];
 
 /* ── 로컬 캐시(카드ID 기억용) ─────────────────────────────── */
@@ -302,7 +339,7 @@ function reconcileTours(){
     var changed = false;
     for(var city in serverTours){
       if(!local.tours[city]){
-        local.tours[city] = { cards: null, grades: serverTours[city].grades, startAt: serverTours[city].startAt, durationMs: serverTours[city].durationMs };
+        local.tours[city] = { cards: null, grades: serverTours[city].grades, elements: serverTours[city].elements || [], startAt: serverTours[city].startAt, durationMs: serverTours[city].durationMs };
         changed = true;
       }
     }
@@ -328,8 +365,10 @@ function tourCards(cityKey){
   var tour = local.tours[cityKey];
   if(!tour) return [];
   if(tour.cards) return tour.cards.map(function(id){ return XenaCards.get(id); }).filter(Boolean);
-  /* 다른 기기에서 시작된 투어 — 카드ID를 몰라 등급만으로 표시 */
-  return (tour.grades || []).map(function(g){ return { grade: g, power: GRADE_POWER[g] || 0, img: null, color: '#b9b9c6' }; });
+  /* 다른 기기에서 시작된 투어 — 카드ID를 몰라 등급/속성 배열만으로 표시 */
+  return (tour.grades || []).map(function(g, i){
+    return { grade: g, power: GRADE_POWER[g] || 0, img: null, color: '#b9b9c6', element: (tour.elements || [])[i] || null };
+  });
 }
 function tourRemainMs(cityKey){
   var tour = local.tours[cityKey];
@@ -340,11 +379,15 @@ function tourReady(cityKey){
   var tour = local.tours[cityKey];
   return !!tour && tourRemainMs(cityKey) <= 0;
 }
-function cityMult(cityKey){ var c = CITIES.filter(function(x){return x.key===cityKey;})[0]; return c ? c.mult : 1; }
+function cityByKey(cityKey){ return CITIES.filter(function(x){return x.key===cityKey;})[0]; }
+function cityMult(cityKey){ var c = cityByKey(cityKey); return c ? c.mult : 1; }
 function tourReward(cityKey){
   var cards = tourCards(cityKey), sum = 0;
-  for(var i = 0; i < cards.length; i++) sum += cards[i].power;
-  return Math.floor(sum * REWARD_PER_POWER * cityMult(cityKey));
+  var elements = [];
+  for(var i = 0; i < cards.length; i++){ sum += cards[i].power; if(cards[i].element) elements.push(cards[i].element); }
+  var c = cityByKey(cityKey);
+  var bonus = c ? synergyPreview(elements, c.element) : 0;
+  return Math.floor(sum * REWARD_PER_POWER * cityMult(cityKey) * (1 + bonus));
 }
 
 function fmtTime(ms){
@@ -358,13 +401,14 @@ function renderCities(){
   var h = '';
   for(var i = 0; i < CITIES.length; i++){
     var c = CITIES[i];
-    var unlocked = wallet.unlockedCities.indexOf(c.key) >= 0;
+    var unlocked = c.key === 'seoul' || wallet.unlockedCities.indexOf(c.key) >= 0; /* 서울은 서버 데이터와 무관하게 항상 해금 상태 (구버전 손상 데이터 방어) */
     var tour = local.tours[c.key];
 
     h += '<div class="city' + (!unlocked ? ' locked' : (tour ? (tourReady(c.key) ? ' ready' : ' running') : '')) + '"' +
          ' style="--ca:' + c.a + '">' +
            '<div class="c-top">' +
-             '<span class="c-name"><span class="c-flag">' + c.flag + '</span>' + t(c.en, c.ko) + '</span>' +
+             '<span class="c-name"><span class="c-flag">' + c.flag + '</span>' + t(c.en, c.ko) +
+               ' <button class="c-info-btn" data-info-city="' + c.key + '" aria-label="synergy info">&#9432;</button></span>' +
              '<span class="c-mult">×' + c.mult.toFixed(2) + '</span>' +
            '</div>' +
            '<div class="c-body" data-city="' + c.key + '">';
@@ -445,7 +489,28 @@ $('cities').addEventListener('click', function(e){
   if(el.matches('[data-claim]')){ claimTour(el.getAttribute('data-claim')); return; }
   if(el.matches('[data-cancel]')){ cancelTour(el.getAttribute('data-cancel')); return; }
   if(el.matches('[data-unlock-city]')){ openCityUnlock(el.getAttribute('data-unlock-city')); return; }
+  if(el.matches('[data-info-city]')){ openCitySynergyInfo(el.getAttribute('data-info-city')); return; }
 });
+
+function openCitySynergyInfo(cityKey){
+  var c = cityByKey(cityKey);
+  if(!c) return;
+  var el = ELEMENT_LABEL[c.element] || {en:c.element, ko:c.element};
+  $('info-title').textContent = t(c.en, c.ko) + ' ' + t('SYNERGY', '시너지');
+  $('info-body').innerHTML =
+    '<p>' + t(
+      'This city has a natural affinity for ', '이 도시는 '
+    ) + '<b style="color:' + c.a + '">' + t(el.en, el.ko) + '</b>' + t(' element cards.', ' 속성 카드와 궁합이 좋습니다.') + '</p>' +
+    '<ul class="synergy-list">' +
+      '<li>' + t('All sent cards match → ', '보낸 카드가 전부 일치 → ') + '<b>+30%</b> XC</li>' +
+      '<li>' + t('66%+ of sent cards match → ', '보낸 카드의 66% 이상 일치 → ') + '<b>+15%</b> XC</li>' +
+      '<li>' + t('Example: send 3 ', '예시: ') + '<b>' + t(el.en, el.ko) + '</b>' + t(' cards to ' + c.en + ' → +30% reward on arrival.',
+        ' 속성 카드 3장을 ' + c.ko + '에 보내면 → 도착 보상 +30%.') + '</li>' +
+    '</ul>';
+  $('modal-info').classList.add('on');
+}
+$('info-close').addEventListener('click', function(){ $('modal-info').classList.remove('on'); });
+$('modal-info').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
 
 function claimTour(cityKey){
   if(!tourReady(cityKey) || !window.XenaWallet) return;
@@ -453,7 +518,8 @@ function claimTour(cityKey){
   window.XenaWallet.claimTourReward(cityKey).then(function(r){
     delete local.tours[cityKey];
     saveLocal(local);
-    toast('+' + r.granted.toLocaleString() + ' XC — ' + t(cname.en, cname.ko));
+    var synergyTxt = r.bonus > 0 ? ' (' + t('SYNERGY +', '시너지 +') + Math.round(r.bonus*100) + '%)' : '';
+    toast('+' + r.granted.toLocaleString() + ' XC — ' + t(cname.en, cname.ko) + synergyTxt);
     renderAll();
   }).catch(function(err){
     toast(t('Could not claim — try again.', '수령 실패 — 다시 시도해주세요.'));
@@ -477,6 +543,7 @@ function openPicker(cityKey){
   if(!XenaCards.ownsAny()){ toast(t('No cards yet — open a pack first.', '보유 카드가 없습니다 — 팩을 먼저 열어주세요.')); return; }
   pickCity = cityKey;
   pickSelected = [];
+  pickShowAll = false;
   var c = CITIES.filter(function(x){ return x.key === cityKey; })[0];
   $('pick-title').textContent = t(c.en, c.ko);
   $('pick-sub').textContent = t('Tour length = your highest Cost card (hours). Reward = total Power × ' + c.mult.toFixed(2) + ' × ' + REWARD_PER_POWER,
@@ -485,11 +552,17 @@ function openPicker(cityKey){
   $('modal-pick').classList.add('on');
 }
 
+var PICKER_TOP_N = 8;
+var pickShowAll = false;
+
 function renderPicker(){
   var owned = XenaCards.owned(), dispatched = dispatchedIds();
+  /* 등급 높은 카드부터 이미 정렬돼 있음(owned()가 power desc) — 어차피 높은 등급을 보낼 테니
+     기본은 상위 PICKER_TOP_N장만 보여주고, '더보기'를 눌러야 전체 보유 카드를 펼친다 */
+  var visible = pickShowAll ? owned : owned.slice(0, PICKER_TOP_N);
   var h = '';
-  for(var i = 0; i < owned.length; i++){
-    var c = owned[i];
+  for(var i = 0; i < visible.length; i++){
+    var c = visible[i];
     var isUsed = dispatched[c.id];
     var isChosen = pickSelected.indexOf(c.id) >= 0;
     h += '<button class="pick' + (isChosen ? ' chosen' : '') + (isUsed ? ' used' : '') + '" data-id="' + c.id + '"' +
@@ -502,22 +575,45 @@ function renderPicker(){
          '</button>';
   }
   $('picker').innerHTML = h;
+  var moreCount = owned.length - visible.length;
+  if(moreCount > 0){
+    $('picker-more-wrap').style.display = '';
+    $('picker-more-btn').textContent = t('+ Show all cards (' + moreCount + ' more)', '+ 전체 카드 더보기 (' + moreCount + '장 더)');
+  } else if(pickShowAll && owned.length > PICKER_TOP_N){
+    $('picker-more-wrap').style.display = '';
+    $('picker-more-btn').textContent = t('Show top ' + PICKER_TOP_N + ' only', '상위 ' + PICKER_TOP_N + '장만 보기');
+  } else {
+    $('picker-more-wrap').style.display = 'none';
+  }
   updatePickSummary();
 }
 
 function updatePickSummary(){
   var cards = pickSelected.map(function(id){ return XenaCards.get(id); });
-  var maxCost = 0, sumPower = 0;
-  for(var i = 0; i < cards.length; i++){ if(cards[i].cost > maxCost) maxCost = cards[i].cost; sumPower += cards[i].power; }
-  var reward = Math.floor(sumPower * REWARD_PER_POWER * cityMult(pickCity));
+  var maxCost = 0, sumPower = 0, elements = [];
+  for(var i = 0; i < cards.length; i++){
+    if(cards[i].cost > maxCost) maxCost = cards[i].cost;
+    sumPower += cards[i].power;
+    if(cards[i].element) elements.push(cards[i].element);
+  }
+  var city = cityByKey(pickCity);
+  var bonus = city ? synergyPreview(elements, city.element) : 0;
+  var reward = Math.floor(sumPower * REWARD_PER_POWER * cityMult(pickCity) * (1 + bonus));
   $('pick-count').textContent = pickSelected.length + ' / ' + wallet.tourCapacity + ' ' + t('selected', '선택됨');
+  var synergyTxt = bonus > 0 ? ' · ' + t('SYNERGY +', '시너지 +') + Math.round(bonus*100) + '%' : '';
   $('pick-preview').textContent = cards.length
-    ? t(maxCost + 'h · +' + reward + ' XC', maxCost + '시간 · +' + reward + ' XC')
+    ? t(maxCost + 'h · +' + reward + ' XC', maxCost + '시간 · +' + reward + ' XC') + synergyTxt
     : '';
+  $('pick-preview').classList.toggle('has-synergy', bonus > 0);
   var btn = $('pick-send');
   btn.disabled = cards.length === 0;
   btn.textContent = cards.length ? t('SEND ON TOUR', '투어 파견') : t('SELECT AT LEAST 1 CARD', '카드를 1장 이상 선택하세요');
 }
+
+$('picker-more-btn').addEventListener('click', function(){
+  pickShowAll = !pickShowAll;
+  renderPicker();
+});
 
 $('picker').addEventListener('click', function(e){
   var el = e.target.closest('.pick');
@@ -540,11 +636,12 @@ $('pick-send').addEventListener('click', function(){
   if(!pickSelected.length || !window.XenaWallet) return;
   var cards = pickSelected.map(function(id){ return XenaCards.get(id); });
   var grades = cards.map(function(c){ return c.grade; });
+  var elements = cards.map(function(c){ return c.element || null; });
   var btn = $('pick-send');
   btn.disabled = true;
   btn.textContent = t('Sending…', '전송 중…');
-  window.XenaWallet.startTour(pickCity, grades).then(function(r){
-    local.tours[pickCity] = { cards: pickSelected.slice(), grades: grades, startAt: Date.now(), durationMs: r.durationMs };
+  window.XenaWallet.startTour(pickCity, grades, elements).then(function(r){
+    local.tours[pickCity] = { cards: pickSelected.slice(), grades: grades, elements: elements, startAt: Date.now(), durationMs: r.durationMs };
     saveLocal(local);
     $('modal-pick').classList.remove('on');
     toast(t('Cards dispatched!', '카드가 파견되었습니다!'));

@@ -81,7 +81,7 @@
   function claimTcgMatch(difficulty, outcome){ return callFn('claimTcgMatch', {difficulty: difficulty, outcome: outcome}); }
   function unlockCity(city){ return callFn('unlockCity', {city: city}); }
   function upgradeTourCapacity(){ return callFn('upgradeTourCapacity', {}); }
-  function startTour(city, grades){ return callFn('startTour', {city: city, grades: grades}); }
+  function startTour(city, grades, elements){ return callFn('startTour', {city: city, grades: grades, elements: elements || []}); }
   function claimTourReward(city){ return callFn('claimTourReward', {city: city}); }
   function cancelTour(city){ return callFn('cancelTour', {city: city}); }
   function getTours(){ return callFn('getTours', {}).then(function(r){ return r.tours || {}; }); }

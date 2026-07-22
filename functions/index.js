@@ -634,13 +634,38 @@ exports.claimTcgMatch = onCall(async (request) => {
   return { ...result, credits: wallet.get("credits") || 0 };
 });
 
-/* ── LIVE TOUR: 도시 해금 ── */
+/* ── LIVE TOUR: 도시 해금 ──
+   서울은 항상 무료 해금 상태여야 하지만, Firestore엔 실제로 기록된 적이 없었다(클라이언트/서버
+   양쪽 다 "필드가 아예 없을 때만" 기본값 ["seoul"]로 가정했을 뿐). 그래서 다른 도시를 처음
+   해금(arrayUnion)하는 순간 unlockedCities 필드가 그 도시 하나만 담은 채로 새로 생성되어
+   서울이 배열에서 빠지고, 이후 서울 관련 검사(startTour 등)가 전부 "잠김"으로 잘못 판정했다.
+   normalizeUnlocked()로 seoul을 항상 강제 포함시켜 근본적으로 고친다. */
+function normalizeUnlocked(arr){
+  var out = Array.isArray(arr) ? arr.slice() : [];
+  if (out.indexOf("seoul") < 0) out.unshift("seoul");
+  return out;
+}
+/* element는 도시별 "궁합 속성" — 파견한 카드들의 속성(SOUND/SOUL/DARK/LIGHT/METAL/BUG)이
+   이 값과 얼마나 겹치느냐로 보상 시너지 보너스가 붙는다(아래 SYNERGY_BONUS). 카드 소유권을
+   서버가 직접 검증하지 않는 기존 설계(grades만 신뢰)와 동일한 신뢰 수준으로, elements도
+   client가 보고한 값을 그대로 쓴다 — grade와 마찬가지로 고정 배율표만 참조하고 카드 DB를
+   서버에 복제하지 않는다. */
 const CITY_TABLE = Object.freeze({
-  seoul:  { mult: 1.00, cost: 0 },
-  tokyo:  { mult: 1.25, cost: 1200 },
-  ny:     { mult: 1.50, cost: 7000 },
-  london: { mult: 1.80, cost: 22000 },
+  seoul:  { mult: 1.00, cost: 0,     element: 'SOUND' },
+  tokyo:  { mult: 1.25, cost: 1200,  element: 'SOUL'  },
+  ny:     { mult: 1.50, cost: 7000,  element: 'METAL' },
+  london: { mult: 1.80, cost: 22000, element: 'LIGHT' },
 });
+const VALID_ELEMENTS = Object.freeze(['SOUND', 'SOUL', 'DARK', 'LIGHT', 'METAL', 'BUG']);
+/* 보낸 카드 중 도시 속성과 일치하는 비율에 따른 보상 보너스 */
+function synergyBonus(elements, cityElement){
+  if (!Array.isArray(elements) || !elements.length) return 0;
+  const matches = elements.filter((e) => e === cityElement).length;
+  const ratio = matches / elements.length;
+  if (ratio >= 1) return 0.30;
+  if (ratio >= 0.66) return 0.15;
+  return 0;
+}
 exports.unlockCity = onCall(async (request) => {
   const uid = requireAuth(request);
   const city = String(request.data && request.data.city || "");
@@ -650,19 +675,19 @@ exports.unlockCity = onCall(async (request) => {
   const result = await db.runTransaction(async (tx) => {
     const wallet = await tx.get(walletRef);
     const data = wallet.exists ? wallet.data() : {};
-    const unlocked = data.unlockedCities || ["seoul"];
+    const unlocked = normalizeUnlocked(data.unlockedCities);
     if (unlocked.indexOf(city) >= 0) return { already: true };
     const credits = data.credits || 0;
     if (credits < info.cost) throw new HttpsError("failed-precondition", "Insufficient balance.");
     tx.set(walletRef, {
       uid, credits: FieldValue.increment(-info.cost),
-      unlockedCities: FieldValue.arrayUnion(city),
+      unlockedCities: FieldValue.arrayUnion(city, "seoul"),
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
     return { unlocked: city };
   });
   const wallet = await walletRef.get();
-  return { ...result, credits: wallet.get("credits") || 0, unlockedCities: wallet.get("unlockedCities") || ["seoul"] };
+  return { ...result, credits: wallet.get("credits") || 0, unlockedCities: normalizeUnlocked(wallet.get("unlockedCities")) };
 });
 
 /* ── LIVE TOUR: 투어 정원 확장(3→4장), 35,000 XC + SIGNAL CLASH 30승 ──
@@ -699,18 +724,22 @@ exports.startTour = onCall(async (request) => {
   const uid = requireAuth(request);
   const city = String(request.data && request.data.city || "");
   const grades = Array.isArray(request.data && request.data.grades) ? request.data.grades : [];
+  const elementsRaw = Array.isArray(request.data && request.data.elements) ? request.data.elements : [];
   const cityInfo = CITY_TABLE[city];
   if (!cityInfo) throw new HttpsError("invalid-argument", "Unknown city.");
   if (!grades.length || grades.length > 4 || grades.some((g) => !GRADE_COST[g])) {
     throw new HttpsError("invalid-argument", "Invalid card grades.");
   }
+  /* elements는 선택 입력(구버전 클라이언트 호환) — 있으면 grades와 길이가 같고 유효한 속성이어야 함 */
+  const elements = elementsRaw.length === grades.length && elementsRaw.every((e) => VALID_ELEMENTS.indexOf(e) >= 0)
+    ? elementsRaw : [];
 
   const walletRef = db.doc(`wallets/${uid}`);
   const tourRef = db.doc(`tours/${uid}_${city}`);
   const result = await db.runTransaction(async (tx) => {
     const [wallet, tour] = await Promise.all([tx.get(walletRef), tx.get(tourRef)]);
     const data = wallet.exists ? wallet.data() : {};
-    const unlocked = data.unlockedCities || ["seoul"];
+    const unlocked = normalizeUnlocked(data.unlockedCities);
     if (unlocked.indexOf(city) < 0) throw new HttpsError("failed-precondition", "City is locked.");
     const capacity = data.tourCapacity || 3;
     if (grades.length > capacity) throw new HttpsError("failed-precondition", "Too many cards for current tour capacity.");
@@ -718,7 +747,7 @@ exports.startTour = onCall(async (request) => {
 
     const durationMs = Math.max.apply(null, grades.map((g) => GRADE_COST[g])) * 3600000;
     tx.set(tourRef, {
-      uid, city, grades, durationMs,
+      uid, city, grades, elements, durationMs,
       startAt: FieldValue.serverTimestamp(),
       claimedAt: null,
     });
@@ -744,11 +773,12 @@ exports.claimTourReward = onCall(async (request) => {
     if (Date.now() < startAtMs + t.durationMs) throw new HttpsError("failed-precondition", "Tour not finished yet.");
 
     const sumPower = t.grades.reduce((s, g) => s + (GRADE_POWER[g] || 0), 0);
-    const granted = Math.floor(sumPower * REWARD_PER_POWER * cityInfo.mult);
+    const bonus = synergyBonus(t.elements, cityInfo.element);
+    const granted = Math.floor(sumPower * REWARD_PER_POWER * cityInfo.mult * (1 + bonus));
 
     tx.delete(tourRef);
     tx.set(walletRef, { uid, credits: FieldValue.increment(granted), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    return { granted };
+    return { granted, bonus };
   });
   const wallet = await walletRef.get();
   return { ...result, credits: wallet.get("credits") || 0 };
@@ -773,7 +803,7 @@ exports.getTours = onCall(async (request) => {
   snap.forEach((doc) => {
     const d = doc.data();
     tours[d.city] = {
-      grades: d.grades, durationMs: d.durationMs,
+      grades: d.grades, elements: d.elements || [], durationMs: d.durationMs,
       startAt: d.startAt && d.startAt.toMillis ? d.startAt.toMillis() : Date.now(),
     };
   });
@@ -793,7 +823,7 @@ exports.getWallet = onCall(async (request) => {
   const streak = (lastDay === dayKey || lastDay === yesterday) ? ((streakDoc.exists && streakDoc.get("streak")) || 0) : 0;
   return {
     credits: wallet.get("credits") || 0, shards: wallet.get("shards") || 0, streak,
-    unlockedCities: wallet.get("unlockedCities") || ["seoul"],
+    unlockedCities: normalizeUnlocked(wallet.get("unlockedCities")),
     tourCapacity: wallet.get("tourCapacity") || 3,
     tcgWins: wallet.get("tcgWins") || 0,
   };

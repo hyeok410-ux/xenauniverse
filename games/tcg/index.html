@@ -118,10 +118,16 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .card .c-pow{bottom:-6px;right:-5px;background:#24081a;color:var(--magenta);border:1px solid rgba(255,47,176,.6);}
 .card .c-name{font-size:.5rem;line-height:1.25;text-align:center;letter-spacing:.02em;font-weight:600;
   color:rgba(230,230,238,.82);margin:auto 0;padding:0 2px;word-break:keep-all;}
+/* 실제 보유 카드(커스텀 덱)는 이미지가 있는 카드 — 배경으로 꽉 채우고 이름은 하단 그라디언트 위에 */
+.card.has-img{background-size:cover;background-position:center;}
+.card.has-img .c-name{position:absolute;left:2px;right:2px;bottom:2px;margin:0;padding:10px 2px 2px;
+  background:linear-gradient(transparent, rgba(0,0,0,.9) 55%);border-radius:0 0 6px 6px;
+  color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);}
 .card[data-grade="N"]{border-color:rgba(185,185,198,.4);}
 .card[data-grade="R"]{border-color:rgba(63,224,255,.45);}
 .card[data-grade="S"]{border-color:rgba(160,107,255,.5);}
 .card[data-grade="SR"]{border-color:rgba(255,47,176,.5);box-shadow:0 0 10px rgba(255,47,176,.12);}
+.card[data-grade="SSR"]{border-color:rgba(232,196,104,.6);box-shadow:0 0 14px rgba(232,196,104,.22);}
 .card.op{border-style:dashed;opacity:.94;}
 .card.reveal{animation:pop .38s ease-out;}
 @keyframes pop{0%{transform:translateY(-14px) scale(.8);opacity:0;}100%{transform:none;opacity:1;}}
@@ -191,8 +197,16 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
   padding:2px 5px;border-radius:6px;background:rgba(0,0,0,.7);letter-spacing:.04em;}
 .deck-card .dc-count{position:absolute;top:4px;right:4px;font-family:var(--font-mono);font-size:.5rem;font-weight:700;
   padding:2px 5px;border-radius:6px;background:rgba(0,0,0,.7);color:var(--gold);}
-.deck-card .dc-name{position:absolute;left:0;right:0;bottom:0;padding:5px 4px 4px;font-size:.5rem;font-weight:600;text-align:center;
-  background:linear-gradient(transparent, rgba(0,0,0,.9));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.deck-card .dc-name{position:absolute;left:0;right:0;bottom:0;padding:16px 4px 4px;font-size:.5rem;font-weight:600;text-align:center;
+  background:linear-gradient(transparent, rgba(0,0,0,.92) 40%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.deck-card .dc-stats{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:5px;font-family:var(--font-mono);z-index:1;}
+.deck-card .dc-stats b{font-size:.52rem;font-weight:700;color:var(--cyan);background:rgba(10,26,36,.85);border:1px solid rgba(63,224,255,.5);
+  border-radius:50%;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;}
+.deck-card .dc-stats i{font-style:normal;font-size:.52rem;font-weight:700;color:var(--magenta);background:rgba(36,8,26,.85);border:1px solid rgba(255,47,176,.5);
+  border-radius:50%;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;}
+.deck-card.tcg{border-color:rgba(232,196,104,.6);box-shadow:0 0 10px rgba(232,196,104,.25);}
+.dc-tcg-badge{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:.44rem;font-weight:700;
+  letter-spacing:.06em;padding:2px 6px;border-radius:7px;background:linear-gradient(120deg,#fff7e0,#e8c468);color:#2a1f06;z-index:1;}
 .deck-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 
 /* ── end screen ── */
@@ -362,25 +376,32 @@ document.querySelectorAll('.diff-btn').forEach(function(b){
 
 function paintXC(bal){ $('xc-chip').textContent = 'XC ' + (bal === null ? '…' : bal.toLocaleString()); }
 
-/* ── 카드 풀 (능력 없는 기본 4종 · 등급 파생 스탯) ─────── */
-/* cost / power 는 기획서 3-1 파생표 그대로: power = cost*2 + 1
-   (functions/index.js 의 GRADE_COST/GRADE_POWER 와 반드시 동일하게 유지) */
+/* ── 카드 풀 (능력 없는 기본 데모/AI 카드 · 등급 파생 스탯) ───────────────────
+   [2026-07-23 수정] 예전엔 이 풀만 power=cost*2+1 이라는 별도 공식을 써서
+   (N1/3, R2/5, S3/7, SR4/9) — 실제 보유 카드가 쓰는 shared/xena-cards.js의
+   GRADE_STATS(=functions/index.js GRADE_COST/GRADE_POWER와 동일: N/R 1·1,
+   S 2·2, SR 3·4, SSR 4·6)와 완전히 다른 숫자였다. 그 결과 "내 카드"로 커스텀
+   덱을 짜서 들어가면 같은 등급이라도 AI 쪽 카드가 실제로 훨씬 세서
+   (예: SR끼리 비교해도 파워 9 vs 4) "AI가 더 좋은 카드를 쥔 것처럼" 보였다 —
+   착시가 아니라 실제 스탯 불일치였다. 이제 전 게임 공통 스탯 체계로 통일한다. */
 var CARD_POOL = [
-  { id:'B-N-01',  name_en:'SIGNAL DRONE',  name_ko:'시그널 드론',   grade:'N',  cost:1, power:3 },
-  { id:'B-R-01',  name_en:'BACKUP DANCER', name_ko:'백업 댄서',     grade:'R',  cost:2, power:5 },
-  { id:'B-S-01',  name_en:'STAGE GUARD',   name_ko:'스테이지 가드', grade:'S',  cost:3, power:7 },
-  { id:'B-SR-01', name_en:'LEAD VOCAL',    name_ko:'리드 보컬',     grade:'SR', cost:4, power:9 }
+  { id:'B-N-01',   name_en:'SIGNAL DRONE',  name_ko:'시그널 드론',   grade:'N',   cost:1, power:1 },
+  { id:'B-R-01',   name_en:'BACKUP DANCER', name_ko:'백업 댄서',     grade:'R',   cost:1, power:1 },
+  { id:'B-S-01',   name_en:'STAGE GUARD',   name_ko:'스테이지 가드', grade:'S',   cost:2, power:2 },
+  { id:'B-SR-01',  name_en:'LEAD VOCAL',    name_ko:'리드 보컬',     grade:'SR',  cost:3, power:4 },
+  { id:'B-SSR-01', name_en:'CENTER STAGE',  name_ko:'센터 스테이지', grade:'SSR', cost:4, power:6 }
 ];
 /* 플레이어 덱은 난이도 무관 고정(데모). copies = 덱 장수 — 저코스트를 두텁게 깔아야
    1턴이 죽지 않는다 (플레이테스트: 균등 3장씩이면 약 38% 확률로 1턴에 낼 카드가 없었음). */
-var PLAYER_COPIES = { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2 };   /* 12장 */
+var PLAYER_COPIES = { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2 };   /* 12장, 평균 파워 1.75 */
 /* AI 덱은 난이도별로 등급 비중을 다르게 — 기획서 §8-2 "AI를 똑똑하게 만들기보다
-   덱 구성을 바꾼다". 쉬움은 저코스트 위주(평균 파워 낮음), 어려움은 고코스트 위주. */
+   덱 구성을 바꾼다". 쉬움은 저코스트 위주(평균 파워 낮음), 어려움은 고코스트 위주.
+   매우 어려움은 SSR까지 섞어서 진짜 위협적으로. */
 var AI_COPIES = {
-  easy:     { 'B-N-01':6, 'B-R-01':4, 'B-S-01':2, 'B-SR-01':0 },   /* 평균 파워 3.7 */
-  normal:   { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2 },   /* 평균 파워 5.5 (플레이어와 동일) */
-  hard:     { 'B-N-01':2, 'B-R-01':3, 'B-S-01':4, 'B-SR-01':3 },   /* 평균 파워 6.6 */
-  veryhard: { 'B-N-01':1, 'B-R-01':2, 'B-S-01':4, 'B-SR-01':5 }    /* 평균 파워 7.2, SR 위주 */
+  easy:     { 'B-N-01':6, 'B-R-01':4, 'B-S-01':2, 'B-SR-01':0, 'B-SSR-01':0 },   /* 평균 파워 1.17 */
+  normal:   { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2, 'B-SSR-01':0 },   /* 평균 파워 1.75 (플레이어 기본덱과 동일) */
+  hard:     { 'B-N-01':2, 'B-R-01':3, 'B-S-01':4, 'B-SR-01':3, 'B-SSR-01':0 },   /* 평균 파워 2.08 */
+  veryhard: { 'B-N-01':1, 'B-R-01':2, 'B-S-01':3, 'B-SR-01':4, 'B-SSR-01':2 }    /* 평균 파워 3.08, SSR 포함 */
 };
 var ZONES = [
   { en:'SIGNAL TOWER',   ko:'시그널 타워' },
@@ -482,7 +503,9 @@ function drawA(){ if(G.aDeck.length) G.aHand.push(G.aDeck.pop()); }
 
 /* ── 렌더 ─────────────────────────────────────────────── */
 function cardHTML(card, cls){
-  return '<div class="card ' + (cls || '') + '" data-grade="' + card.grade + '">' +
+  var hasImg = !!card.img;
+  var style = hasImg ? ' style="background-image:url(\'' + card.img + '\')"' : '';
+  return '<div class="card ' + (hasImg ? 'has-img ' : '') + (cls || '') + '" data-grade="' + card.grade + '"' + style + '>' +
            '<span class="c-cost">' + card.cost + '</span>' +
            '<span class="c-name">' + t(card.name_en, card.name_ko) + '</span>' +
            '<span class="c-pow">' + card.power + '</span>' +
@@ -807,6 +830,14 @@ function openDeckBuilder(){
 }
 function renderDeckBuilder(){
   var owned = XenaCards.owned(); /* 등급(파워) 내림차순으로 이미 정렬되어 있음 */
+  /* TCG 전용(ARCHIVE PACK, PC-* ) 카드를 맨 위로 — 시그널 크래쉬는 이 카드들 전용 게임이니
+     내카드에서 덱을 짤 때 가장 먼저 눈에 띄어야 한다. TCG 그룹 내부/일반 그룹 내부는
+     기존 파워 내림차순을 그대로 유지(stable sort). */
+  owned = owned.slice().sort(function(a, b){
+    var ap = a.id.indexOf('PC-') === 0, bp = b.id.indexOf('PC-') === 0;
+    if(ap !== bp) return ap ? -1 : 1;
+    return 0;
+  });
   var filled = deckDraft.filter(function(x){ return !!x; }).length;
   $('deck-count').textContent = filled;
   $('btn-deck-confirm').disabled = filled !== 12;
@@ -844,10 +875,14 @@ function renderDeckBuilder(){
     var used = counts[c.id] || 0;
     var remaining = c.count - used;
     var exhausted = remaining <= 0;
-    colHtml += '<div class="deck-card'+(exhausted?' exhausted':'')+'" data-id="'+c.id+'" title="'+c.name+'">'+
+    var isTcg = c.id.indexOf('PC-') === 0;
+    var title = c.name + ' — ' + t('Cost ', '비용 ') + c.cost + ' / ' + t('Power ', '파워 ') + c.power + ' / ' + t('No ability (pure stats)', '기술 없음(순수 스탯)');
+    colHtml += '<div class="deck-card'+(exhausted?' exhausted':'')+(isTcg?' tcg':'')+'" data-id="'+c.id+'" title="'+title+'">'+
       '<img src="'+c.img+'" alt="" loading="lazy">'+
+      (isTcg ? '<span class="dc-tcg-badge">TCG</span>' : '')+
       '<span class="dc-grade" style="color:'+c.color+';">'+c.grade+'</span>'+
       '<span class="dc-count">×'+remaining+'</span>'+
+      '<span class="dc-stats"><b>'+c.cost+'</b><i>'+c.power+'</i></span>'+
       '<span class="dc-name">'+c.name+'</span>'+
     '</div>';
   });
