@@ -207,6 +207,14 @@
     return callFunction("awardMatchReward", payload);
   }
 
+  async function createCheckoutSession(payload) {
+    return callFunction("createCheckoutSession", payload);
+  }
+
+  async function getWallet() {
+    return callFunction("getWallet", {});
+  }
+
   async function context() {
     await connect();
     return { auth, db, authApi, firestoreApi, functionsApi, functionsInstance };
@@ -221,6 +229,8 @@
     save,
     ensurePlayer,
     awardMatchReward,
+    createCheckoutSession,
+    getWallet,
     context,
     subscribe(listener) {
       listeners.add(listener);

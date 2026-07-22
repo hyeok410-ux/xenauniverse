@@ -1,13 +1,51 @@
-const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onCall, onRequest, HttpsError } = require("firebase-functions/v2/https");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { setGlobalOptions } = require("firebase-functions/v2");
+const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
 
 admin.initializeApp();
 setGlobalOptions({ region: "us-central1", maxInstances: 10 });
 
 const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
+const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
+const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
+
+const PAID_PRODUCTS = Object.freeze({
+  AS_120: { name: "Anomaly Shards 120", shards: 120, amountKrw: 1500 },
+  AS_650: { name: "Anomaly Shards 700", shards: 700, amountKrw: 7500 },
+  AS_1400: { name: "Anomaly Shards 1,600", shards: 1600, amountKrw: 15000 },
+});
+
+function stripeRequest(path, params, idempotencyKey) {
+  const key = STRIPE_SECRET_KEY.value();
+  if (!key) throw new Error("STRIPE_SECRET_KEY is not configured.");
+  return fetch(`https://api.stripe.com${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${key}:`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
+    },
+    body: new URLSearchParams(params),
+  }).then(async (response) => {
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error?.message || "Stripe request failed.");
+    return body;
+  });
+}
+
+function verifyStripeSignature(rawBody, signature) {
+  const parts = String(signature || "").split(",");
+  const timestamp = parts.find((part) => part.startsWith("t="))?.slice(2);
+  const signatureValue = parts.find((part) => part.startsWith("v1="))?.slice(3);
+  if (!timestamp || !signatureValue || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
+  const expected = crypto.createHmac("sha256", STRIPE_WEBHOOK_SECRET.value()).update(`${timestamp}.${rawBody}`).digest("hex");
+  if (expected.length !== signatureValue.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signatureValue));
+}
 
 // 대표님 전용 관리자 UID. 로그인 후 프로필 패널에 표시되는 UID를 여기에 채워 넣어야
 // adminGrantCredits / adminListWallets 가 동작한다. 비어 있으면 항상 거부된다.
@@ -49,6 +87,112 @@ function requireAuth(request) {
 function cleanNickname(value) {
   return String(value || "").trim().replace(/[^\p{L}\p{N} _-]/gu, "").slice(0, 20);
 }
+
+exports.createCheckoutSession = onCall({ secrets: [STRIPE_SECRET_KEY] }, async (request) => {
+  const uid = requireAuth(request);
+  const productId = String(request.data && request.data.productId || "");
+  const product = PAID_PRODUCTS[productId];
+  const clientOrderId = String(request.data && request.data.orderId || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+  if (!product || !clientOrderId) throw new HttpsError("invalid-argument", "Invalid payment product or order id.");
+
+  const orderRef = db.doc(`paymentOrders/${uid}_${clientOrderId}`);
+  const existing = await orderRef.get();
+  if (existing.exists && existing.get("checkoutUrl") && ["created", "open"].includes(existing.get("status"))) {
+    return { url: existing.get("checkoutUrl"), sessionId: existing.get("stripeSessionId") };
+  }
+
+  let session;
+  try {
+    session = await stripeRequest("/v1/checkout/sessions", {
+      mode: "payment",
+      success_url: "https://xenauniverse.com/game/?payment=success&session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: "https://xenauniverse.com/game/?payment=cancelled",
+      "line_items[0][price_data][currency]": "krw",
+      "line_items[0][price_data][product_data][name]": product.name,
+      "line_items[0][price_data][unit_amount]": String(product.amountKrw),
+      "line_items[0][quantity]": "1",
+      "metadata[uid]": uid,
+      "metadata[productId]": productId,
+      "metadata[clientOrderId]": clientOrderId,
+    }, `xena-${uid}-${clientOrderId}`);
+  } catch (error) {
+    console.error("createCheckoutSession failed", error);
+    throw new HttpsError("unavailable", "Payment provider is not ready.");
+  }
+
+  await orderRef.set({
+    uid, productId, clientOrderId, stripeSessionId: session.id, checkoutUrl: session.url,
+    amountKrw: product.amountKrw, shards: product.shards, status: "created",
+    createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  return { url: session.url, sessionId: session.id };
+});
+
+async function fulfillCheckoutSession(session) {
+  const metadata = session.metadata || {};
+  const uid = String(metadata.uid || "");
+  const productId = String(metadata.productId || "");
+  const product = PAID_PRODUCTS[productId];
+  if (!uid || !product || session.mode !== "payment" || session.payment_status !== "paid") return false;
+  const purchaseRef = db.doc(`purchases/${session.id}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+  await db.runTransaction(async (tx) => {
+    const purchase = await tx.get(purchaseRef);
+    if (purchase.exists && ["paid", "refunded"].includes(purchase.get("status"))) return;
+    tx.set(purchaseRef, {
+      uid, productId, stripeSessionId: session.id,
+      stripePaymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
+      amountKrw: product.amountKrw, grantedShards: product.shards, status: "paid",
+      paidAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    tx.set(walletRef, { uid, shards: FieldValue.increment(product.shards), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(db.doc(`paymentOrders/${uid}_${metadata.clientOrderId || session.id}`), { status: "paid", stripeSessionId: session.id, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  });
+  return true;
+}
+
+async function reverseRefund(paymentIntentId, chargeId) {
+  const byIntent = paymentIntentId ? await db.collection("purchases").where("stripePaymentIntentId", "==", paymentIntentId).limit(1).get() : { empty: true };
+  const byCharge = byIntent.empty && chargeId ? await db.collection("purchases").where("stripeChargeId", "==", chargeId).limit(1).get() : byIntent;
+  if (byCharge.empty) return false;
+  const purchaseRef = byCharge.docs[0].ref;
+  await db.runTransaction(async (tx) => {
+    const purchase = await tx.get(purchaseRef);
+    if (!purchase.exists || purchase.get("status") === "refunded") return;
+    const uid = purchase.get("uid");
+    const granted = Number(purchase.get("grantedShards") || 0);
+    const walletRef = db.doc(`wallets/${uid}`);
+    const wallet = await tx.get(walletRef);
+    const available = Math.max(0, Number(wallet.get("shards") || 0));
+    const debit = Math.min(available, granted);
+    const debt = granted - debit;
+    tx.set(walletRef, { shards: FieldValue.increment(-debit), premiumShardDebt: FieldValue.increment(debt), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(purchaseRef, { status: "refunded", refundedAt: FieldValue.serverTimestamp(), refundDebit: debit, refundDebt: debt, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  });
+  return true;
+}
+
+exports.stripeWebhook = onRequest({ secrets: [STRIPE_WEBHOOK_SECRET] }, async (request, response) => {
+  const rawBody = request.rawBody ? request.rawBody.toString("utf8") : "";
+  if (!rawBody || !verifyStripeSignature(rawBody, request.get("stripe-signature"))) {
+    response.status(400).send("Invalid signature");
+    return;
+  }
+  let event;
+  try { event = JSON.parse(rawBody); } catch (_) { response.status(400).send("Invalid event"); return; }
+  try {
+    if (["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(event.type)) {
+      await fulfillCheckoutSession(event.data.object);
+    } else if (event.type === "charge.refunded") {
+      const charge = event.data.object;
+      await reverseRefund(typeof charge.payment_intent === "string" ? charge.payment_intent : "", charge.id);
+    }
+    response.status(200).send("ok");
+  } catch (error) {
+    console.error("stripeWebhook failed", error);
+    response.status(500).send("Webhook processing failed");
+  }
+});
 
 exports.ensurePlayer = onCall(async (request) => {
   const uid = requireAuth(request);

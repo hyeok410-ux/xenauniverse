@@ -1172,10 +1172,20 @@
     renderStore();
   }
 
-  function startCheckout(productId) {
-    const checkoutUrl = window.XenaCheckoutUrls && window.XenaCheckoutUrls[productId];
-    if (checkoutUrl) window.location.assign(checkoutUrl);
-    else alert("결제 연결 준비 중입니다. 운영 서버에 Stripe Checkout URL과 웹훅 장부를 연결하면 이 상품이 즉시 활성화됩니다.");
+  async function startCheckout(productId) {
+    const cloud = window.XenaCloudSync;
+    if (!cloud || !cloud.snapshot().user || !cloud.createCheckoutSession) {
+      alert(language === "en" ? "Sign in with Google before purchasing." : "구매 전에 Google 로그인이 필요합니다.");
+      return;
+    }
+    const orderId = window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    try {
+      const checkout = await cloud.createCheckoutSession({ productId, orderId });
+      if (!checkout?.url) throw new Error("CHECKOUT_URL_MISSING");
+      window.location.assign(checkout.url);
+    } catch (_) {
+      alert(language === "en" ? "Secure checkout is not ready yet. Please try again later." : "안전 결제가 아직 준비되지 않았습니다. 잠시 후 다시 시도해 주세요.");
+    }
   }
 
   function ownsCodexCard(card) {
@@ -1202,7 +1212,7 @@
     const details = isCodex || isUnit ? null : shopDetails(item);
     const description = isCodex || isUnit ? `${item.faction} · ${roleLabel(item.role)} · ${item.rarity}` : `${details.role} · ${details.tier} · ${item.description}`;
     let action;
-    if (isCodex) action = ownedItem ? `<span class="showcase-owned">보유 중 · 편성은 내 유닛에서 진행</span>` : `<button class="primary" data-modal-buy-card="${item.id}">${price}로 해금</button>`;
+    if (isCodex) action = ownedItem ? `<button class="secondary" data-go-my-units>내 유닛에서 장착</button>` : `<button class="primary" data-modal-buy-card="${item.id}">${price}로 해금</button>`;
     else if (isUnit) action = `<span class="showcase-owned">현재 편성 캐릭터 · 슬롯 선택은 아래에서 진행</span>`;
     else if (!ownedItem) action = `<button class="primary" data-modal-buy-cosmetic="${item.id}">${t("purchase")} · ${price}</button>`;
     else if (source === "units") action = `<button class="primary" data-modal-equip-units="${item.id}">장착</button>`;
@@ -1224,7 +1234,7 @@
           : `<button class="secondary" disabled>${language === "en" ? "ACTIVE" : "자동 활성화"}</button>`;
       return `<article class="shop-card kind-${item.kind} ${ownedItem ? "owned" : ""} ${selected ? "equipped" : ""}"><button class="shop-visual" data-preview-shop="${item.id}" aria-label="${item.name} 자세히 보기"><img class="shop-art" src="${shopArtSrc(item)}"${fallbackAttr(item.artRoot || "card", item.fallbackArt)} alt="${item.name}" loading="lazy" decoding="async"><span>VIEW</span>${ownedItem ? `<b class="owned-ribbon">${language === "en" ? "OWNED" : "보유 중"}</b>` : ""}</button><div class="shop-copy"><small>${details.role} · ${details.tier}</small><h2>${item.name}</h2><p>${item.description}</p><b>${ownedItem ? (language === "en" ? "OWNED" : "보유 중") : cosmeticPrice(item)}</b><div class="shop-card-actions">${ownedItem ? ownedAction : `<button class="primary" data-buy-cosmetic="${item.id}">${t("purchase")}</button>`}</div></div></article>`;
     };
-    const paymentCard = (item) => `<article class="shop-card payment-card coming-soon"><small>ANOMALY SHARD · COMING SOON</small><h2>${item.name}</h2><p>${language === "en" ? "Secure account ledger and checkout are in preparation" : "계정 장부와 안전 결제 연동을 준비 중입니다"}</p><b>${item.price}</b><div class="shop-card-actions"><button class="primary" disabled>${language === "en" ? "PAYMENT IN PREPARATION" : "결제 준비 중"}</button></div></article>`;
+    const paymentCard = (item) => `<article class="shop-card payment-card"><small>ANOMALY SHARD · SECURE CHECKOUT</small><h2>${item.name}</h2><p>${language === "en" ? "Premium currency is credited only after server-confirmed payment." : "결제 확인 웹훅이 승인된 뒤에만 서버 장부에서 변칙 파편을 지급합니다."}</p><b>${item.price}</b><div class="shop-card-actions"><button class="primary" data-buy-shards="${item.id}">${language === "en" ? "BUY SECURELY" : "안전하게 구매"}</button></div></article>`;
     const section = (id, title, note, items) => `<section class="store-section ${storeFilter === id ? "active" : ""}" id="store-${id}"><div class="section-title"><h2>${title}</h2><span>${note}</span></div><div class="shop-grid">${items.map(cosmeticCard).join("")}</div></section>`;
     app.innerHTML = `<div class="shell store-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="store-page"><div class="store-heading"><div><small>COSMETIC ARMORY · WEB PROTOTYPE</small><h1>OVERRIDE <span>STORE</span></h1><p>전투 캐릭터는 도감에서 해금합니다. 상점에서는 코스메틱을 구매하고, 장착과 변경은 내 유닛에서 진행합니다.</p></div><button class="secondary" id="back-to-setup">${t("play")}</button></div><div class="store-guide"><b>도감</b><span>새 캐릭터 해금</span><b>상점</b><span>외형과 연출 구매</span><b>내 유닛</b><span>전장·공간·테두리·스킨·이펙트 장착</span></div><nav class="store-tabs" aria-label="상품 종류">${[["skin","스킨"],["effect","이펙트"],["board","전장"],["arena","게임 공간"],["frame","말 테두리"],["emote","캐릭터 이모트"]].map(([id, label]) => `<button type="button" class="${storeFilter === id ? "active" : ""}" data-store-filter="${id}">${label}</button>`).join("")}</nav>${section("skin", "캐릭터 스킨", "같은 캐릭터의 의상과 초상을 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "skin"))}${section("effect", "공격 이펙트", "보유 후 내 유닛에서 캐릭터별로 적용하거나 끌 수 있습니다.", SHOP_ITEMS.filter((item) => item.kind === "effect"))}${section("board", "전장", "구매 후 내 유닛의 전장 설정에서 장착합니다.", SHOP_ITEMS.filter((item) => item.kind === "board"))}${section("arena", "게임 공간 스킨", "전투 중 좌우 패널과 배경 분위기를 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "arena"))}${section("frame", "말 테두리", "아군 말 전체에 적용할 테두리를 구매합니다.", SHOP_ITEMS.filter((item) => item.kind === "frame"))}${section("emote", "캐릭터 이모트", "제나 리액션 이미지 교체 후 판매할 소셜 표현 팩입니다.", SHOP_ITEMS.filter((item) => item.kind === "emote"))}<section class="store-section"><div class="section-title"><h2>${t("shardStore")}</h2><span>상품 미리보기 · 안전 결제는 준비 중</span></div><div class="shop-grid payment-grid">${PAYMENT_PRODUCTS.map(paymentCard).join("")}</div></section><p class="store-notice">${t("paymentNotice")}</p></section></div>`;
     if (showcase && showcase.source === "store") {
@@ -1243,6 +1253,7 @@
     app.querySelectorAll("[data-preview-shop]").forEach((button) => button.addEventListener("click", () => { showcase = { source: "store", id: button.dataset.previewShop }; renderStore(); }));
     app.querySelectorAll("[data-close-showcase]").forEach((element) => element.addEventListener("click", (event) => { if (event.target === element || event.target.closest("[data-close-showcase]")) { showcase = null; renderStore(); } }));
     app.querySelectorAll("[data-modal-buy-cosmetic]").forEach((button) => button.addEventListener("click", () => buyCosmetic(button.dataset.modalBuyCosmetic)));
+    app.querySelectorAll("[data-buy-shards]").forEach((button) => button.addEventListener("click", () => startCheckout(button.dataset.buyShards)));
     syncBgm();
   }
 
@@ -2314,6 +2325,10 @@
       const cloudState = window.XenaCloudSync.snapshot();
       if (!cloudState.user) return;
       await syncTrustedWallet();
+      if (launchParams.get("payment") === "success") {
+        setTimeout(() => syncTrustedWallet(), 1800);
+        setTimeout(() => syncTrustedWallet(), 5000);
+      }
       const remote = await window.XenaCloudSync.load().catch(() => null);
       if (!remote) window.XenaCloudSync.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
     }).catch(() => {});

@@ -39,6 +39,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Payment records are created and finalized only by the Stripe webhook.
+    // A player may read their own receipt status, but never change balances.
+    match /purchases/{purchaseId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /paymentOrders/{orderId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
     match /dailyRewardClaims/{claimId} {
       allow read: if request.auth != null && resource.data.uid == request.auth.uid;
       allow write: if false;
