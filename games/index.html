@@ -130,6 +130,9 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
 .gbody h3{font-size:1.25rem;font-weight:700;letter-spacing:.02em;margin-bottom:8px;}
 .gbody p{color:var(--text-dim);font-size:.85rem;line-height:1.7;margin-bottom:18px;flex:1;}
 .play-btn{align-self:flex-start;font-weight:700;font-size:.85rem;letter-spacing:.1em;padding:12px 30px;border-radius:26px;transition:.3s ease;}
+/* 관리자 전용 베타 — 일반 사용자에게는 아예 클릭이 안 되도록 링크를 죽여버린다 (href 제거) */
+.admin-beta-btn.locked{background:rgba(255,255,255,.06)!important;color:var(--text-dim)!important;
+  cursor:not-allowed;pointer-events:none;opacity:.55;}
 .grid-theme .play-btn{background:rgba(232,196,104,.92);color:#1a1206;}
 .grid-theme .play-btn:hover{background:var(--gold);box-shadow:0 0 26px rgba(232,196,104,.45);transform:translateY(-2px);}
 .cup-theme .play-btn{background:var(--silver);color:var(--black);}
@@ -298,7 +301,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="en">6 turns, 3 zones, win two of three. A XENA card battle skeleton — no abilities yet, pure cost/power strategy.</span>
           <span lang="ko">6턴, 3구역, 2곳 이상 우세 시 승리. 아직 카드 능력은 없는 코스트/파워 전략 뼈대입니다.</span>
         </p>
-        <a class="play-btn" href="tcg/"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
+        <a class="play-btn admin-beta-btn" href="tcg/" data-beta-label-en="PLAY BETA →" data-beta-label-ko="베타 플레이 →"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
       </div>
     </div>
 
@@ -315,7 +318,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="en">Send your cards on tour to Seoul, Tokyo, New York, London. Come back later to collect XC — no need to stay online.</span>
           <span lang="ko">보유 카드를 서울·도쿄·뉴욕·런던으로 투어 보내고, 나중에 돌아와서 XC를 수령하세요 — 접속 안 해도 진행됩니다.</span>
         </p>
-        <a class="play-btn" href="idle/"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
+        <a class="play-btn admin-beta-btn" href="idle/" data-beta-label-en="PLAY BETA →" data-beta-label-ko="베타 플레이 →"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
       </div>
     </div>
   </div>
@@ -380,6 +383,26 @@ if (window.XenaAudio) window.XenaAudio.init('hub');
 document.querySelectorAll('.game-card, a, button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });
+
+/* 관리자 전용 베타(SIGNAL CLASH, LIVE TOUR) — 로그인 상태가 확정되기 전까지는 일단 잠가두고,
+   확인된 뒤 관리자면 풀어준다. href 자체를 제거해서 어떤 경로로도 클릭이 안 통하게 한다. */
+(function(){
+  var links = document.querySelectorAll('.admin-beta-btn');
+  var originalHref = {};
+  links.forEach(function(el, i){ originalHref[i] = el.getAttribute('href'); el.classList.add('locked'); el.removeAttribute('href'); });
+  function apply(state){
+    links.forEach(function(el, i){
+      if (state && state.isAdmin){
+        el.classList.remove('locked');
+        el.setAttribute('href', originalHref[i]);
+      } else {
+        el.classList.add('locked');
+        el.removeAttribute('href');
+      }
+    });
+  }
+  if (window.XenaIdentity) window.XenaIdentity.subscribe(apply);
+})();
 </script>
 </body>
 </html>

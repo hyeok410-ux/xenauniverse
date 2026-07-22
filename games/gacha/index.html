@@ -111,11 +111,11 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .topup-banner.ok{background:rgba(92,255,192,.12);border:1px solid rgba(92,255,192,.45);color:#5cffc0;}
 .topup-banner.cancel{background:rgba(255,107,138,.1);border:1px solid rgba(255,107,138,.4);color:#ff8fa8;}
 
-/* ── 팩 (4종) ── */
-/* 카드 자체를 살짝 넓혀 확률 5줄이 한 줄에 들어가도록 minmax 를 200→230 으로 올림 */
-.packs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;max-width:1320px;margin:0 auto 14px;}
-@media(max-width:960px){ .packs{grid-template-columns:repeat(2,minmax(0,1fr));} }
-@media(max-width:560px){ .packs{grid-template-columns:1fr;} }
+/* ── 팩 (5종) ── */
+.packs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;max-width:1500px;margin:0 auto 14px;}
+@media(max-width:1200px){ .packs{grid-template-columns:repeat(3,minmax(0,1fr));} }
+@media(max-width:760px){ .packs{grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:480px){ .packs{grid-template-columns:1fr;} }
 .pack{position:relative;border-radius:20px;border:1px solid var(--hair);padding:26px 18px 24px;text-align:center;
   background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.012));backdrop-filter:blur(16px);transition:.3s ease;}
 /* 시그널(베이직) = 초록, 소버린(어드밴스드) = 골드, 오버라이드(엘리트) = 마젠타, 위클리(프리미엄) = 퍼플 */
@@ -123,11 +123,21 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .pack.sov:hover{border-color:rgba(232,196,104,.45);box-shadow:0 14px 44px rgba(232,196,104,.12);}
 .pack.elite:hover{border-color:rgba(255,47,176,.45);box-shadow:0 14px 44px rgba(255,47,176,.14);}
 .pack.week:hover{border-color:rgba(160,107,255,.45);box-shadow:0 14px 44px rgba(160,107,255,.14);}
+/* 아카이브 = 화이트+골드 네온. 다른 팩과 달리 평소에도 은은하게 빛나는 애니메이션 테두리 */
+.pack.archive{border-color:rgba(255,247,224,.4);
+  background:linear-gradient(165deg, rgba(255,247,224,.07), rgba(232,196,104,.02));
+  animation:archiveGlow 3s ease-in-out infinite;}
+@keyframes archiveGlow{
+  0%,100%{box-shadow:0 0 20px rgba(232,196,104,.16), 0 0 2px rgba(255,255,255,.3) inset;}
+  50%{box-shadow:0 0 34px rgba(232,196,104,.34), 0 0 4px rgba(255,255,255,.5) inset;}
+}
+.pack.archive:hover{border-color:rgba(255,251,235,.7);box-shadow:0 14px 50px rgba(232,196,104,.3);}
 .pack-kind{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;margin-bottom:10px;}
 .pack.signal .pack-kind{color:#5cffc0;text-shadow:0 0 12px rgba(92,255,192,.45);}
 .pack.sov .pack-kind{color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);}
 .pack.elite .pack-kind{color:var(--magenta);text-shadow:0 0 12px rgba(255,47,176,.4);}
 .pack.week .pack-kind{color:var(--purple-light);text-shadow:0 0 12px rgba(160,107,255,.4);}
+.pack.archive .pack-kind{color:#fff7e0;text-shadow:0 0 14px rgba(232,196,104,.7);}
 .pack h3{font-size:1.2rem;font-weight:800;letter-spacing:.05em;margin-bottom:6px;}
 .pack .cool{font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:16px;letter-spacing:.06em;}
 /* 가운데 카드아트 살짝 크게 (112→140 w, 156→196 h) */
@@ -137,11 +147,14 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .pack.sov .pack-art{background:linear-gradient(150deg,#150d02,#3a2a06 45%,#150d02);box-shadow:inset 0 0 34px rgba(232,196,104,.28), 0 6px 24px rgba(0,0,0,.5);}
 .pack.elite .pack-art{background:linear-gradient(150deg,#160410,#3a0a28 45%,#160410);box-shadow:inset 0 0 34px rgba(255,47,176,.3), 0 6px 24px rgba(0,0,0,.5);}
 .pack.week .pack-art{background:linear-gradient(150deg,#0e0620,#2c1650 45%,#0e0620);box-shadow:inset 0 0 34px rgba(160,107,255,.32), 0 6px 24px rgba(0,0,0,.5);}
+.pack.archive .pack-art{background:linear-gradient(150deg,#26210f,#4a3c12 45%,#26210f);box-shadow:inset 0 0 34px rgba(255,247,224,.4), 0 6px 24px rgba(0,0,0,.5);
+  border-color:rgba(255,247,224,.5);}
 .pack-art b{font-family:var(--font-sans);font-weight:800;font-size:2.1rem;letter-spacing:.04em;}
 .pack.signal .pack-art b{color:#5cffc0;text-shadow:0 0 22px rgba(92,255,192,.85);}
 .pack.sov .pack-art b{color:var(--gold);text-shadow:0 0 22px rgba(232,196,104,.8);}
 .pack.elite .pack-art b{color:var(--magenta);text-shadow:0 0 22px rgba(255,47,176,.85);}
 .pack.week .pack-art b{color:var(--purple-light);text-shadow:0 0 22px rgba(160,107,255,.85);}
+.pack.archive .pack-art b{color:#fffbeb;text-shadow:0 0 26px rgba(255,255,255,.9), 0 0 40px rgba(232,196,104,.7);}
 .pack-art small{position:absolute;bottom:8px;left:0;right:0;font-family:var(--font-mono);font-size:.5rem;letter-spacing:.2em;color:rgba(255,255,255,.5);}
 .pack-x3{position:absolute;top:8px;right:8px;font-family:var(--font-mono);font-size:.56rem;font-weight:700;letter-spacing:.06em;padding:3px 7px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.25);}
 .draw-btn{width:100%;font-weight:700;font-size:.9rem;letter-spacing:.08em;padding:14px 0;border-radius:28px;border:none;transition:.3s ease;margin-bottom:8px;}
@@ -153,10 +166,15 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .pack.elite .draw-btn:not(:disabled):hover{background:var(--magenta);box-shadow:0 0 26px rgba(255,47,176,.45);}
 .pack.week .draw-btn{background:rgba(160,107,255,.9);color:#100420;}
 .pack.week .draw-btn:not(:disabled):hover{background:var(--purple-light);box-shadow:0 0 26px rgba(160,107,255,.5);}
+.pack.archive .draw-btn{background:linear-gradient(120deg,#fff7e0,#e8c468);color:#2a1f06;}
+.pack.archive .draw-btn:not(:disabled):hover{background:linear-gradient(120deg,#fffdf5,#ffd97a);box-shadow:0 0 30px rgba(232,196,104,.6);}
 .draw-btn:disabled{background:rgba(255,255,255,.07)!important;color:var(--text-dim)!important;cursor:default;font-family:var(--font-mono);font-weight:500;font-size:.74rem;}
 .xc-btn{width:100%;font-family:var(--font-mono);font-size:.68rem;font-weight:500;letter-spacing:.08em;padding:11px 0;border-radius:26px;border:1px solid rgba(232,196,104,.35);background:transparent;color:var(--gold);transition:.3s ease;}
 .xc-btn:not(:disabled):hover{background:rgba(232,196,104,.1);box-shadow:0 0 16px rgba(232,196,104,.2);}
 .xc-btn:disabled{opacity:.35;cursor:default;}
+.pack.archive .xc-btn{border-color:rgba(255,247,224,.55);color:#fff7e0;}
+.pack.archive .xc-btn:not(:disabled):hover{background:rgba(255,247,224,.12);box-shadow:0 0 20px rgba(255,247,224,.3);}
+.archive-note{margin-top:12px;font-family:var(--font-mono);font-size:.56rem;line-height:1.7;color:rgba(255,247,224,.6);}
 /* 확률은 한 줄에 들어가도록 letter-spacing 축소 + white-space nowrap 로 강제 */
 .odds{margin-top:14px;font-family:var(--font-mono);font-size:.54rem;letter-spacing:0;color:var(--text-dim);line-height:1.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .odds b{font-weight:700;}
@@ -352,6 +370,20 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <button class="draw-btn" id="btn-weekly-pack">FREE + 1500 XC</button>
       <div class="odds"><span class="oN">N 20%</span> · <span class="oR">R 40%</span> · <span class="oS">S 26%</span> · <span class="oSR">SR 11%</span> · <span class="oSSR">SSR 3%</span></div>
     </div>
+    <div class="pack archive">
+      <span class="pack-x3">×1~3</span>
+      <div class="pack-kind"><span lang="en">Premium · TCG Exclusive</span><span lang="ko">프리미엄 · TCG 전용</span></div>
+      <h3>ARCHIVE PACK</h3>
+      <div class="cool" id="cool-archive">—</div>
+      <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
+      <button class="draw-btn" id="btn-archive">FREE DRAW · 1 CARD</button>
+      <button class="xc-btn" id="btn-archive-xc"><span lang="en">Buy 3 cards · 3000 XC</span><span lang="ko">3장 구매 · 3000 XC</span></button>
+      <div class="odds"><span class="oN">N 40%</span> · <span class="oR">R 35%</span> · <span class="oS">S 14%</span> · <span class="oSR">SR 8%</span> · <span class="oSSR">SSR 3%</span></div>
+      <p class="archive-note">
+        <span lang="en">55 premium SIGNAL ARCHIVE cards, found only in this pack. Used in LIVE TOUR (world dispatch) and SIGNAL CLASH (card battle).</span>
+        <span lang="ko">이 팩에서만 나오는 SIGNAL ARCHIVE 프리미엄 카드 55종. LIVE TOUR(월드 투어)와 SIGNAL CLASH(카드 배틀)에서 사용됩니다.</span>
+      </p>
+    </div>
   </div>
   <p class="note-line">
     <span lang="en">Earn XC from Daily Signal quests (World Cup · OVERRIDE GRID · this gacha) and dusting duplicates<br>Collection is saved in this browser · Odds always public · 1st Edition</span>
@@ -447,8 +479,24 @@ var PACKS = {
   elite: {label:'OVERRIDE PACK', coolMs:24*3600*1000, price:500,
     odds:[['SSR',0.01],['SR',0.07],['S',0.18],['R',0.44],['N',0.30]]},
   weekly: {label:'WEEKLY PACK', weekly:true, price:1500,
-    odds:[['SSR',0.03],['SR',0.11],['S',0.26],['R',0.40],['N',0.20]]}
+    odds:[['SSR',0.03],['SR',0.11],['S',0.26],['R',0.40],['N',0.20]]},
+  archive: {label:'ARCHIVE PACK', premium:true, price:3000, freeCount:1, paidCount:3,
+    odds:[['SSR',0.03],['SR',0.08],['S',0.14],['R',0.35],['N',0.40]]}
 };
+
+/* 아카이브 팩 전용: 미국 동부시간 자정 리셋(하루 1회 무료 1장) */
+function nyDayKey(){
+  var f = new Intl.DateTimeFormat('en-CA', {timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit'});
+  var parts = f.formatToParts(new Date()).reduce(function(acc,p){ if(p.type!=='literal') acc[p.type]=p.value; return acc; }, {});
+  return parts.year+'-'+parts.month+'-'+parts.day;
+}
+function nyNextMidnightMs(){
+  var f = new Intl.DateTimeFormat('en-CA', {timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false});
+  var parts = f.formatToParts(new Date()).reduce(function(acc,p){ if(p.type!=='literal') acc[p.type]=p.value; return acc; }, {});
+  var nowNY = new Date(parts.year+'-'+parts.month+'-'+parts.day+'T'+parts.hour+':'+parts.minute+':'+parts.second);
+  var target = new Date(nowNY); target.setDate(nowNY.getDate()+1); target.setHours(0,0,0,0);
+  return Date.now() + (target - nowNY);
+}
 
 /* 주간 팩 전용: 미국 동부시간(뉴욕) 기준 월요일 자정 리셋.
    그 주 "월요일 날짜"(YYYY-MM-DD)를 키로 써서, 키가 바뀌면 다시 뽑을 수 있다. */
@@ -472,13 +520,18 @@ function nyNextMondayMs(){
 }
 var FALLBACK = {SSR:'SR', SR:'S', S:'R', R:'N', N:null};
 
-/* 카드 풀 */
+/* 카드 풀 — PC-* (ARCHIVE PACK 전용 프리미엄 55장)는 별도 풀로 분리해서
+   일반 팩(시그널/소버린/오버라이드/위클리)에는 절대 섞이지 않게 한다. */
 var CARDS = (window.ZENA_CARD_DEFS||[]).map(function(d){
-  return {id:d[0], name:d[1], grade:d[2], img:d[3], avail:d[4]===1};
+  return {id:d[0], name:d[1], grade:d[2], img:d[3], avail:d[4]===1, premium:d[0].indexOf('PC-')===0};
 });
 var AVAIL = CARDS.filter(function(c){return c.avail;});
-var byGrade = {};
-AVAIL.forEach(function(c){ (byGrade[c.grade] = byGrade[c.grade]||[]).push(c); });
+var byGrade = {};        /* 일반 팩용 */
+var byGradePremium = {}; /* ARCHIVE PACK 전용 */
+AVAIL.forEach(function(c){
+  var target = c.premium ? byGradePremium : byGrade;
+  (target[c.grade] = target[c.grade]||[]).push(c);
+});
 
 /* 저장 */
 var SAVE_KEY = 'zena_gacha_v1', WALLET_KEY = 'xena_wallet_v1';
@@ -536,18 +589,21 @@ function rollGrade(pack){
   }
   return odds[odds.length-1][0];
 }
-function pickCard(grade){
+function pickCard(grade, premium){
+  var pool2 = premium ? byGradePremium : byGrade;
   var g = grade;
-  while(g && !(byGrade[g] && byGrade[g].length)){ g = FALLBACK[g]; }
+  while(g && !(pool2[g] && pool2[g].length)){ g = FALLBACK[g]; }
   if(!g) return null;
-  var pool = byGrade[g];
+  var pool = pool2[g];
   return pool[Math.floor(Math.random()*pool.length)];
 }
-var lastDrawn = null; /* [{card, isNew}, ...] x3 */
-function doPull(pack){
+var lastDrawn = null; /* [{card, isNew}, ...] xN */
+function doPull(pack, count){
+  var premium = !!PACKS[pack].premium;
+  var n = count || DRAW_COUNT;
   var pulls = [];
-  for(var i=0;i<DRAW_COUNT;i++){
-    var card = pickCard(rollGrade(pack));
+  for(var i=0;i<n;i++){
+    var card = pickCard(rollGrade(pack), premium);
     if(!card) continue;
     var isNew = !st.owned[card.id];
     st.owned[card.id] = (st.owned[card.id]||0) + 1;
@@ -573,6 +629,20 @@ function draw(pack, useXC){
       save(SAVE_KEY, st);
       doPull(pack);
     }).catch(function(){ toast(t('Not enough XC', 'XC가 부족합니다')); });
+  } else if(PACKS[pack].premium){
+    /* ARCHIVE PACK: 하루 1회 무료 1장, 또는 언제든 3000 XC로 3장 (등급 확률은 동일) */
+    if(useXC){
+      if(wallet.xc < PACKS[pack].price || !window.XenaWallet){ toast(t('Not enough XC', 'XC가 부족합니다')); return; }
+      window.XenaWallet.spend(PACKS[pack].price, 'gacha_archive').then(function(){
+        doPull(pack, PACKS[pack].paidCount);
+      }).catch(function(){ toast(t('Not enough XC', 'XC가 부족합니다')); });
+    } else {
+      var dk = nyDayKey();
+      if(st.packs.archiveClaimed === dk){ toast(t('Already claimed today — buy with XC or come back tomorrow', '오늘 무료 뽑기는 이미 받았습니다 — XC로 구매하거나 내일 다시 오세요')); return; }
+      st.packs.archiveClaimed = dk;
+      save(SAVE_KEY, st);
+      doPull(pack, PACKS[pack].freeCount);
+    }
   } else if(useXC){
     if(wallet.xc < PACKS[pack].price || !window.XenaWallet) { toast(t('Not enough XC — check Daily Signal quests', 'XC가 부족합니다 — 데일리 시그널 퀘스트를 확인하세요')); return; }
     window.XenaWallet.spend(PACKS[pack].price, 'gacha_'+pack).then(function(){
@@ -658,6 +728,15 @@ function fmtLeft(ms){
   if(lang === 'ko') return (h>0? h+'시간 ' : '') + m + '분' + (h>0?'':' '+sec+'초');
   return (h>0? h+'h ' : '') + m + 'm' + (h>0?'':' '+sec+'s');
 }
+/* 위클리 팩처럼 최대 7일까지 남는 경우: 하루 이상이면 "N일 N시간", 하루 미만이면 "N시간 N분" */
+function fmtLeftLong(ms){
+  var totalMin = Math.ceil(ms/60000);
+  var days = Math.floor(totalMin/1440);
+  var hours = Math.floor((totalMin%1440)/60);
+  var mins = totalMin%60;
+  if(days > 0) return t(days+'d '+hours+'h', days+'일 '+hours+'시간');
+  return t(hours+'h '+mins+'m', hours+'시간 '+mins+'분');
+}
 function tickCooldowns(){
   ['signal','sov','elite'].forEach(function(p){
     var left = PACKS[p].coolMs - (Date.now() - (st.packs[p]||0));
@@ -690,8 +769,23 @@ function tickCooldowns(){
     var leftW = nyNextMondayMs() - Date.now();
     wBtn.disabled = true;
     wBtn.textContent = t('Opened this week', '이번 주 오픈 완료');
-    wCool.textContent = t('Next reset in '+fmtLeft(leftW), '다음 초기화까지 '+fmtLeft(leftW));
+    wCool.textContent = t('Next reset in '+fmtLeftLong(leftW)+' · '+wPrice+' XC per open', '다음 초기화까지 '+fmtLeftLong(leftW)+' · 오픈당 '+wPrice+' XC');
   }
+  /* 아카이브 팩: 하루 1회 무료 1장(뉴욕 자정 리셋) + 언제든 3000 XC로 3장 */
+  var aBtn = $('btn-archive'), aCool = $('cool-archive'), aXcBtn = $('btn-archive-xc');
+  var aPrice = PACKS.archive.price;
+  var freeClaimed = st.packs.archiveClaimed === nyDayKey();
+  if(!freeClaimed){
+    aBtn.disabled = false;
+    aBtn.textContent = t('FREE DRAW · 1 CARD', '무료 뽑기 · 1장');
+    aCool.textContent = t('Free draw available now! · Buy 3 for '+aPrice+' XC anytime', '지금 무료 뽑기 가능! · 3장 구매는 언제든 '+aPrice+' XC');
+  } else {
+    var leftA = nyNextMidnightMs() - Date.now();
+    aBtn.disabled = true;
+    aBtn.textContent = t('Claimed today', '오늘 수령 완료');
+    aCool.textContent = t('Next free draw in '+fmtLeftLong(leftA)+' · Buy 3 for '+aPrice+' XC anytime', '다음 무료까지 '+fmtLeftLong(leftA)+' · 3장 구매는 언제든 '+aPrice+' XC');
+  }
+  aXcBtn.disabled = wallet.xc < aPrice;
 }
 setInterval(tickCooldowns, 1000);
 
@@ -699,6 +793,8 @@ $('btn-signal').addEventListener('click', function(){ draw('signal', false); });
 $('btn-sov').addEventListener('click', function(){ draw('sov', false); });
 $('btn-elite').addEventListener('click', function(){ draw('elite', false); });
 $('btn-weekly-pack').addEventListener('click', function(){ draw('weekly', false); });
+$('btn-archive').addEventListener('click', function(){ draw('archive', false); });
+$('btn-archive-xc').addEventListener('click', function(){ draw('archive', true); });
 $('btn-signal-xc').addEventListener('click', function(){ draw('signal', true); });
 $('btn-sov-xc').addEventListener('click', function(){ draw('sov', true); });
 $('btn-elite-xc').addEventListener('click', function(){ draw('elite', true); });

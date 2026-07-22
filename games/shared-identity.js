@@ -60,7 +60,7 @@
   var nicknameChecked = false;
   var subs = [];
   function notify(){ subs.forEach(function(fn){ try{ fn(state()); }catch(e){} }); }
-  function state(){ return { signedIn: !!authUser, uid: authUser ? authUser.uid : null, nickname: nickname, avatar: L.avatar }; }
+  function state(){ return { signedIn: !!authUser, uid: authUser ? authUser.uid : null, nickname: nickname, avatar: L.avatar, isAdmin: !!(authUser && authUser.uid === ADMIN_UID) }; }
 
   function ctx(){
     if (!window.XenaCloudSync) return Promise.reject(new Error('CLOUD_UNAVAILABLE'));
