@@ -83,9 +83,17 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 /* ── 도시 카드 그리드 ── */
 .cities{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;}
 .city{position:relative;border:1px solid var(--hair);border-radius:16px;padding:16px 15px;overflow:hidden;
-  background:linear-gradient(165deg,rgba(255,255,255,.045),rgba(255,255,255,.012));transition:.3s;}
-.city::before{content:'';position:absolute;top:-50%;left:-15%;width:130%;height:100%;pointer-events:none;opacity:.14;
+  background:linear-gradient(165deg,rgba(255,255,255,.045),rgba(255,255,255,.012));background-size:cover;background-position:center;transition:.3s;isolation:isolate;}
+.city::before{content:'';position:absolute;top:-50%;left:-15%;width:130%;height:100%;pointer-events:none;opacity:.14;z-index:-1;
   background:radial-gradient(ellipse,var(--ca),transparent 68%);}
+/* [2026-07-26] 도시별 배경 아트 적용 — 가독성을 위해 어두운 그라디언트를 배경 위에 한 겹 더 깐다 */
+.city-seoul,.city-tokyo,.city-ny,.city-london{background-blend-mode:normal;}
+.city-seoul::after,.city-tokyo::after,.city-ny::after,.city-london::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(165deg,rgba(5,6,12,.72),rgba(5,6,12,.55) 55%,rgba(5,6,12,.82));}
+.city-seoul{background-image:url('assets/bg-seoul.jpg');}
+.city-tokyo{background-image:url('assets/bg-tokyo.jpg');}
+.city-ny{background-image:url('assets/bg-ny.jpg');}
+.city-london{background-image:url('assets/bg-london.jpg');}
 .city.running{border-color:color-mix(in srgb, var(--ca) 45%, var(--hair));}
 .city.ready{border-color:var(--gold);box-shadow:0 0 24px -8px var(--gold);}
 .city.locked{opacity:.68;}
@@ -468,7 +476,7 @@ function renderCities(){
       continue;
     }
 
-    h += '<div class="city' + (!unlocked ? ' locked' : (tour ? (tourReady(c.key) ? ' ready' : ' running') : '')) + '"' +
+    h += '<div class="city city-' + c.key + (!unlocked ? ' locked' : (tour ? (tourReady(c.key) ? ' ready' : ' running') : '')) + '"' +
          ' style="--ca:' + c.a + '">' +
            '<div class="c-top">' +
              '<span class="c-name"><span class="c-flag">' + c.flag + '</span>' + t(c.en, c.ko) +
