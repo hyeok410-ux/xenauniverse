@@ -550,12 +550,17 @@ function openCitySynergyInfo(cityKey){
 $('info-close').addEventListener('click', function(){ $('modal-info').classList.remove('on'); });
 $('modal-info').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
 
+/* 데일리 시그널의 "LIVE TOUR 수령" 퀘스트가 감지할 플래그 */
+function markTourClaimedToday(){
+  try{ localStorage.setItem('xena_tour_daily_v1', JSON.stringify({date:new Date().toISOString().slice(0,10)})); }catch(e){}
+}
 function claimTour(cityKey){
   if(!tourReady(cityKey) || !window.XenaWallet) return;
   var cname = CITIES.filter(function(c){return c.key===cityKey;})[0];
   window.XenaWallet.claimTourReward(cityKey).then(function(r){
     delete local.tours[cityKey];
     saveLocal(local);
+    markTourClaimedToday();
     var synergyTxt = r.bonus > 0 ? ' (' + t('SYNERGY +', '시너지 +') + Math.round(r.bonus*100) + '%)' : '';
     toast('+' + r.granted.toLocaleString() + ' XC — ' + t(cname.en, cname.ko) + synergyTxt);
     renderAll();

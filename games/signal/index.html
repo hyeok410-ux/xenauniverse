@@ -120,6 +120,21 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 .q button.golink.claimable:hover{background:linear-gradient(120deg,#ffd97a,var(--gold));box-shadow:0 0 24px rgba(232,196,104,.7);}
 @keyframes claimPulse{50%{box-shadow:0 0 26px rgba(232,196,104,.75);}}
 .q-note{margin-top:14px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.1em;color:var(--text-dim);opacity:.7;line-height:1.9;}
+
+/* [2026-07-24] 웹(데스크톱)에서는 모바일용 사이즈 그대로 확대만 돼서 밋밋하다는
+   피드백 — 넓은 화면에서만 여백/버튼/카드에 여유를 주고 존재감을 살린다. */
+@media(min-width:820px){
+  .wrap{max-width:900px;}
+  .cl-btn{padding:15px 30px;font-size:.78rem;border-radius:30px;}
+  .cl-btn.primary{padding:17px 40px;font-size:1rem;letter-spacing:.04em;box-shadow:0 8px 30px rgba(255,255,255,.12);}
+  .cl-btn.primary:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(255,255,255,.18);}
+  .q{padding:18px 22px;border-radius:18px;gap:18px;}
+  .q .qi{font-size:1.5rem;width:38px;}
+  .q .qt b{font-size:.94rem;}
+  .q .qt span{font-size:.68rem;}
+  .q a.golink, .q button.golink{padding:10px 20px;font-size:.68rem;border-radius:22px;}
+  .q button.golink.claimable:hover{transform:translateY(-2px);}
+}
 .all-bonus{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
   background:linear-gradient(120deg, rgba(232,196,104,.14), rgba(255,47,176,.1));border:1px solid rgba(232,196,104,.4);border-radius:14px;padding:14px 18px;}
 .all-bonus span{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;color:var(--gold);text-shadow:0 0 10px rgba(232,196,104,.4);}
@@ -397,7 +412,7 @@ $('btn-share').addEventListener('click', function(){
 
 /* ── 퀘스트 (모든 게임 통합) ── */
 var CHESS_PER_MATCH = 8, CHESS_MAX = 3, CHESS_BONUS = 10;
-var WC_BONUS = 10, GACHA_BONUS = 8, MEMORY_BONUS = 8, SHISEN_BONUS = 8, ALL_BONUS = 25;
+var WC_BONUS = 10, GACHA_BONUS = 8, MEMORY_BONUS = 8, SHISEN_BONUS = 8, TCG_BONUS = 10, TOUR_BONUS = 10, ALL_BONUS = 25;
 
 function chessSnapshot(){
   var keys = ['og_credits','og_shards','og_grid_rating','og_daily_login'];
@@ -443,12 +458,21 @@ function shisenStageToday(){
   var sh = load('xena_shisen_v1', {});
   return !!(sh.daily && sh.daily.date === today() && sh.daily.cleared && sh.daily.cleared.length > 0);
 }
+function tcgPlayedToday(){
+  var d = load('xena_tcg_daily_v1', {});
+  return d.date === today();
+}
+function tourClaimedToday(){
+  var d = load('xena_tour_daily_v1', {});
+  return d.date === today();
+}
 function claimedFlag(key){ return st[key] === today(); }
 function setClaimedFlag(key){ st[key] = today(); save(SAVE_KEY, st); }
 
 function allQuestsDone(wc){
   return claimed && claimedFlag('wcBonusClaim') && claimedFlag('gachaBonusClaim')
-    && st.chessBonusClaimed && claimedFlag('memBonusClaim') && claimedFlag('shBonusClaim');
+    && st.chessBonusClaimed && claimedFlag('memBonusClaim') && claimedFlag('shBonusClaim')
+    && claimedFlag('tcgBonusClaim') && claimedFlag('tourBonusClaim');
 }
 
 function renderQuests(){
@@ -458,6 +482,8 @@ function renderQuests(){
   var memBonusDone = claimedFlag('memBonusClaim');
   var shBonusDone = claimedFlag('shBonusClaim');
   var chessBonusDone = !!st.chessBonusClaimed;
+  var tcgBonusDone = claimedFlag('tcgBonusClaim');
+  var tourBonusDone = claimedFlag('tourBonusClaim');
 
   var quests = [
     {icon:'🔮', done: claimed,
@@ -501,7 +527,23 @@ function renderQuests(){
          : t('Any stage, once a day', '아무 스테이지나 하루 1회'),
       reward: '+'+SHISEN_BONUS+' XC',
       act: (shisenStageToday() && !shBonusDone) ? 'shisen' : null,
-      link: !shisenStageToday() ? '../shisen/' : null}
+      link: !shisenStageToday() ? '../shisen/' : null},
+    {icon:'🃏', done: tcgBonusDone,
+      title: t('Play a SIGNAL CLASH match', 'SIGNAL CLASH 대전 플레이'),
+      sub: tcgBonusDone ? t('Bonus claimed', '보너스 수령 완료')
+         : tcgPlayedToday() ? t('Match detected — claim your bonus!', '대전 감지됨 — 보너스를 받으세요!')
+         : t('Any result, once a day', '결과 무관 하루 1회'),
+      reward: '+'+TCG_BONUS+' XC',
+      act: (tcgPlayedToday() && !tcgBonusDone) ? 'tcg' : null,
+      link: !tcgPlayedToday() ? '../tcg/' : null},
+    {icon:'✈️', done: tourBonusDone,
+      title: t('Collect a LIVE TOUR reward', 'LIVE TOUR 보상 수령'),
+      sub: tourBonusDone ? t('Bonus claimed', '보너스 수령 완료')
+         : tourClaimedToday() ? t('Claim detected — claim your bonus!', '수령 감지됨 — 보너스를 받으세요!')
+         : t('Claim any city tour, once a day', '아무 도시나 투어 수령 하루 1회'),
+      reward: '+'+TOUR_BONUS+' XC',
+      act: (tourClaimedToday() && !tourBonusDone) ? 'idle' : null,
+      link: !tourClaimedToday() ? '../idle/' : null}
   ];
   var list = $('q-list');
   list.innerHTML = '';
@@ -545,10 +587,18 @@ function bindQuestActions(){
       toast(t('+'+r.granted+' XC — '+msgEn, '+'+r.granted+' XC — '+msgKo));
       renderQuests();
     }).catch(function(e){
-      if (e && e.code === 'already-exists'){
+      var code = e && e.code || '';
+      if (code === 'already-exists'){
         if (flagKey === 'chessBonusClaimed') st.chessBonusClaimed = true; else setClaimedFlag(flagKey);
         save(SAVE_KEY, st); renderQuests();
+        return;
       }
+      /* [2026-07-24] 버그 수정: already-exists 이외의 실패(네트워크/precondition 등)는
+         지금까지 아무 처리 없이 조용히 삼켜졌다 — 버튼이 disabled=true 상태로 굳어버려
+         "눌러도 반응 없음"으로 보였고, 보상도 지급되지 않은 채 아무 안내도 없었다.
+         모든 실패 경로에서 반드시 안내 + 버튼을 다시 눌러볼 수 있게 재렌더링한다. */
+      toast(t('Could not claim — try again in a moment', '수령에 실패했습니다 — 잠시 후 다시 시도해주세요'));
+      renderQuests();
     });
   }
   var map = {
@@ -557,6 +607,8 @@ function bindQuestActions(){
     worldcup: function(){ claimQuest('worldcup', 'wcBonusClaim', WC_BONUS, 'World Cup quest complete!', '월드컵 퀘스트 완료!'); },
     memory: function(){ claimQuest('memory', 'memBonusClaim', MEMORY_BONUS, 'Memory Grid quest complete!', '메모리 그리드 퀘스트 완료!'); },
     shisen: function(){ claimQuest('shisen', 'shBonusClaim', SHISEN_BONUS, 'Signal Link quest complete!', '시그널 링크 퀘스트 완료!'); },
+    tcg: function(){ claimQuest('tcg', 'tcgBonusClaim', TCG_BONUS, 'SIGNAL CLASH quest complete!', 'SIGNAL CLASH 퀘스트 완료!'); },
+    idle: function(){ claimQuest('idle', 'tourBonusClaim', TOUR_BONUS, 'LIVE TOUR quest complete!', 'LIVE TOUR 퀘스트 완료!'); },
     allbonus: function(){ claimQuest('allbonus', 'allBonusClaim', ALL_BONUS, 'all quests bonus!', '전체 완료 보너스!', true); }
   };
   document.querySelectorAll('button[data-act]').forEach(function(btn){

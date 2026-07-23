@@ -28,6 +28,8 @@
   --cyan:#3fe0ff;
   --magenta:#ff2fb0;
   --gold:#e8c468;
+  --sky:#5cb3ff;
+  --plum:#c9679e;
   --hair:rgba(255,255,255,.09);
   --text-dim:rgba(230,230,238,.55);
   --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
@@ -111,18 +113,31 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .topup-banner.ok{background:rgba(92,255,192,.12);border:1px solid rgba(92,255,192,.45);color:#5cffc0;}
 .topup-banner.cancel{background:rgba(255,107,138,.1);border:1px solid rgba(255,107,138,.4);color:#ff8fa8;}
 
-/* ── 팩 (5종) ── */
+/* ── 팩 카테고리 탭 (데일리/위클리/프리미엄) ──
+   [2026-07-24] 5개 팩이 한 줄에 다 들어가 너무 좁아보인다는 피드백 — 카테고리별로
+   나눠서 보여주면 팩당 폭이 넓어져 확률표도 안 잘리고 다 보인다. */
+.pack-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 auto 22px;}
+.ptab{font-family:var(--font-mono);font-size:.7rem;font-weight:600;letter-spacing:.08em;padding:10px 20px;border-radius:22px;
+  border:1px solid var(--hair);background:rgba(255,255,255,.03);color:var(--text-dim);cursor:pointer;transition:.25s ease;}
+.ptab:hover{color:#fff;border-color:rgba(255,255,255,.3);}
+.ptab.sel{background:linear-gradient(120deg, rgba(160,107,255,.24), rgba(63,224,255,.16));border-color:rgba(160,107,255,.55);color:#fff;box-shadow:0 0 16px rgba(160,107,255,.25);}
+
+/* ── 팩 ── */
 .packs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;max-width:1500px;margin:0 auto 14px;}
+.packs[data-count="1"]{grid-template-columns:minmax(0,420px);}
+.packs[data-count="2"]{grid-template-columns:repeat(2,minmax(0,360px));}
+.packs[data-count="3"]{grid-template-columns:repeat(3,minmax(0,340px));}
 @media(max-width:1200px){ .packs{grid-template-columns:repeat(3,minmax(0,1fr));} }
-@media(max-width:760px){ .packs{grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:760px){ .packs{grid-template-columns:repeat(2,minmax(0,1fr));} .packs[data-count="1"]{grid-template-columns:1fr;max-width:420px;} }
 @media(max-width:480px){ .packs{grid-template-columns:1fr;} }
 .pack{position:relative;border-radius:20px;border:1px solid var(--hair);padding:26px 18px 24px;text-align:center;
   background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.012));backdrop-filter:blur(16px);transition:.3s ease;}
-/* 시그널(베이직) = 초록, 소버린(어드밴스드) = 골드, 오버라이드(엘리트) = 마젠타, 위클리(프리미엄) = 퍼플 */
+/* [2026-07-24] 프리미엄팩(아카이브=화이트+골드)과 색이 겹친다는 피드백으로 재배정:
+   시그널(베이직) = 초록, 소버린(어드밴스드) = 하늘색, 오버라이드(엘리트) = 보라, 위클리 = 자두색 */
 .pack.signal:hover{border-color:rgba(92,255,192,.5);box-shadow:0 14px 44px rgba(92,255,192,.14);}
-.pack.sov:hover{border-color:rgba(232,196,104,.45);box-shadow:0 14px 44px rgba(232,196,104,.12);}
-.pack.elite:hover{border-color:rgba(255,47,176,.45);box-shadow:0 14px 44px rgba(255,47,176,.14);}
-.pack.week:hover{border-color:rgba(160,107,255,.45);box-shadow:0 14px 44px rgba(160,107,255,.14);}
+.pack.sov:hover{border-color:rgba(92,179,255,.45);box-shadow:0 14px 44px rgba(92,179,255,.12);}
+.pack.elite:hover{border-color:rgba(160,107,255,.45);box-shadow:0 14px 44px rgba(160,107,255,.14);}
+.pack.week:hover{border-color:rgba(201,103,158,.45);box-shadow:0 14px 44px rgba(201,103,158,.14);}
 /* --archAng 을 등록해야 conic-gradient 회전이 점프 없이 부드럽게 보간됨 */
 @property --archAng{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
 /* 아카이브 = 화이트+골드 네온. 다른 팩과 달리 평소에도 은은하게 빛나는 애니메이션 테두리 + 대각선 샤인 스윕 + 회전 그라디언트 보더 */
@@ -153,9 +168,9 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .pack.archive .pack-kind,.pack.archive h3{position:relative;z-index:1;}
 .pack-kind{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;margin-bottom:10px;}
 .pack.signal .pack-kind{color:#5cffc0;text-shadow:0 0 12px rgba(92,255,192,.45);}
-.pack.sov .pack-kind{color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);}
-.pack.elite .pack-kind{color:var(--magenta);text-shadow:0 0 12px rgba(255,47,176,.4);}
-.pack.week .pack-kind{color:var(--purple-light);text-shadow:0 0 12px rgba(160,107,255,.4);}
+.pack.sov .pack-kind{color:var(--sky);text-shadow:0 0 12px rgba(92,179,255,.4);}
+.pack.elite .pack-kind{color:var(--purple-light);text-shadow:0 0 12px rgba(160,107,255,.4);}
+.pack.week .pack-kind{color:var(--plum);text-shadow:0 0 12px rgba(201,103,158,.4);}
 .pack.archive .pack-kind{color:#fff7e0;text-shadow:0 0 14px rgba(232,196,104,.7);}
 .pack h3{font-size:1.2rem;font-weight:800;letter-spacing:.05em;margin-bottom:6px;}
 .pack .cool{font-family:var(--font-mono);font-size:.62rem;color:var(--text-dim);margin-bottom:16px;letter-spacing:.06em;}
@@ -163,28 +178,28 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .pack-art{width:140px;height:196px;margin:0 auto 20px;border-radius:14px;position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.14);}
 .pack.signal .pack-art{background:linear-gradient(150deg,#031a12,#083426 45%,#031a12);box-shadow:inset 0 0 34px rgba(92,255,192,.28), 0 6px 24px rgba(0,0,0,.5);}
-.pack.sov .pack-art{background:linear-gradient(150deg,#150d02,#3a2a06 45%,#150d02);box-shadow:inset 0 0 34px rgba(232,196,104,.28), 0 6px 24px rgba(0,0,0,.5);}
-.pack.elite .pack-art{background:linear-gradient(150deg,#160410,#3a0a28 45%,#160410);box-shadow:inset 0 0 34px rgba(255,47,176,.3), 0 6px 24px rgba(0,0,0,.5);}
-.pack.week .pack-art{background:linear-gradient(150deg,#0e0620,#2c1650 45%,#0e0620);box-shadow:inset 0 0 34px rgba(160,107,255,.32), 0 6px 24px rgba(0,0,0,.5);}
+.pack.sov .pack-art{background:linear-gradient(150deg,#031224,#0a2c4e 45%,#031224);box-shadow:inset 0 0 34px rgba(92,179,255,.28), 0 6px 24px rgba(0,0,0,.5);}
+.pack.elite .pack-art{background:linear-gradient(150deg,#0e0620,#2c1650 45%,#0e0620);box-shadow:inset 0 0 34px rgba(160,107,255,.3), 0 6px 24px rgba(0,0,0,.5);}
+.pack.week .pack-art{background:linear-gradient(150deg,#1e0a18,#3e1630 45%,#1e0a18);box-shadow:inset 0 0 34px rgba(201,103,158,.32), 0 6px 24px rgba(0,0,0,.5);}
 .pack.archive .pack-art{background:linear-gradient(150deg,#26210f,#4a3c12 45%,#26210f);box-shadow:inset 0 0 34px rgba(255,247,224,.4), 0 6px 24px rgba(0,0,0,.5);
   border-color:rgba(255,247,224,.5);}
 .pack-art b{font-family:var(--font-sans);font-weight:800;font-size:2.1rem;letter-spacing:.04em;}
 .pack.signal .pack-art b{color:#5cffc0;text-shadow:0 0 22px rgba(92,255,192,.85);}
-.pack.sov .pack-art b{color:var(--gold);text-shadow:0 0 22px rgba(232,196,104,.8);}
-.pack.elite .pack-art b{color:var(--magenta);text-shadow:0 0 22px rgba(255,47,176,.85);}
-.pack.week .pack-art b{color:var(--purple-light);text-shadow:0 0 22px rgba(160,107,255,.85);}
+.pack.sov .pack-art b{color:var(--sky);text-shadow:0 0 22px rgba(92,179,255,.8);}
+.pack.elite .pack-art b{color:var(--purple-light);text-shadow:0 0 22px rgba(160,107,255,.85);}
+.pack.week .pack-art b{color:var(--plum);text-shadow:0 0 22px rgba(201,103,158,.85);}
 .pack.archive .pack-art b{color:#fffbeb;text-shadow:0 0 26px rgba(255,255,255,.9), 0 0 40px rgba(232,196,104,.7);}
 .pack-art small{position:absolute;bottom:8px;left:0;right:0;font-family:var(--font-mono);font-size:.5rem;letter-spacing:.2em;color:rgba(255,255,255,.5);}
 .pack-x3{position:absolute;top:8px;right:8px;font-family:var(--font-mono);font-size:.56rem;font-weight:700;letter-spacing:.06em;padding:3px 7px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.25);}
 .draw-btn{width:100%;font-weight:700;font-size:.9rem;letter-spacing:.08em;padding:14px 0;border-radius:28px;border:none;transition:.3s ease;margin-bottom:8px;}
 .pack.signal .draw-btn{background:rgba(92,255,192,.92);color:#03130d;}
 .pack.signal .draw-btn:not(:disabled):hover{background:#5cffc0;box-shadow:0 0 26px rgba(92,255,192,.5);}
-.pack.sov .draw-btn{background:rgba(232,196,104,.92);color:#1a1206;}
-.pack.sov .draw-btn:not(:disabled):hover{background:var(--gold);box-shadow:0 0 26px rgba(232,196,104,.45);}
-.pack.elite .draw-btn{background:rgba(255,47,176,.9);color:#20040f;}
-.pack.elite .draw-btn:not(:disabled):hover{background:var(--magenta);box-shadow:0 0 26px rgba(255,47,176,.45);}
-.pack.week .draw-btn{background:rgba(160,107,255,.9);color:#100420;}
-.pack.week .draw-btn:not(:disabled):hover{background:var(--purple-light);box-shadow:0 0 26px rgba(160,107,255,.5);}
+.pack.sov .draw-btn{background:rgba(92,179,255,.92);color:#04162a;}
+.pack.sov .draw-btn:not(:disabled):hover{background:var(--sky);box-shadow:0 0 26px rgba(92,179,255,.45);}
+.pack.elite .draw-btn{background:rgba(160,107,255,.9);color:#100420;}
+.pack.elite .draw-btn:not(:disabled):hover{background:var(--purple-light);box-shadow:0 0 26px rgba(160,107,255,.5);}
+.pack.week .draw-btn{background:rgba(201,103,158,.9);color:#20081a;}
+.pack.week .draw-btn:not(:disabled):hover{background:var(--plum);box-shadow:0 0 26px rgba(201,103,158,.5);}
 .pack.archive .draw-btn{background:linear-gradient(120deg,#fff7e0,#e8c468);color:#2a1f06;}
 .pack.archive .draw-btn:not(:disabled):hover{background:linear-gradient(120deg,#fffdf5,#ffd97a);box-shadow:0 0 30px rgba(232,196,104,.6);}
 .draw-btn:disabled{background:rgba(255,255,255,.07)!important;color:var(--text-dim)!important;cursor:default;font-family:var(--font-mono);font-weight:500;font-size:.74rem;}
@@ -195,7 +210,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .pack.archive .xc-btn:not(:disabled):hover{background:rgba(255,247,224,.12);box-shadow:0 0 20px rgba(255,247,224,.3);}
 .archive-note{margin-top:12px;font-family:var(--font-mono);font-size:.56rem;line-height:1.7;color:rgba(255,247,224,.6);}
 /* 확률은 한 줄에 들어가도록 letter-spacing 축소 + white-space nowrap 로 강제 */
-.odds{margin-top:14px;font-family:var(--font-mono);font-size:.54rem;letter-spacing:0;color:var(--text-dim);line-height:1.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.odds{margin-top:14px;font-family:var(--font-mono);font-size:.6rem;letter-spacing:0;color:var(--text-dim);line-height:2;white-space:normal;word-spacing:2px;}
 .odds b{font-weight:700;}
 .odds .oN{color:var(--g-N);} .odds .oR{color:var(--g-R);} .odds .oS{color:var(--g-S);} .odds .oSR{color:var(--g-SR);} .odds .oSSR{color:var(--g-SSR);}
 
@@ -350,13 +365,19 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
     <div class="eyebrow">Photo Card Gacha</div>
     <h1>XENA CARDS</h1>
     <p>
-      <span lang="en">Every pack opens <b style="color:var(--silver);font-weight:600;">3 cards</b> at once.<br>From N to the top grade <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b> — complete the collection.</span>
-      <span lang="ko">모든 팩은 한 번에 <b style="color:var(--silver);font-weight:600;">카드 3장</b>이 나옵니다.<br>N부터 최고 등급 <b style="color:var(--gold);font-weight:600;">SOVEREIGN</b>까지 — 컬렉션을 완성하라.</span>
+      <span lang="en">Every pack opens <b style="color:var(--silver);font-weight:600;">3 cards</b> at once.<br>From N to the top grade <b style="color:var(--gold);font-weight:600;">SSR</b> — complete the collection.</span>
+      <span lang="ko">모든 팩은 한 번에 <b style="color:var(--silver);font-weight:600;">카드 3장</b>이 나옵니다.<br>N부터 최고 등급 <b style="color:var(--gold);font-weight:600;">SSR</b>까지 — 컬렉션을 완성하라.</span>
     </p>
   </div>
 
+  <div class="pack-tabs" id="pack-tabs">
+    <button class="ptab sel" data-pt="daily"><span lang="en">DAILY PACKS</span><span lang="ko">데일리팩</span></button>
+    <button class="ptab" data-pt="weekly"><span lang="en">WEEKLY PACK</span><span lang="ko">위클리팩</span></button>
+    <button class="ptab" data-pt="premium"><span lang="en">PREMIUM PACK</span><span lang="ko">프리미엄 팩</span></button>
+  </div>
+
   <div class="packs">
-    <div class="pack signal">
+    <div class="pack signal" data-ptab="daily">
       <span class="pack-x3">×3</span>
       <div class="pack-kind">Basic · Every 8 Hours</div>
       <h3>SIGNAL PACK</h3>
@@ -366,7 +387,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <button class="xc-btn" id="btn-signal-xc"><span lang="en">Extra draw · 50 XC</span><span lang="ko">50 XC로 추가 뽑기</span></button>
       <div class="odds"><span class="oN">N 65%</span> · <span class="oR">R 30.9%</span> · <span class="oS">S 3%</span> · <span class="oSR">SR 1%</span> · <span class="oSSR">SSR 0.1%</span></div>
     </div>
-    <div class="pack sov">
+    <div class="pack sov" data-ptab="daily">
       <span class="pack-x3">×3</span>
       <div class="pack-kind">Advanced · Every 12 Hours</div>
       <h3>SOVEREIGN PACK</h3>
@@ -376,7 +397,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <button class="xc-btn" id="btn-sov-xc"><span lang="en">Extra draw · 200 XC</span><span lang="ko">200 XC로 추가 뽑기</span></button>
       <div class="odds"><span class="oN">N 45.6%</span> · <span class="oR">R 40%</span> · <span class="oS">S 10%</span> · <span class="oSR">SR 4%</span> · <span class="oSSR">SSR 0.4%</span></div>
     </div>
-    <div class="pack elite">
+    <div class="pack elite" data-ptab="daily">
       <span class="pack-x3">×3</span>
       <div class="pack-kind">Elite · Every 24 Hours</div>
       <h3>OVERRIDE PACK</h3>
@@ -386,7 +407,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <button class="xc-btn" id="btn-elite-xc"><span lang="en">Extra draw · 500 XC</span><span lang="ko">500 XC로 추가 뽑기</span></button>
       <div class="odds"><span class="oN">N 30%</span> · <span class="oR">R 44%</span> · <span class="oS">S 18%</span> · <span class="oSR">SR 7%</span> · <span class="oSSR">SSR 1%</span></div>
     </div>
-    <div class="pack week">
+    <div class="pack week" data-ptab="weekly">
       <span class="pack-x3">×3</span>
       <div class="pack-kind"><span lang="en">Weekly · Resets Monday</span><span lang="ko">주간 · 매주 월요일 초기화</span></div>
       <h3>WEEKLY PACK</h3>
@@ -395,7 +416,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <button class="draw-btn" id="btn-weekly-pack">FREE + 1500 XC</button>
       <div class="odds"><span class="oN">N 20%</span> · <span class="oR">R 40%</span> · <span class="oS">S 26%</span> · <span class="oSR">SR 11%</span> · <span class="oSSR">SSR 3%</span></div>
     </div>
-    <div class="pack archive">
+    <div class="pack archive" data-ptab="premium">
       <span class="pack-x3">×1~3</span>
       <div class="pack-kind"><span lang="en">Premium · TCG Exclusive</span><span lang="ko">프리미엄 · TCG 전용</span></div>
       <h3>ARCHIVE PACK</h3>
@@ -839,6 +860,29 @@ $('btn-signal-xc').addEventListener('click', function(){ draw('signal', true); }
 $('btn-sov-xc').addEventListener('click', function(){ draw('sov', true); });
 $('btn-elite-xc').addEventListener('click', function(){ draw('elite', true); });
 
+/* ── 팩 카테고리 탭 (데일리/위클리/프리미엄) — 기본은 데일리 ── */
+(function(){
+  var wrap = $('packs') || document.querySelector('.packs');
+  function applyPackTab(cat){
+    var visible = 0;
+    document.querySelectorAll('.pack').forEach(function(p){
+      var show = p.getAttribute('data-ptab') === cat;
+      p.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+    if(wrap) wrap.setAttribute('data-count', String(visible));
+  }
+  document.querySelectorAll('.ptab').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.ptab').forEach(function(x){x.classList.remove('sel');});
+      b.classList.add('sel');
+      applyPackTab(b.getAttribute('data-pt'));
+      if (window.XenaAudio) window.XenaAudio.sfx('btn_click');
+    });
+  });
+  applyPackTab('daily');
+})();
+
 /* ── 컬렉션 ── */
 var curTab = 'ALL';
 document.querySelectorAll('.tab').forEach(function(b){
@@ -1073,7 +1117,11 @@ document.querySelectorAll('button').forEach(function(el){
 
   function open(){ overlay.hidden = false; }
   function close(){ overlay.hidden = true; }
-  btnOpen.addEventListener('click', open);
+  /* [2026-07-24] 결제 시스템이 아직 실제로 연결되어 있지 않아 모달을 열지 않고
+     "준비중" 안내만 표시한다. */
+  btnOpen.addEventListener('click', function(){
+    toast(t('Top up is coming soon — not available yet.', '충전 기능은 준비 중입니다.'));
+  });
   btnClose.addEventListener('click', close);
   overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
 

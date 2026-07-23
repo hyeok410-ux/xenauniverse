@@ -65,6 +65,34 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 .skill-btn .sk-cost{font-size:.56rem;color:var(--gold);}
 .skill-btn:not(:disabled):hover{background:rgba(255,47,176,.18);box-shadow:0 0 16px rgba(255,47,176,.3);}
 .skill-btn:disabled{opacity:.32;cursor:not-allowed;}
+.skill-info-btn{background:none;border:none;color:var(--text-dim);font-size:.85rem;line-height:1;vertical-align:middle;
+  padding:0;margin-left:2px;cursor:pointer;transition:.2s;}
+.skill-info-btn:hover{color:var(--gold);}
+.skill-modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.8);backdrop-filter:blur(6px);padding:20px;}
+.skill-modal.on{display:flex;}
+.skill-modal-box{background:#0e0a16;border:1px solid var(--hair);border-radius:16px;padding:24px 26px;max-width:420px;}
+.skill-modal-box h3{font-size:1rem;font-weight:700;margin-bottom:12px;color:var(--gold);}
+.skill-modal-box p{font-size:.8rem;line-height:1.6;margin-bottom:12px;color:rgba(230,230,238,.85);}
+.skill-modal-box ul{padding-left:18px;margin-bottom:16px;}
+.skill-modal-box li{font-size:.76rem;line-height:1.7;color:rgba(230,230,238,.8);margin-bottom:8px;}
+.skill-modal-box .btn.ghost{width:100%;padding:10px;border-radius:12px;border:1px solid var(--hair);background:rgba(255,255,255,.03);
+  color:var(--text-dim);font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;cursor:pointer;transition:.2s;}
+.skill-modal-box .btn.ghost:hover{color:#fff;border-color:rgba(255,255,255,.3);}
+
+/* ── 게임오버 랭크 뱃지 (점수 기반 S~D) ── */
+.rank-badge{width:96px;height:96px;margin:14px auto;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  position:relative;background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.18), transparent 60%);}
+.rank-badge::before{content:'';position:absolute;inset:0;border-radius:50%;border:3px solid var(--rc,#b9b9c6);
+  box-shadow:0 0 24px var(--rc,#b9b9c6), inset 0 0 16px rgba(255,255,255,.15);}
+.rank-letter{font-family:var(--font-mono);font-weight:800;font-size:2.6rem;color:var(--rc,#b9b9c6);
+  text-shadow:0 0 18px var(--rc,#b9b9c6);}
+.rank-badge[data-rank="S"]{--rc:#e8c468;}
+.rank-badge[data-rank="A"]{--rc:#ff2fb0;}
+.rank-badge[data-rank="B"]{--rc:#a06bff;}
+.rank-badge[data-rank="C"]{--rc:#3fe0ff;}
+.rank-badge[data-rank="D"]{--rc:#b9b9c6;}
+.rank-note{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;color:rgba(230,230,238,.6);margin-bottom:8px;}
 
 /* 데스크톱에서 게임판이 너무 작아보였음 → 420 → 560 로 확장.
    3:4 비율은 유지 (물리엔진이 캔버스 크기에 자동 맞춰지므로 gameplay 는 그대로) */
@@ -122,15 +150,35 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   </div>
 
   <div class="skill-row">
-    <span class="skill-charge"><span lang="en">OVERRIDE</span><span lang="ko">오버라이드</span> ×<b id="zena-charge">0</b></span>
-    <button class="skill-btn" id="skill-a" disabled>
+    <span class="skill-charge"><span lang="en">OVERRIDE</span><span lang="ko">오버라이드</span> ×<b id="zena-charge">0</b>
+      <button class="skill-info-btn" id="skill-info-btn" aria-label="skill info" type="button">&#9432;</button>
+    </span>
+    <button class="skill-btn" id="skill-a" disabled
+      title="Push the rising floor back down for temporary relief. Costs 2 OVERRIDE charge.">
       <span class="sk-name"><span lang="en">PUSH BACK FLOOR</span><span lang="ko">바닥 밀어내기</span></span>
       <span class="sk-cost">×2</span>
     </button>
-    <button class="skill-btn" id="skill-b" disabled>
+    <button class="skill-btn" id="skill-b" disabled
+      title="Remove up to 4 OVERRIDE-tier orbs from the jar and score bonus points. Costs 4 OVERRIDE charge.">
       <span class="sk-name"><span lang="en">CLEAR OVERRIDE ×4</span><span lang="ko">오버라이드 정리 ×4</span></span>
       <span class="sk-cost">×4</span>
     </button>
+  </div>
+
+  <!-- 기술 설명 모달 -->
+  <div class="skill-modal" id="skill-modal">
+    <div class="skill-modal-box">
+      <h3><span lang="en">ZENA SKILLS</span><span lang="ko">제나 기술</span></h3>
+      <p>
+        <span lang="en">Merging two XENA orbs creates an <b>OVERRIDE</b> orb — the top tier. Every OVERRIDE orb created adds +1 charge (shown above).</span>
+        <span lang="ko">XENA 구슬 2개를 합치면 최상위 티어 <b>OVERRIDE</b> 구슬이 만들어집니다. OVERRIDE 구슬을 만들 때마다 충전이 +1 됩니다 (위에 표시).</span>
+      </p>
+      <ul>
+        <li><b><span lang="en">PUSH BACK FLOOR</span><span lang="ko">바닥 밀어내기</span></b> — <span lang="en">costs 2 charge. The slowly rising floor is pushed back down for breathing room.</span><span lang="ko">충전 2 소모. 서서히 차오르는 바닥을 다시 밀어내려 여유 공간을 만듭니다.</span></li>
+        <li><b><span lang="en">CLEAR OVERRIDE ×4</span><span lang="ko">오버라이드 정리 ×4</span></b> — <span lang="en">costs 4 charge. Removes up to 4 OVERRIDE orbs sitting in the jar (they never merge further, so they can clog it) and grants bonus score.</span><span lang="ko">충전 4 소모. 더 이상 합쳐지지 않아 병을 막고 있는 OVERRIDE 구슬을 최대 4개까지 제거하고 보너스 점수를 얻습니다.</span></li>
+      </ul>
+      <button class="btn ghost" id="skill-modal-close"><span lang="en">CLOSE</span><span lang="ko">닫기</span></button>
+    </div>
   </div>
 
   <div id="jar-wrap">
@@ -146,7 +194,9 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     </div>
     <div class="overlay" id="ov-over">
       <h2><span lang="en">JAR OVERFLOW</span><span lang="ko">병이 넘쳤습니다</span></h2>
+      <div class="rank-badge" id="rank-badge"><span class="rank-letter" id="rank-letter">C</span></div>
       <p id="ov-score"></p>
+      <p class="rank-note" id="rank-note"></p>
       <button id="btn-retry"><span lang="en">RETRY</span><span lang="ko">다시하기</span></button>
     </div>
   </div>
@@ -169,7 +219,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
      [2026-07-23] N 이전 단계(SEED)와 XENA 다음 단계(OVERRIDE)를 추가해 8단계로 확장.
      성장감이 약하다는 피드백을 반영해 상위 단계로 갈수록 반지름이 더 크게 벌어지도록 재조정. */
   var TIERS = [
-    {r:11, color:'#8a8a96', label:'SEED', score:1},
+    {r:11, color:'#5f6478', label:'SEED', score:1}, /* N(근백색)과 뚜렷이 구분되도록 더 어둡고 진한 슬레이트톤으로 */
     {r:15, color:'#e6e6ee', label:'N',    score:2},
     {r:20, color:'#3fe0ff', label:'R',    score:5},
     {r:27, color:'#5cffc0', label:'S',    score:13},
@@ -418,19 +468,20 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     /* 바탕색 (이미지 로딩 전/실패 대비 fallback) */
     ctx.fillStyle = b.color || TIERS[b.tier].color;
     ctx.fillRect(b.x-r, b.y-r, r*2, r*2);
-    /* 캐릭터 얼굴 — 마스코트 사진을 원형으로 꽉 채워 클리핑 */
+    /* 캐릭터 얼굴 — 마스코트 사진을 원형으로 꽉 채워 클리핑
+       [2026-07-24] 얼굴이 흐릿해 보인다는 피드백 — 얼굴 위에 틴트(22%)+오브 오버레이(55%,
+       screen)가 겹겹이 쌓여 사실상 반투명 레이어 2장을 더 얹은 셈이었다. 얼굴은 완전
+       불투명하게 그리고, 그 위 장식 레이어들은 훨씬 옅게 낮춘다. */
     if (mascotReady){
       var iw = mascotImg.naturalWidth, ih = mascotImg.naturalHeight;
       var side = Math.min(iw, ih);
       var sx = (iw-side)/2, sy = ih*0.06; /* 위쪽 얼굴 위주로 크롭 */
       sy = Math.min(sy, ih-side);
-      ctx.globalAlpha = 0.92;
       ctx.drawImage(mascotImg, sx, sy, side, side, b.x-r, b.y-r, r*2, r*2);
-      ctx.globalAlpha = 1;
     }
-    /* 등급 색 틴트 */
+    /* 등급 색 틴트 — 얼굴은 보이면서도 등급 구분은 되도록 */
     ctx.fillStyle = b.color || TIERS[b.tier].color;
-    ctx.globalAlpha = 0.22;
+    ctx.globalAlpha = 0.16;
     ctx.fillRect(b.x-r, b.y-r, r*2, r*2);
     ctx.globalAlpha = 1;
     /* 글래스 오브 스프라이트 겹치기 — N~XENA(티어1~6)만 대응 슬라이스가 있음 */
@@ -438,7 +489,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     if (orbsReady && orbIdx >= 0 && orbIdx < ORB_SPRITE_COUNT){
       var sw = orbsImg.naturalWidth / ORB_SPRITE_COUNT, sh = orbsImg.naturalHeight;
       ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = 0.55;
+      ctx.globalAlpha = 0.28;
       ctx.drawImage(orbsImg, orbIdx*sw, 0, sw, sh, b.x-r, b.y-r, r*2, r*2);
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
@@ -499,6 +550,19 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     balls.forEach(drawBallFace);
   }
 
+  /* 점수 기반 랭크 — 보상/랭킹 아트가 아직 없어 우선 등급 뱃지로 성취감을 준다 */
+  var RANK_THRESHOLDS = [ {min:3000, r:'S'}, {min:1500, r:'A'}, {min:700, r:'B'}, {min:250, r:'C'}, {min:0, r:'D'} ];
+  function scoreRank(s){
+    for (var i = 0; i < RANK_THRESHOLDS.length; i++){ if (s >= RANK_THRESHOLDS[i].min) return RANK_THRESHOLDS[i].r; }
+    return 'D';
+  }
+  var RANK_NOTE = {
+    S: {en:'LEGENDARY RUN', ko:'전설적인 기록'},
+    A: {en:'GREAT RUN', ko:'훌륭한 기록'},
+    B: {en:'SOLID RUN', ko:'준수한 기록'},
+    C: {en:'KEEP GOING', ko:'계속 도전하세요'},
+    D: {en:'JUST GETTING STARTED', ko:'이제 시작입니다'}
+  };
   function endGame(){
     running = false;
     if (score > best){
@@ -507,6 +571,11 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       $('hud-best').textContent = best;
     }
     $('ov-score').textContent = t('Score: ','점수: ') + score;
+    var rank = scoreRank(score);
+    $('rank-badge').setAttribute('data-rank', rank);
+    $('rank-letter').textContent = rank;
+    var note = RANK_NOTE[rank];
+    $('rank-note').textContent = t(note.en, note.ko);
     $('ov-over').classList.add('on');
     if (window.XenaAudio) window.XenaAudio.sfx('match_fail_a');
   }
@@ -523,6 +592,9 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 
   $('skill-a').addEventListener('click', useSkillA);
   $('skill-b').addEventListener('click', useSkillB);
+  $('skill-info-btn').addEventListener('click', function(){ $('skill-modal').classList.add('on'); });
+  $('skill-modal-close').addEventListener('click', function(){ $('skill-modal').classList.remove('on'); });
+  $('skill-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
 
   $('btn-start').addEventListener('click', function(){
     $('ov-start').classList.remove('on');

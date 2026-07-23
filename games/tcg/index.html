@@ -827,7 +827,12 @@ $('btn-retreat').addEventListener('click', function(){
 });
 
 /* ── 승패 판정 ─────────────────────────────────────────── */
+/* 데일리 시그널의 "SIGNAL CLASH 플레이" 퀘스트가 감지할 플래그 — 승패 무관 플레이 자체 기록 */
+function markTcgPlayedToday(){
+  try{ localStorage.setItem('xena_tcg_daily_v1', JSON.stringify({date:new Date().toISOString().slice(0,10)})); }catch(e){}
+}
 function finish(retreated){
+  markTcgPlayedToday();
   var w = zonesWon();
   var myP = totalPower('p'), opP = totalPower('a');
   var outcome;                                   /* 'win' | 'lose' | 'draw' */
