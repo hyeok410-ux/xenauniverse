@@ -22,6 +22,7 @@
 :root{
   --black:#000000; --purple:#6e2fd9; --purple-light:#a06bff; --silver:#e6e6ee;
   --cyan:#3fe0ff; --magenta:#ff2fb0; --gold:#e8c468;
+  --sound:#5cffc0; --soul:#a06bff; --dark:#ff2fb0; --light:#7fb8ff; --metal:#e8c468; --bug:#3fe0ff;
   --hair:rgba(255,255,255,.09); --text-dim:rgba(230,230,238,.55);
   --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
   --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
@@ -167,6 +168,8 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
   padding:1px 4px;border-radius:4px;background:rgba(0,0,0,.75);}
 .pick .p-used-tag{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   font-family:var(--font-mono);font-size:.52rem;color:var(--text-dim);background:rgba(0,0,0,.6);text-align:center;padding:4px;}
+.pick .p-element{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);font-family:var(--font-mono);font-size:.48rem;
+  font-weight:700;color:#fff;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.65);text-shadow:0 0 2px rgba(0,0,0,.8);}
 .sheet-actions{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap;}
 
 .gate{border:1px solid var(--hair);border-radius:10px;padding:11px 13px;margin-top:9px;background:rgba(255,255,255,.02);}
@@ -292,16 +295,26 @@ var CAP_UPGRADE_COST = 35000;      /* 투어 정원 확장 — 엔드게임 (기
 var CAP_UPGRADE_COLL = 0.60;       /* 도감 60% — 카드소유권이 아직 서버에 없어 클라이언트에서만 강제(연성 게이트) */
 var CAP_UPGRADE_WINS = 30;         /* SIGNAL CLASH 승수 — 서버 wallets/{uid}.tcgWins 로 실제 검증됨 */
 
-/* 국가별 시너지 속성 — 보낸 카드들의 element(SOUND/SOUL/DARK/LIGHT/METAL/BUG)가
-   이 도시의 element와 얼마나 겹치느냐로 보상 보너스가 붙는다. functions/index.js
-   CITY_TABLE.element / synergyBonus() 와 반드시 동일하게 유지(실제 지급은 서버가 재계산). */
+/* 국가별 시너지 속성 + 추가 조합 보너스 — functions/index.js 와는 아직 미분리
+   (서버는 국가 속성 시너지만 재계산하고, 추가 조합은 클라이언트 미리보기용) */
 var SYNERGY_TIERS = [ {ratio:1.00, bonus:0.30}, {ratio:0.66, bonus:0.15} ];
-function synergyPreview(elements, cityElement){
-  if (!elements.length) return 0;
+function synergyPreview(cards, cityElement){
+  if (!cards.length) return {total:0, reasons:[]};
+  var elements = cards.map(function(c){ return c.element; });
+  var total = 0, reasons = [];
+  /* 국가 속성 시너지 */
   var matches = elements.filter(function(e){ return e === cityElement; }).length;
   var ratio = matches / elements.length;
-  for (var i = 0; i < SYNERGY_TIERS.length; i++){ if (ratio >= SYNERGY_TIERS[i].ratio) return SYNERGY_TIERS[i].bonus; }
-  return 0;
+  for (var i = 0; i < SYNERGY_TIERS.length; i++){
+    if (ratio >= SYNERGY_TIERS[i].ratio){ total += SYNERGY_TIERS[i].bonus; reasons.push({tier:'element', bonus:SYNERGY_TIERS[i].bonus}); break; }
+  }
+  /* 동일 인물 3장 조합: +10% */
+  var personCounts = {};
+  cards.forEach(function(c){ personCounts[c.person||'?'] = (personCounts[c.person||'?']||0) + 1; });
+  for (var p in personCounts){ if (personCounts[p] >= 3){ total += 0.10; reasons.push({tier:'person3', bonus:0.10, person:p}); break; } }
+  /* 전체 등급 SR 이상: +10% */
+  if (cards.every(function(c){ return c.rank >= 3; })){ total += 0.10; reasons.push({tier:'allSR', bonus:0.10}); }
+  return {total:total, reasons:reasons};
 }
 var ELEMENT_LABEL = { SOUND:{en:'SOUND',ko:'사운드'}, SOUL:{en:'SOUL',ko:'소울'}, DARK:{en:'DARK',ko:'다크'},
   LIGHT:{en:'LIGHT',ko:'라이트'}, METAL:{en:'METAL',ko:'메탈'}, BUG:{en:'BUG',ko:'버그'} };
@@ -383,11 +396,10 @@ function cityByKey(cityKey){ return CITIES.filter(function(x){return x.key===cit
 function cityMult(cityKey){ var c = cityByKey(cityKey); return c ? c.mult : 1; }
 function tourReward(cityKey){
   var cards = tourCards(cityKey), sum = 0;
-  var elements = [];
-  for(var i = 0; i < cards.length; i++){ sum += cards[i].power; if(cards[i].element) elements.push(cards[i].element); }
+  for(var i = 0; i < cards.length; i++){ sum += cards[i].power; }
   var c = cityByKey(cityKey);
-  var bonus = c ? synergyPreview(elements, c.element) : 0;
-  return Math.floor(sum * REWARD_PER_POWER * cityMult(cityKey) * (1 + bonus));
+  var syn = c ? synergyPreview(cards, c.element) : {total:0, reasons:[]};
+  return Math.floor(sum * REWARD_PER_POWER * cityMult(cityKey) * (1 + syn.total));
 }
 
 function fmtTime(ms){
@@ -572,6 +584,7 @@ function renderPicker(){
            '<span class="p-grade" style="color:' + c.color + '">' + c.grade + '</span>' +
            '<span class="p-cost">' + c.cost + 'h</span>' +
            '<span class="p-pow">⚡' + c.power + '</span>' +
+           (c.element ? '<span class="p-element" style="background:var(--' + c.element.toLowerCase() + ')">' + (lang==='ko'?ELEMENT_LABEL[c.element].ko:ELEMENT_LABEL[c.element].en) + '</span>' : '') +
          '</button>';
   }
   $('picker').innerHTML = h;
@@ -590,21 +603,30 @@ function renderPicker(){
 
 function updatePickSummary(){
   var cards = pickSelected.map(function(id){ return XenaCards.get(id); });
-  var maxCost = 0, sumPower = 0, elements = [];
+  var maxCost = 0, sumPower = 0;
   for(var i = 0; i < cards.length; i++){
     if(cards[i].cost > maxCost) maxCost = cards[i].cost;
     sumPower += cards[i].power;
-    if(cards[i].element) elements.push(cards[i].element);
   }
   var city = cityByKey(pickCity);
-  var bonus = city ? synergyPreview(elements, city.element) : 0;
-  var reward = Math.floor(sumPower * REWARD_PER_POWER * cityMult(pickCity) * (1 + bonus));
+  var syn = city ? synergyPreview(cards, city.element) : {total:0, reasons:[]};
+  var reward = Math.floor(sumPower * REWARD_PER_POWER * cityMult(pickCity) * (1 + syn.total));
   $('pick-count').textContent = pickSelected.length + ' / ' + wallet.tourCapacity + ' ' + t('selected', '선택됨');
-  var synergyTxt = bonus > 0 ? ' · ' + t('SYNERGY +', '시너지 +') + Math.round(bonus*100) + '%' : '';
+  var synergyTxt = syn.total > 0 ? ' · ' + t('SYNERGY +', '시너지 +') + Math.round(syn.total*100) + '%' : '';
+  var reasonsTxt = '';
+  if(syn.reasons.length > 0){
+    var hints = syn.reasons.map(function(r){
+      if(r.tier === 'element') return t('All match city element', '도시 속성 전부 일치');
+      if(r.tier === 'person3') return t('Same character ×3', '동일 인물 3장');
+      if(r.tier === 'allSR') return t('All SR+', '전부 SR 이상');
+      return '';
+    });
+    reasonsTxt = ' (' + hints.join(', ') + ')';
+  }
   $('pick-preview').textContent = cards.length
-    ? t(maxCost + 'h · +' + reward + ' XC', maxCost + '시간 · +' + reward + ' XC') + synergyTxt
+    ? t(maxCost + 'h · +' + reward + ' XC', maxCost + '시간 · +' + reward + ' XC') + synergyTxt + reasonsTxt
     : '';
-  $('pick-preview').classList.toggle('has-synergy', bonus > 0);
+  $('pick-preview').classList.toggle('has-synergy', syn.total > 0);
   var btn = $('pick-send');
   btn.disabled = cards.length === 0;
   btn.textContent = cards.length ? t('SEND ON TOUR', '투어 파견') : t('SELECT AT LEAST 1 CARD', '카드를 1장 이상 선택하세요');

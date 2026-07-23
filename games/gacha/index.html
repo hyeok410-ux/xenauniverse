@@ -212,6 +212,8 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .tab.tab-tcg.sel{color:#fffbeb;border-color:rgba(255,247,224,.8);box-shadow:0 0 16px rgba(232,196,104,.4);}
 .ccard-tcg-badge{position:absolute;bottom:6px;right:6px;font-family:var(--font-mono);font-size:.5rem;font-weight:700;letter-spacing:.06em;
   padding:3px 7px;border-radius:9px;background:linear-gradient(120deg,#fff7e0,#e8c468);color:#2a1f06;z-index:2;box-shadow:0 0 8px rgba(232,196,104,.5);}
+.celement-badge{position:absolute;top:6px;right:6px;font-family:var(--font-mono);font-size:.45rem;font-weight:700;letter-spacing:.05em;
+  padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.65);border:1px solid currentColor;color:#fff;z-index:1;text-shadow:0 0 3px rgba(0,0,0,.8);}
 .album{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
 .ccard{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:3/4.35;border:1px solid var(--hair);background:rgba(255,255,255,.02);transition:.25s ease;}
 .ccard.owned{cursor:pointer;}
@@ -489,6 +491,9 @@ var lang = document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 
 function t(en, ko){ return lang === 'ko' ? ko : en; }
 var GRADE_COLOR = {N:'#b9b9c6', R:'#3fe0ff', S:'#a06bff', SR:'#ff2fb0', SSR:'#e8c468'};
 var GRADE_LABEL = {N:'NORMAL', R:'RARE', S:'SUPER', SR:'SUPER RARE', SSR:'SOVEREIGN'};
+var ELEMENT_LABEL = {SOUND:{en:'SOUND',ko:'사운드'}, SOUL:{en:'SOUL',ko:'소울'}, DARK:{en:'DARK',ko:'다크'},
+  LIGHT:{en:'LIGHT',ko:'라이트'}, METAL:{en:'METAL',ko:'메탈'}, BUG:{en:'BUG',ko:'버그'}};
+var ELEMENT_COLOR = {SOUND:'#5cffc0', SOUL:'#a06bff', DARK:'#ff2fb0', LIGHT:'#7fb8ff', METAL:'#e8c468', BUG:'#3fe0ff'};
 var DUST = {N:1, R:3, S:10, SR:30, SSR:100};
 var DRAW_COUNT = 3;
 /* 확률·가격 표는 서버 balance 처럼 완벽하게 변조를 막지는 못하지만,
@@ -861,6 +866,7 @@ function renderAlbum(){
       '<span class="gtag '+c.grade+'">'+c.grade+'</span>'+
       (n>1 ? '<span class="dupe">&times;'+n+'</span>' : '')+
       (c.premium ? '<span class="ccard-tcg-badge">TCG</span>' : '')+
+      (c.element ? '<span class="celement-badge" style="background:'+ELEMENT_COLOR[c.element]+'">'+(lang==='ko'?ELEMENT_LABEL[c.element].ko:ELEMENT_LABEL[c.element].en)+'</span>' : '')+
       (n>0 ? '<div class="cinfo"><b>'+c.name+'</b>'+(c.premium ? t(' · TCG exclusive',' · TCG 전용') : '')+'</div>' : '');
     if(n>0){ cell.addEventListener('click', function(){ openDetail(c); }); }
     grid.appendChild(cell);

@@ -345,9 +345,9 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 
 /* ── 카테고리 필터: 카테고리별 지정 순서대로 재배치 + 그 외는 숨김 ── */
 var CAT_ORDER = {
-  popular: ['grid','cards','tcg','idle'],
+  popular: ['grid','tcg','idle','cards'],
   photo:   ['cards','worldcup'],
-  puzzle:  ['grid','shisen','memory','merge','tcg']
+  puzzle:  ['grid','tcg','shisen','memory','merge']
 };
 var grid = document.getElementById('game-grid');
 var allCards = Array.prototype.slice.call(grid.children);
