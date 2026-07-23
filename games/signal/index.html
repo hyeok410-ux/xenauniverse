@@ -65,6 +65,9 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 .head p{color:var(--text-dim);font-size:.9rem;line-height:1.7;}
 .date-line{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.24em;color:var(--text-dim);margin-top:8px;}
 .streak{display:inline-block;margin-top:12px;font-family:var(--font-mono);font-size:.68rem;letter-spacing:.12em;color:var(--gold);border:1px solid rgba(232,196,104,.4);padding:6px 14px;border-radius:18px;background:rgba(232,196,104,.06);}
+/* [2026-07-26] 버그 수정: display:inline-block이 [hidden] 기본 동작보다 우선순위가 높아서
+   HTML의 hidden 속성이 무시되고 페이지 로드 시 빈 뱃지가 항상 보이고 있었다. */
+.streak[hidden]{display:none;}
 
 /* 카드 */
 .sig-zone{display:flex;flex-direction:column;align-items:center;margin:8px 0 34px;}
@@ -137,6 +140,9 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 }
 .all-bonus{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
   background:linear-gradient(120deg, rgba(232,196,104,.14), rgba(255,47,176,.1));border:1px solid rgba(232,196,104,.4);border-radius:14px;padding:14px 18px;}
+/* [2026-07-26] 버그 수정: 위와 같은 [hidden] 무력화 문제 — 전체완료 배너가 조건과
+   무관하게 항상 보이던 원인. */
+.all-bonus[hidden]{display:none;}
 .all-bonus span{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;color:var(--gold);text-shadow:0 0 10px rgba(232,196,104,.4);}
 .all-bonus button{font-family:var(--font-mono);font-size:.68rem;font-weight:700;letter-spacing:.08em;color:#1a1206;background:var(--gold);border:none;padding:9px 18px;border-radius:18px;transition:.3s ease;}
 .all-bonus button:hover{box-shadow:0 0 18px rgba(232,196,104,.5);}

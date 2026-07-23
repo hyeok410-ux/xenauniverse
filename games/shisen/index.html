@@ -163,6 +163,9 @@ h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;lin
 .wk-modal h3{font-family:var(--font-mono);font-size:.92rem;letter-spacing:.2em;color:var(--gold);margin-bottom:8px;}
 .wk-sub{font-size:.74rem;color:#b8c6da;line-height:1.6;margin-bottom:18px;}
 .wk-list{display:flex;flex-direction:column;gap:7px;margin-bottom:20px;}
+/* [2026-07-26] 버그 수정: display:flex가 [hidden] 기본 동작을 덮어써서 상세보기로 전환해도
+   목록이 안 사라지고 겹쳐 보이던 문제. */
+.wk-list[hidden]{display:none;}
 .wk-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:10px 14px;border-radius:11px;border:1px solid var(--hair);background:rgba(255,255,255,.04);}
 .wk-row.has{border-color:rgba(232,196,104,.4);background:rgba(232,196,104,.07);}

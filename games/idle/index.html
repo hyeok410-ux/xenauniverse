@@ -858,6 +858,7 @@ for(var i = 0; i < tg.length; i++){
     try{ localStorage.setItem('xena-lang', lang); }catch(e){}
     if(window.XenaCards) XenaCards.refresh(); /* TCG 카드는 EN/KR 아트가 갈려 있어 재빌드 필요 */
     renderAll();
+    if($('modal-pick').classList.contains('on')){ renderPickElemFilter(); renderPicker(); }
   });
 }
 

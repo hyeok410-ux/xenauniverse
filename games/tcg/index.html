@@ -1292,7 +1292,7 @@ for(var i = 0; i < toggles.length; i++){
     try{ localStorage.setItem('xena-lang', lang); }catch(e){}
     if(window.XenaCards) XenaCards.refresh(); /* TCG 카드는 EN/KR 아트가 갈려 있어 재빌드 필요 */
     if(G) render();
-    if($('screen-deck').classList.contains('on')) renderDeckBuilder();
+    if($('screen-deck').classList.contains('on')){ renderElemFilter(); renderDeckBuilder(); }
   });
 }
 
