@@ -92,6 +92,18 @@ function resolveImg(p){
   if(p.indexOf('../') === 0 || p.indexOf('http') === 0 || p.indexOf('/') === 0) return p;
   return GACHA_BASE + p;
 }
+/* [2026-07-24] TCG 전용(PC-*) 카드는 EN/KR 아트가 한 쌍으로 존재한다(카드 자체에
+   기술/비용 등 정보가 그려져 있어 언어별로 그림이 다름). 현재 UI 언어에 맞는 아트를
+   고른다 — 소유권은 언제나 하나(PC-01 등)뿐이고, 어느 버전을 뽑았든 상관없이 언어
+   토글에 따라 같은 카드의 그림만 바뀐다. 언어를 바꿀 때는 각 게임이 XenaCards.refresh()
+   를 호출해 다시 빌드해야 반영된다. */
+function curLang(){
+  try{ return document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 'en'; }catch(e){ return 'en'; }
+}
+function resolveCardImg(id, def3){
+  if(id.indexOf('PC-') === 0 && curLang() === 'ko') return resolveImg('cards/' + id + '-kr.jpg');
+  return resolveImg(def3);
+}
 
 /* ── 정규화 ─────────────────────────────────────────────── */
 function normalize(def){
@@ -106,7 +118,7 @@ function normalize(def){
     id:        id,
     name:      def[1],
     grade:     grade,
-    img:       resolveImg(def[3]),
+    img:       resolveCardImg(id, def[3]),
     available: def[4] === 1,
 
     person:    meta.person || null,

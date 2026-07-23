@@ -573,8 +573,19 @@ var FALLBACK = {SSR:'SR', SR:'S', S:'R', R:'N', N:null};
 /* 카드 풀 — PC-* (ARCHIVE PACK 전용 프리미엄 55장)는 별도 풀로 분리해서
    일반 팩(시그널/소버린/오버라이드/위클리)에는 절대 섞이지 않게 한다. */
 var CARDS = (window.ZENA_CARD_DEFS||[]).map(function(d){
-  return {id:d[0], name:d[1], grade:d[2], img:d[3], avail:d[4]===1, premium:d[0].indexOf('PC-')===0};
+  return {id:d[0], name:d[1], grade:d[2], img:d[3], imgEn:d[3], avail:d[4]===1, premium:d[0].indexOf('PC-')===0};
 });
+/* [2026-07-24] TCG 전용(PC-*) 카드는 EN/KR 아트가 한 쌍으로 존재 — 카드 자체에 정보가
+   그려져 있어 언어별로 그림이 다르다. 소유권은 하나뿐이고 현재 UI 언어에 맞춰 그림만
+   바뀐다(언어 토글 시 refreshCardImages() 호출). 객체 참조를 그대로 두고 img만 바꿔서
+   byGrade/byGradePremium 풀에도 자동 반영되게 한다. */
+function refreshCardImages(){
+  CARDS.forEach(function(c){
+    if(!c.premium) return;
+    c.img = (lang === 'ko') ? ('cards/' + c.id + '-kr.jpg') : c.imgEn;
+  });
+}
+refreshCardImages();
 var AVAIL = CARDS.filter(function(c){return c.avail;});
 /* 정렬: ① 기본팩 카드 먼저, TCG 전용(ARCHIVE) 카드는 뒤에 별도로 묶어서
    ② 그 안에서 높은 등급이 먼저, ③ 같은 등급 안에서는 캐릭터(이름의 " · " 앞부분)별로 묶어서 배열 */
@@ -1087,6 +1098,8 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
     document.documentElement.setAttribute('data-lang', lang);
     document.documentElement.setAttribute('lang', lang);
     try{ localStorage.setItem('xena-lang', lang); }catch(e){}
+    refreshCardImages();
+    renderAlbum();
     tickCooldowns();
     if(detailCard && document.getElementById('detail').classList.contains('on')){ openDetail(detailCard); }
   });
