@@ -33,13 +33,18 @@ var GRADE_LABEL= { N:'NORMAL', R:'RARE', S:'SUPER', SR:'SUPER RARE', SSR:'SOVERE
 /* SIGNAL CLASH(TCG) 기본카드 기술 — 등급별 공용(카드 개별 기술은 추후 확장 지점).
    플레이버 텍스트이자 실제 카드에 표기되는 "기술" 한 줄. 순수 코스트/파워 대결이라는
    기존 설계를 유지하면서, 카드에 뭔가 정보가 비어보이지 않도록 등급 고유 문구를 붙인다. */
-var GRADE_ABILITY = {
-  N:   { en:'No special ability.',              ko:'특수 기술 없음.' },
-  R:   { en:'No special ability.',               ko:'특수 기술 없음.' },
-  S:   { en:'Holds the line — steady power.',    ko:'구역을 지킨다 — 안정적인 파워.' },
-  SR:  { en:'Turns the tide of close zones.',    ko:'접전 구역의 흐름을 바꾼다.' },
-  SSR: { en:'Commands the zone it enters.',      ko:'입장한 구역을 장악한다.' }
-};
+/* [2026-07-26] 버그 수정: 이전엔 이 모호한 문구("구역을 지킨다" 등)가 실제 발동하는
+   시리즈 링크 효과(SERIES_LINK_AMT)와 무관하게 그냥 등급별로 붙어서, "왜 파워가
+   올랐는지" 알 수 없었다 — 문구와 실제 동작이 아예 다른 카드였다. 이제 normalize()가
+   실제 effect 유무/수치를 보고 그에 맞는 문구를 동적으로 만든다(NO_ABILITY = 링크 대상
+   시리즈가 없는 카드, LINK_ABILITY = 실제 SERIES_LINK_AMT 수치를 그대로 문구에 반영). */
+var NO_ABILITY = { en:'No special ability.', ko:'특수 기술 없음.' };
+function linkAbility(amt){
+  return {
+    en: 'LINK: +' + amt + ' PWR if another card from the same series (same person/track) is here.',
+    ko: 'LINK: 같은 시리즈(같은 인물/트랙) 카드가 이 구역에 또 있으면 +' + amt + ' PWR.'
+  };
+}
 var ELEMENT_ABBR = { SOUND:'SND', SOUL:'SOL', DARK:'DRK', LIGHT:'LGT', METAL:'MTL', BUG:'BUG' };
 
 /* ── TCG 전용(PC-01~PC-55) 개별 카드 COST/PWR/기술 오버라이드 ─────────────
@@ -76,11 +81,11 @@ var TCG_STATS = {
   'PC-17':{cost:2,power:3,element:'SOUL',                 ability:{en:'LINK: If another SOUL card is here, +1 PWR.',ko:'LINK: 이 구역에 다른 SOUL 카드가 있으면 +1 PWR.'},   effect:{kind:'buff_self_if_element',el:'SOUL',amt:1}},
   'PC-18':{cost:6,power:9,element:'LIGHT',                ability:{en:'DROP: -2 PWR to each enemy card here.',ko:'DROP: 이 구역의 적 카드 전체 -2 PWR.'},                    effect:{kind:'debuff_enemy_all',amt:2}},
   'PC-19':{cost:2,power:3,element:'LIGHT',                ability:{en:'LINK: If another LIGHT card is here, +2 PWR.',ko:'LINK: 이 구역에 다른 LIGHT 카드가 있으면 +2 PWR.'}, effect:{kind:'buff_self_if_element',el:'LIGHT',amt:2}},
-  'PC-20':{cost:2,power:0,element:'SOUL',                 ability:{en:'DROP: Your next card here gets +2 PWR.',ko:'DROP: 이 구역의 내 카드 전체 +2 PWR.'},                  effect:{kind:'buff_all_own',amt:2}},
+  'PC-20':{cost:2,power:0,element:'SOUL',                 ability:{en:'DROP: The next card you play here gets +2 PWR.',ko:'DROP: 이 카드 다음으로 이 구역에 내는 카드 +2 PWR.'},  effect:{kind:'buff_next_only',amt:2}},
   'PC-21':{cost:3,power:0,element:'DARK',                 ability:{en:'DROP: The next enemy card here gets -3 PWR.',ko:'DROP: 이 구역의 적 카드 -3 PWR.'},                  effect:{kind:'debuff_enemy_one',amt:3}},
   'PC-22':{cost:5,power:7,element:'LIGHT',                ability:{en:'DROP: -2 PWR to one enemy card here.',ko:'DROP: 이 구역의 적 카드 -2 PWR.'},                          effect:{kind:'debuff_enemy_one',amt:2}},
   'PC-23':{cost:2,power:3,element:'SOUL',                 ability:{en:'LINK: If another SOUL card is here, +1 PWR.',ko:'LINK: 이 구역에 다른 SOUL 카드가 있으면 +1 PWR.'},   effect:{kind:'buff_self_if_element',el:'SOUL',amt:1}},
-  'PC-24':{cost:1,power:1,element:'SOUL',                 ability:{en:'DROP: Your next SOUL card here gets +2 PWR.',ko:'DROP: 이 구역의 SOUL 카드 전체 +2 PWR.'},           effect:{kind:'buff_element',el:'SOUL',amt:2}},
+  'PC-24':{cost:1,power:1,element:'SOUL',                 ability:{en:'DROP: The next SOUL card you play here gets +2 PWR.',ko:'DROP: 이 카드 다음으로 이 구역에 내는 SOUL 카드 +2 PWR.'},effect:{kind:'buff_next_only',el:'SOUL',amt:2}},
   'PC-25':{cost:4,power:5,element:'SOUND',                ability:{en:'PULSE: +1 PWR to each of your cards here.',ko:'PULSE: 이 구역의 내 카드 전체 +1 PWR.'},              effect:{kind:'buff_all_own',amt:1}},
   'PC-26':{cost:3,power:4,element:'SOUL',                 ability:{en:'LINK: If another SOUL card is here, your SOUL cards get +1 PWR.',ko:'LINK: 다른 SOUL 카드가 있으면 SOUL 카드 전체 +1 PWR.'},effect:{kind:'buff_element',el:'SOUL',amt:1}},
   'PC-27':{cost:5,power:8,element:'SOUND',                ability:{en:'DROP: +2 PWR to each of your cards here.',ko:'DROP: 이 구역의 내 카드 전체 +2 PWR.'},                effect:{kind:'buff_all_own',amt:2}},
@@ -89,29 +94,29 @@ var TCG_STATS = {
   'PC-30':{cost:4,power:6,element:'SOUND',person:'XENA',  ability:{en:'DROP: If another SOUL card is here, +2 PWR.',ko:'DROP: 이 구역에 다른 SOUL 카드가 있으면 +2 PWR.'}, effect:{kind:'buff_self_if_element',el:'SOUL',amt:2}},
   'PC-31':{cost:6,power:10,element:'DARK',                ability:{en:'DROP: -2 PWR to each enemy card here.',ko:'DROP: 이 구역의 적 카드 전체 -2 PWR.'},                    effect:{kind:'debuff_enemy_all',amt:2}},
   'PC-32':{cost:3,power:5,element:'SOUL',person:'NAYUN',  ability:{en:'DROP: Give another SOUL card here +2 PWR.',ko:'DROP: 이 구역의 다른 SOUL 카드 +2 PWR.'},             effect:{kind:'buff_element',el:'SOUL',amt:2}},
-  'PC-33':{cost:2,power:0,element:'DARK',                 ability:{en:'PASSIVE: 0 PWR. Next card you play here gets +3 PWR.',ko:'PASSIVE: 파워 0. 이 구역의 내 카드 전체 +3 PWR.'},effect:{kind:'buff_all_own',amt:3}},
+  'PC-33':{cost:2,power:0,element:'DARK',                 ability:{en:'PASSIVE: 0 PWR itself. The next card you play here gets +3 PWR.',ko:'PASSIVE: 이 카드 자체는 0 PWR. 다음으로 이 구역에 내는 카드 +3 PWR.'},effect:{kind:'buff_next_only',amt:3}},
   'PC-34':{cost:4,power:6,element:'DARK',                 ability:{en:'DROP: -2 PWR to one enemy card here.',ko:'DROP: 이 구역의 적 카드 -2 PWR.'},                          effect:{kind:'debuff_enemy_one',amt:2}},
   'PC-35':{cost:5,power:8,element:'SOUND',                ability:{en:'DROP: +2 PWR to each of your cards here.',ko:'DROP: 이 구역의 내 카드 전체 +2 PWR.'},                effect:{kind:'buff_all_own',amt:2}},
   'PC-36':{cost:6,power:11,element:'DARK',                ability:{en:'DROP: +3 PWR to each of your cards here.',ko:'DROP: 이 구역의 내 카드 전체 +3 PWR.'},                effect:{kind:'buff_all_own',amt:3}},
-  'PC-37':{cost:3,power:5,element:'SOUL',                 ability:{en:'DROP: +2 PWR to another card here.',ko:'DROP: 이 구역의 내 카드 전체 +2 PWR.'},                      effect:{kind:'buff_all_own',amt:2}},
+  'PC-37':{cost:3,power:5,element:'SOUL',                 ability:{en:'DROP: +2 PWR to another card of yours here (no effect if alone).',ko:'DROP: 이 구역의 다른 내 카드에게 +2 PWR (혼자면 효과 없음).'},effect:{kind:'buff_others',amt:2}},
   'PC-38':{cost:2,power:3,element:'DARK',                 ability:{en:'DROP: -1 PWR to one enemy card here.',ko:'DROP: 이 구역의 적 카드 -1 PWR.'},                          effect:{kind:'debuff_enemy_one',amt:1}},
   'PC-39':{cost:6,power:10,element:'LIGHT',                ability:{en:'DROP: -2 PWR to one enemy card here.',ko:'DROP: 이 구역의 적 카드 -2 PWR.'},                          effect:{kind:'debuff_enemy_one',amt:2}},
   'PC-40':{cost:4,power:6,element:'LIGHT',                ability:{en:'PASSIVE: +2 PWR if this is the only card here.',ko:'PASSIVE: 이 구역의 유일한 카드면 +2 PWR.'},      effect:{kind:'buff_self_if_only',amt:2}},
   'PC-41':{cost:2,power:0,element:'LIGHT',                ability:{en:'PASSIVE: Enemy cards played here get -1 PWR.',ko:'PASSIVE: 이 구역의 적 카드 전체 -1 PWR.'},         effect:{kind:'debuff_enemy_all',amt:1}},
-  'PC-42':{cost:4,power:2,element:'DARK',                 ability:{en:'DROP: +4 PWR if an enemy effect targeted this location.',ko:'DROP: 조건부 +2 PWR(근사치).'},        effect:{kind:'buff_self_flat',amt:2}},
+  'PC-42':{cost:4,power:2,element:'DARK',                 ability:{en:'DROP: +2 PWR, always (simplified from a complex original condition).',ko:'DROP: 조건 없이 항상 +2 PWR(원래 조건이 복잡해 단순화함).'},effect:{kind:'buff_self_flat',amt:2}},
   'PC-43':{cost:6,power:10,element:'SOUND',                ability:{en:'DROP: +3 PWR to your lowest-PWR card here.',ko:'DROP: 이 구역의 내 최저파워 카드 +3 PWR.'},          effect:{kind:'buff_lowest',amt:3}},
   'PC-44':{cost:5,power:7,element:'LIGHT',                ability:{en:'LINK: If another LIGHT card is here, +2 PWR.',ko:'LINK: 이 구역에 다른 LIGHT 카드가 있으면 +2 PWR.'}, effect:{kind:'buff_self_if_element',el:'LIGHT',amt:2}},
   'PC-45':{cost:2,power:3,element:'SOUL',                 ability:{en:'LINK: If NAYUN is here, +2 PWR.',ko:'LINK: 이 구역에 NAYUN이 있으면 +2 PWR.'},                        effect:{kind:'buff_self_if_person',person:'NAYUN',amt:2}},
   'PC-46':{cost:5,power:8,element:'SOUND',                ability:{en:'LINK: If your other card here has lower PWR, +2 PWR.',ko:'LINK: 이 구역의 다른 내 카드보다 파워가 높으면 +2 PWR.'},effect:{kind:'buff_self_if_lowerother',amt:2}},
-  'PC-47':{cost:4,power:4,element:'LIGHT',                ability:{en:'DROP: Your next card here gets +2 PWR.',ko:'DROP: 이 구역의 내 카드 전체 +2 PWR.'},                  effect:{kind:'buff_all_own',amt:2}},
+  'PC-47':{cost:4,power:4,element:'LIGHT',                ability:{en:'DROP: The next card you play here gets +2 PWR.',ko:'DROP: 다음으로 이 구역에 내는 카드 +2 PWR.'},         effect:{kind:'buff_next_only',amt:2}},
   'PC-48':{cost:3,power:4,element:'LIGHT',                ability:{en:'DROP: -1 PWR to each enemy card here.',ko:'DROP: 이 구역의 적 카드 전체 -1 PWR.'},                    effect:{kind:'debuff_enemy_all',amt:1}},
   'PC-49':{cost:6,power:9,element:'LIGHT',                ability:{en:'DROP: -3 PWR to one enemy card here.',ko:'DROP: 이 구역의 적 카드 -3 PWR.'},                          effect:{kind:'debuff_enemy_one',amt:3}},
   'PC-50':{cost:5,power:9,element:'SOUND',                ability:{en:'PASSIVE: +3 PWR if you have no LIGHT cards here.',ko:'PASSIVE: 이 구역에 LIGHT 카드가 없으면 +3 PWR.'},effect:{kind:'buff_self_if_no_element',el:'LIGHT',amt:3}},
-  'PC-51':{cost:3,power:5,element:'SOUL',person:'NAYUN',  ability:{en:'PASSIVE: +2 PWR if an enemy effect was revealed here.',ko:'PASSIVE: 조건부 +2 PWR(근사치).'},        effect:{kind:'buff_self_flat',amt:2}},
-  'PC-52':{cost:2,power:3,element:'LIGHT',                ability:{en:'DROP: +2 PWR to another card here.',ko:'DROP: 이 구역의 내 카드 전체 +2 PWR.'},                      effect:{kind:'buff_all_own',amt:2}},
+  'PC-51':{cost:3,power:5,element:'SOUL',person:'NAYUN',  ability:{en:'PASSIVE: +2 PWR, always (simplified from a complex original condition).',ko:'PASSIVE: 조건 없이 항상 +2 PWR(원래 조건이 복잡해 단순화함).'},effect:{kind:'buff_self_flat',amt:2}},
+  'PC-52':{cost:2,power:3,element:'LIGHT',                ability:{en:'DROP: +2 PWR to another card of yours here (no effect if alone).',ko:'DROP: 이 구역의 다른 내 카드에게 +2 PWR (혼자면 효과 없음).'},effect:{kind:'buff_others',amt:2}},
   'PC-53':{cost:6,power:0,element:'DARK',                 ability:{en:'DROP: +1 PWR for each different element you have here.',ko:'DROP: 이 구역의 서로 다른 속성 수만큼 +1 PWR.'},effect:{kind:'buff_element_count',amt:1}},
   'PC-54':{cost:4,power:5,element:'LIGHT',                ability:{en:'DROP: +2 PWR to your lowest-PWR card here.',ko:'DROP: 이 구역의 내 최저파워 카드 +2 PWR.'},          effect:{kind:'buff_lowest',amt:2}},
-  'PC-55':{cost:5,power:9,element:'SOUND',person:'XENA',  ability:{en:'DROP: +2 PWR to another card here.',ko:'DROP: 이 구역의 내 카드 전체 +2 PWR.'},                      effect:{kind:'buff_all_own',amt:2}}
+  'PC-55':{cost:5,power:9,element:'SOUND',person:'XENA',  ability:{en:'DROP: +2 PWR to another card of yours here (no effect if alone).',ko:'DROP: 이 구역의 다른 내 카드에게 +2 PWR (혼자면 효과 없음).'},effect:{kind:'buff_others',amt:2}}
 };
 /* 갤러리(R+) 카드 "같은 시리즈" 링크 효과 — ZENA_TCG_전체통합_카드DB_v1.md §3-2 공식.
    등급별 고정 보너스(R+1/S+2/SR+3/SSR+4)를 "이 구역에 같은 시리즈 카드가 또 있으면" 발동. */
@@ -224,7 +229,7 @@ function normalize(def){
     cost:      tcgOverride ? tcgOverride.cost : base.cost,
     power:     tcgOverride ? tcgOverride.power : base.power,
 
-    ability:   (tcgOverride && tcgOverride.ability) || GRADE_ABILITY[grade] || null,
+    ability:   (tcgOverride && tcgOverride.ability) || (effect ? linkAbility(effect.amt) : NO_ABILITY),
     effect:    effect,
     isTcg:     isTcg,
     dust:      DUST[grade] || 1,
@@ -259,7 +264,6 @@ function ownedMap(){
 
 var XenaCards = {
   GRADE_STATS: GRADE_STATS,
-  GRADE_ABILITY: GRADE_ABILITY,
   ELEMENT_ABBR: ELEMENT_ABBR,
   ELEMENTS: ['SOUND','SOUL','DARK','LIGHT','METAL','BUG'],
 

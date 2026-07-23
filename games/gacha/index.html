@@ -234,14 +234,19 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .col-rate{font-family:var(--font-mono);font-size:.7rem;color:var(--cyan);letter-spacing:.1em;}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
 .tab{font-family:var(--font-mono);font-size:.66rem;font-weight:500;letter-spacing:.1em;padding:8px 16px;border-radius:20px;border:1px solid var(--hair);background:rgba(255,255,255,.03);color:var(--text-dim);transition:.25s ease;}
+.tab-count{font-size:.6rem;opacity:.75;}
 .tab.sel{color:var(--cyan);border-color:rgba(63,224,255,.5);box-shadow:0 0 14px rgba(63,224,255,.18);}
 .tab.tab-tcg{color:#fff7e0;border-color:rgba(232,196,104,.4);background:linear-gradient(120deg, rgba(255,247,224,.06), rgba(232,196,104,.04));}
 .tab.tab-tcg.sel{color:#fffbeb;border-color:rgba(255,247,224,.8);box-shadow:0 0 16px rgba(232,196,104,.4);}
-.ccard-tcg-badge{position:absolute;bottom:6px;right:6px;font-family:var(--font-mono);font-size:.5rem;font-weight:700;letter-spacing:.06em;
-  padding:3px 7px;border-radius:9px;background:linear-gradient(120deg,#fff7e0,#e8c468);color:#2a1f06;z-index:2;box-shadow:0 0 8px rgba(232,196,104,.5);}
 .celement-badge{position:absolute;top:6px;right:6px;font-family:var(--font-mono);font-size:.45rem;font-weight:700;letter-spacing:.05em;
   padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.65);border:1px solid currentColor;color:#fff;z-index:1;text-shadow:0 0 3px rgba(0,0,0,.8);}
-.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px 12px;}
+/* [2026-07-26] 재구성: TCG 프리미엄 카드는 존재 자체로 정보가 다 그려져 있어서 다른
+   배지로 가리지 말자는 요청 — TCG 금색 마크/이름/"TCG 전용" 문구를 전부 제거했다.
+   등급 표시는 카드 위에 얹지 않고 아래(카드 밖) 중앙에 통일 표시, 수량(×N)도 카드
+   안이 아니라 바깥 우상단에 배치 — 래퍼로 감싸서 구현. */
+.ccard-wrap{position:relative;}
+.ccard-wrap.owned{cursor:pointer;}
 .ccard{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:3/4.35;border:1px solid var(--hair);background:rgba(255,255,255,.02);transition:.25s ease;}
 .ccard.owned{cursor:pointer;}
 .ccard.owned:hover{transform:translateY(-3px);}
@@ -250,13 +255,14 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .ccard.locked::after{content:'?';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:rgba(230,230,238,.25);}
 .ccard .cinfo{position:absolute;left:0;right:0;bottom:0;padding:18px 8px 6px;background:linear-gradient(transparent, rgba(0,0,0,.88));}
 .ccard .cinfo b{display:block;font-size:.6rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.gtag{position:absolute;top:6px;left:6px;font-family:var(--font-mono);font-size:.54rem;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:10px;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);}
-.gtag.N{color:var(--g-N);border:1px solid rgba(185,185,198,.5);}
-.gtag.R{color:var(--g-R);border:1px solid rgba(63,224,255,.55);}
-.gtag.S{color:var(--g-S);border:1px solid rgba(160,107,255,.55);}
-.gtag.SR{color:var(--g-SR);border:1px solid rgba(255,47,176,.55);}
-.gtag.SSR{color:var(--g-SSR);border:1px solid rgba(232,196,104,.6);}
-.dupe{position:absolute;top:6px;right:6px;font-family:var(--font-mono);font-style:normal;font-size:.56rem;font-weight:700;color:var(--gold);background:rgba(0,0,0,.72);padding:3px 7px;border-radius:10px;}
+.ccard-grade-below{text-align:center;font-family:var(--font-mono);font-size:.6rem;font-weight:700;letter-spacing:.12em;margin-top:5px;}
+.ccard-grade-below.N{color:var(--g-N);}
+.ccard-grade-below.R{color:var(--g-R);}
+.ccard-grade-below.S{color:var(--g-S);}
+.ccard-grade-below.SR{color:var(--g-SR);}
+.ccard-grade-below.SSR{color:var(--g-SSR);}
+.dupe-outside{position:absolute;top:-8px;right:-6px;z-index:3;font-family:var(--font-mono);font-style:normal;font-size:.56rem;font-weight:700;
+  color:var(--gold);background:#1a1220;border:1px solid rgba(232,196,104,.6);padding:2px 7px;border-radius:10px;}
 
 /* ── 등급별 테두리 퀄리티 (도감·뽑기연출·상세 공용) ── */
 .gframe-N{border-width:1px!important;border-color:var(--g-N)!important;box-shadow:none!important;}
@@ -453,14 +459,14 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
     <div class="col-rate" id="col-rate">0 / 0 (0%)</div>
   </div>
   <div class="tabs" id="tabs">
-    <button class="tab" data-g="MINE"><span lang="en">MY CARDS</span><span lang="ko">내 카드</span></button>
-    <button class="tab sel" data-g="ALL"><span lang="en">ALL</span><span lang="ko">전체</span></button>
-    <button class="tab" data-g="N">N</button>
-    <button class="tab" data-g="R">R</button>
-    <button class="tab" data-g="S">S</button>
-    <button class="tab" data-g="SR">SR</button>
-    <button class="tab" data-g="SSR">SSR</button>
-    <button class="tab tab-tcg" data-g="TCG"><span lang="en">TCG EXCLUSIVE</span><span lang="ko">TCG 전용</span></button>
+    <button class="tab" data-g="MINE"><span lang="en">MY CARDS</span><span lang="ko">내 카드</span> <span class="tab-count" id="tc-MINE"></span></button>
+    <button class="tab sel" data-g="ALL"><span lang="en">ALL</span><span lang="ko">전체</span> <span class="tab-count" id="tc-ALL"></span></button>
+    <button class="tab" data-g="N">N <span class="tab-count" id="tc-N"></span></button>
+    <button class="tab" data-g="R">R <span class="tab-count" id="tc-R"></span></button>
+    <button class="tab" data-g="S">S <span class="tab-count" id="tc-S"></span></button>
+    <button class="tab" data-g="SR">SR <span class="tab-count" id="tc-SR"></span></button>
+    <button class="tab" data-g="SSR">SSR <span class="tab-count" id="tc-SSR"></span></button>
+    <button class="tab tab-tcg" data-g="TCG"><span lang="en">TCG EXCLUSIVE</span><span lang="ko">TCG 전용</span> <span class="tab-count" id="tc-TCG"></span></button>
   </div>
   <div class="album" id="album"></div>
 </div>
@@ -934,14 +940,15 @@ function renderAlbum(){
     else if(curTab !== 'ALL' && (c.grade !== curTab || c.premium)) return;
     shown++;
     var cell = document.createElement('div');
-    cell.className = 'ccard '+(n>0?('owned gframe-'+c.grade):'locked');
+    cell.className = 'ccard-wrap'+(n>0?' owned':'');
     cell.innerHTML =
-      '<img src="'+c.img+'" alt="'+(n>0?c.name:'locked card')+'" loading="lazy" draggable="false">'+
-      '<span class="gtag '+c.grade+'">'+c.grade+'</span>'+
-      (n>1 ? '<span class="dupe">&times;'+n+'</span>' : '')+
-      (c.premium ? '<span class="ccard-tcg-badge">TCG</span>' : '')+
-      (c.element ? '<span class="celement-badge" style="background:'+ELEMENT_COLOR[c.element]+'">'+(lang==='ko'?ELEMENT_LABEL[c.element].ko:ELEMENT_LABEL[c.element].en)+'</span>' : '')+
-      (n>0 ? '<div class="cinfo"><b>'+c.name+'</b>'+(c.premium ? t(' · TCG exclusive',' · TCG 전용') : '')+'</div>' : '');
+      (n>1 ? '<span class="dupe-outside">&times;'+n+'</span>' : '')+
+      '<div class="ccard '+(n>0?('owned gframe-'+c.grade):'locked')+'">'+
+        '<img src="'+c.img+'" alt="'+(n>0?c.name:'locked card')+'" loading="lazy" draggable="false">'+
+        (!c.premium && c.element ? '<span class="celement-badge" style="background:'+ELEMENT_COLOR[c.element]+'">'+(lang==='ko'?ELEMENT_LABEL[c.element].ko:ELEMENT_LABEL[c.element].en)+'</span>' : '')+
+        (n>0 && !c.premium ? '<div class="cinfo"><b>'+c.name+'</b></div>' : '')+
+      '</div>'+
+      '<div class="ccard-grade-below '+c.grade+'">'+c.grade+'</div>';
     if(n>0){ cell.addEventListener('click', function(){ openDetail(c); }); }
     grid.appendChild(cell);
   });
@@ -957,7 +964,26 @@ function renderRate(){
   var pct = AVAIL.length ? Math.round(owned/AVAIL.length*100) : 0;
   $('col-rate').textContent = owned + ' / ' + AVAIL.length + ' (' + pct + '%)';
 }
-function renderAll(){ renderWallet(); renderAlbum(); renderRate(); tickCooldowns(); }
+/* [2026-07-26] "내카드 누르면 몇장중에 몇장인지" 요청 — 탭마다 보유/전체 카운트 표시 */
+function renderTabCounts(){
+  var groups = { MINE:0, ALL:0, N:0, R:0, S:0, SR:0, SSR:0, TCG:0 };
+  var totals = { MINE:0, ALL:AVAIL.length, N:0, R:0, S:0, SR:0, SSR:0, TCG:0 };
+  AVAIL.forEach(function(c){
+    var owned = !!st.owned[c.id];
+    if(c.premium) totals.TCG++; else totals[c.grade] = (totals[c.grade]||0) + 1;
+    if(owned){
+      groups.ALL++;
+      groups.MINE++;
+      if(c.premium) groups.TCG++; else groups[c.grade] = (groups[c.grade]||0) + 1;
+    }
+  });
+  totals.MINE = AVAIL.length;
+  Object.keys(totals).forEach(function(k){
+    var el = $('tc-'+k);
+    if(el) el.textContent = groups[k] + '/' + totals[k];
+  });
+}
+function renderAll(){ renderWallet(); renderAlbum(); renderRate(); renderTabCounts(); tickCooldowns(); }
 
 /* ── 카드 상세 & 분해 & 저장 (도감) ── */
 var detailCard = null;

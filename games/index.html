@@ -132,6 +132,10 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
 .badge{position:absolute;top:12px;left:12px;z-index:2;font-family:var(--font-mono);font-size:.58rem;font-weight:700;letter-spacing:.18em;padding:5px 11px;border-radius:14px;backdrop-filter:blur(8px);}
 .badge.live-b{background:rgba(63,255,180,.16);border:1px solid rgba(63,255,180,.55);color:#5cffc0;text-shadow:0 0 10px rgba(92,255,192,.6);}
 .badge.soon-b{color:var(--text-dim);background:rgba(255,255,255,.07);border:1px solid var(--hair);}
+/* [2026-07-26] SOON 카드 회색 처리 — 관리자로 확인되면 admin-beta-btn 스크립트가 이 클래스를 제거 */
+.gcard.soon-lock{opacity:.55;filter:grayscale(.6);}
+.gcard.soon-lock:hover{transform:none;box-shadow:none;}
+.gcard.soon-lock .play-btn{cursor:not-allowed;}
 .gbody{padding:20px 22px 22px;display:flex;flex-direction:column;flex:1;}
 .gkind{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;margin-bottom:8px;}
 .grid-theme .gkind{color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);}
@@ -194,6 +198,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
     <button class="cat-btn sel" data-cat="popular">🔥 <span lang="en">POPULAR</span><span lang="ko">인기</span></button>
     <button class="cat-btn" data-cat="photo">📸 <span lang="en">PHOTO &amp; VIBES</span><span lang="ko">포토 &amp; 감성</span></button>
     <button class="cat-btn" data-cat="puzzle">🧩 <span lang="en">PUZZLE &amp; STRATEGY</span><span lang="ko">퍼즐 &amp; 전략</span></button>
+    <button class="cat-btn" data-cat="soon">⏳ <span lang="en">COMING SOON</span><span lang="ko">출시 예정</span></button>
   </div>
 
   <div class="grid" id="game-grid">
@@ -299,37 +304,37 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- SIGNAL CLASH (베타) -->
-    <div class="gcard live grid-theme" data-id="tcg" data-cat="popular,puzzle">
+    <!-- SIGNAL CLASH (관리자 전용 베타 — 일반 사용자에겐 SOON) -->
+    <div class="gcard live grid-theme soon-lock" data-id="tcg" data-cat="soon">
       <div class="thumb">
-        <span class="badge live-b" style="background:rgba(63,224,255,.18);border-color:rgba(63,224,255,.55);color:#9fe9ff;">&#9679; BETA</span>
+        <span class="badge soon-b">&#9679; SOON</span>
         <img src="../images/thumbs/thumb-tcg.jpg" alt="SIGNAL CLASH">
       </div>
       <div class="gbody">
         <div class="gkind" style="color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);">Card Battle</div>
         <h3>SIGNAL CLASH</h3>
         <p>
-          <span lang="en">6 turns, 3 zones, win two of three. A XENA card battle skeleton — no abilities yet, pure cost/power strategy.</span>
-          <span lang="ko">6턴, 3구역, 2곳 이상 우세 시 승리. 아직 카드 능력은 없는 코스트/파워 전략 뼈대입니다.</span>
+          <span lang="en">6 turns, 3 zones, win two of three. A XENA card battle — coming soon.</span>
+          <span lang="ko">6턴, 3구역, 2곳 이상 우세 시 승리. XENA 카드 배틀 — 곧 출시됩니다.</span>
         </p>
-        <a class="play-btn admin-beta-btn" href="tcg/" data-beta-label-en="PLAY BETA →" data-beta-label-ko="베타 플레이 →"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
+        <a class="play-btn admin-beta-btn" href="tcg/" data-beta-label-en="PLAY BETA →" data-beta-label-ko="베타 플레이 →"><span lang="en">SOON</span><span lang="ko">출시 예정</span></a>
       </div>
     </div>
 
-    <!-- LIVE TOUR (베타) -->
-    <div class="gcard live gacha-theme" data-id="idle" data-cat="popular">
+    <!-- LIVE TOUR (관리자 전용 베타 — 일반 사용자에겐 SOON) -->
+    <div class="gcard live gacha-theme soon-lock" data-id="idle" data-cat="soon">
       <div class="thumb">
-        <span class="badge live-b" style="background:rgba(232,196,104,.18);border-color:rgba(232,196,104,.55);color:#ffd97a;">&#9679; BETA</span>
+        <span class="badge soon-b">&#9679; SOON</span>
         <img src="../images/thumbs/thumb-idle.jpg" alt="LIVE TOUR">
       </div>
       <div class="gbody">
         <div class="gkind" style="color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);">Idle Dispatch</div>
         <h3>LIVE TOUR</h3>
         <p>
-          <span lang="en">Send your cards on tour to Seoul, Tokyo, New York, London. Come back later to collect XC — no need to stay online.</span>
-          <span lang="ko">보유 카드를 서울·도쿄·뉴욕·런던으로 투어 보내고, 나중에 돌아와서 XC를 수령하세요 — 접속 안 해도 진행됩니다.</span>
+          <span lang="en">Send your cards on tour to Seoul, Tokyo, New York, London. Come back later to collect XC — coming soon.</span>
+          <span lang="ko">보유 카드를 서울·도쿄·뉴욕·런던으로 투어 보내고, 나중에 돌아와서 XC를 수령하세요 — 곧 출시됩니다.</span>
         </p>
-        <a class="play-btn admin-beta-btn" href="idle/" data-beta-label-en="PLAY BETA →" data-beta-label-ko="베타 플레이 →"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
+        <a class="play-btn admin-beta-btn" href="idle/" data-beta-label-en="PLAY BETA →" data-beta-label-ko="베타 플레이 →"><span lang="en">SOON</span><span lang="ko">출시 예정</span></a>
       </div>
     </div>
   </div>
@@ -355,11 +360,14 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 });
 
 /* ── 카테고리 필터: 카테고리별 지정 순서대로 재배치 + 그 외는 숨김 ── */
+/* [2026-07-26] "베타는 인기/포토/퍼즐에서 빼고 SOON 탭 신설" 요청 —
+   tcg/idle을 전 카테고리에서 제외하고 전용 soon 탭으로만 노출한다. */
 var CAT_ORDER = {
-  all:     ['grid','cards','tcg','idle','shisen','memory','merge','worldcup'],
-  popular: ['cards','grid','tcg','idle'],
+  all:     ['grid','cards','shisen','memory','merge','worldcup'],
+  popular: ['cards','grid'],
   photo:   ['cards','worldcup'],
-  puzzle:  ['grid','tcg','shisen','memory','merge']
+  puzzle:  ['grid','shisen','memory','merge'],
+  soon:    ['tcg','idle']
 };
 var grid = document.getElementById('game-grid');
 var allCards = Array.prototype.slice.call(grid.children);
@@ -394,19 +402,34 @@ document.querySelectorAll('.game-card, a, button').forEach(function(el){
 });
 
 /* 관리자 전용 베타(SIGNAL CLASH, LIVE TOUR) — 로그인 상태가 확정되기 전까지는 일단 잠가두고,
-   확인된 뒤 관리자면 풀어준다. href 자체를 제거해서 어떤 경로로도 클릭이 안 통하게 한다. */
+   확인된 뒤 관리자면 풀어준다. href 자체를 제거해서 어떤 경로로도 클릭이 안 통하게 한다.
+   [2026-07-26] 일반 사용자에겐 "SOON"(회색)으로 보이던 카드를, 관리자에게는 원래
+   BETA 카드처럼(뱃지/버튼 문구 원복) 보여준다 — 관리자는 실제로 베타를 플레이해야 하니까. */
 (function(){
   var links = document.querySelectorAll('.admin-beta-btn');
-  var originalHref = {};
-  links.forEach(function(el, i){ originalHref[i] = el.getAttribute('href'); el.classList.add('locked'); el.removeAttribute('href'); });
+  var originalHref = {}, originalBtnHtml = {};
+  links.forEach(function(el, i){
+    originalHref[i] = el.getAttribute('href');
+    originalBtnHtml[i] = '<span lang="en">'+(el.getAttribute('data-beta-label-en')||'PLAY BETA →')+'</span>'+
+                          '<span lang="ko">'+(el.getAttribute('data-beta-label-ko')||'베타 플레이 →')+'</span>';
+    el.classList.add('locked');
+    el.removeAttribute('href');
+  });
   function apply(state){
     links.forEach(function(el, i){
+      var card = el.closest('.gcard');
+      var badge = card ? card.querySelector('.badge') : null;
       if (state && state.isAdmin){
         el.classList.remove('locked');
         el.setAttribute('href', originalHref[i]);
+        el.innerHTML = originalBtnHtml[i];
+        if (card) card.classList.remove('soon-lock');
+        if (badge){ badge.textContent = '● BETA'; badge.className = 'badge live-b'; }
       } else {
         el.classList.add('locked');
         el.removeAttribute('href');
+        if (card) card.classList.add('soon-lock');
+        if (badge){ badge.textContent = '● SOON'; badge.className = 'badge soon-b'; }
       }
     });
   }

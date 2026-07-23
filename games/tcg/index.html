@@ -92,6 +92,15 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .st-item b{color:var(--silver);font-weight:700;font-size:.82rem;margin-left:5px;}
 .st-item.mana b{color:var(--cyan);}
 .st-item.turn b{color:var(--purple-light);}
+/* [2026-07-26] 아주 넓은 화면(1400px+)에서는 상태바를 화면 왼쪽 가운데, 액션 버튼을
+   오른쪽 가운데로 — 그보다 좁으면(대부분의 데스크톱/노트북) 보드와 겹칠 위험이 있어
+   기존 상단/하단 배치를 유지한다. */
+@media(min-width:1400px){
+  #screen-play .status{position:fixed;left:18px;top:50%;transform:translateY(-50%);flex-direction:column;
+    align-items:flex-start;width:150px;z-index:40;}
+  #screen-play > .actions{position:fixed;right:18px;top:50%;transform:translateY(-50%);flex-direction:column;
+    width:140px;z-index:40;margin-top:0;}
+}
 
 /* ── board ── */
 .board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
@@ -110,8 +119,10 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .z-score .me{color:var(--cyan);} .z-score .op{color:var(--magenta);} .z-score .vs{color:var(--text-dim);font-size:.6rem;font-weight:400;}
 .z-score.win-me{background:rgba(63,224,255,.12);border-radius:8px;}
 .z-score.win-op{background:rgba(255,47,176,.12);border-radius:8px;}
-.slots{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;min-height:56px;align-content:flex-start;}
-.slots.op{align-content:flex-end;}
+/* [2026-07-26] "카드 3장 넣으니 1x3으로 한 줄에 놓인다" 피드백 — 폭에 따라 자동으로
+   줄바꿈되는 flex-wrap 대신, 항상 2열로 고정되는 grid로 바꿔 2x2 형태를 강제한다. */
+.slots{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;justify-items:center;min-height:56px;align-content:start;}
+.slots.op{align-content:end;}
 
 /* ── card ──
    [2026-07-24] 전면 개편: 카드 이름 문구는 완전히 제거(정보를 다 가려서). 대신
@@ -288,6 +299,15 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .result.win h2{color:var(--cyan);} .result.lose h2{color:var(--magenta);} .result.draw h2{color:var(--text-dim);}
 .result .final{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;}
 .reward{font-family:var(--font-mono);font-size:.9rem;color:var(--gold);margin:14px 0 22px;}
+/* [2026-07-26] "어떻게 이기고 졌는지 모르겠다" 피드백 — 구역별 결과 요약 카드 3개 */
+.res-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:480px;margin:18px auto;}
+.rb-zone{border:1px solid var(--hair);border-radius:12px;padding:10px 8px;background:rgba(255,255,255,.03);}
+.rb-zone.win-me{border-color:rgba(63,224,255,.5);background:rgba(63,224,255,.08);}
+.rb-zone.win-op{border-color:rgba(255,47,176,.5);background:rgba(255,47,176,.08);}
+.rb-zone .rb-name{font-family:var(--font-mono);font-size:.56rem;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;}
+.rb-zone .rb-score{font-family:var(--font-mono);font-size:.92rem;font-weight:700;}
+.rb-zone .rb-score .me{color:var(--cyan);} .rb-zone .rb-score .op{color:var(--magenta);}
+.rb-zone .rb-tag{font-family:var(--font-mono);font-size:.54rem;letter-spacing:.08em;margin-top:4px;color:var(--text-dim);}
 
 @media(max-width:620px){
   main{padding:60px 9px 18px;}
@@ -444,6 +464,7 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
       <h2 id="res-title"></h2>
       <p class="final" id="res-zones"></p>
       <p class="final" id="res-power"></p>
+      <div class="res-breakdown" id="res-breakdown"></div>
       <p class="reward" id="res-reward"></p>
       <div class="actions">
         <button class="btn" id="btn-again"><span lang="en">PLAY AGAIN</span><span lang="ko">다시 하기</span></button>
@@ -742,6 +763,23 @@ function computeZone(z){
         case 'buff_all_own':
           for(k = 0; k < own.length; k++) delta[k] += e.amt;
           break;
+        /* [2026-07-26] 버그 수정: "다른 카드 1장에게 +N"류를 buff_all_own(자기 포함)으로
+           근사했더니, 혼자 있어도 자기 자신에게 +N이 붙는 오류가 있었다(되찾은 시민들 등).
+           자기 자신은 제외하고, 다른 카드가 있을 때만 그 카드들에게 적용한다. */
+        case 'buff_others':
+          for(k = 0; k < own.length; k++){ if(k !== i) delta[k] += e.amt; }
+          break;
+        /* [2026-07-26] 버그 수정: "다음에 내는 카드 +N"류를 buff_element/buff_all_own으로
+           근사했더니, 이미 놓여있던(먼저 낸) 카드까지 버프를 받는 오류가 있었다(시안-골드
+           별표 등). 카드 배열은 실제 배치 순서와 같으므로, 이 카드보다 "나중에"(인덱스가
+           더 큰) 놓인 카드만 대상으로 한다 — 정확히 "다음 카드"만 버프. */
+        case 'buff_next_only':
+          for(k = i + 1; k < own.length; k++){
+            if(e.el && own[k].element !== e.el) continue;
+            delta[k] += e.amt;
+            break; /* 바로 다음 한 장만 */
+          }
+          break;
         case 'buff_lowest':
           var lowIdx = -1, lowVal = Infinity;
           for(k = 0; k < own.length; k++){ if(own[k].power < lowVal){ lowVal = own[k].power; lowIdx = k; } }
@@ -1031,6 +1069,21 @@ function finish(retreated){
                              :                      t('DRAW', '무승부');
   $('res-zones').textContent = t('Zones  ' + w.me + ' - ' + w.op, '구역  ' + w.me + ' - ' + w.op);
   $('res-power').textContent = t('Total Power  ' + myP + ' - ' + opP, '총 파워  ' + myP + ' - ' + opP);
+
+  /* [2026-07-26] "어떻게 이기고 졌는지 모르겠다" — 구역별 파워/승패를 요약해서 보여준다 */
+  var bd = '';
+  for(var z = 0; z < 3; z++){
+    var zc = computeZone(z);
+    var pw = zc.p.total, aw = zc.a.total;
+    var tag = pw > aw ? t('WON','승리') : (aw > pw ? t('LOST','패배') : t('TIE','동률'));
+    var cls = pw > aw ? 'win-me' : (aw > pw ? 'win-op' : '');
+    bd += '<div class="rb-zone ' + cls + '">' +
+      '<div class="rb-name">' + t(ZONES[z].en, ZONES[z].ko) + '</div>' +
+      '<div class="rb-score"><span class="me">' + pw + '</span> : <span class="op">' + aw + '</span></div>' +
+      '<div class="rb-tag">' + tag + '</div></div>';
+  }
+  $('res-breakdown').innerHTML = bd;
+
   $('res-reward').textContent = t('Submitting result…', '결과 제출 중…');
   $('end-hint').textContent = '';
   show('end');
