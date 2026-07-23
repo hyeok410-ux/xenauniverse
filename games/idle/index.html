@@ -52,7 +52,7 @@ a{color:inherit;text-decoration:none;}
 
 main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 @media(min-width:1000px){
-  main{max-width:1180px;padding:84px 24px 60px;}
+  main{max-width:1180px;padding:84px 24px 60px;min-height:calc(100vh - 84px);display:flex;flex-direction:column;justify-content:center;}
   .page-head h1{font-size:clamp(2.4rem,4vw,3.4rem);}
   .cities{grid-template-columns:repeat(4,1fr);gap:16px;}
   .city{padding:20px 18px;}
@@ -615,7 +615,7 @@ function renderPicker(){
            '<span class="p-grade" style="color:' + c.color + '">' + c.grade + '</span>' +
            '<span class="p-cost">' + c.cost + 'h</span>' +
            '<span class="p-pow">⚡' + c.power + '</span>' +
-           (c.element ? '<span class="p-element" style="background:var(--' + c.element.toLowerCase() + ')">' + (lang==='ko'?ELEMENT_LABEL[c.element].ko:ELEMENT_LABEL[c.element].en) + '</span>' : '') +
+           (c.element ? '<span class="p-element" style="background:var(--' + c.element.toLowerCase() + ')">' + t(ELEMENT_LABEL[c.element].en, ELEMENT_LABEL[c.element].ko) + '</span>' : '') +
          '</button>';
   }
   $('picker').innerHTML = h;

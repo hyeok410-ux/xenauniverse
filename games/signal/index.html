@@ -379,7 +379,7 @@ document.addEventListener('contextmenu', function(e){
 $('btn-claim').addEventListener('click', function(){
   if(claimed || !window.XenaWallet) return;
   claimed = true;
-  renderClaimBtn();
+  renderClaimBtn(); renderQuests();
   window.XenaWallet.claimDailySignal().then(function(r){
     st.lastClaim = today();
     st.streak = r.streak;
@@ -390,9 +390,13 @@ $('btn-claim').addEventListener('click', function(){
       ? t('+5 XC + streak bonus +'+r.bonus+' XC!', '+5 XC + 7일 연속 보너스 +'+r.bonus+' XC!')
       : t('+5 XC claimed — see you tomorrow!', '+5 XC 수령 — 내일 또 만나요!'));
   }).catch(function(e){
-    if (e && e.code === 'already-exists'){ st.lastClaim = today(); save(SAVE_KEY, st); renderClaimBtn(); return; }
+    /* [2026-07-24] 버그 수정: 실패 시 claimed는 롤백하면서 renderClaimBtn()만 다시
+       불렀고 renderQuests()를 빼먹어서 — 상단 "+5XC 받기" 버튼은 다시 활성화되는데
+       퀘스트 목록의 "오늘의 시그널 받기" 항목은 낙관적 업데이트(done) 상태로 굳어
+       서로 다른 상태를 보여주는 불일치가 있었다. 두 렌더를 항상 같이 호출한다. */
+    if (e && e.code === 'already-exists'){ st.lastClaim = today(); save(SAVE_KEY, st); renderClaimBtn(); renderQuests(); return; }
     claimed = false;
-    renderClaimBtn();
+    renderClaimBtn(); renderQuests();
     toast(t('Could not claim — try again in a moment', '수령에 실패했습니다 — 잠시 후 다시 시도해주세요'));
   });
 });
@@ -412,7 +416,7 @@ $('btn-share').addEventListener('click', function(){
 
 /* ── 퀘스트 (모든 게임 통합) ── */
 var CHESS_PER_MATCH = 8, CHESS_MAX = 3, CHESS_BONUS = 10;
-var WC_BONUS = 10, GACHA_BONUS = 8, MEMORY_BONUS = 8, SHISEN_BONUS = 8, TCG_BONUS = 10, TOUR_BONUS = 10, ALL_BONUS = 25;
+var WC_BONUS = 10, GACHA_BONUS = 8, MEMORY_BONUS = 8, SHISEN_BONUS = 8, TCG_BONUS = 10, TOUR_BONUS = 10, MERGE_BONUS = 10, ALL_BONUS = 25;
 
 function chessSnapshot(){
   var keys = ['og_credits','og_shards','og_grid_rating','og_daily_login'];
@@ -466,13 +470,17 @@ function tourClaimedToday(){
   var d = load('xena_tour_daily_v1', {});
   return d.date === today();
 }
+function mergePlayedToday(){
+  var d = load('xena_merge_daily_v1', {});
+  return d.date === today();
+}
 function claimedFlag(key){ return st[key] === today(); }
 function setClaimedFlag(key){ st[key] = today(); save(SAVE_KEY, st); }
 
 function allQuestsDone(wc){
   return claimed && claimedFlag('wcBonusClaim') && claimedFlag('gachaBonusClaim')
     && st.chessBonusClaimed && claimedFlag('memBonusClaim') && claimedFlag('shBonusClaim')
-    && claimedFlag('tcgBonusClaim') && claimedFlag('tourBonusClaim');
+    && claimedFlag('tcgBonusClaim') && claimedFlag('tourBonusClaim') && claimedFlag('mergeBonusClaim');
 }
 
 function renderQuests(){
@@ -484,6 +492,7 @@ function renderQuests(){
   var chessBonusDone = !!st.chessBonusClaimed;
   var tcgBonusDone = claimedFlag('tcgBonusClaim');
   var tourBonusDone = claimedFlag('tourBonusClaim');
+  var mergeBonusDone = claimedFlag('mergeBonusClaim');
 
   var quests = [
     {icon:'🔮', done: claimed,
@@ -543,7 +552,15 @@ function renderQuests(){
          : t('Claim any city tour, once a day', '아무 도시나 투어 수령 하루 1회'),
       reward: '+'+TOUR_BONUS+' XC',
       act: (tourClaimedToday() && !tourBonusDone) ? 'idle' : null,
-      link: !tourClaimedToday() ? '../idle/' : null}
+      link: !tourClaimedToday() ? '../idle/' : null},
+    {icon:'🫧', done: mergeBonusDone,
+      title: t('Play an XENA MERGE run', 'XENA MERGE 플레이'),
+      sub: mergeBonusDone ? t('Bonus claimed', '보너스 수령 완료')
+         : mergePlayedToday() ? t('Run detected — claim your bonus!', '플레이 감지됨 — 보너스를 받으세요!')
+         : t('Any result, once a day', '결과 무관 하루 1회'),
+      reward: '+'+MERGE_BONUS+' XC',
+      act: (mergePlayedToday() && !mergeBonusDone) ? 'merge' : null,
+      link: !mergePlayedToday() ? '../merge/' : null}
   ];
   var list = $('q-list');
   list.innerHTML = '';
@@ -609,6 +626,7 @@ function bindQuestActions(){
     shisen: function(){ claimQuest('shisen', 'shBonusClaim', SHISEN_BONUS, 'Signal Link quest complete!', '시그널 링크 퀘스트 완료!'); },
     tcg: function(){ claimQuest('tcg', 'tcgBonusClaim', TCG_BONUS, 'SIGNAL CLASH quest complete!', 'SIGNAL CLASH 퀘스트 완료!'); },
     idle: function(){ claimQuest('idle', 'tourBonusClaim', TOUR_BONUS, 'LIVE TOUR quest complete!', 'LIVE TOUR 퀘스트 완료!'); },
+    merge: function(){ claimQuest('merge', 'mergeBonusClaim', MERGE_BONUS, 'XENA MERGE quest complete!', 'XENA MERGE 퀘스트 완료!'); },
     allbonus: function(){ claimQuest('allbonus', 'allBonusClaim', ALL_BONUS, 'all quests bonus!', '전체 완료 보너스!', true); }
   };
   document.querySelectorAll('button[data-act]').forEach(function(btn){

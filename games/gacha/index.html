@@ -117,6 +117,14 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
    [2026-07-24] 5개 팩이 한 줄에 다 들어가 너무 좁아보인다는 피드백 — 카테고리별로
    나눠서 보여주면 팩당 폭이 넓어져 확률표도 안 잘리고 다 보인다. */
 .pack-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:0 auto 22px;}
+/* [2026-07-24] 무료 뽑기 가능할 때 탭에 핑크네온 "!" — 눈에 안 띄어서 뭘 뽑을 수 있는지
+   모르겠다는 피드백 대응. 탭 버튼은 relative가 아니었어서 배지 위치 기준으로 추가. */
+.ptab{position:relative;}
+.ptab-alert{position:absolute;top:-7px;right:-7px;width:17px;height:17px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:.62rem;font-weight:800;
+  color:#fff;background:#ff2fb0;box-shadow:0 0 8px #ff2fb0,0 0 16px rgba(255,47,176,.7);
+  animation:ptabPulse 1.4s ease-in-out infinite;}
+@keyframes ptabPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.18);opacity:.82;}}
 .ptab{font-family:var(--font-mono);font-size:.7rem;font-weight:600;letter-spacing:.08em;padding:10px 20px;border-radius:22px;
   border:1px solid var(--hair);background:rgba(255,255,255,.03);color:var(--text-dim);cursor:pointer;transition:.25s ease;}
 .ptab:hover{color:#fff;border-color:rgba(255,255,255,.3);}
@@ -371,9 +379,9 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
   </div>
 
   <div class="pack-tabs" id="pack-tabs">
-    <button class="ptab sel" data-pt="daily"><span lang="en">DAILY PACKS</span><span lang="ko">데일리팩</span></button>
-    <button class="ptab" data-pt="weekly"><span lang="en">WEEKLY PACK</span><span lang="ko">위클리팩</span></button>
-    <button class="ptab" data-pt="premium"><span lang="en">PREMIUM PACK</span><span lang="ko">프리미엄 팩</span></button>
+    <button class="ptab sel" data-pt="daily"><span lang="en">DAILY PACKS</span><span lang="ko">데일리팩</span><span class="ptab-alert" id="ptab-alert-daily" hidden>!</span></button>
+    <button class="ptab" data-pt="weekly"><span lang="en">WEEKLY PACK</span><span lang="ko">위클리팩</span><span class="ptab-alert" id="ptab-alert-weekly" hidden>!</span></button>
+    <button class="ptab" data-pt="premium"><span lang="en">PREMIUM PACK</span><span lang="ko">프리미엄 팩</span><span class="ptab-alert" id="ptab-alert-premium" hidden>!</span></button>
   </div>
 
   <div class="packs">
@@ -810,11 +818,13 @@ function fmtLeftLong(ms){
   return t(hours+'h '+mins+'m', hours+'시간 '+mins+'분');
 }
 function tickCooldowns(){
+  var dailyFree = false;
   ['signal','sov','elite'].forEach(function(p){
     var left = PACKS[p].coolMs - (Date.now() - (st.packs[p]||0));
     var btn = $('btn-'+p);
     var cool = $('cool-'+p);
     if(left <= 0){
+      dailyFree = true;
       btn.disabled = false;
       btn.textContent = t('FREE DRAW', '무료 뽑기');
       cool.textContent = t('Free draw available now!', '지금 무료 뽑기 가능!');
@@ -826,6 +836,7 @@ function tickCooldowns(){
     var xcBtn = $('btn-'+p+'-xc');
     xcBtn.disabled = wallet.xc < PACKS[p].price;
   });
+  $('ptab-alert-daily').hidden = !dailyFree;
   /* 위클리 팩: 뉴욕시간 월요일 자정 리셋 + XC 결제 (프리미엄 슬롯) */
   var wBtn = $('btn-weekly-pack'), wCool = $('cool-weekly');
   var claimed = st.packs.weeklyClaimed === nyWeekMondayKey();
@@ -837,11 +848,13 @@ function tickCooldowns(){
       ? t('OPEN · '+wPrice+' XC', '열기 · '+wPrice+' XC')
       : t('Need '+wPrice+' XC', wPrice+' XC 필요');
     wCool.textContent = t('Once per week · '+wPrice+' XC per open', '주 1회 · 오픈당 '+wPrice+' XC');
+    $('ptab-alert-weekly').hidden = !canAfford;
   } else {
     var leftW = nyNextMondayMs() - Date.now();
     wBtn.disabled = true;
     wBtn.textContent = t('Opened this week', '이번 주 오픈 완료');
     wCool.textContent = t('Next reset in '+fmtLeftLong(leftW)+' · '+wPrice+' XC per open', '다음 초기화까지 '+fmtLeftLong(leftW)+' · 오픈당 '+wPrice+' XC');
+    $('ptab-alert-weekly').hidden = true;
   }
   /* 아카이브 팩: 하루 1회 무료 1장(뉴욕 자정 리셋) + 언제든 3000 XC로 3장 */
   var aBtn = $('btn-archive'), aCool = $('cool-archive'), aXcBtn = $('btn-archive-xc');
@@ -851,11 +864,13 @@ function tickCooldowns(){
     aBtn.disabled = false;
     aBtn.textContent = t('FREE DRAW · 1 CARD', '무료 뽑기 · 1장');
     aCool.textContent = t('Free draw available now! · Buy 3 for '+aPrice+' XC anytime', '지금 무료 뽑기 가능! · 3장 구매는 언제든 '+aPrice+' XC');
+    $('ptab-alert-premium').hidden = false;
   } else {
     var leftA = nyNextMidnightMs() - Date.now();
     aBtn.disabled = true;
     aBtn.textContent = t('Claimed today', '오늘 수령 완료');
     aCool.textContent = t('Next free draw in '+fmtLeftLong(leftA)+' · Buy 3 for '+aPrice+' XC anytime', '다음 무료까지 '+fmtLeftLong(leftA)+' · 3장 구매는 언제든 '+aPrice+' XC');
+    $('ptab-alert-premium').hidden = true;
   }
   aXcBtn.disabled = wallet.xc < aPrice;
 }

@@ -96,9 +96,11 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 
 /* 데스크톱에서 게임판이 너무 작아보였음 → 420 → 560 로 확장.
    3:4 비율은 유지 (물리엔진이 캔버스 크기에 자동 맞춰지므로 gameplay 는 그대로) */
-#jar-wrap{position:relative;width:100%;aspect-ratio:3/4;max-width:560px;margin:0 auto;border-radius:18px;overflow:hidden;
+/* [2026-07-24] "웹에서 너무 작다" 피드백 — 560 → 840(1.5배)로 확대.
+   어두운 배경 덮개도 옅게(0.9 → 0.5) 해서 새로 넣은 jar-bg.jpg가 잘 보이게 한다. */
+#jar-wrap{position:relative;width:100%;aspect-ratio:3/4;max-width:840px;margin:0 auto;border-radius:18px;overflow:hidden;
   border:2px solid rgba(160,107,255,.35);
-  background:linear-gradient(180deg, rgba(160,107,255,.06), rgba(6,8,16,.9)), url('jar-bg.jpg') center/cover no-repeat;
+  background:linear-gradient(180deg, rgba(160,107,255,.04), rgba(6,8,16,.5)), url('jar-bg.jpg') center/cover no-repeat;
   box-shadow:0 0 40px rgba(160,107,255,.12), inset 0 0 60px rgba(0,0,0,.5);}
 #jar{width:100%;height:100%;display:block;touch-action:none;cursor:pointer;}
 .gameover-line{position:absolute;left:0;right:0;top:64px;height:1px;background:repeating-linear-gradient(90deg, rgba(255,107,138,.6) 0 8px, transparent 8px 16px);pointer-events:none;}
@@ -219,15 +221,17 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   /* ── 티어 정의 (반지름 px 기준, 캔버스 좌표계) ──
      [2026-07-23] N 이전 단계(SEED)와 XENA 다음 단계(OVERRIDE)를 추가해 8단계로 확장.
      성장감이 약하다는 피드백을 반영해 상위 단계로 갈수록 반지름이 더 크게 벌어지도록 재조정. */
+  /* [2026-07-24] "구슬이 웹상에서 너무 작다" 피드백 — 전 티어 반지름 1.5배 확대
+     (jar-wrap도 같은 비율로 840px까지 커졌으니 상대적 비율은 그대로 유지됨). */
   var TIERS = [
-    {r:11, color:'#5f6478', label:'SEED', score:1}, /* N(근백색)과 뚜렷이 구분되도록 더 어둡고 진한 슬레이트톤으로 */
-    {r:15, color:'#e6e6ee', label:'N',    score:2},
-    {r:20, color:'#3fe0ff', label:'R',    score:5},
-    {r:27, color:'#5cffc0', label:'S',    score:13},
-    {r:35, color:'#a06bff', label:'SR',   score:32},
-    {r:44, color:'#e8c468', label:'SSR',  score:75},
-    {r:55, color:'#ff2fb0', label:'XENA', score:170},
-    {r:70, color:'#fff2c8', label:'OVR',  score:380}
+    {r:17, color:'#5f6478', label:'SEED', score:1}, /* N(근백색)과 뚜렷이 구분되도록 더 어둡고 진한 슬레이트톤으로 */
+    {r:23, color:'#e6e6ee', label:'N',    score:2},
+    {r:30, color:'#3fe0ff', label:'R',    score:5},
+    {r:41, color:'#5cffc0', label:'S',    score:13},
+    {r:53, color:'#a06bff', label:'SR',   score:32},
+    {r:66, color:'#e8c468', label:'SSR',  score:75},
+    {r:83, color:'#ff2fb0', label:'XENA', score:170},
+    {r:105,color:'#fff2c8', label:'OVR',  score:380}
   ];
   var OVERRIDE_TIER = TIERS.length - 1; /* 제나 오버라이드 — 최상위 티어 */
   /* 합체 SFX 4종을 등급 구간별로 나눠서 재생 — 높은 티어일수록 더 웅장한 사운드 */
@@ -252,6 +256,13 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   orbsImg.src = 'orbs.png';
   var ORB_SPRITE_COUNT = 6; /* orbs.png 안의 오브 개수 (N,R,S,SR,SSR,XENA 순서) */
   var ORB_TIER_OFFSET = 1;  /* TIERS[1]=N 부터 오브 스프라이트가 대응 시작 */
+  /* [2026-07-24] 소브란 얼굴 라이징 플로어 — sovran-floor.png 를 games/merge/ 에 넣으면
+     자동으로 적용된다(아직 자산 없음 → 로드 실패 시 onload가 안 불려 sovranReady=false로
+     남고, 기존 그라디언트 바닥으로 자연스럽게 폴백). 프롬프트: 프롬프트_아카이브 참고. */
+  var sovranImg = new Image();
+  var sovranReady = false;
+  sovranImg.onload = function(){ sovranReady = true; };
+  sovranImg.src = 'sovran-floor.png';
 
   var $ = function(id){ return document.getElementById(id); };
   var canvas = $('jar'), ctx = canvas.getContext('2d');
@@ -272,6 +283,36 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var best = 0;
   try{ best = JSON.parse(localStorage.getItem(BEST_KEY)||'{}').best || 0; }catch(e){}
   $('hud-best').textContent = best;
+
+  /* ── 주간 최고 기록 ── [2026-07-24] 전체 유저 대상 서버 랭킹(games/shared-leaderboard.js)은
+     "시간(초) 오름차순" 게임(기억력/사천성) 전용으로 설계돼 있어, 점수를 최대화하는 머지에
+     그대로 재사용하려면 서버 anti-cheat 검증식(스테이지별 물리적 최소/최대 시간)을 새로
+     설계해야 한다 — 그 백엔드 작업은 범위 밖이라 우선 "내 이번주 최고 기록"을 로컬에 저장해
+     보여준다(전체 유저 랭킹판은 다음 단계). shared-leaderboard.js와 동일한 weekKey 계산식. */
+  var WEEKLY_KEY = 'xena_merge_weekly_v1';
+  function weekKey(){
+    var d = new Date();
+    var onejan = new Date(d.getFullYear(), 0, 1);
+    var wk = Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+    return d.getFullYear() + '-W' + wk;
+  }
+  var weeklyBest = 0;
+  (function(){
+    var wk = weekKey(), saved = null;
+    try{ saved = JSON.parse(localStorage.getItem(WEEKLY_KEY)||'null'); }catch(e){}
+    weeklyBest = (saved && saved.week === wk) ? (saved.best || 0) : 0;
+  })();
+  function saveWeeklyBest(s){
+    if (s <= weeklyBest) return;
+    weeklyBest = s;
+    try{ localStorage.setItem(WEEKLY_KEY, JSON.stringify({week:weekKey(), best:weeklyBest})); }catch(e){}
+  }
+  /* 데일리 시그널의 "XENA MERGE 플레이" 퀘스트가 감지할 플래그 — SIGNAL CLASH/LIVE TOUR와
+     동일한 패턴. 게임오버(=한 판 완료) 시점에 기록 — 머지에는 서버 검증 보상이 아직 없어
+     우선 이 방식으로 XC를 지급한다. */
+  function markMergePlayedToday(){
+    try{ localStorage.setItem('xena_merge_daily_v1', JSON.stringify({date:new Date().toISOString().slice(0,10)})); }catch(e){}
+  }
 
   /* ── 물리 상태 ── */
   var GRAVITY = 1500;       /* px/s^2 */
@@ -353,8 +394,8 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     updateSkillUI();
   }
 
-  function addBall(x, y, tier){
-    balls.push({x:x, y:y, vx:0, vy:0, r:TIERS[tier].r, tier:tier, merging:false, settleT:0});
+  function addBall(x, y, tier, vx, vy){
+    balls.push({x:x, y:y, vx:vx||0, vy:vy||0, r:TIERS[tier].r, tier:tier, merging:false, settleT:0});
   }
 
   function dropAt(x){
@@ -451,7 +492,9 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
         setTimeout(function(){
           balls.splice(balls.indexOf(b1),1);
           balls.splice(balls.indexOf(b2),1);
-          addBall(nx, ny, Math.min(newTier, TIERS.length-1));
+          /* [2026-07-24] 합쳐진 직후 완전히 정지해 있던 것을 살짝 튕기게 —
+             관성이 남아있는 것처럼 미세한 랜덤 임펄스를 준다. */
+          addBall(nx, ny, Math.min(newTier, TIERS.length-1), (Math.random()-0.5)*70, -60-Math.random()*40);
         }, 0);
       });
     }
@@ -486,9 +529,10 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       sy = Math.min(sy, ih-side);
       ctx.drawImage(mascotImg, sx, sy, side, side, b.x-r, b.y-r, r*2, r*2);
     }
-    /* 등급 색 틴트 — 얼굴은 보이면서도 등급 구분은 되도록 */
+    /* 등급 색 틴트 — 얼굴은 보이면서도 등급 구분은 되도록.
+       [2026-07-24] "구슬 안 배경이 어둡다"는 피드백 — 틴트를 더 옅게(0.16 → 0.10). */
     ctx.fillStyle = b.color || TIERS[b.tier].color;
-    ctx.globalAlpha = 0.16;
+    ctx.globalAlpha = 0.10;
     ctx.fillRect(b.x-r, b.y-r, r*2, r*2);
     ctx.globalAlpha = 1;
     /* 글래스 오브 스프라이트 겹치기 — N~XENA(티어1~6)만 대응 슬라이스가 있음 */
@@ -525,11 +569,27 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 
   function drawRisingFloor(){
     if (floorY >= H - 0.5) return;
-    var grad = ctx.createLinearGradient(0, floorY, 0, H);
-    grad.addColorStop(0, 'rgba(255,107,138,.5)');
-    grad.addColorStop(1, 'rgba(120,10,30,.75)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, floorY, W, H-floorY);
+    if (sovranReady){
+      /* 소브란 얼굴이 바닥 차오르는 만큼 아래에서부터 드러나도록 — 이미지 상단을
+         floorY에 맞춰 클리핑해서 그린다(이미지가 위로 갈수록 얼굴이 더 드러남). */
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, floorY, W, H - floorY);
+      ctx.clip();
+      var iw = sovranImg.naturalWidth, ih = sovranImg.naturalHeight;
+      var scale = Math.max(W / iw, H / ih);
+      var dw = iw * scale, dh = ih * scale;
+      ctx.globalAlpha = 0.92;
+      ctx.drawImage(sovranImg, (W - dw) / 2, H - dh, dw, dh);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    } else {
+      var grad = ctx.createLinearGradient(0, floorY, 0, H);
+      grad.addColorStop(0, 'rgba(255,107,138,.5)');
+      grad.addColorStop(1, 'rgba(120,10,30,.75)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, floorY, W, H-floorY);
+    }
     ctx.strokeStyle = 'rgba(255,180,190,.85)';
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(0, floorY); ctx.lineTo(W, floorY); ctx.stroke();
@@ -577,7 +637,9 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       try{ localStorage.setItem(BEST_KEY, JSON.stringify({best:best})); }catch(e){}
       $('hud-best').textContent = best;
     }
-    $('ov-score').textContent = t('Score: ','점수: ') + score;
+    markMergePlayedToday();
+    saveWeeklyBest(score);
+    $('ov-score').textContent = t('Score: ','점수: ') + score + '  ·  ' + t('Weekly best: ','이번주 최고: ') + weeklyBest;
     var rank = scoreRank(score);
     $('rank-badge').setAttribute('data-rank', rank);
     $('rank-letter').textContent = rank;
