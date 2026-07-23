@@ -416,8 +416,12 @@ exports.claimStageReward = onCall(async (request) => {
   return { ...result, credits: wallet.get("credits") || 0 };
 });
 
-/* ── 데일리 시그널 수령 (+5 XC, 7일 연속이면 +20 보너스) ──
-   연속 출석일수도 서버가 직접 센다 — localStorage 조작으로는 스트릭도 늘릴 수 없다. */
+/* ── 데일리 시그널 수령 (+5 XC + 연속출석 단계 보너스) ──
+   [2026-07-25] 7일마다 +20 하나뿐이던 걸 3/7/15/30/100/365일 단계별 보너스로 확장.
+   365일 달성 시 스트릭을 0으로 리셋(그 다음 출석이 다시 1일차) — "최대 1년 연속 받으면
+   초기화" 요청 반영. 하루라도 거르면 1일차부터 다시 시작(기존 로직 그대로 유지).
+   연속 출석일수는 서버가 직접 센다 — localStorage 조작으로는 스트릭을 늘릴 수 없다. */
+const STREAK_BONUS = Object.freeze({ 3: 10, 7: 20, 15: 40, 30: 80, 100: 300, 365: 1000 });
 exports.claimDailySignal = onCall(async (request) => {
   const uid = requireAuth(request);
   const dayKey = newYorkDateKey();
@@ -434,14 +438,16 @@ exports.claimDailySignal = onCall(async (request) => {
     const prevDay = streakDoc.exists ? streakDoc.get("lastDayKey") : null;
     const prevStreak = (streakDoc.exists && streakDoc.get("streak")) || 0;
     const yesterday = newYorkDateKey(new Date(Date.now() - 86400000));
-    const streak = prevDay === yesterday ? prevStreak + 1 : 1;
-    const bonus = (streak > 0 && streak % 7 === 0) ? 20 : 0;
+    let streak = prevDay === yesterday ? prevStreak + 1 : 1;
+    const bonus = STREAK_BONUS[streak] || 0;
     const total = 5 + bonus;
+    const resetAfterYear = streak >= 365;
+    if (resetAfterYear) streak = 0; /* 1년 연속 달성 보너스까지 지급한 뒤 다음날부터 다시 1일차 */
 
     tx.set(claimRef, { uid, dayKey, signalClaimed: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     tx.set(streakRef, { uid, streak, lastDayKey: dayKey, updatedAt: FieldValue.serverTimestamp() });
     tx.set(walletRef, { uid, credits: FieldValue.increment(total), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    return { granted: total, streak, bonus };
+    return { granted: total, streak: resetAfterYear ? 365 : streak, bonus };
   });
   const wallet = await walletRef.get();
   return { ...result, credits: wallet.get("credits") || 0 };
@@ -629,6 +635,39 @@ exports.claimTcgMatch = onCall(async (request) => {
     tx.set(walletRef, walletUpdate, { merge: true });
 
     return { granted, firstWin, played: played + 1, limit: TCG_DAILY_LIMIT };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── XENA MERGE: 점수 비례 XC 보상 ──
+   ⚠ 시간 대비 물리적 최대 점수 검증(SIGNAL CLASH/SIGNAL LINK 처럼)까지는 아직 없다 —
+   그러려면 머지 특유의 물리엔진 결과를 서버가 재현해야 해서 범위 밖. 대신 (1) 한 판당
+   받을 수 있는 점수에 상한을 두고, (2) 하루 지급 횟수를 제한해서 무한 반복 수령을 막는다. */
+const MERGE_MAX_SCORE_PER_CLAIM = 20000;   /* 이보다 큰 점수를 보내면 이 값으로 잘라서 계산 */
+const MERGE_XC_PER_SCORE = 1 / 25;         /* 점수 25당 XC 1 */
+const MERGE_MAX_REWARD = 300;              /* 한 판 보상 상한 */
+const MERGE_DAILY_LIMIT = 5;
+exports.claimMergeScore = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const scoreRaw = Number(request.data && request.data.score);
+  if (!Number.isFinite(scoreRaw) || scoreRaw < 0) throw new HttpsError("invalid-argument", "Invalid score.");
+  const score = Math.min(Math.floor(scoreRaw), MERGE_MAX_SCORE_PER_CLAIM);
+
+  const dayKey = newYorkDateKey();
+  const claimRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+
+  const result = await db.runTransaction(async (tx) => {
+    const claim = await tx.get(claimRef);
+    const data = claim.exists ? claim.data() : {};
+    const played = Number(data.mergePlays || 0);
+    if (played >= MERGE_DAILY_LIMIT) throw new HttpsError("resource-exhausted", "Daily reward limit reached.");
+
+    const granted = Math.min(MERGE_MAX_REWARD, Math.floor(score * MERGE_XC_PER_SCORE));
+    tx.set(claimRef, { uid, dayKey, mergePlays: played + 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(walletRef, { uid, credits: FieldValue.increment(granted), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted, played: played + 1, limit: MERGE_DAILY_LIMIT };
   });
   const wallet = await walletRef.get();
   return { ...result, credits: wallet.get("credits") || 0 };

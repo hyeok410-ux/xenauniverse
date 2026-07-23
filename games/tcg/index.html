@@ -70,8 +70,9 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
   display:flex;flex-direction:column;align-items:center;gap:4px;transition:.2s;}
 .diff-btn:hover{border-color:rgba(63,224,255,.4);}
 .diff-btn.on{border-color:var(--cyan);background:rgba(63,224,255,.1);box-shadow:0 0 16px -4px var(--cyan);}
-.diff-btn .d-name{font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;}
-.diff-btn .d-desc{font-size:.62rem;color:var(--text-dim);text-align:center;}
+/* [2026-07-25] 난이도 글씨가 안 보인다는 피드백 — 색을 명시적으로 흰색으로 고정.
+   d-desc(AI덱 설명 문구)는 요청대로 완전히 제거. */
+.diff-btn .d-name{font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;color:#fff;}
 .diff-btn .d-reward{font-family:var(--font-mono);font-size:.62rem;color:var(--gold);margin-top:2px;}
 .rules{border:1px solid var(--hair);border-radius:14px;padding:18px 20px;background:rgba(255,255,255,.025);margin-bottom:22px;}
 .rules li{list-style:none;font-size:.86rem;line-height:1.85;color:rgba(230,230,238,.8);padding-left:18px;position:relative;}
@@ -121,7 +122,13 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .card{position:relative;width:60px;height:82px;border-radius:8px;border:1px solid var(--hair);
   background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
   overflow:hidden;transition:.2s;flex-shrink:0;}
-.card.mini{width:52px;height:70px;}
+/* [2026-07-25] "전장 카드가 작다" 피드백 — 구역(board)에 놓인 mini 카드를 2배로. */
+.card.mini{width:104px;height:140px;}
+.zone .card .c-cost,.zone .card .c-pow{font-size:.82rem;}
+.zone .card .c-elem{font-size:.5rem;}
+.zone .card .c-grade{font-size:.72rem;bottom:20px;}
+.zone .card .c-ability{font-size:.46rem;}
+.zone .card .c-effpow{font-size:.7rem;min-width:20px;}
 .card.has-img{background-size:cover;background-position:center;}
 .card .c-cost,.card .c-pow{position:absolute;top:3px;font-family:var(--font-mono);font-size:.64rem;font-weight:800;
   color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.9);z-index:2;}
@@ -155,15 +162,13 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 @keyframes pop{0%{transform:translateY(-14px) scale(.8);opacity:0;}100%{transform:none;opacity:1;}}
 
 /* [2026-07-24] 손패 카드가 너무 작다는 피드백 — 전 구간에서 2배 가까이 확대.
-   기본(태블릿/기본 뷰포트) 크기도 새로 지정해 미디어쿼리 경계에서 작아지는 구간이 없게 한다. */
-.hand .card{width:110px;height:150px;border-radius:10px;}
-.hand{gap:10px;min-height:160px;}
-.hand .card .c-cost,.hand .card .c-pow{font-size:.85rem;}
-.hand .card .c-elem{font-size:.5rem;}
-.hand .card .c-grade{font-size:.74rem;bottom:23px;}
-.hand .card .c-ability{font-size:.5rem;}
-.hand .card.selected{transform:translateY(-9px) scale(1.08);}
-
+   [2026-07-25] 추가로 1.5배 더 확대(요청: "지금보다 1.5배 더 크게"). */
+.hand .card{width:165px;height:225px;border-radius:12px;}
+.hand{gap:12px;min-height:235px;}
+.hand .card .c-cost,.hand .card .c-pow{font-size:1.15rem;}
+.hand .card .c-elem{font-size:.7rem;}
+.hand .card .c-grade{font-size:1rem;bottom:30px;}
+.hand .card .c-ability{font-size:.7rem;}
 /* 데스크톱: 배틀 화면을 더 큼직하게 + 화면 정중앙 (base 규칙들 뒤에 위치해야 캐스케이드에서 이김) */
 @media(min-width:900px){
   #screen-play.on{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;justify-content:center;min-height:calc(100vh - 70px);}
@@ -172,28 +177,29 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
   .z-name{font-size:.7rem;letter-spacing:.16em;padding-bottom:10px;}
   .z-score{font-size:1.15rem;gap:18px;padding:8px 0;}
   .card{width:88px;height:120px;border-radius:10px;}
-  .card.mini{width:78px;height:106px;}
-  .card .c-cost,.card .c-pow{font-size:.78rem;}
-  .card .c-elem{font-size:.44rem;}
-  .card .c-grade{font-size:.7rem;bottom:20px;}
-  .card .c-ability{font-size:.46rem;}
-  .hand .card{width:188px;height:256px;border-radius:14px;}
-  .hand{gap:16px;min-height:270px;}
-  .hand .card .c-cost,.hand .card .c-pow{font-size:1.15rem;}
-  .hand .card .c-elem{font-size:.68rem;}
-  .hand .card .c-grade{font-size:1rem;bottom:36px;}
-  .hand .card .c-ability{font-size:.66rem;}
+  .card.mini{width:156px;height:212px;}
+  .zone .card .c-cost,.zone .card .c-pow{font-size:1rem;}
+  .zone .card .c-elem{font-size:.6rem;}
+  .zone .card .c-grade{font-size:.88rem;bottom:26px;}
+  .zone .card .c-ability{font-size:.56rem;}
+  .hand .card{width:282px;height:384px;border-radius:16px;}
+  .hand{gap:20px;min-height:400px;}
+  .hand .card .c-cost,.hand .card .c-pow{font-size:1.6rem;}
+  .hand .card .c-elem{font-size:.9rem;}
+  .hand .card .c-grade{font-size:1.3rem;bottom:48px;}
+  .hand .card .c-ability{font-size:.85rem;}
 }
 
 /* ── 상대 손패 (내용은 안 보이고 장수만 — 프리미엄 화이트+골드 뒷장으로 통일) ── */
 .opp-hand-wrap{margin-bottom:14px;}
 .opp-hand-wrap .hand-label{text-align:center;}
 .opp-hand{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
-.cardback{width:44px;height:60px;border-radius:7px;flex-shrink:0;
+/* [2026-07-25] "상대 손패도 3배 더 크게" 요청 반영 */
+.cardback{width:132px;height:180px;border-radius:14px;flex-shrink:0;
   background-image:url('assets/card-back.jpg');background-size:cover;background-position:center;
   border:1px solid rgba(160,107,255,.5);
   box-shadow:0 0 10px rgba(63,224,255,.3);}
-@media(min-width:900px){ .cardback{width:52px;height:70px;} }
+@media(min-width:900px){ .cardback{width:156px;height:210px;} }
 
 /* ── hand ── */
 .hand-wrap{border-top:1px solid var(--hair);padding-top:12px;}
@@ -201,7 +207,8 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .hand{display:flex;gap:8px;flex-wrap:wrap;min-height:88px;align-items:flex-start;}
 .hand .card{cursor:pointer;}
 .hand .card:hover{transform:translateY(-5px);border-color:rgba(63,224,255,.6);}
-.hand .card.selected{transform:translateY(-9px);border-color:var(--cyan);box-shadow:0 0 18px rgba(63,224,255,.35);}
+/* [2026-07-25] 클릭한 카드가 "커진다"는 느낌이 들도록 1.2배 확대(요청사항) */
+.hand .card.selected{transform:translateY(-9px) scale(1.2);border-color:var(--cyan);box-shadow:0 0 18px rgba(63,224,255,.35);z-index:5;}
 .hand .card.unaffordable{opacity:.34;cursor:not-allowed;}
 .hand .card.unaffordable:hover{transform:none;border-color:var(--hair);}
 .pending{outline:1px dashed rgba(63,224,255,.5);outline-offset:2px;cursor:pointer;}
@@ -265,6 +272,7 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .cp-actions .cp-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--text-dim);}
 .cp-close{position:absolute;top:16px;right:20px;font-size:1.4rem;color:var(--text-dim);cursor:pointer;background:none;border:none;}
 .cp-close:hover{color:#fff;}
+.card-preview-modal.view-only #cp-equip{display:none;}
 
 /* ── 로비 확인 모달 ── */
 .confirm-modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
@@ -291,11 +299,13 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
   .card .c-grade{font-size:.46rem;bottom:12px;}
   .card .c-ability{font-size:.3rem;}
   .z-name{font-size:.5rem;}
-  .hand .card{width:100px;height:140px;}
-  .hand .card .c-cost,.hand .card .c-pow{font-size:.78rem;}
-  .hand .card .c-elem{font-size:.46rem;}
-  .hand .card .c-grade{font-size:.68rem;bottom:22px;}
-  .hand .card .c-ability{font-size:.46rem;}
+  .hand .card{width:150px;height:210px;}
+  .hand .card .c-cost,.hand .card .c-pow{font-size:1.05rem;}
+  .hand .card .c-elem{font-size:.62rem;}
+  .hand .card .c-grade{font-size:.9rem;bottom:30px;}
+  .hand .card .c-ability{font-size:.62rem;}
+  .card.mini{width:90px;height:122px;}
+  .cardback{width:100px;height:136px;}
 }
 </style>
 </head>
@@ -331,22 +341,18 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
     <div class="diff-picker" id="diff-picker">
       <button class="diff-btn" data-diff="easy">
         <span class="d-name"><span lang="en">EASY</span><span lang="ko">쉬움</span></span>
-        <span class="d-desc"><span lang="en">Weak AI deck</span><span lang="ko">약한 AI 덱</span></span>
         <span class="d-reward">+8 XC</span>
       </button>
       <button class="diff-btn on" data-diff="normal">
         <span class="d-name"><span lang="en">NORMAL</span><span lang="ko">보통</span></span>
-        <span class="d-desc"><span lang="en">Even deck</span><span lang="ko">동일한 덱</span></span>
         <span class="d-reward">+15 XC</span>
       </button>
       <button class="diff-btn" data-diff="hard">
         <span class="d-name"><span lang="en">HARD</span><span lang="ko">어려움</span></span>
-        <span class="d-desc"><span lang="en">Strong AI deck</span><span lang="ko">강한 AI 덱</span></span>
         <span class="d-reward">+30 XC</span>
       </button>
       <button class="diff-btn" data-diff="veryhard">
         <span class="d-name"><span lang="en">VERY HARD</span><span lang="ko">매우 어려움</span></span>
-        <span class="d-desc"><span lang="en">SR-heavy AI deck</span><span lang="ko">SR 위주 최강 덱</span></span>
         <span class="d-reward">+50 XC</span>
       </button>
     </div>
@@ -667,7 +673,7 @@ function cardHTML(card, cls){
   var hasImg = !!card.img;
   var style = hasImg ? ' style="background-image:url(\'' + card.img + '\')"' : '';
   return '<div class="card ' + (hasImg ? 'has-img ' : '') + (card.isTcg ? 'tcg-pure ' : '') + (cls || '') +
-         '" data-grade="' + card.grade + '"' + style + '>' + cardFaceHTML(card) + '</div>';
+         '" data-grade="' + card.grade + '" data-cid="' + card.id + '"' + style + '>' + cardFaceHTML(card) + '</div>';
 }
 /* 구역(board)에 놓인 카드 전용 — 효과 엔진이 계산한 "현재 유효 파워"가 카드 인쇄값(원본
    power)과 다르면 우측 하단에 파워 뱃지를 얹는다. 인쇄값과 같으면 뱃지를 안 보여줘 화면이
@@ -883,6 +889,14 @@ $('board').addEventListener('click', function(e){
     }
   }
 
+  /* [2026-07-25] 확정된(pending 아닌) 카드는 클릭하면 확대 미리보기 — 상대 카드 포함 */
+  var placedEl = e.target.closest('.card:not(.pending)');
+  if(placedEl && zEl.contains(placedEl)){
+    var cid = placedEl.getAttribute('data-cid');
+    var c = cid && window.XenaCards ? XenaCards.get(cid) : null;
+    if(c){ openBoardCardPreview(c); return; }
+  }
+
   if(G.selected < 0){ return; }
   var card = G.pHand[G.selected];
   if(card.cost > (G.mana - G.manaUsed)){ hint(t('Not enough mana.', '마나가 부족합니다.')); return; }
@@ -1037,6 +1051,7 @@ function finish(retreated){
     $('res-reward').textContent = '+' + r.granted + ' XC';
     $('end-hint').textContent = notes.join(' · ') +
       '  |  ' + t('Today ' + r.played + '/' + r.limit + ' rewarded', '오늘 ' + r.played + '/' + r.limit + '판 보상됨');
+    if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
   }).catch(function(err){
     var code = err && err.code || '';
     if(code.indexOf('resource-exhausted') >= 0){
@@ -1230,8 +1245,17 @@ $('deck-collection').addEventListener('click', function(e){
   if(!el || el.classList.contains('exhausted')) return;
   openCardPreview(el.getAttribute('data-id'));
 });
-$('cp-close').addEventListener('click', function(){ $('card-preview-modal').classList.remove('on'); });
-$('card-preview-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
+/* [2026-07-25] 전장에 낸 카드도 클릭하면 크게 볼 수 있도록 — 장착 버튼 없는 보기 전용 모드 */
+function openBoardCardPreview(card){
+  $('cp-card').className = 'cp-card card' + (card.isTcg ? ' tcg-pure' : '') + (card.img ? ' has-img' : '');
+  $('cp-card').setAttribute('data-grade', card.grade);
+  $('cp-card').style.backgroundImage = card.img ? 'url(\'' + card.img + '\')' : '';
+  $('cp-card').innerHTML = cardFaceHTML(card);
+  $('cp-meta').textContent = card.grade + (card.isTcg ? ' · TCG' : '') + ' · ' + t('Cost ', '비용 ') + card.cost + ' · ' + t('Power ', '파워 ') + card.power;
+  $('card-preview-modal').classList.add('on', 'view-only');
+}
+$('cp-close').addEventListener('click', function(){ $('card-preview-modal').classList.remove('on', 'view-only'); });
+$('card-preview-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on', 'view-only'); });
 $('cp-equip').addEventListener('click', function(){
   if(!previewCard) return;
   var emptyIdx = deckDraft.indexOf(null);

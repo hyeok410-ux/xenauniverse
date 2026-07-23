@@ -36,7 +36,9 @@ a{color:inherit;text-decoration:none;}
 [data-lang="ko"] .lang-toggle button[data-set="ko"],
 [data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(160,107,255,.18);color:var(--purple-light);box-shadow:inset 0 0 0 1px rgba(160,107,255,.4);}
 
-.wrap{position:relative;z-index:2;max-width:720px;margin:0 auto;padding:0 16px calc(40px + env(safe-area-inset-bottom));min-height:100vh;display:flex;flex-direction:column;}
+/* [2026-07-25] jar-wrap을 1260px까지 키웠는데 부모 .wrap이 720px로 눌러서 실제로는
+   반영이 안 되던 문제 — 부모도 같이 넓힌다. */
+.wrap{position:relative;z-index:2;max-width:1320px;margin:0 auto;padding:0 16px calc(40px + env(safe-area-inset-bottom));min-height:100vh;display:flex;flex-direction:column;}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 10px;gap:10px;flex-wrap:wrap;}
 .back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
 .back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
@@ -97,8 +99,9 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 /* 데스크톱에서 게임판이 너무 작아보였음 → 420 → 560 로 확장.
    3:4 비율은 유지 (물리엔진이 캔버스 크기에 자동 맞춰지므로 gameplay 는 그대로) */
 /* [2026-07-24] "웹에서 너무 작다" 피드백 — 560 → 840(1.5배)로 확대.
-   어두운 배경 덮개도 옅게(0.9 → 0.5) 해서 새로 넣은 jar-bg.jpg가 잘 보이게 한다. */
-#jar-wrap{position:relative;width:100%;aspect-ratio:3/4;max-width:840px;margin:0 auto;border-radius:18px;overflow:hidden;
+   어두운 배경 덮개도 옅게(0.9 → 0.5) 해서 새로 넣은 jar-bg.jpg가 잘 보이게 한다.
+   [2026-07-25] 추가로 1.5배 더 확대 요청 — 840 → 1260. */
+#jar-wrap{position:relative;width:100%;aspect-ratio:3/4;max-width:1260px;margin:0 auto;border-radius:18px;overflow:hidden;
   border:2px solid rgba(160,107,255,.35);
   background:linear-gradient(180deg, rgba(160,107,255,.04), rgba(6,8,16,.5)), url('jar-bg.jpg') center/cover no-repeat;
   box-shadow:0 0 40px rgba(160,107,255,.12), inset 0 0 60px rgba(0,0,0,.5);}
@@ -156,15 +159,20 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     <span class="skill-charge"><span lang="en">OVERRIDE</span><span lang="ko">오버라이드</span> ×<b id="zena-charge">0</b>
       <button class="skill-info-btn" id="skill-info-btn" aria-label="skill info" type="button">&#9432;</button>
     </span>
+    <button class="skill-btn" id="skill-c" disabled
+      title="Freeze the rising floor for 3 seconds. Costs 1 OVERRIDE charge.">
+      <span class="sk-name"><span lang="en">FREEZE FLOOR</span><span lang="ko">바닥 정지</span></span>
+      <span class="sk-cost">×1</span>
+    </button>
     <button class="skill-btn" id="skill-a" disabled
       title="Push the rising floor back down for temporary relief. Costs 2 OVERRIDE charge.">
       <span class="sk-name"><span lang="en">PUSH BACK FLOOR</span><span lang="ko">바닥 밀어내기</span></span>
       <span class="sk-cost">×2</span>
     </button>
     <button class="skill-btn" id="skill-b" disabled
-      title="Remove up to 4 OVERRIDE-tier orbs from the jar and score bonus points. Costs 4 OVERRIDE charge.">
+      title="Remove up to 4 OVERRIDE-tier orbs from the jar and score bonus points. Costs 3 OVERRIDE charge.">
       <span class="sk-name"><span lang="en">CLEAR OVERRIDE ×4</span><span lang="ko">오버라이드 정리 ×4</span></span>
-      <span class="sk-cost">×4</span>
+      <span class="sk-cost">×3</span>
     </button>
   </div>
 
@@ -177,8 +185,9 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
         <span lang="ko">XENA 구슬 2개를 합치면 최상위 티어 <b>OVERRIDE</b> 구슬이 만들어집니다. OVERRIDE 구슬을 만들 때마다 충전이 +1 됩니다 (위에 표시).</span>
       </p>
       <ul>
+        <li><b><span lang="en">FREEZE FLOOR</span><span lang="ko">바닥 정지</span></b> — <span lang="en">costs 1 charge. Freezes the rising floor for 3 seconds.</span><span lang="ko">충전 1 소모. 차오르는 바닥을 3초간 멈춥니다.</span></li>
         <li><b><span lang="en">PUSH BACK FLOOR</span><span lang="ko">바닥 밀어내기</span></b> — <span lang="en">costs 2 charge. The slowly rising floor is pushed back down for breathing room.</span><span lang="ko">충전 2 소모. 서서히 차오르는 바닥을 다시 밀어내려 여유 공간을 만듭니다.</span></li>
-        <li><b><span lang="en">CLEAR OVERRIDE ×4</span><span lang="ko">오버라이드 정리 ×4</span></b> — <span lang="en">costs 4 charge. Removes up to 4 OVERRIDE orbs sitting in the jar (they never merge further, so they can clog it) and grants bonus score.</span><span lang="ko">충전 4 소모. 더 이상 합쳐지지 않아 병을 막고 있는 OVERRIDE 구슬을 최대 4개까지 제거하고 보너스 점수를 얻습니다.</span></li>
+        <li><b><span lang="en">CLEAR OVERRIDE ×4</span><span lang="ko">오버라이드 정리 ×4</span></b> — <span lang="en">costs 3 charge. Removes up to 4 OVERRIDE orbs sitting in the jar (they never merge further, so they can clog it) and grants bonus score.</span><span lang="ko">충전 3 소모. 더 이상 합쳐지지 않아 병을 막고 있는 OVERRIDE 구슬을 최대 4개까지 제거하고 보너스 점수를 얻습니다.</span></li>
       </ul>
       <button class="btn ghost" id="skill-modal-close"><span lang="en">CLOSE</span><span lang="ko">닫기</span></button>
     </div>
@@ -200,6 +209,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       <div class="rank-badge" id="rank-badge"><span class="rank-letter" id="rank-letter">C</span></div>
       <p id="ov-score"></p>
       <p class="rank-note" id="rank-note"></p>
+      <p class="rank-note" id="ov-reward"></p>
       <button id="btn-retry"><span lang="en">RETRY</span><span lang="ko">다시하기</span></button>
     </div>
   </div>
@@ -221,17 +231,17 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   /* ── 티어 정의 (반지름 px 기준, 캔버스 좌표계) ──
      [2026-07-23] N 이전 단계(SEED)와 XENA 다음 단계(OVERRIDE)를 추가해 8단계로 확장.
      성장감이 약하다는 피드백을 반영해 상위 단계로 갈수록 반지름이 더 크게 벌어지도록 재조정. */
-  /* [2026-07-24] "구슬이 웹상에서 너무 작다" 피드백 — 전 티어 반지름 1.5배 확대
-     (jar-wrap도 같은 비율로 840px까지 커졌으니 상대적 비율은 그대로 유지됨). */
+  /* [2026-07-24] "구슬이 웹상에서 너무 작다" 피드백 — 전 티어 반지름 1.5배 확대.
+     [2026-07-25] 추가로 1.3배 더 확대 요청. */
   var TIERS = [
-    {r:17, color:'#5f6478', label:'SEED', score:1}, /* N(근백색)과 뚜렷이 구분되도록 더 어둡고 진한 슬레이트톤으로 */
-    {r:23, color:'#e6e6ee', label:'N',    score:2},
-    {r:30, color:'#3fe0ff', label:'R',    score:5},
-    {r:41, color:'#5cffc0', label:'S',    score:13},
-    {r:53, color:'#a06bff', label:'SR',   score:32},
-    {r:66, color:'#e8c468', label:'SSR',  score:75},
-    {r:83, color:'#ff2fb0', label:'XENA', score:170},
-    {r:105,color:'#fff2c8', label:'OVR',  score:380}
+    {r:22, color:'#5f6478', label:'SEED', score:1}, /* N(근백색)과 뚜렷이 구분되도록 더 어둡고 진한 슬레이트톤으로 */
+    {r:30, color:'#e6e6ee', label:'N',    score:2},
+    {r:39, color:'#3fe0ff', label:'R',    score:5},
+    {r:53, color:'#5cffc0', label:'S',    score:13},
+    {r:69, color:'#a06bff', label:'SR',   score:32},
+    {r:86, color:'#e8c468', label:'SSR',  score:75},
+    {r:108,color:'#ff2fb0', label:'XENA', score:170},
+    {r:137,color:'#fff2c8', label:'OVR',  score:380}
   ];
   var OVERRIDE_TIER = TIERS.length - 1; /* 제나 오버라이드 — 최상위 티어 */
   /* 합체 SFX 4종을 등급 구간별로 나눠서 재생 — 높은 티어일수록 더 웅장한 사운드 */
@@ -336,24 +346,35 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var FLOOR_RISE_SECONDS = 240; /* 바닥이 최솟값까지 차오르는 데 걸리는 시간(초) — 4분, 아주 천천히 */
 
   /* ── 제나 오버라이드 스킬 ──
-     OVERRIDE 티어를 새로 만들 때마다 charge +1. 2로 스킬A(바닥 밀어내기), 4로
-     스킬B(오버라이드 구슬 4개 정리)가 켜진다. 서로 독립적인 자원이라 A를 써도 B 조건엔 영향 없음. */
+     OVERRIDE 티어를 새로 만들 때마다 charge +1. 1로 스킬C(바닥 정지 3초), 2로 스킬A
+     (바닥 밀어내기), 3으로 스킬B(오버라이드 구슬 4개 정리)가 켜진다. [2026-07-25] 요청대로
+     스킬B 비용 4→3, 신규 스킬C(비용1, 3초 정지) 추가. 세 스킬은 서로 독립적인 자원 소모. */
   var zenaCharge = 0;
-  var SKILL_A_COST = 2, SKILL_B_COST = 4;
+  var SKILL_A_COST = 2, SKILL_B_COST = 3, SKILL_C_COST = 1;
   var FLOOR_RELIEF = 100; /* 스킬A 한 번에 바닥을 밀어내리는 양(px) */
+  var FLOOR_FREEZE_SECONDS = 3;
+  var floorFreezeRemaining = 0; /* >0 인 동안은 바닥이 차오르지 않음 */
 
   function updateSkillUI(){
-    var elA = $('skill-a'), elB = $('skill-b'), elC = $('zena-charge');
+    var elA = $('skill-a'), elB = $('skill-b'), elCbtn = $('skill-c'), elC = $('zena-charge');
     if (!elA) return;
     elC.textContent = zenaCharge;
     elA.disabled = zenaCharge < SKILL_A_COST;
     elB.disabled = zenaCharge < SKILL_B_COST;
+    elCbtn.disabled = zenaCharge < SKILL_C_COST;
   }
 
   function useSkillA(){
     if (!running || zenaCharge < SKILL_A_COST) return;
     zenaCharge -= SKILL_A_COST;
     floorY = Math.min(H, floorY + FLOOR_RELIEF);
+    updateSkillUI();
+    if (window.XenaAudio) window.XenaAudio.sfx('signal_claim');
+  }
+  function useSkillC(){
+    if (!running || zenaCharge < SKILL_C_COST) return;
+    zenaCharge -= SKILL_C_COST;
+    floorFreezeRemaining = FLOOR_FREEZE_SECONDS;
     updateSkillUI();
     if (window.XenaAudio) window.XenaAudio.sfx('signal_claim');
   }
@@ -389,6 +410,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     floorY = H;
     floorRiseRate = Math.max(0, H - overLine - FLOOR_MIN_MARGIN) / FLOOR_RISE_SECONDS;
     zenaCharge = 0;
+    floorFreezeRemaining = 0;
     $('hud-score').textContent = '0';
     spawnPreviewUpdate();
     updateSkillUI();
@@ -425,8 +447,10 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     if (!running) return;
     if (dropCooldown > 0) dropCooldown -= dt;
 
-    /* 바닥이 아주 천천히 차오른다(테트리스 식 압박) — 스킬A로만 밀어낼 수 있다 */
-    if (floorY > overLine + FLOOR_MIN_MARGIN){
+    /* 바닥이 아주 천천히 차오른다(테트리스 식 압박) — 스킬A로 밀어내거나 스킬C로 잠깐 멈출 수 있다 */
+    if (floorFreezeRemaining > 0){
+      floorFreezeRemaining = Math.max(0, floorFreezeRemaining - dt);
+    } else if (floorY > overLine + FLOOR_MIN_MARGIN){
       floorY = Math.max(overLine + FLOOR_MIN_MARGIN, floorY - floorRiseRate*dt);
     }
 
@@ -499,14 +523,10 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       });
     }
 
-    /* 게임오버 판정: 라인 위에 정지한 공이 일정시간 유지되면 종료 */
-    var overflow = balls.some(function(b){ return !b.merging && b.y - b.r < overLine && Math.abs(b.vy) < 40; });
-    if (overflow){
-      overTimer += dt;
-      if (overTimer > 1.4) endGame();
-    } else {
-      overTimer = Math.max(0, overTimer-dt*2);
-    }
+    /* [2026-07-25] "라인을 넘으면 바로 종료" 요청 — 1.4초 유예 없이 즉시 게임오버.
+       (드롭 직후 잠깐 스치는 것까지 끝나지 않도록, 합체 대기중(merging) 공은 제외) */
+    var overflow = balls.some(function(b){ return !b.merging && b.y - b.r < overLine; });
+    if (overflow) endGame();
   }
 
   function drawBallFace(b){
@@ -647,6 +667,23 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     $('rank-note').textContent = t(note.en, note.ko);
     $('ov-over').classList.add('on');
     if (window.XenaAudio) window.XenaAudio.sfx('match_fail_a');
+
+    /* [2026-07-25] 점수 비례 XC 지급 — 서버(claimMergeScore)가 최종 검증/지급 */
+    var rewardEl = $('ov-reward');
+    if (window.XenaWallet && window.XenaWallet.claimMergeScore){
+      rewardEl.textContent = t('Submitting score…', '점수 제출 중…');
+      window.XenaWallet.claimMergeScore(score).then(function(r){
+        rewardEl.textContent = '+' + r.granted + ' XC  ·  ' + t('Today ' + r.played + '/' + r.limit, '오늘 ' + r.played + '/' + r.limit);
+        if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
+      }).catch(function(err){
+        var code = err && err.code || '';
+        rewardEl.textContent = code.indexOf('resource-exhausted') >= 0
+          ? t('Daily reward limit reached', '일일 보상 한도 도달')
+          : t('Could not submit score', '점수 제출 실패');
+      });
+    } else {
+      rewardEl.textContent = '';
+    }
   }
 
   var lastT = null;
@@ -661,6 +698,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 
   $('skill-a').addEventListener('click', useSkillA);
   $('skill-b').addEventListener('click', useSkillB);
+  $('skill-c').addEventListener('click', useSkillC);
   $('skill-info-btn').addEventListener('click', function(){ $('skill-modal').classList.add('on'); });
   $('skill-modal-close').addEventListener('click', function(){ $('skill-modal').classList.remove('on'); });
   $('skill-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
@@ -704,6 +742,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-gate.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
+<script src="../shared-wallet.js?v=20260725"></script>
 <script>if (window.XenaAudio) window.XenaAudio.init('merge');</script>
 </body>
 </html>

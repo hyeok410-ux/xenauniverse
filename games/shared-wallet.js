@@ -86,6 +86,8 @@
   function cancelTour(city){ return callFn('cancelTour', {city: city}); }
   function getTours(){ return callFn('getTours', {}).then(function(r){ return r.tours || {}; }); }
   function getWalletFull(){ return callFn('getWallet', {}); }
+  /* XENA MERGE — 점수 비례 XC (2026-07-25 추가) */
+  function claimMergeScore(score){ return callFn('claimMergeScore', {score: Math.floor(score)}); }
   /* Stripe 결제창 열기 → 결제 성공 시 서버(fulfillCheckoutSession)가 지갑에 크레딧을 넣는다.
      returnPath 는 결제 후 돌아올 페이지 (예: '/games/gacha/'). 유효하지 않으면 서버가 '/game/' 로 fallback. */
   function purchase(productId, returnPath){
@@ -114,6 +116,7 @@
     claimTourReward: claimTourReward,
     cancelTour: cancelTour,
     getTours: getTours,
-    getWalletFull: getWalletFull
+    getWalletFull: getWalletFull,
+    claimMergeScore: claimMergeScore
   };
 })();

@@ -51,13 +51,25 @@ a{color:inherit;text-decoration:none;}
 [data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(255,255,255,.12);color:var(--silver);}
 
 main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
+/* [2026-07-25] "공간이 넓은데 게임이 너무 작다" 피드백 — 데스크톱 전체를 큰 폭으로 확대 */
 @media(min-width:1000px){
-  main{max-width:1180px;padding:84px 24px 60px;min-height:calc(100vh - 84px);display:flex;flex-direction:column;justify-content:center;}
-  .page-head h1{font-size:clamp(2.4rem,4vw,3.4rem);}
-  .cities{grid-template-columns:repeat(4,1fr);gap:16px;}
-  .city{padding:20px 18px;}
-  .c-name{font-size:1.02rem;}
-  .c-body{min-height:120px;}
+  main{max-width:1760px;padding:96px 32px 70px;min-height:calc(100vh - 96px);display:flex;flex-direction:column;justify-content:center;}
+  .page-head h1{font-size:clamp(3rem,5vw,4.6rem);}
+  .page-head p{font-size:.85rem;}
+  .cities{grid-template-columns:repeat(4,1fr);gap:26px;}
+  .city{padding:34px 30px;border-radius:22px;}
+  .c-name{font-size:1.5rem;}
+  .c-flag{font-size:1.7rem;}
+  .c-mult{font-size:.9rem;}
+  .c-body{min-height:190px;}
+  .c-thumbs img,.c-grade-pill{width:64px;height:88px;border-radius:9px;}
+  .c-timer{font-size:1.7rem;}
+  .c-claim,.c-send-btn,.c-unlock-btn{font-size:.9rem;padding:15px;}
+  .c-reward-preview{font-size:.78rem;}
+  .lk-cost{font-size:1.5rem;}
+  .cap-card{padding:22px 26px;}
+  .cap-info p{font-size:1rem;}
+  .cap-btn{font-size:.8rem;padding:13px 22px;}
 }
 
 .page-head{text-align:center;margin-bottom:20px;}
@@ -158,8 +170,18 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .pick-summary{display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:.66rem;
   padding:9px 12px;border:1px solid var(--hair);border-radius:10px;margin-bottom:12px;background:rgba(255,255,255,.02);}
 .pick-summary b{color:var(--gold);}
+.pick-elem-filter{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;}
+.pick-elem-filter button{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.08em;color:var(--text-dim);
+  border:1px solid var(--hair);background:rgba(255,255,255,.03);padding:6px 13px;border-radius:16px;transition:.2s;}
+.pick-elem-filter button:hover{color:var(--silver);border-color:rgba(255,255,255,.3);}
+.pick-elem-filter button.on{color:var(--cyan);border-color:rgba(63,224,255,.5);background:rgba(63,224,255,.12);
+  box-shadow:0 0 12px rgba(63,224,255,.2);}
 #pick-preview.has-synergy{color:#5cffc0;font-weight:700;text-shadow:0 0 10px rgba(92,255,192,.5);}
 .picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px;}
+@media(min-width:1000px){
+  .sheet{max-width:900px;}
+  .picker{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px;}
+}
 .picker-more-wrap{text-align:center;margin-top:12px;}
 .picker-more-btn{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;padding:9px 20px;border-radius:20px;
   border:1px solid var(--hair);background:rgba(255,255,255,.03);color:var(--text-dim);transition:.2s;}
@@ -240,6 +262,7 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
       <span id="pick-count"></span>
       <span id="pick-preview"></span>
     </div>
+    <div class="pick-elem-filter" id="pick-elem-filter"></div>
     <div class="picker" id="picker"></div>
     <div class="picker-more-wrap" id="picker-more-wrap" style="display:none;">
       <button class="picker-more-btn" id="picker-more-btn"></button>
@@ -318,9 +341,12 @@ function synergyPreview(cards, cityElement){
   for (var i = 0; i < SYNERGY_TIERS.length; i++){
     if (ratio >= SYNERGY_TIERS[i].ratio){ total += SYNERGY_TIERS[i].bonus; reasons.push({tier:'element', bonus:SYNERGY_TIERS[i].bonus}); break; }
   }
-  /* 동일 인물 3장 조합: +10% */
+  /* 동일 인물 3장 조합: +10%
+     [2026-07-25] 버그 수정: person이 없는(null) 카드들이 전부 '?' 키 하나로 묶여서,
+     서로 다른 인물이라도(둘 다 person:null) 3장만 모이면 "동일 인물"로 오판정됐다.
+     person이 실제로 있는 카드만 집계한다. */
   var personCounts = {};
-  cards.forEach(function(c){ personCounts[c.person||'?'] = (personCounts[c.person||'?']||0) + 1; });
+  cards.forEach(function(c){ if (c.person) personCounts[c.person] = (personCounts[c.person]||0) + 1; });
   for (var p in personCounts){ if (personCounts[p] >= 3){ total += 0.10; reasons.push({tier:'person3', bonus:0.10, person:p}); break; } }
   /* 전체 등급 SR 이상: +10% */
   if (cards.every(function(c){ return c.rank >= 3; })){ total += 0.10; reasons.push({tier:'allSR', bonus:0.10}); }
@@ -591,15 +617,38 @@ function openPicker(cityKey){
   $('pick-title').textContent = t(c.en, c.ko);
   $('pick-sub').textContent = t('Tour length = your highest Cost card (hours). Reward = total Power × ' + c.mult.toFixed(2) + ' × ' + REWARD_PER_POWER,
                                 '투어 시간 = 최고 코스트 카드 기준(시간). 보상 = 파워 합계 × ' + c.mult.toFixed(2) + ' × ' + REWARD_PER_POWER);
+  pickElemFilter = 'ALL';
+  renderPickElemFilter();
   renderPicker();
   $('modal-pick').classList.add('on');
 }
 
 var PICKER_TOP_N = 8;
 var pickShowAll = false;
+var pickElemFilter = 'ALL';
+function renderPickElemFilter(){
+  var els = ['ALL'].concat(window.XenaCards ? XenaCards.ELEMENTS : []);
+  var html = '';
+  els.forEach(function(el){
+    var label = el === 'ALL' ? t('ALL', '전체') : t(ELEMENT_LABEL[el].en, ELEMENT_LABEL[el].ko);
+    html += '<button class="' + (pickElemFilter === el ? 'on' : '') + '" data-el="' + el + '">' + label + '</button>';
+  });
+  $('pick-elem-filter').innerHTML = html;
+}
+$('pick-elem-filter').addEventListener('click', function(e){
+  var btn = e.target.closest('button');
+  if(!btn) return;
+  pickElemFilter = btn.getAttribute('data-el');
+  pickShowAll = false;
+  renderPickElemFilter();
+  renderPicker();
+});
 
 function renderPicker(){
   var owned = XenaCards.owned(), dispatched = dispatchedIds();
+  if(pickElemFilter !== 'ALL'){
+    owned = owned.filter(function(c){ return c.element === pickElemFilter; });
+  }
   /* 등급 높은 카드부터 이미 정렬돼 있음(owned()가 power desc) — 어차피 높은 등급을 보낼 테니
      기본은 상위 PICKER_TOP_N장만 보여주고, '더보기'를 눌러야 전체 보유 카드를 펼친다 */
   var visible = pickShowAll ? owned : owned.slice(0, PICKER_TOP_N);
