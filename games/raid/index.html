@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05070d">
+  <meta name="description" content="CRISIS: OVERRIDE - A six-turn XENA boss raid card game.">
+  <title>CRISIS: OVERRIDE | XENA Games</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305070d'/%3E%3Cpath d='M20 20h60v60H20z' fill='none' stroke='%233fe0ff' stroke-width='8'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./raid.css?v=20260723a">
+</head>
+<body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="back-link" href="../">← XENA GAMES</a>
+    <div class="brand">CRISIS: <strong>OVERRIDE</strong><small>FREE PILOT</small></div>
+    <div class="top-actions">
+      <span class="wallet" id="wallet">XC …</span>
+      <button class="top-button" id="language" type="button">EN</button>
+      <button class="top-button" id="sound" type="button">SOUND</button>
+    </div>
+  </header>
+
+  <main id="app" class="app-shell">
+    <section class="intro-panel" id="intro-panel">
+      <span class="eyebrow">XENA LIVE / SINGLE RAID</span>
+      <h1>CRISIS: <span>OVERRIDE</span></h1>
+      <p class="intro-copy" data-i18n="intro"></p>
+      <div class="rule-row">
+        <div><b>30</b><span data-i18n="bossHp"></span></div>
+        <div><b>06</b><span data-i18n="turns"></span></div>
+        <div><b>3</b><span data-i18n="starterCards"></span></div>
+      </div>
+      <button class="primary-button" id="start-button" type="button" data-i18n="start"></button>
+    </section>
+
+    <section class="battle-panel" id="battle-panel" hidden>
+      <div class="battle-meta">
+        <div><span data-i18n="raidLabel"></span><strong id="turn-label"></strong></div>
+        <div class="mana-readout"><span data-i18n="mana"></span><strong id="mana-label"></strong></div>
+        <div><span data-i18n="power"></span><strong id="power-label"></strong></div>
+      </div>
+
+      <section class="boss-card" id="boss-card" aria-live="polite">
+        <div class="boss-scanline" aria-hidden="true"></div>
+        <div class="boss-art"><span class="boss-glyph">!</span><span class="boss-ring"></span></div>
+        <div class="boss-copy">
+          <span class="eyebrow" data-i18n="bossThreat"></span>
+          <h2 data-i18n="bossName"></h2>
+          <p data-i18n="bossDescription"></p>
+          <div class="hp-line"><span data-i18n="hp"></span><strong id="boss-hp">30 / 30</strong></div>
+          <div class="hp-track"><span id="boss-hp-bar"></span></div>
+        </div>
+      </section>
+
+      <section class="field-section">
+        <div class="section-heading"><div><span class="eyebrow" data-i18n="fieldLabel"></span><h2 data-i18n="fieldTitle"></h2></div><span class="field-hint" data-i18n="fieldHint"></span></div>
+        <div class="field-grid" id="field-grid" aria-label="Live support line"></div>
+      </section>
+
+      <section class="hand-section">
+        <div class="section-heading"><div><span class="eyebrow" data-i18n="handLabel"></span><h2 data-i18n="handTitle"></h2></div><span class="field-hint" data-i18n="handHint"></span></div>
+        <div class="hand-grid" id="hand-grid"></div>
+      </section>
+
+      <div class="turn-actions">
+        <p id="status-message" class="status-message" role="status"></p>
+        <button class="end-button" id="end-turn" type="button" data-i18n="endTurn"></button>
+      </div>
+    </section>
+
+    <section class="result-panel" id="result-panel" hidden aria-live="assertive">
+      <span class="result-kicker" id="result-kicker"></span>
+      <h2 id="result-title"></h2>
+      <p id="result-copy"></p>
+      <div class="score-box"><span data-i18n="score"></span><strong id="result-score">0</strong></div>
+      <p class="reward-note" data-i18n="rewardNote"></p>
+      <p class="reward-status" id="reward-status" aria-live="polite"></p>
+      <div class="result-actions"><button class="primary-button" id="retry-button" type="button" data-i18n="retry"></button><a class="secondary-button" href="../" data-i18n="backGames"></a></div>
+      <button class="share-button" id="share-button" type="button" data-i18n="share"></button>
+    </section>
+  </main>
+
+  <script src="../../game/firebase-config.js?v=20260723a"></script>
+  <script src="../../game/cloud-sync.js?v=20260723a"></script>
+  <script src="../shared-identity.js?v=20260723a"></script>
+  <script src="../shared-gate.js?v=20260723a"></script>
+  <script src="../shared-audio.js?v=20260723a"></script>
+    <script src="../shared-wallet.js?v=20260723b"></script>
+  <script src="../gacha/cards.js?v=20260723a"></script>
+    <script src="./raid.js?v=20260723c"></script>
+</body>
+</html>

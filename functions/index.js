@@ -422,6 +422,58 @@ exports.claimStageReward = onCall(async (request) => {
    초기화" 요청 반영. 하루라도 거르면 1일차부터 다시 시작(기존 로직 그대로 유지).
    연속 출석일수는 서버가 직접 센다 — localStorage 조작으로는 스트릭을 늘릴 수 없다. */
 const STREAK_BONUS = Object.freeze({ 3: 10, 7: 20, 15: 40, 30: 80, 100: 300, 365: 1000 });
+const RAID_CARDS = Object.freeze({
+  "raid-nix": { cost: 1, power: 1 },
+  "raid-echo": { cost: 2, power: 2 },
+  "raid-xena": { cost: 3, power: 4 },
+});
+const RAID_REWARD = 10;
+
+function verifyRaidRun(actions) {
+  if (!Array.isArray(actions) || actions.length > 3) return false;
+  const usedCards = new Set();
+  const usedSlots = new Set();
+  let bossHp = 30;
+  for (let turn = 1; turn <= 6; turn += 1) {
+    let mana = turn;
+    let power = 0;
+    for (const action of actions.filter((entry) => entry && Number(entry.turn) === turn)) {
+      const cardId = String(action.cardId || "");
+      const card = RAID_CARDS[cardId];
+      const slot = Number(action.slot);
+      if (!card || usedCards.has(cardId) || usedSlots.has(slot) || !Number.isInteger(slot) || slot < 0 || slot > 4 || card.cost > mana) return false;
+      usedCards.add(cardId);
+      usedSlots.add(slot);
+      mana -= card.cost;
+      power += card.power;
+    }
+    bossHp -= power;
+    if (bossHp <= 0) return true;
+  }
+  return false;
+}
+
+exports.claimRaidClear = onCall(async (request) => {
+  const uid = requireAuth(request);
+  if (!verifyRaidRun(request.data && request.data.actions)) {
+    throw new HttpsError("failed-precondition", "Raid result could not be verified.");
+  }
+  const dayKey = newYorkDateKey();
+  const claimRef = db.doc(`raidDailyClaims/${uid}_${dayKey}`);
+  const walletRef = db.doc(`wallets/${uid}`);
+  const result = await db.runTransaction(async (tx) => {
+    const claim = await tx.get(claimRef);
+    if (claim.exists) return { granted: 0, alreadyClaimed: true };
+    tx.set(claimRef, { uid, dayKey, game: "crisis-override", reward: RAID_REWARD, createdAt: FieldValue.serverTimestamp() });
+    tx.set(walletRef, { uid, credits: FieldValue.increment(RAID_REWARD), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return { granted: RAID_REWARD, alreadyClaimed: false };
+  });
+  const wallet = await walletRef.get();
+  return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── 데일리 시그널 수령 (+5 XC, 7일 연속이면 +20 보너스) ──
+   연속 출석일수도 서버가 직접 센다 — localStorage 조작으로는 스트릭도 늘릴 수 없다. */
 exports.claimDailySignal = onCall(async (request) => {
   const uid = requireAuth(request);
   const dayKey = newYorkDateKey();

@@ -73,6 +73,7 @@
   function claimDailySignal(){ return callFn('claimDailySignal', {}); }
   function claimQuestBonus(questId){ return callFn('claimQuestBonus', {questId: questId}); }
   function claimStageReward(game, stage){ return callFn('claimStageReward', {game: game, stage: Number(stage)}); }
+  function claimRaidClear(actions){ return callFn('claimRaidClear', {actions: actions}); }
   function claimWorldcupFinish(){ return callFn('claimWorldcupFinish', {}); }
   function claimChessMatch(){ return callFn('claimChessMatch', {}); }
   function spend(amount, reason){ return callFn('spendCredits', {amount: amount, reason: reason||''}); }
@@ -105,6 +106,7 @@
     claimDailySignal: claimDailySignal,
     claimQuestBonus: claimQuestBonus,
     claimStageReward: claimStageReward,
+    claimRaidClear: claimRaidClear,
     claimWorldcupFinish: claimWorldcupFinish,
     claimChessMatch: claimChessMatch,
     spend: spend,

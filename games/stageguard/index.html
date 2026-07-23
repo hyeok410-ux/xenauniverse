@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>STAY BRIGHT: STAGEGUARD | XENA Games</title>
+  <link rel="stylesheet" href="./stageguard.css?v=20260723a">
+</head>
+<body>
+  <header class="topbar"><a class="back" href="../">← XENA GAMES</a><strong>STAY BRIGHT <span>STAGEGUARD</span></strong><div class="tools"><b id="wallet">XC …</b><button id="language">EN</button><button id="sound">SOUND</button></div></header>
+  <main>
+    <section class="intro" id="intro-panel"><p class="eyebrow">XENA LIVE DEFENSE</p><h1>STAY BRIGHT: STAGEGUARD</h1><p>제나의 무대로 몰려오는 방해꾼을 막아내세요. 카드를 길목에 배치하고 60초 동안 무대를 지키면 승리합니다.</p><button class="primary" id="start-button">게임 시작</button></section>
+    <section class="game" id="game-panel" hidden>
+      <div class="hud"><div><small>STAGE HP</small><b id="stage-hp">10 / 10</b></div><div><small>SIGNAL</small><b id="signal">3 / 10</b></div><div><small>TIME</small><b id="time">60s</b></div><button class="danger" id="pause-button">일시정지</button></div>
+      <div class="board-wrap"><div class="stage-label">XENA STAGE</div><div class="board" id="board" aria-label="5x3 defense board"></div><div class="board-legend"><span>← 무대</span><span>방해꾼 생성 →</span></div></div>
+      <div class="status" id="status">카드를 골라 빈 칸에 배치하세요.</div>
+      <section class="hand-section"><div class="section-head"><h2>YOUR SIGNALS</h2><span>카드 배치</span></div><div class="hand" id="hand"></div></section>
+    </section>
+    <section class="result" id="result-panel" hidden><p class="eyebrow" id="result-kicker"></p><h2 id="result-title"></h2><p id="result-copy"></p><strong class="score" id="result-score">0</strong><div><button class="primary" id="retry-button">다시 플레이</button><a class="secondary" href="../">허브로 돌아가기</a></div></section>
+  </main>
+  <script src="../../game/firebase-config.js?v=20260723a"></script>
+  <script src="../../game/cloud-sync.js?v=20260723a"></script>
+  <script src="../shared-identity.js?v=20260723a"></script>
+  <script src="../shared-gate.js?v=20260723a"></script>
+  <script src="../shared-audio.js?v=20260723a"></script>
+  <script src="../shared-wallet.js?v=20260723b"></script>
+  <script src="../gacha/cards.js?v=20260723a"></script>
+  <script src="./stageguard.js?v=20260723a"></script>
+</body>
+</html>
