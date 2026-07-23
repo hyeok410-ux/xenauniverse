@@ -97,7 +97,8 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 /* 데스크톱에서 게임판이 너무 작아보였음 → 420 → 560 로 확장.
    3:4 비율은 유지 (물리엔진이 캔버스 크기에 자동 맞춰지므로 gameplay 는 그대로) */
 #jar-wrap{position:relative;width:100%;aspect-ratio:3/4;max-width:560px;margin:0 auto;border-radius:18px;overflow:hidden;
-  border:2px solid rgba(160,107,255,.35);background:linear-gradient(180deg, rgba(160,107,255,.06), rgba(6,8,16,.9));
+  border:2px solid rgba(160,107,255,.35);
+  background:linear-gradient(180deg, rgba(160,107,255,.06), rgba(6,8,16,.9)), url('jar-bg.jpg') center/cover no-repeat;
   box-shadow:0 0 40px rgba(160,107,255,.12), inset 0 0 60px rgba(0,0,0,.5);}
 #jar{width:100%;height:100%;display:block;touch-action:none;cursor:pointer;}
 .gameover-line{position:absolute;left:0;right:0;top:64px;height:1px;background:repeating-linear-gradient(90deg, rgba(255,107,138,.6) 0 8px, transparent 8px 16px);pointer-events:none;}
@@ -229,6 +230,12 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     {r:70, color:'#fff2c8', label:'OVR',  score:380}
   ];
   var OVERRIDE_TIER = TIERS.length - 1; /* 제나 오버라이드 — 최상위 티어 */
+  /* 합체 SFX 4종을 등급 구간별로 나눠서 재생 — 높은 티어일수록 더 웅장한 사운드 */
+  function beadSfxFor(tier){
+    var pct = tier / OVERRIDE_TIER;
+    var idx = Math.min(4, Math.max(1, Math.ceil(pct * 4)));
+    return 'merge_bead_' + idx;
+  }
   var SPAWN_MAX_TIER = 3; /* 처음 드롭 가능한 최고 티어 (0~3 = SEED/N/R/S) */
 
   /* ── 캐릭터 얼굴 + 글래스 오브 스프라이트 ──
@@ -435,7 +442,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
         b1.merging = true; b2.merging = true;
         score += TIERS[newTier].score;
         $('hud-score').textContent = score;
-        if (window.XenaAudio) window.XenaAudio.sfx('match_success_a');
+        if (window.XenaAudio) window.XenaAudio.sfx(beadSfxFor(newTier));
         if (newTier === OVERRIDE_TIER){
           zenaCharge++;
           updateSkillUI();
