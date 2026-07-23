@@ -51,6 +51,14 @@ a{color:inherit;text-decoration:none;}
 [data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(255,255,255,.12);color:var(--silver);}
 
 main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
+@media(min-width:1000px){
+  main{max-width:1180px;padding:84px 24px 60px;}
+  .page-head h1{font-size:clamp(2.4rem,4vw,3.4rem);}
+  .cities{grid-template-columns:repeat(4,1fr);gap:16px;}
+  .city{padding:20px 18px;}
+  .c-name{font-size:1.02rem;}
+  .c-body{min-height:120px;}
+}
 
 .page-head{text-align:center;margin-bottom:20px;}
 .page-head h1{font-size:clamp(1.8rem,6vw,2.8rem);font-weight:800;letter-spacing:-.02em;line-height:1;
@@ -69,6 +77,8 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .city.running{border-color:color-mix(in srgb, var(--ca) 45%, var(--hair));}
 .city.ready{border-color:var(--gold);box-shadow:0 0 24px -8px var(--gold);}
 .city.locked{opacity:.68;}
+.city.loading{opacity:.5;}
+.c-loading{text-align:center;padding:20px 0;font-family:var(--font-mono);font-size:.68rem;color:var(--text-dim);}
 
 .c-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;margin-bottom:10px;}
 .c-name{font-size:.92rem;font-weight:700;letter-spacing:-.01em;}
@@ -334,6 +344,10 @@ if(!local.tours) local.tours = {};    /* { seoul: {cards:[id,...]|null, grades:[
 
 /* ── 서버 상태 캐시 (subscribe/getWalletFull 로 채워짐) ──── */
 var wallet = { credits: null, unlockedCities: ['seoul'], tourCapacity: 3, tcgWins: 0 };
+/* getWalletFull이 실패/지연되면 unlockedCities가 기본값(서울만)에 멈춰 있어
+   실제로는 해금된 도시가 "잠김"으로 잘못 보이는 문제(깜빡임/파견 버튼 먹통)가 있었다.
+   최초 로드 완료 전까지는 잠금 판정을 내리지 않고, 주기적으로 재동기화해 자가 치유한다. */
+var walletMetaReady = false;
 
 function refreshWalletMeta(){
   if(!window.XenaWallet || !window.XenaWallet.getWalletFull) return;
@@ -341,6 +355,7 @@ function refreshWalletMeta(){
     wallet.unlockedCities = r.unlockedCities || ['seoul'];
     wallet.tourCapacity = r.tourCapacity || 3;
     wallet.tcgWins = r.tcgWins || 0;
+    walletMetaReady = true;
     renderAll();
   }).catch(function(){});
 }
@@ -413,8 +428,19 @@ function renderCities(){
   var h = '';
   for(var i = 0; i < CITIES.length; i++){
     var c = CITIES[i];
-    var unlocked = c.key === 'seoul' || wallet.unlockedCities.indexOf(c.key) >= 0; /* 서울은 서버 데이터와 무관하게 항상 해금 상태 (구버전 손상 데이터 방어) */
+    /* 서울은 서버 데이터와 무관하게 항상 해금. 그 외 도시는 walletMetaReady가 될 때까지
+       (아직 서버 응답을 못 받은 로딩 구간) 섣불리 "잠김"으로 단정하지 않는다 — 잠김 깜빡임/
+       파견버튼 먹통 버그의 원인이었다. */
+    var unlocked = c.key === 'seoul' || (walletMetaReady ? wallet.unlockedCities.indexOf(c.key) >= 0 : true);
     var tour = local.tours[c.key];
+
+    if(!walletMetaReady && c.key !== 'seoul'){
+      h += '<div class="city loading" style="--ca:' + c.a + '">' +
+             '<div class="c-top"><span class="c-name"><span class="c-flag">' + c.flag + '</span>' + t(c.en, c.ko) + '</span></div>' +
+             '<div class="c-body"><p class="c-loading">' + t('Loading…', '불러오는 중…') + '</p></div>' +
+           '</div>';
+      continue;
+    }
 
     h += '<div class="city' + (!unlocked ? ' locked' : (tour ? (tourReady(c.key) ? ' ready' : ' running') : '')) + '"' +
          ' style="--ca:' + c.a + '">' +
@@ -674,6 +700,15 @@ $('pick-send').addEventListener('click', function(){
             : code.indexOf('failed-precondition') >= 0 ? t('City locked or too many cards for your capacity.', '도시가 잠겨있거나 정원을 초과했습니다.')
             : t('Could not start tour — try again.', '투어 시작 실패 — 다시 시도해주세요.');
     toast(msg);
+    /* 버튼이 disabled 상태로 굳어 다시 눌러도 반응 없던 문제 — 확실하게 원복 */
+    btn.disabled = false;
+    btn.textContent = t('SEND ON TOUR', '투어 파견');
+    /* 서버가 이미 이 도시에 투어가 있다고 판단했다면(already-exists) 로컬 상태가
+       stale한 것이므로 즉시 서버와 재동기화해서 실제 상태를 화면에 반영한다 */
+    if(code.indexOf('already-exists') >= 0){
+      $('modal-pick').classList.remove('on');
+      reconcileTours();
+    }
     updatePickSummary();
   });
 });
@@ -766,7 +801,10 @@ for(var i = 0; i < tg.length; i++){
 /* ── 라이브 틱 ────────────────────────────────────────────── */
 renderAll();
 setInterval(renderCities, 1000);
-document.addEventListener('visibilitychange', function(){ if(!document.hidden){ reconcileTours(); renderAll(); } });
+/* refreshWalletMeta는 1회성 호출이라 실패/지연되면 unlockedCities가 계속 stale할 수 있었다
+   (도쿄 잠김 깜빡임, 도착표시 지연, 파견버튼 먹통의 공통 원인) — 주기적으로 재동기화해 자가치유 */
+setInterval(function(){ refreshWalletMeta(); reconcileTours(); }, 8000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden){ refreshWalletMeta(); reconcileTours(); renderAll(); } });
 </script>
 <script src="../../game/firebase-config.js?v=20260722"></script>
 <script src="../../game/cloud-sync.js?v=20260722"></script>

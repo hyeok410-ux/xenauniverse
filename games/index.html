@@ -90,8 +90,9 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
 
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:860px;margin:0 auto;}
 /* 인기 탭: 요청하신 대로 가로 한 줄(데스크톱 기준) */
-.grid.cat-popular{grid-template-columns:repeat(3,minmax(0,1fr));max-width:900px;}
-@media(max-width:760px){ .grid.cat-popular{grid-template-columns:1fr; max-width:420px;} }
+.grid.cat-popular{grid-template-columns:repeat(4,minmax(0,1fr));max-width:1180px;}
+@media(max-width:960px){ .grid.cat-popular{grid-template-columns:repeat(2,minmax(0,1fr)); max-width:640px;} }
+@media(max-width:520px){ .grid.cat-popular{grid-template-columns:1fr; max-width:420px;} }
 .gcard[hidden]{display:none;}
 
 /* 데일리 시그널 — 표지 없는 위젯. 우측 상단 프로필 줄 바로 아래, 스크롤해도 항상 따라오도록 고정.
@@ -179,8 +180,8 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
   </div>
 
   <div class="cat-bar" id="cat-bar">
-    <button class="cat-btn sel" data-cat="all"><span lang="en">ALL</span><span lang="ko">전체</span></button>
-    <button class="cat-btn" data-cat="popular">🔥 <span lang="en">POPULAR</span><span lang="ko">인기</span></button>
+    <button class="cat-btn" data-cat="all"><span lang="en">ALL</span><span lang="ko">전체</span></button>
+    <button class="cat-btn sel" data-cat="popular">🔥 <span lang="en">POPULAR</span><span lang="ko">인기</span></button>
     <button class="cat-btn" data-cat="photo">📸 <span lang="en">PHOTO &amp; VIBES</span><span lang="ko">포토 &amp; 감성</span></button>
     <button class="cat-btn" data-cat="puzzle">🧩 <span lang="en">PUZZLE &amp; STRATEGY</span><span lang="ko">퍼즐 &amp; 전략</span></button>
   </div>
@@ -345,7 +346,8 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 
 /* ── 카테고리 필터: 카테고리별 지정 순서대로 재배치 + 그 외는 숨김 ── */
 var CAT_ORDER = {
-  popular: ['grid','tcg','idle','cards'],
+  all:     ['grid','cards','tcg','idle','shisen','memory','merge','worldcup'],
+  popular: ['cards','grid','tcg','idle'],
   photo:   ['cards','worldcup'],
   puzzle:  ['grid','tcg','shisen','memory','merge']
 };
@@ -353,10 +355,6 @@ var grid = document.getElementById('game-grid');
 var allCards = Array.prototype.slice.call(grid.children);
 function applyCategory(cat){
   grid.classList.toggle('cat-popular', cat === 'popular');
-  if(cat === 'all'){
-    allCards.forEach(function(c){ c.hidden = false; });
-    return;
-  }
   var order = CAT_ORDER[cat] || [];
   order.forEach(function(id){
     var el = allCards.filter(function(c){ return c.getAttribute('data-id') === id; })[0];
@@ -374,6 +372,7 @@ document.querySelectorAll('.cat-btn').forEach(function(b){
     if (window.XenaAudio) window.XenaAudio.sfx('btn_click');
   });
 });
+applyCategory('popular'); /* 기본 탭 = 인기 */
 </script>
 <script src="./shared-identity.js?v=20260721"></script>
 <script src="./shared-gate.js?v=20260721"></script>

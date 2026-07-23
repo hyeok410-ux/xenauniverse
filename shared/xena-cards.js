@@ -30,6 +30,17 @@ var DUST       = { N:1, R:3, S:10, SR:30, SSR:100 };
 var GRADE_RANK = { N:0, R:1, S:2, SR:3, SSR:4 };
 var GRADE_COLOR= { N:'#b9b9c6', R:'#3fe0ff', S:'#a06bff', SR:'#ff2fb0', SSR:'#e8c468' };
 var GRADE_LABEL= { N:'NORMAL', R:'RARE', S:'SUPER', SR:'SUPER RARE', SSR:'SOVEREIGN' };
+/* SIGNAL CLASH(TCG) 기본카드 기술 — 등급별 공용(카드 개별 기술은 추후 확장 지점).
+   플레이버 텍스트이자 실제 카드에 표기되는 "기술" 한 줄. 순수 코스트/파워 대결이라는
+   기존 설계를 유지하면서, 카드에 뭔가 정보가 비어보이지 않도록 등급 고유 문구를 붙인다. */
+var GRADE_ABILITY = {
+  N:   { en:'No special ability.',              ko:'특수 기술 없음.' },
+  R:   { en:'No special ability.',               ko:'특수 기술 없음.' },
+  S:   { en:'Holds the line — steady power.',    ko:'구역을 지킨다 — 안정적인 파워.' },
+  SR:  { en:'Turns the tide of close zones.',    ko:'접전 구역의 흐름을 바꾼다.' },
+  SSR: { en:'Commands the zone it enters.',      ko:'입장한 구역을 장악한다.' }
+};
+var ELEMENT_ABBR = { SOUND:'SND', SOUL:'SOL', DARK:'DRK', LIGHT:'LGT', METAL:'MTL', BUG:'BUG' };
 
 /* ── ID 접두어 → 인물 / 속성 / 트랙 ────────────────────────
    ZENA_TCG_전체통합_카드DB_v1.md §3-3 (대표 확정, 2026-07-22) 기준.
@@ -105,7 +116,8 @@ function normalize(def){
     cost:      base.cost,
     power:     base.power,
 
-    ability:   null,                   /* 2차 확장 자리(TCG 기술은 games/gacha 밖 별도 세션에서 다룸) */
+    ability:   GRADE_ABILITY[grade] || null,
+    isTcg:     id.indexOf('PC-') === 0,
     dust:      DUST[grade] || 1,
     rank:      GRADE_RANK[grade] || 0,
     color:     GRADE_COLOR[grade] || '#b9b9c6',
@@ -138,6 +150,8 @@ function ownedMap(){
 
 var XenaCards = {
   GRADE_STATS: GRADE_STATS,
+  GRADE_ABILITY: GRADE_ABILITY,
+  ELEMENT_ABBR: ELEMENT_ABBR,
 
   /** 배열 재파싱 (cards.js 를 나중에 로드한 경우) */
   refresh: build,

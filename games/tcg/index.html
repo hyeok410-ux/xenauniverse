@@ -107,27 +107,37 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .slots{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;min-height:56px;align-content:flex-start;}
 .slots.op{align-content:flex-end;}
 
-/* ── card ── */
+/* ── card ──
+   [2026-07-24] 전면 개편: 카드 이름 문구는 완전히 제거(정보를 다 가려서). 대신
+   기본카드(=has-img 이지만 TCG 전용은 아닌 카드)는 좌상단 비용, 중앙상단 속성,
+   우상단 파워, 카드 하단 중앙 등급, 맨 아래 한 줄 기술을 오버레이로 얹는다.
+   TCG 전용 카드(PC-*, .tcg-pure)는 카드 아트 자체에 이미 비용/파워/속성/기술이
+   그려져 있으므로 오버레이를 절대 얹지 않는다 — 순수 아트만 보여준다. */
 .card{position:relative;width:60px;height:82px;border-radius:8px;border:1px solid var(--hair);
   background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
-  display:flex;flex-direction:column;justify-content:space-between;padding:5px 4px;transition:.2s;flex-shrink:0;}
+  overflow:hidden;transition:.2s;flex-shrink:0;}
 .card.mini{width:52px;height:70px;}
-.card .c-cost,.card .c-pow{position:absolute;font-family:var(--font-mono);font-size:.66rem;font-weight:700;
-  width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
-.card .c-cost{top:-6px;left:-5px;background:#0a1a24;color:var(--cyan);border:1px solid rgba(63,224,255,.6);}
-.card .c-pow{bottom:-6px;right:-5px;background:#24081a;color:var(--magenta);border:1px solid rgba(255,47,176,.6);}
-.card .c-name{font-size:.5rem;line-height:1.25;text-align:center;letter-spacing:.02em;font-weight:600;
-  color:rgba(230,230,238,.82);margin:auto 0;padding:0 2px;word-break:keep-all;}
-/* 실제 보유 카드(커스텀 덱)는 이미지가 있는 카드 — 배경으로 꽉 채우고 이름은 하단 그라디언트 위에 */
 .card.has-img{background-size:cover;background-position:center;}
-.card.has-img .c-name{position:absolute;left:2px;right:2px;bottom:2px;margin:0;padding:10px 2px 2px;
-  background:linear-gradient(transparent, rgba(0,0,0,.9) 55%);border-radius:0 0 6px 6px;
-  color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8);}
+.card .c-cost,.card .c-pow{position:absolute;top:3px;font-family:var(--font-mono);font-size:.56rem;font-weight:800;
+  color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.9);z-index:2;}
+.card .c-cost{left:3px;}
+.card .c-pow{right:3px;}
+.card .c-elem{position:absolute;top:3px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);
+  font-size:.44rem;font-weight:700;letter-spacing:.03em;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.95);z-index:2;}
+.card .c-grade{position:absolute;left:0;right:0;bottom:15px;text-align:center;font-family:var(--font-mono);
+  font-size:.5rem;font-weight:800;letter-spacing:.06em;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.95);z-index:2;}
+.card .c-ability{position:absolute;left:1px;right:1px;bottom:1px;text-align:center;font-size:.36rem;line-height:1.15;
+  color:rgba(255,255,255,.85);padding:1px 2px;background:rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;z-index:2;}
+/* 오버레이가 있는(기본) 카드는 아래를 살짝 어둡게 깔아 흰 글자가 읽히도록 */
+.card.has-img:not(.tcg-pure)::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(rgba(0,0,0,.42) 0%, transparent 22%, transparent 68%, rgba(0,0,0,.65) 100%);}
 .card[data-grade="N"]{border-color:rgba(185,185,198,.4);}
 .card[data-grade="R"]{border-color:rgba(63,224,255,.45);}
 .card[data-grade="S"]{border-color:rgba(160,107,255,.5);}
 .card[data-grade="SR"]{border-color:rgba(255,47,176,.5);box-shadow:0 0 10px rgba(255,47,176,.12);}
 .card[data-grade="SSR"]{border-color:rgba(232,196,104,.6);box-shadow:0 0 14px rgba(232,196,104,.22);}
+.card.tcg-pure{border-color:rgba(232,196,104,.55);}
 .card.op{border-style:dashed;opacity:.94;}
 .card.reveal{animation:pop .38s ease-out;}
 @keyframes pop{0%{transform:translateY(-14px) scale(.8);opacity:0;}100%{transform:none;opacity:1;}}
@@ -141,10 +151,16 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
   .z-score{font-size:1.05rem;gap:16px;padding:6px 0;}
   .card{width:78px;height:106px;border-radius:10px;}
   .card.mini{width:68px;height:92px;}
-  .card .c-name{font-size:.6rem;}
-  .card .c-cost,.card .c-pow{width:23px;height:23px;font-size:.76rem;}
-  .hand .card{width:84px;height:114px;}
-  .hand{gap:12px;min-height:120px;}
+  .card .c-cost,.card .c-pow{font-size:.7rem;}
+  .card .c-elem{font-size:.54rem;}
+  .card .c-grade{font-size:.62rem;bottom:19px;}
+  .card .c-ability{font-size:.44rem;}
+  .hand .card{width:94px;height:128px;}
+  .hand{gap:12px;min-height:134px;}
+  .hand .card .c-cost,.hand .card .c-pow{font-size:.8rem;}
+  .hand .card .c-elem{font-size:.6rem;}
+  .hand .card .c-grade{font-size:.7rem;bottom:22px;}
+  .hand .card .c-ability{font-size:.5rem;}
 }
 
 /* ── 상대 손패 (내용은 안 보이고 장수만 — 프리미엄 화이트+골드 뒷장으로 통일) ── */
@@ -152,12 +168,10 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .opp-hand-wrap .hand-label{text-align:center;}
 .opp-hand{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
 .cardback{width:44px;height:60px;border-radius:7px;flex-shrink:0;
-  background:linear-gradient(150deg,#2a2308,#4a3c12 45%,#2a2308);
-  border:1px solid rgba(255,247,224,.55);
-  box-shadow:0 0 10px rgba(232,196,104,.3), inset 0 0 8px rgba(255,255,255,.15);
-  display:flex;align-items:center;justify-content:center;}
-.cardback::after{content:'X';font-family:var(--font-sans);font-weight:800;font-size:1.1rem;color:#fff7e0;text-shadow:0 0 10px rgba(232,196,104,.8);}
-@media(min-width:900px){ .cardback{width:52px;height:70px;} .cardback::after{font-size:1.3rem;} }
+  background-image:url('assets/card-back.jpg');background-size:cover;background-position:center;
+  border:1px solid rgba(160,107,255,.5);
+  box-shadow:0 0 10px rgba(63,224,255,.3);}
+@media(min-width:900px){ .cardback{width:52px;height:70px;} }
 
 /* ── hand ── */
 .hand-wrap{border-top:1px solid var(--hair);padding-top:12px;}
@@ -187,27 +201,50 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .deck-slot img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;}
 .deck-slot .ds-empty{font-family:var(--font-mono);font-size:.6rem;color:rgba(255,255,255,.2);}
 .deck-collection-title{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.16em;color:var(--text-dim);text-align:center;margin-bottom:14px;}
-.deck-collection{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;max-height:44vh;overflow-y:auto;padding:4px;margin-bottom:20px;}
-.deck-card{position:relative;aspect-ratio:3/4.2;border-radius:9px;overflow:hidden;cursor:pointer;transition:.2s;border:1px solid var(--hair);}
+/* [2026-07-24] 6열 고정 그리드. 기본은 2줄(12장)만 보여주고 "더보기"로 전체 펼침 —
+   TCG 우선→등급 내림차순 정렬은 renderDeckBuilder()가 담당. */
+.deck-collection{display:grid;grid-template-columns:repeat(6,1fr);gap:14px 10px;padding:8px 4px 4px;margin-bottom:8px;}
+@media(max-width:640px){ .deck-collection{grid-template-columns:repeat(3,1fr);} }
+.deck-card-wrap{position:relative;}
+.deck-card-count{position:absolute;top:-8px;right:-4px;font-family:var(--font-mono);font-size:.56rem;font-weight:800;
+  padding:2px 6px;border-radius:8px;background:#1a1220;border:1px solid rgba(232,196,104,.6);color:var(--gold);z-index:3;}
+.deck-card{width:100%;height:auto;position:relative;aspect-ratio:3/4.2;border-radius:9px;overflow:hidden;cursor:pointer;transition:.2s;border:1px solid var(--hair);}
 .deck-card:hover{transform:translateY(-3px);}
 .deck-card.exhausted{opacity:.3;cursor:not-allowed;}
 .deck-card.exhausted:hover{transform:none;}
 .deck-card img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;}
-.deck-card .dc-grade{position:absolute;top:4px;left:4px;font-family:var(--font-mono);font-size:.5rem;font-weight:700;
-  padding:2px 5px;border-radius:6px;background:rgba(0,0,0,.7);letter-spacing:.04em;}
-.deck-card .dc-count{position:absolute;top:4px;right:4px;font-family:var(--font-mono);font-size:.5rem;font-weight:700;
-  padding:2px 5px;border-radius:6px;background:rgba(0,0,0,.7);color:var(--gold);}
-.deck-card .dc-name{position:absolute;left:0;right:0;bottom:0;padding:16px 4px 4px;font-size:.5rem;font-weight:600;text-align:center;
-  background:linear-gradient(transparent, rgba(0,0,0,.92) 40%);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.deck-card .dc-stats{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;gap:5px;font-family:var(--font-mono);z-index:1;}
-.deck-card .dc-stats b{font-size:.52rem;font-weight:700;color:var(--cyan);background:rgba(10,26,36,.85);border:1px solid rgba(63,224,255,.5);
-  border-radius:50%;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;}
-.deck-card .dc-stats i{font-style:normal;font-size:.52rem;font-weight:700;color:var(--magenta);background:rgba(36,8,26,.85);border:1px solid rgba(255,47,176,.5);
-  border-radius:50%;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;}
+/* 카드 이름 표기는 완전히 제거 — 정보를 가리지 않는다. 기본카드만 스탯 오버레이(카드 CSS 재사용). */
 .deck-card.tcg{border-color:rgba(232,196,104,.6);box-shadow:0 0 10px rgba(232,196,104,.25);}
-.dc-tcg-badge{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:.44rem;font-weight:700;
-  letter-spacing:.06em;padding:2px 6px;border-radius:7px;background:linear-gradient(120deg,#fff7e0,#e8c468);color:#2a1f06;z-index:1;}
+.deck-more-wrap{text-align:center;margin-bottom:20px;}
+.deck-more-btn{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;color:var(--text-dim);
+  border:1px solid var(--hair);padding:8px 18px;border-radius:16px;background:rgba(255,255,255,.03);transition:.2s;}
+.deck-more-btn:hover{color:var(--silver);border-color:rgba(255,255,255,.3);}
 .deck-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+/* ── 카드 미리보기(확대) + 장착 모달 ── */
+.card-preview-modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(6px);padding:20px;}
+.card-preview-modal.on{display:flex;}
+.cp-inner{display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:center;max-width:480px;}
+.cp-card{width:200px;height:280px;border-radius:16px;position:relative;flex-shrink:0;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);}
+.cp-card .c-cost,.cp-card .c-pow{font-size:1.1rem;}
+.cp-card .c-elem{font-size:.8rem;}
+.cp-card .c-grade{font-size:1rem;bottom:34px;}
+.cp-card .c-ability{font-size:.66rem;bottom:6px;white-space:normal;line-height:1.4;padding:4px 8px;}
+.cp-actions{display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
+.cp-actions .cp-name{font-weight:700;font-size:1.1rem;}
+.cp-actions .cp-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--text-dim);}
+.cp-close{position:absolute;top:16px;right:20px;font-size:1.4rem;color:var(--text-dim);cursor:pointer;background:none;border:none;}
+.cp-close:hover{color:#fff;}
+
+/* ── 로비 확인 모달 ── */
+.confirm-modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.78);backdrop-filter:blur(6px);padding:20px;}
+.confirm-modal.on{display:flex;}
+.confirm-box{background:#0e0a16;border:1px solid var(--hair);border-radius:16px;padding:26px 28px;max-width:340px;text-align:center;}
+.confirm-box p{font-size:.9rem;line-height:1.6;margin-bottom:18px;}
+.confirm-actions{display:flex;gap:10px;justify-content:center;}
 
 /* ── end screen ── */
 .result{text-align:center;padding:30px 0;}
@@ -221,8 +258,10 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
   .board{gap:6px;}
   .zone{padding:8px 5px;}
   .card{width:50px;height:70px;}
-  .card .c-name{font-size:.44rem;}
-  .card .c-cost,.card .c-pow{width:17px;height:17px;font-size:.58rem;}
+  .card .c-cost,.card .c-pow{font-size:.5rem;}
+  .card .c-elem{font-size:.38rem;}
+  .card .c-grade{font-size:.42rem;bottom:12px;}
+  .card .c-ability{font-size:.3rem;}
   .z-name{font-size:.5rem;}
 }
 </style>
@@ -252,7 +291,8 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
         <li><span lang="en"><b>3 zones.</b> Play cards into any zone — up to 4 cards each.</span><span lang="ko"><b>3개 구역.</b> 원하는 구역에 카드를 냅니다 — 구역당 최대 4장.</span></li>
         <li><span lang="en"><b>Win 2 of 3 zones</b> by total Power when turn 6 ends.</span><span lang="ko">6턴 종료 시 파워 합계로 <b>3개 중 2개 구역</b>을 이기면 승리.</span></li>
         <li><span lang="en">Tie on zones? Highest total Power wins.</span><span lang="ko">구역 수가 같으면 전체 파워 합계가 높은 쪽이 승리.</span></li>
-        <li><span lang="en">Cards have no abilities yet — pure cost &amp; power.</span><span lang="ko">아직 카드 능력은 없습니다 — 순수 비용/파워 대결.</span></li>
+        <li><span lang="en">Battles are decided by cost &amp; power — each card's ability line is flavor for now.</span><span lang="ko">승부는 비용/파워로 갈립니다 — 카드의 기술 문구는 아직 수치에 영향을 주지 않습니다.</span></li>
+        <li><span lang="en">You need a 12-card deck from MY CARDS to play.</span><span lang="ko">플레이하려면 내 카드에서 12장 덱을 구성해야 합니다.</span></li>
       </ul>
     </div>
     <div class="diff-picker" id="diff-picker">
@@ -295,14 +335,40 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
     <p class="deck-progress"><span lang="en">DECK</span><span lang="ko">덱</span> <b id="deck-count">0</b> / 12</p>
     <div class="deck-slots" id="deck-slots"></div>
 
-    <div class="deck-collection-title"><span lang="en">TAP A CARD TO ADD IT</span><span lang="ko">카드를 눌러 덱에 추가하세요</span></div>
+    <div class="deck-collection-title"><span lang="en">TAP A CARD TO PREVIEW &amp; EQUIP</span><span lang="ko">카드를 눌러 크게 보고 장착하세요</span></div>
     <div class="deck-collection" id="deck-collection"></div>
+    <div class="deck-more-wrap" id="deck-more-wrap" style="display:none;">
+      <button class="deck-more-btn" id="deck-more-btn"></button>
+    </div>
 
     <div class="deck-actions">
       <button class="btn" id="btn-deck-confirm" disabled><span lang="en">DECK COMPLETE</span><span lang="ko">구성 완료</span></button>
       <button class="btn ghost" id="btn-deck-back"><span lang="en">← BACK</span><span lang="ko">← 뒤로</span></button>
     </div>
   </section>
+
+  <!-- ══ 카드 미리보기 + 장착 ══ -->
+  <div class="card-preview-modal" id="card-preview-modal">
+    <div class="cp-inner">
+      <button class="cp-close" id="cp-close">&times;</button>
+      <div class="cp-card" id="cp-card"></div>
+      <div class="cp-actions">
+        <span class="cp-meta" id="cp-meta"></span>
+        <button class="btn" id="cp-equip"><span lang="en">EQUIP →</span><span lang="ko">장착 →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 로비 확인 ══ -->
+  <div class="confirm-modal" id="confirm-lobby">
+    <div class="confirm-box">
+      <p><span lang="en">Go back to the lobby? Current match progress will be lost.</span><span lang="ko">로비로 가시겠습니까? 현재 진행 중인 대전이 취소됩니다.</span></p>
+      <div class="confirm-actions">
+        <button class="btn" id="lobby-yes"><span lang="en">YES</span><span lang="ko">예</span></button>
+        <button class="btn ghost" id="lobby-no"><span lang="en">NO</span><span lang="ko">아니오</span></button>
+      </div>
+    </div>
+  </div>
 
   <!-- ══ PLAY ══ -->
   <section class="screen" id="screen-play">
@@ -327,6 +393,7 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
     <div class="actions">
       <button class="btn" id="btn-end"><span lang="en">END TURN</span><span lang="ko">턴 종료</span></button>
       <button class="btn ghost" id="btn-retreat"><span lang="en">RETREAT</span><span lang="ko">기권</span></button>
+      <button class="btn ghost" id="btn-lobby-play"><span lang="en">LOBBY</span><span lang="ko">로비</span></button>
     </div>
     <p class="hint" id="hint"></p>
   </section>
@@ -340,6 +407,7 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
       <p class="reward" id="res-reward"></p>
       <div class="actions">
         <button class="btn" id="btn-again"><span lang="en">PLAY AGAIN</span><span lang="ko">다시 하기</span></button>
+        <button class="btn ghost" id="btn-lobby-end"><span lang="en">LOBBY</span><span lang="ko">로비</span></button>
         <a class="btn ghost" href="../"><span lang="en">BACK TO GAMES</span><span lang="ko">게임 목록</span></a>
       </div>
       <p class="hint" id="end-hint"></p>
@@ -384,13 +452,21 @@ function paintXC(bal){ $('xc-chip').textContent = 'XC ' + (bal === null ? '…' 
    덱을 짜서 들어가면 같은 등급이라도 AI 쪽 카드가 실제로 훨씬 세서
    (예: SR끼리 비교해도 파워 9 vs 4) "AI가 더 좋은 카드를 쥔 것처럼" 보였다 —
    착시가 아니라 실제 스탯 불일치였다. 이제 전 게임 공통 스탯 체계로 통일한다. */
+var GRADE_ABILITY_LOCAL = {
+  N:   { en:'No special ability.',           ko:'특수 기술 없음.' },
+  R:   { en:'No special ability.',           ko:'특수 기술 없음.' },
+  S:   { en:'Holds the line — steady power.', ko:'구역을 지킨다 — 안정적인 파워.' },
+  SR:  { en:'Turns the tide of close zones.', ko:'접전 구역의 흐름을 바꾼다.' },
+  SSR: { en:'Commands the zone it enters.',   ko:'입장한 구역을 장악한다.' }
+};
 var CARD_POOL = [
-  { id:'B-N-01',   name_en:'SIGNAL DRONE',  name_ko:'시그널 드론',   grade:'N',   cost:1, power:1 },
-  { id:'B-R-01',   name_en:'BACKUP DANCER', name_ko:'백업 댄서',     grade:'R',   cost:1, power:1 },
-  { id:'B-S-01',   name_en:'STAGE GUARD',   name_ko:'스테이지 가드', grade:'S',   cost:2, power:2 },
-  { id:'B-SR-01',  name_en:'LEAD VOCAL',    name_ko:'리드 보컬',     grade:'SR',  cost:3, power:4 },
-  { id:'B-SSR-01', name_en:'CENTER STAGE',  name_ko:'센터 스테이지', grade:'SSR', cost:4, power:6 }
+  { id:'B-N-01',   name_en:'SIGNAL DRONE',  name_ko:'시그널 드론',   grade:'N',   cost:1, power:1, element:'SOUND', isTcg:false },
+  { id:'B-R-01',   name_en:'BACKUP DANCER', name_ko:'백업 댄서',     grade:'R',   cost:1, power:1, element:'SOUL',  isTcg:false },
+  { id:'B-S-01',   name_en:'STAGE GUARD',   name_ko:'스테이지 가드', grade:'S',   cost:2, power:2, element:'METAL', isTcg:false },
+  { id:'B-SR-01',  name_en:'LEAD VOCAL',    name_ko:'리드 보컬',     grade:'SR',  cost:3, power:4, element:'DARK',  isTcg:false },
+  { id:'B-SSR-01', name_en:'CENTER STAGE',  name_ko:'센터 스테이지', grade:'SSR', cost:4, power:6, element:'LIGHT', isTcg:false }
 ];
+CARD_POOL.forEach(function(c){ c.ability = GRADE_ABILITY_LOCAL[c.grade]; });
 /* 플레이어 덱은 난이도 무관 고정(데모). copies = 덱 장수 — 저코스트를 두텁게 깔아야
    1턴이 죽지 않는다 (플레이테스트: 균등 3장씩이면 약 38% 확률로 1턴에 낼 카드가 없었음). */
 var PLAYER_COPIES = { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2 };   /* 12장, 평균 파워 1.75 */
@@ -461,9 +537,11 @@ function saveCustomDeck(ids){
   localStorage.setItem(CUSTOM_DECK_KEY, JSON.stringify({ids:ids, copiesMap:copiesMap, savedAt:Date.now()}));
 }
 function toDeckCard(xc){
-  return { id:xc.id, name_en:xc.name, name_ko:xc.name, grade:xc.grade, cost:xc.cost, power:xc.power, img:xc.img };
+  return { id:xc.id, name_en:xc.name, name_ko:xc.name, grade:xc.grade, cost:xc.cost, power:xc.power,
+           img:xc.img, element:xc.element, ability:xc.ability, isTcg:xc.isTcg };
 }
-/* 실제 이번 판에 쓸 플레이어 덱 재료를 결정한다: 커스텀 덱이 있으면 그것, 없으면 데모덱 */
+/* [2026-07-24] 데모덱 폴백 제거 — 실제 보유 카드로 12장을 맞춘 커스텀 덱이 없으면
+   플레이 자체를 막는다("내카드에서 덱을 맞추세요"). 유효하면 그 덱, 아니면 null. */
 function getPlayerDeckPlan(){
   var custom = loadCustomDeck();
   if(custom && window.XenaCards){
@@ -476,11 +554,12 @@ function getPlayerDeckPlan(){
     });
     if(allFound) return { copiesMap:custom.copiesMap, poolMap:poolMap, isCustom:true };
   }
-  return { copiesMap:PLAYER_COPIES, poolMap:CARD_POOL_MAP, isCustom:false };
+  return null;
 }
 
 function newGame(){
   var plan = getPlayerDeckPlan();
+  if(!plan){ return false; }
   G = {
     turn: 1,
     mana: 1,
@@ -496,20 +575,31 @@ function newGame(){
   };
   for(var i = 0; i < START_HAND; i++){ drawP(); drawA(); }
   render();
+  return true;
 }
 
 function drawP(){ if(G.pDeck.length) G.pHand.push(G.pDeck.pop()); }
 function drawA(){ if(G.aDeck.length) G.aHand.push(G.aDeck.pop()); }
 
 /* ── 렌더 ─────────────────────────────────────────────── */
+/* [2026-07-24] 카드 이름 표기는 완전히 제거. TCG 전용(카드아트에 정보가 이미 그려진) 카드는
+   오버레이를 아예 얹지 않는다 — 정보를 가리는 문제였다. 기본카드만 좌상단 비용/중앙상단
+   속성/우상단 파워/카드 하단 등급/맨아래 한 줄 기술을 얹는다. 배틀·덱빌더 공용. */
+function cardFaceHTML(card){
+  if(card.isTcg) return '';
+  var abbr = (window.XenaCards && XenaCards.ELEMENT_ABBR && card.element) ? XenaCards.ELEMENT_ABBR[card.element] : '';
+  var ability = card.ability ? t(card.ability.en, card.ability.ko) : '';
+  return '<span class="c-cost">' + card.cost + '</span>' +
+         (abbr ? '<span class="c-elem">' + abbr + '</span>' : '') +
+         '<span class="c-pow">' + card.power + '</span>' +
+         '<span class="c-grade">' + card.grade + '</span>' +
+         (ability ? '<span class="c-ability" title="' + ability.replace(/"/g,'&quot;') + '">' + ability + '</span>' : '');
+}
 function cardHTML(card, cls){
   var hasImg = !!card.img;
   var style = hasImg ? ' style="background-image:url(\'' + card.img + '\')"' : '';
-  return '<div class="card ' + (hasImg ? 'has-img ' : '') + (cls || '') + '" data-grade="' + card.grade + '"' + style + '>' +
-           '<span class="c-cost">' + card.cost + '</span>' +
-           '<span class="c-name">' + t(card.name_en, card.name_ko) + '</span>' +
-           '<span class="c-pow">' + card.power + '</span>' +
-         '</div>';
+  return '<div class="card ' + (hasImg ? 'has-img ' : '') + (card.isTcg ? 'tcg-pure ' : '') + (cls || '') +
+         '" data-grade="' + card.grade + '"' + style + '>' + cardFaceHTML(card) + '</div>';
 }
 
 function zonePower(z, side){
@@ -804,13 +894,32 @@ function updateIntroHint(){
   var el = $('intro-hint');
   var deckMsg = custom
     ? t('Custom deck equipped (12 cards) — MY CARDS to change it', '커스텀 덱 장착됨 (12장) — 내 카드에서 변경 가능')
-    : t('Using the demo deck — build your own in MY CARDS', '데모 덱 사용 중 — 내 카드에서 직접 구성할 수 있습니다');
+    : t('No deck set — go to MY CARDS and build a 12-card deck to play.', '덱이 없습니다 — 내 카드에서 덱을 맞추세요 (12장 필요).');
   el.textContent = deckMsg + ' · ' + t('Up to 5 rewarded matches per day (any difficulty).', '난이도 무관 하루 최대 5판까지 보상됩니다.');
+  $('btn-start').disabled = !custom;
 }
 updateIntroHint();
 
-$('btn-start').addEventListener('click', function(){ newGame(); show('play'); hint(t('Turn 1 — mana 1.', '1턴 — 마나 1.')); });
-$('btn-again').addEventListener('click', function(){ newGame(); show('play'); hint(t('Turn 1 — mana 1.', '1턴 — 마나 1.')); });
+$('btn-start').addEventListener('click', function(){
+  if(!newGame()){ hint(t('No deck set — go to MY CARDS and build a 12-card deck to play.', '덱이 없습니다 — 내 카드에서 덱을 맞추세요 (12장 필요).')); return; }
+  show('play'); hint(t('Turn 1 — mana 1.', '1턴 — 마나 1.'));
+});
+$('btn-again').addEventListener('click', function(){
+  if(!newGame()){ show('intro'); updateIntroHint(); return; }
+  show('play'); hint(t('Turn 1 — mana 1.', '1턴 — 마나 1.'));
+});
+
+/* ── 로비 이동(확인 후) ── */
+var lobbyFrom = null;
+function askLobby(from){ lobbyFrom = from; $('confirm-lobby').classList.add('on'); }
+$('btn-lobby-play').addEventListener('click', function(){ askLobby('play'); });
+$('btn-lobby-end').addEventListener('click', function(){ askLobby('end'); });
+$('lobby-no').addEventListener('click', function(){ $('confirm-lobby').classList.remove('on'); });
+$('lobby-yes').addEventListener('click', function(){
+  $('confirm-lobby').classList.remove('on');
+  show('intro');
+  updateIntroHint();
+});
 
 /* ── 덱 빌더 ────────────────────────────────────────────
    draft: 이번에 편집 중인 12칸(빈 칸은 null). 확정 전까지는 저장되지 않는다. */
@@ -825,18 +934,20 @@ function openDeckBuilder(){
   var saved = loadCustomDeck();
   deckDraft = saved ? saved.ids.slice() : [];
   while(deckDraft.length < 12) deckDraft.push(null);
+  deckShowAll = false;
   renderDeckBuilder();
   show('deck');
 }
+var GRADE_RANK_TCG = { SSR:5, SR:4, S:3, R:2, N:1 };
+var DECK_PAGE_N = 12; /* 6열 × 2줄 기본 노출 */
+var deckShowAll = false;
 function renderDeckBuilder(){
-  var owned = XenaCards.owned(); /* 등급(파워) 내림차순으로 이미 정렬되어 있음 */
-  /* TCG 전용(ARCHIVE PACK, PC-* ) 카드를 맨 위로 — 시그널 크래쉬는 이 카드들 전용 게임이니
-     내카드에서 덱을 짤 때 가장 먼저 눈에 띄어야 한다. TCG 그룹 내부/일반 그룹 내부는
-     기존 파워 내림차순을 그대로 유지(stable sort). */
+  var owned = XenaCards.owned();
+  /* TCG 전용(PC-*) 카드를 맨 위로, 그 다음 등급 내림차순 — 우선순위: TCG > 등급 */
   owned = owned.slice().sort(function(a, b){
-    var ap = a.id.indexOf('PC-') === 0, bp = b.id.indexOf('PC-') === 0;
+    var ap = a.isTcg, bp = b.isTcg;
     if(ap !== bp) return ap ? -1 : 1;
-    return 0;
+    return (GRADE_RANK_TCG[b.grade]||0) - (GRADE_RANK_TCG[a.grade]||0);
   });
   var filled = deckDraft.filter(function(x){ return !!x; }).length;
   $('deck-count').textContent = filled;
@@ -869,33 +980,66 @@ function renderDeckBuilder(){
   }
   $('deck-slots').innerHTML = slotsHtml;
 
-  /* 컬렉션 — 이미 덱에 다 쓴 만큼은 흐리게(더 못 넣음) */
+  /* 컬렉션 — 기본 12장(2줄)만, "더보기"로 전체. 이름 표기 없음. ×수량은 카드 밖 배지로. */
+  var visible = deckShowAll ? owned : owned.slice(0, DECK_PAGE_N);
   var colHtml = '';
-  owned.forEach(function(c){
+  visible.forEach(function(c){
     var used = counts[c.id] || 0;
     var remaining = c.count - used;
     var exhausted = remaining <= 0;
-    var isTcg = c.id.indexOf('PC-') === 0;
-    var title = c.name + ' — ' + t('Cost ', '비용 ') + c.cost + ' / ' + t('Power ', '파워 ') + c.power + ' / ' + t('No ability (pure stats)', '기술 없음(순수 스탯)');
-    colHtml += '<div class="deck-card'+(exhausted?' exhausted':'')+(isTcg?' tcg':'')+'" data-id="'+c.id+'" title="'+title+'">'+
-      '<img src="'+c.img+'" alt="" loading="lazy">'+
-      (isTcg ? '<span class="dc-tcg-badge">TCG</span>' : '')+
-      '<span class="dc-grade" style="color:'+c.color+';">'+c.grade+'</span>'+
-      '<span class="dc-count">×'+remaining+'</span>'+
-      '<span class="dc-stats"><b>'+c.cost+'</b><i>'+c.power+'</i></span>'+
-      '<span class="dc-name">'+c.name+'</span>'+
-    '</div>';
+    colHtml += '<div class="deck-card-wrap">' +
+      '<span class="deck-card-count">×'+remaining+'</span>' +
+      '<div class="card deck-card'+(exhausted?' exhausted':'')+(c.isTcg?' tcg tcg-pure':'')+(c.img?' has-img':'')+'" data-id="'+c.id+'" data-grade="'+c.grade+'"'+
+      (c.img ? ' style="background-image:url(\''+c.img+'\')"' : '')+'>'+
+      cardFaceHTML(c)+
+      '</div></div>';
   });
   $('deck-collection').innerHTML = colHtml;
+
+  var moreCount = owned.length - visible.length;
+  if(moreCount > 0){
+    $('deck-more-wrap').style.display = '';
+    $('deck-more-btn').textContent = t('+ Show all cards (' + moreCount + ' more)', '+ 전체 카드 더보기 (' + moreCount + '장 더)');
+  } else if(deckShowAll && owned.length > DECK_PAGE_N){
+    $('deck-more-wrap').style.display = '';
+    $('deck-more-btn').textContent = t('Show top ' + DECK_PAGE_N + ' only', '상위 ' + DECK_PAGE_N + '장만 보기');
+  } else {
+    $('deck-more-wrap').style.display = 'none';
+  }
+}
+$('deck-more-btn').addEventListener('click', function(){ deckShowAll = !deckShowAll; renderDeckBuilder(); });
+
+/* ── 카드 미리보기 + 장착 ── */
+var previewCard = null;
+function openCardPreview(id){
+  var c = XenaCards.get(id);
+  if(!c) return;
+  var counts = draftCounts();
+  var remaining = c.count - (counts[c.id] || 0);
+  if(remaining <= 0) return;
+  previewCard = c;
+  $('cp-card').className = 'cp-card card' + (c.isTcg ? ' tcg-pure' : '') + (c.img ? ' has-img' : '');
+  $('cp-card').setAttribute('data-grade', c.grade);
+  $('cp-card').style.backgroundImage = c.img ? 'url(\'' + c.img + '\')' : '';
+  $('cp-card').innerHTML = cardFaceHTML(c);
+  $('cp-meta').textContent = c.grade + (c.isTcg ? ' · TCG' : '') + ' · ' + t('Owned ', '보유 ') + remaining;
+  $('cp-equip').disabled = deckDraft.indexOf(null) < 0;
+  $('card-preview-modal').classList.add('on');
 }
 $('deck-collection').addEventListener('click', function(e){
   var el = e.target.closest('.deck-card');
   if(!el || el.classList.contains('exhausted')) return;
-  var id = el.getAttribute('data-id');
+  openCardPreview(el.getAttribute('data-id'));
+});
+$('cp-close').addEventListener('click', function(){ $('card-preview-modal').classList.remove('on'); });
+$('card-preview-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
+$('cp-equip').addEventListener('click', function(){
+  if(!previewCard) return;
   var emptyIdx = deckDraft.indexOf(null);
-  if(emptyIdx < 0) return; /* 이미 12장 다 참 */
-  deckDraft[emptyIdx] = id;
+  if(emptyIdx < 0) return;
+  deckDraft[emptyIdx] = previewCard.id;
   if (window.XenaAudio) window.XenaAudio.sfx('btn_click');
+  $('card-preview-modal').classList.remove('on');
   renderDeckBuilder();
 });
 $('deck-slots').addEventListener('click', function(e){
