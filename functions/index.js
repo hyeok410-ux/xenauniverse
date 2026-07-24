@@ -422,58 +422,6 @@ exports.claimStageReward = onCall(async (request) => {
    초기화" 요청 반영. 하루라도 거르면 1일차부터 다시 시작(기존 로직 그대로 유지).
    연속 출석일수는 서버가 직접 센다 — localStorage 조작으로는 스트릭을 늘릴 수 없다. */
 const STREAK_BONUS = Object.freeze({ 3: 10, 7: 20, 15: 40, 30: 80, 100: 300, 365: 1000 });
-const RAID_CARDS = Object.freeze({
-  "raid-nix": { cost: 1, power: 1 },
-  "raid-echo": { cost: 2, power: 2 },
-  "raid-xena": { cost: 3, power: 4 },
-});
-const RAID_REWARD = 10;
-
-function verifyRaidRun(actions) {
-  if (!Array.isArray(actions) || actions.length > 3) return false;
-  const usedCards = new Set();
-  const usedSlots = new Set();
-  let bossHp = 30;
-  for (let turn = 1; turn <= 6; turn += 1) {
-    let mana = turn;
-    let power = 0;
-    for (const action of actions.filter((entry) => entry && Number(entry.turn) === turn)) {
-      const cardId = String(action.cardId || "");
-      const card = RAID_CARDS[cardId];
-      const slot = Number(action.slot);
-      if (!card || usedCards.has(cardId) || usedSlots.has(slot) || !Number.isInteger(slot) || slot < 0 || slot > 4 || card.cost > mana) return false;
-      usedCards.add(cardId);
-      usedSlots.add(slot);
-      mana -= card.cost;
-      power += card.power;
-    }
-    bossHp -= power;
-    if (bossHp <= 0) return true;
-  }
-  return false;
-}
-
-exports.claimRaidClear = onCall(async (request) => {
-  const uid = requireAuth(request);
-  if (!verifyRaidRun(request.data && request.data.actions)) {
-    throw new HttpsError("failed-precondition", "Raid result could not be verified.");
-  }
-  const dayKey = newYorkDateKey();
-  const claimRef = db.doc(`raidDailyClaims/${uid}_${dayKey}`);
-  const walletRef = db.doc(`wallets/${uid}`);
-  const result = await db.runTransaction(async (tx) => {
-    const claim = await tx.get(claimRef);
-    if (claim.exists) return { granted: 0, alreadyClaimed: true };
-    tx.set(claimRef, { uid, dayKey, game: "crisis-override", reward: RAID_REWARD, createdAt: FieldValue.serverTimestamp() });
-    tx.set(walletRef, { uid, credits: FieldValue.increment(RAID_REWARD), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    return { granted: RAID_REWARD, alreadyClaimed: false };
-  });
-  const wallet = await walletRef.get();
-  return { ...result, credits: wallet.get("credits") || 0 };
-});
-
-/* ── 데일리 시그널 수령 (+5 XC, 7일 연속이면 +20 보너스) ──
-   연속 출석일수도 서버가 직접 센다 — localStorage 조작으로는 스트릭도 늘릴 수 없다. */
 exports.claimDailySignal = onCall(async (request) => {
   const uid = requireAuth(request);
   const dayKey = newYorkDateKey();
@@ -530,8 +478,30 @@ exports.claimQuestBonus = onCall(async (request) => {
     tx.set(walletRef, { uid, credits: FieldValue.increment(amount), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     return { granted: amount };
   });
+  /* 주간 최고 점수 업데이트 (non-critical — 실패해도 XC 지급에는 영향 없음) */
+  try {
+    const week = weekKeyUTC();
+    const weeklyRef = db.doc(`merge_weekly/${week}/entries/${uid}`);
+    const weeklySnap = await weeklyRef.get();
+    const prevBest = (weeklySnap.exists && weeklySnap.get("score")) || 0;
+    if (score > prevBest) {
+      const userDoc = await db.doc(`users/${uid}`).get();
+      const nickname = (userDoc.exists && userDoc.get("nickname")) || "Anonymous";
+      await weeklyRef.set({ uid, score, nickname, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    }
+  } catch (e) { /* silent */ }
   const wallet = await walletRef.get();
   return { ...result, credits: wallet.get("credits") || 0 };
+});
+
+/* ── XENA MERGE 주간 랭킹 TOP 3 조회 ── */
+exports.getMergeLeaderboard = onCall(async (_request) => {
+  const week = weekKeyUTC();
+  const snap = await db.collection(`merge_weekly/${week}/entries`).orderBy("score", "desc").limit(3).get();
+  const top3 = snap.docs.map(function(d) {
+    return { uid: d.id, nickname: d.get("nickname") || "Anonymous", score: d.get("score") || 0 };
+  });
+  return { week, top3 };
 });
 
 /* ── 제나카드 웰컴 보너스: 평생 1회, +50 XC ── */
@@ -553,7 +523,7 @@ exports.claimWelcomeBonus = onCall(async (request) => {
    카드 소유 자체는 아직 서버에 없으므로(다음 단계 작업), 등급별 단가는 서버가 신뢰하는
    표로 고정하고 "몇 장을 분해했는지"만 클라이언트 값을 받아 상한을 두고 계산한다.
    완전한 검증은 아니지만 최소한 "등급 단가 조작"은 막는다. */
-const DUST_VALUE = Object.freeze({ N: 1, R: 3, S: 10, SR: 30, SSR: 100 });
+const DUST_VALUE = Object.freeze({ N: 10, R: 30, S: 100, SR: 300, SSR: 1000 });
 exports.claimGachaDust = onCall(async (request) => {
   const uid = requireAuth(request);
   const grade = String(request.data && request.data.grade || "");
@@ -699,7 +669,7 @@ exports.claimTcgMatch = onCall(async (request) => {
 const MERGE_MAX_SCORE_PER_CLAIM = 20000;   /* 이보다 큰 점수를 보내면 이 값으로 잘라서 계산 */
 const MERGE_XC_PER_SCORE = 1 / 25;         /* 점수 25당 XC 1 */
 const MERGE_MAX_REWARD = 300;              /* 한 판 보상 상한 */
-const MERGE_DAILY_LIMIT = 5;
+const MERGE_DAILY_LIMIT = 3;
 exports.claimMergeScore = onCall(async (request) => {
   const uid = requireAuth(request);
   const scoreRaw = Number(request.data && request.data.score);
@@ -1033,4 +1003,38 @@ exports.adminResetWallet = onCall(async (request) => {
     { merge: true }
   );
   return { ok: true };
+});
+
+/* ── 사용자 피드백 / 관리자 검토 ─────────────────────────────── */
+exports.submitFeedback = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const text = String(request.data?.text || '').trim();
+  const category = String(request.data?.category || 'general').slice(0, 30);
+  if (!text) throw new HttpsError('invalid-argument', 'Feedback text is required.');
+  if (text.length > 2000) throw new HttpsError('invalid-argument', 'Feedback is limited to 2000 characters.');
+  const ref = await db.collection('feedback').add({
+    uid,
+    category,
+    text,
+    language: String(request.data?.language || 'en').slice(0, 5),
+    status: 'open',
+    createdAt: FieldValue.serverTimestamp()
+  });
+  return { id: ref.id };
+});
+
+exports.adminListFeedback = onCall(async (request) => {
+  const uid = requireAuth(request);
+  if (uid !== ADMIN_UID) throw new HttpsError('permission-denied', 'Admin only.');
+  const snap = await db.collection('feedback').orderBy('createdAt', 'desc').limit(100).get();
+  return { items: snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) };
+});
+
+exports.adminDeleteFeedback = onCall(async (request) => {
+  const uid = requireAuth(request);
+  if (uid !== ADMIN_UID) throw new HttpsError('permission-denied', 'Admin only.');
+  const id = String(request.data?.id || '').trim();
+  if (!id || id.length > 120) throw new HttpsError('invalid-argument', 'Feedback id is required.');
+  await db.doc(`feedback/${id}`).delete();
+  return { deleted: id };
 });

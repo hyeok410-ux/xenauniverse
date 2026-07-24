@@ -79,6 +79,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Feedback is submitted and moderated only through callable functions.
+    match /feedback/{feedbackId} {
+      allow read, write: if false;
+    }
+
     match /users/{userId} {
       function isOwner() {
         return request.auth != null && request.auth.uid == userId;

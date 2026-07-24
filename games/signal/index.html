@@ -11,6 +11,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
 <script>
 (function(){
+  var lang = document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 'en';
+  function t(en, ko){ return lang === 'ko' ? ko : en; }
   var saved = null;
   try{ saved = localStorage.getItem('xena-lang'); }catch(e){}
   document.documentElement.setAttribute('data-lang', saved === 'ko' ? 'ko' : 'en');
@@ -96,6 +98,14 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 .fortune p{font-size:.95rem;line-height:1.8;color:var(--silver);}
 .claim-row{display:none;gap:10px;margin-top:20px;flex-wrap:wrap;justify-content:center;}
 .claim-row.on{display:flex;}
+.feedback-open{display:block;margin:16px auto 0;}
+.feedback-modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(0,0,0,.78);padding:20px;}
+.feedback-modal[hidden]{display:none;}
+.feedback-box{width:min(560px,100%);padding:24px;border:1px solid rgba(63,224,255,.4);border-radius:16px;background:#090b16;box-shadow:0 0 40px rgba(63,224,255,.15);}
+.feedback-box h2{font-size:1rem;letter-spacing:.08em;margin-bottom:8px;}
+.feedback-box p{font-size:.8rem;color:var(--text-dim);line-height:1.6;margin:8px 0 14px;}
+.feedback-box textarea{width:100%;resize:vertical;min-height:160px;padding:12px;border:1px solid var(--hair);border-radius:10px;background:rgba(255,255,255,.05);color:var(--silver);font:inherit;line-height:1.6;}
+.feedback-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;}
 .cl-btn{font-family:var(--font-mono);font-size:.7rem;font-weight:500;letter-spacing:.1em;padding:12px 22px;border-radius:26px;border:1px solid var(--hair);background:rgba(255,255,255,.05);color:var(--silver);transition:.3s ease;}
 .cl-btn:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
 .cl-btn.primary{background:var(--silver);color:var(--black);border:none;font-family:var(--font-sans);font-weight:700;font-size:.85rem;}
@@ -202,6 +212,7 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
       <button class="cl-btn primary" id="btn-claim"></button>
       <button class="cl-btn" id="btn-share"><span lang="en">Share</span><span lang="ko">공유하기</span></button>
     </div>
+    <button class="cl-btn feedback-open" id="btn-feedback"><span lang="en">REPORT A BUG / FEEDBACK</span><span lang="ko">오류·버그·불편 접수</span></button>
   </div>
 
   <div class="quests">
@@ -213,6 +224,16 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
       <span lang="ko">* XC는 모든 XENA 게임이 공유하는 지갑입니다 — XENA CARDS 뽑기에 쓰세요.<br>* 퀘스트는 매일 리셋. 게임 진행 상황은 이 기기 기준으로 감지됩니다.</span>
     </p>
   </div>
+</div>
+
+<div class="feedback-modal" id="feedback-modal" hidden>
+  <section class="feedback-box" role="dialog" aria-modal="true" aria-labelledby="feedback-title">
+    <h2 id="feedback-title"><span lang="en">REPORT A BUG / FEEDBACK</span><span lang="ko">오류·버그·불편 접수</span></h2>
+    <p><span lang="en">Tell us what happened. Maximum 2,000 characters.</span><span lang="ko">불편했던 점을 적어주세요. 최대 2,000자입니다.</span></p>
+    <textarea id="feedback-text" maxlength="2000" rows="8"></textarea>
+    <div class="feedback-actions"><button class="cl-btn" id="feedback-cancel"><span lang="en">CANCEL</span><span lang="ko">취소</span></button><button class="cl-btn primary" id="feedback-submit"><span lang="en">SEND</span><span lang="ko">접수하기</span></button></div>
+    <p id="feedback-status" aria-live="polite"></p>
+  </section>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -263,7 +284,7 @@ function toast(msg){
 }
 
 /* ── 오늘의 카드 (날짜+기기 시드 → 매일 다른 카드) ── */
-var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1; });
+var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1 && d[0].indexOf('PC-') !== 0; });
 function hash(s){
   var h = 5381;
   for(var i=0;i<s.length;i++){ h = ((h<<5)+h+s.charCodeAt(i)) & 0x7fffffff; }
@@ -402,7 +423,6 @@ $('btn-claim').addEventListener('click', function(){
        퀘스트 목록의 "오늘의 시그널 받기" 항목은 낙관적 업데이트(done) 상태로 굳어
        서로 다른 상태를 보여주는 불일치가 있었다. 두 렌더를 항상 같이 호출한다. */
     if (e && e.code === 'already-exists'){ st.lastClaim = today(); save(SAVE_KEY, st); renderClaimBtn(); renderQuests(); return; }
-    claimed = false;
     renderClaimBtn(); renderQuests();
     toast(t('Could not claim — try again in a moment', '수령에 실패했습니다 — 잠시 후 다시 시도해주세요'));
   });
@@ -680,6 +700,28 @@ if(revealed){ reveal(); }
 <script>
 if (window.XenaAudio) window.XenaAudio.init('signal');
 if (window.__wireSignalWallet) window.__wireSignalWallet();
+/* 사용자 피드백: Firebase callable로 누적 저장. 로그인하지 않은 경우에는 먼저 로그인 안내. */
+(function(){
+  var lang = document.documentElement.getAttribute('data-lang') === 'ko' ? 'ko' : 'en';
+  function t(en, ko){ return lang === 'ko' ? ko : en; }
+  var open = document.getElementById('btn-feedback'), modal = document.getElementById('feedback-modal');
+  var cancel = document.getElementById('feedback-cancel'), submit = document.getElementById('feedback-submit');
+  var text = document.getElementById('feedback-text'), status = document.getElementById('feedback-status');
+  if (!open || !modal) return;
+  open.addEventListener('click', function(){ modal.hidden = false; text.focus(); });
+  cancel.addEventListener('click', function(){ modal.hidden = true; status.textContent = ''; });
+  submit.addEventListener('click', function(){
+    var value = text.value.trim();
+    if (!value){ status.textContent = t('Please enter your feedback.', '내용을 입력해주세요.'); return; }
+    if (!window.XenaWallet || !window.XenaWallet.submitFeedback){ status.textContent = t('Please sign in first.', '먼저 로그인해주세요.'); return; }
+    submit.disabled = true; status.textContent = t('Sending…', '접수 중…');
+    window.XenaWallet.submitFeedback(value, 'signal', lang).then(function(){
+      text.value = ''; status.textContent = t('Thank you. Your feedback was received.', '접수되었습니다. 감사합니다.');
+      if (window.XenaAudio) window.XenaAudio.sfx('signal_claim');
+      setTimeout(function(){ modal.hidden = true; status.textContent = ''; }, 1200);
+    }).catch(function(){ status.textContent = t('Could not send. Please try again.', '접수에 실패했습니다. 다시 시도해주세요.'); }).finally(function(){ submit.disabled = false; });
+  });
+})();
 document.querySelectorAll('button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });

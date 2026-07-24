@@ -229,12 +229,12 @@
     '.xprof-avatar-wrap img{width:100%;height:100%;object-fit:cover;}'+
     '.xprof-avatar-wrap span{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);font-size:9px;text-align:center;padding:2px 0;}'+
     '.xprof-nick-row{flex:1;}'+
-    '.xprof-nick{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;}'+
+    '.xprof-nick{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;}'+
     '.xprof-nick-lock{font-size:9.5px;color:#9a97b5;line-height:1.5;}'+
     '.xprof-uid{font-size:8.5px;color:#5b586e;margin-top:6px;word-break:break-all;}'+
-    '.xprof-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;font-size:11px;color:#c4c1da;}'+
+    '.xprof-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;font-size:13px;color:#c4c1da;}'+
     '.xprof-stats div{background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px;}'+
-    '.xprof-stats b{color:#3fe0ff;display:block;font-size:14px;}'+
+    '.xprof-stats b{color:#3fe0ff;display:block;font-size:17px;}'+
     '.xprof-claim{display:none;margin-bottom:14px;padding:10px 12px;border-radius:10px;border:1px solid rgba(232,196,104,.4);background:rgba(232,196,104,.08);font-size:11px;color:#ffd97a;}'+
     '.xprof-claim.show{display:block;}'+
     '.xprof-claim button{margin-top:8px;font-family:inherit;font-size:10.5px;font-weight:700;padding:7px 14px;border-radius:14px;border:none;background:var(--gold,#e8c468);color:#1a1206;}'+
@@ -242,11 +242,15 @@
     '.xprof-badges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}'+
     '.xprof-badge{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);position:relative;cursor:default;}'+
     '.xprof-badge.got{background:rgba(160,107,255,.14);border-color:rgba(160,107,255,.5);box-shadow:0 0 10px rgba(160,107,255,.3);}'+
+    '.xprof-badge.got-cyan{background:rgba(63,224,255,.14);border-color:rgba(63,224,255,.6);box-shadow:0 0 10px rgba(63,224,255,.3);}'+
+    '.xprof-badge.got-gold{background:rgba(232,196,104,.14);border-color:rgba(232,196,104,.6);box-shadow:0 0 10px rgba(232,196,104,.3);}'+
+    '.xprof-badge.got-pink{background:rgba(255,47,176,.14);border-color:rgba(255,47,176,.6);box-shadow:0 0 10px rgba(255,47,176,.3);}'+
+    '.xprof-badge.got-purple{background:rgba(160,107,255,.14);border-color:rgba(160,107,255,.6);box-shadow:0 0 10px rgba(160,107,255,.3);}'+
     '.xprof-badge.locked{opacity:.28;filter:grayscale(1);}'+
-    '.xprof-badge small{font-size:7.5px;margin-top:3px;text-align:center;line-height:1.2;padding:0 2px;color:#c4c1da;}'+
+    '.xprof-badge small{font-size:11px;margin-top:3px;text-align:center;line-height:1.2;padding:0 3px;color:#c4c1da;}'+
     '.xprof-badge .xprof-tip{display:none;position:absolute;bottom:105%;left:50%;transform:translateX(-50%);background:#000;color:#fff;font-size:9px;padding:5px 7px;border-radius:6px;white-space:nowrap;z-index:5;}'+
     '.xprof-badge:hover .xprof-tip{display:block;}'+
-    '.xprof-signout{margin-top:16px;width:100%;font-family:inherit;font-size:10.5px;letter-spacing:.08em;padding:9px 0;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:transparent;color:#9a97b5;cursor:pointer;}'+
+    '.xprof-signout{margin-top:16px;width:100%;font-family:inherit;font-size:10.5px;letter-spacing:.08em;padding:9px 0;border-radius:10px;border:1px solid rgba(232,196,104,.5);background:transparent;color:#e8c468;cursor:pointer;}'+
     '.xprof-admin{display:none;margin-top:16px;padding:12px;border-radius:10px;border:1px dashed rgba(255,107,138,.4);background:rgba(255,107,138,.06);text-align:left;}'+
     '.xprof-admin.show{display:block;}'+
     '.xprof-admin-title{font-size:10px;letter-spacing:.1em;color:#ff8fa8;margin-bottom:8px;}'+
@@ -296,6 +300,7 @@
         '<div class="xprof-admin-row"><input id="xa-uid" placeholder="target UID (비우면 나 자신)"></div>'+
         '<div class="xprof-admin-row"><input id="xa-amount" placeholder="credits (예: 1000, -500)"><button id="xa-grant">지급</button></div>'+
         '<div class="xprof-admin-row"><button id="xa-list">비정상 재화 조회</button><button id="xa-reset">대상 UID 초기화</button></div>'+
+        '<div class="xprof-admin-row"><button id="xa-feedback-list">FEEDBACK</button><button id="xa-feedback-delete">DELETE SELECTED</button></div>'+
         '<div class="xprof-admin-out" id="xa-out"></div>'+
       '</div>'+
       '<button class="xprof-signout" id="xprof-signout">'+tt({ko:'로그아웃',en:'Sign out'})+'</button>'+
@@ -322,7 +327,15 @@
     BADGES.forEach(function(b){
       var got = !!L.badges[b.id];
       var d = document.createElement('div');
-      d.className = 'xprof-badge ' + (got ? 'got' : 'locked');
+      var gotClass = 'got';
+      if (got) {
+        var id = b.id;
+        if (id.indexOf('time') === 0 || id.indexOf('shi') === 0) gotClass = 'got-cyan';
+        else if (id.indexOf('streak') === 0 || id.indexOf('wc') === 0 || id.indexOf('chess') === 0 || id.indexOf('xc') === 0) gotClass = 'got-gold';
+        else if (id.indexOf('card') === 0) gotClass = 'got-pink';
+        else if (id.indexOf('mem') === 0) gotClass = 'got-purple';
+      }
+      d.className = 'xprof-badge ' + (got ? gotClass : 'locked');
       d.innerHTML = (got ? b.icon : '🔒') + '<small>'+tt(b.name)+'</small><span class="xprof-tip">'+tt(b.desc)+'</span>';
       grid.appendChild(d);
     });
@@ -365,6 +378,22 @@
     if (!window.confirm('정말 '+targetUid+' 의 재화를 0으로 초기화할까요?')) return;
     adminLog('처리 중…');
     callFn('adminResetWallet', {targetUid:targetUid}).then(adminLog).catch(function(e){ adminLog('오류: '+(e.message||e)); });
+  });
+
+  var feedbackItems = [];
+  var xaFeedbackList = document.getElementById('xa-feedback-list');
+  var xaFeedbackDelete = document.getElementById('xa-feedback-delete');
+  if (xaFeedbackList) xaFeedbackList.addEventListener('click', function(){
+    adminLog('Loading feedback…');
+    callFn('adminListFeedback', {}).then(function(r){
+      feedbackItems = (r && r.items) || [];
+      adminLog(feedbackItems.map(function(x, i){ return '['+i+'] '+x.id+'\n'+(x.text||'')+'\n'+(x.uid||'')+'\n'; }).join('\n') || 'No feedback.');
+    }).catch(function(e){ adminLog('Error: '+(e.message||e)); });
+  });
+  if (xaFeedbackDelete) xaFeedbackDelete.addEventListener('click', function(){
+    var idx = window.prompt('Enter the feedback number to delete:');
+    if (idx === null || !feedbackItems[Number(idx)]) return;
+    callFn('adminDeleteFeedback', {id: feedbackItems[Number(idx)].id}).then(function(){ adminLog('Deleted. Click FEEDBACK to refresh.'); }).catch(function(e){ adminLog('Error: '+(e.message||e)); });
   });
 
   function renderClaimBox(){

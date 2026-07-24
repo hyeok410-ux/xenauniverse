@@ -73,7 +73,6 @@
   function claimDailySignal(){ return callFn('claimDailySignal', {}); }
   function claimQuestBonus(questId){ return callFn('claimQuestBonus', {questId: questId}); }
   function claimStageReward(game, stage){ return callFn('claimStageReward', {game: game, stage: Number(stage)}); }
-  function claimRaidClear(actions){ return callFn('claimRaidClear', {actions: actions}); }
   function claimWorldcupFinish(){ return callFn('claimWorldcupFinish', {}); }
   function claimChessMatch(){ return callFn('claimChessMatch', {}); }
   function spend(amount, reason){ return callFn('spendCredits', {amount: amount, reason: reason||''}); }
@@ -87,8 +86,12 @@
   function cancelTour(city){ return callFn('cancelTour', {city: city}); }
   function getTours(){ return callFn('getTours', {}).then(function(r){ return r.tours || {}; }); }
   function getWalletFull(){ return callFn('getWallet', {}); }
-  /* XENA MERGE — 점수 비례 XC (2026-07-25 추가) */
+  /* XENA MERGE — 점수 비례 XC + 주간 랭킹 */
   function claimMergeScore(score){ return callFn('claimMergeScore', {score: Math.floor(score)}); }
+  function getMergeLeaderboard(){ return callFn('getMergeLeaderboard', {}); }
+  function submitFeedback(text, category, language){ return callFn('submitFeedback', {text:text, category:category || 'general', language:language || 'en'}); }
+  function adminListFeedback(){ return callFn('adminListFeedback', {}); }
+  function adminDeleteFeedback(id){ return callFn('adminDeleteFeedback', {id:id}); }
   /* Stripe 결제창 열기 → 결제 성공 시 서버(fulfillCheckoutSession)가 지갑에 크레딧을 넣는다.
      returnPath 는 결제 후 돌아올 페이지 (예: '/games/gacha/'). 유효하지 않으면 서버가 '/game/' 로 fallback. */
   function purchase(productId, returnPath){
@@ -106,7 +109,6 @@
     claimDailySignal: claimDailySignal,
     claimQuestBonus: claimQuestBonus,
     claimStageReward: claimStageReward,
-    claimRaidClear: claimRaidClear,
     claimWorldcupFinish: claimWorldcupFinish,
     claimChessMatch: claimChessMatch,
     spend: spend,
@@ -119,6 +121,10 @@
     cancelTour: cancelTour,
     getTours: getTours,
     getWalletFull: getWalletFull,
-    claimMergeScore: claimMergeScore
+    claimMergeScore: claimMergeScore,
+    getMergeLeaderboard: getMergeLeaderboard,
+    submitFeedback: submitFeedback,
+    adminListFeedback: adminListFeedback,
+    adminDeleteFeedback: adminDeleteFeedback
   };
 })();

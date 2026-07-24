@@ -4,7 +4,8 @@
   const app = document.getElementById("app");
   function showFatalError() {
     if (document.querySelector(".fatal-overlay")) return;
-    document.body.insertAdjacentHTML("beforeend", `<div class="fatal-overlay"><section><small>PROTOTYPE RECOVERY</small><h2>게임을 다시 불러와 주세요</h2><p>일시적인 실행 오류가 감지되었습니다. 저장된 시그널과 보유 상품은 브라우저에 유지됩니다.</p><button class="primary" data-reload-game>새로고침</button></section></div>`);
+    const english = localStorage.getItem("og_language") === "en";
+    document.body.insertAdjacentHTML("beforeend", `<div class="fatal-overlay"><section><small>PROTOTYPE RECOVERY</small><h2>${english ? "Reload the game" : "게임을 다시 불러와 주세요"}</h2><p>${english ? "A temporary runtime error was detected. Your saved Signal and owned items remain in this browser." : "일시적인 실행 오류가 감지되었습니다. 저장된 시그널과 보유 상품은 브라우저에 유지됩니다."}</p><button class="primary" data-reload-game>${english ? "RELOAD" : "새로고침"}</button></section></div>`);
     document.querySelector("[data-reload-game]")?.addEventListener("click", () => window.location.reload());
   }
   window.addEventListener("error", (event) => { if (event.error) showFatalError(); });
@@ -26,8 +27,6 @@
       store: "Store", play: "Play", owned: "Owned pack", locked: "Locked pack", mode: "Match mode", ai: ["AI Match", "Practice with a chosen difficulty"], local: ["Local Match", "Pass the screen between players"], online: ["Online Match", "Invite-code pilot"], event: ["Daily Event", "Three anomaly trials each day"], difficulty: "AI difficulty", victory: "Victory", dailyClaimed: "Daily login reward already claimed", dailyReward: "Daily login reward · 200 Signal Credits", dailyReset: "Resets at New York midnight.", claim: "Claim", claimed: "Claimed", timePreview: "Rank time controls", rankReady: "Online rank readiness", rankNote: "Invite matches are a pilot. Ranked rewards open after server validation is ready.", start: "Start", starterStart: "Confirm free starter and play", buy: "Buy", reset: "Reset test data", eventTitle: "Today's Anomaly Event", complete: "Complete", inProgress: "In progress", rewardsClaimed: "Reward claimed", selectUnit: "Select a character.", opponentUnit: "Viewing an opponent unit.", captured: "Captured allies", none: "None", firstMove: "Choose your first move.", player: "PLAYER", opponent: "AI OPPONENT", playerOne: "PLAYER 1", playerTwo: "PLAYER 2", turn: "turn", move: "move", thinking: "Synchronizing", cinematic: "Combat sequence in progress", exit: "Pack Select", replay: "Replay", previous: "Previous", next: "Next", leave: "Leave", draw: "Draw", win: "Victory", defeat: "Defeat", onlineLobby: "ONLINE LINK", onlineTitle: "Online Invite Match", onlineNote: "Sign in with Google, then create or enter an 8-character code to play an opponent on another device.", quickMatch: "Casual Match", createRoom: "Create Invite Room", joinRoom: "Join by Code", serverOffline: "Waiting for server connection", storeTitle: "Override Store", cosmetics: "Cosmetics", shardStore: "Anomaly Shards", equip: "Equip", equipped: "Equipped", purchase: "Purchase", checkoutReady: "Checkout Setup", noPower: "Every skin and board is purely cosmetic and never changes combat power.", paymentNotice: "Purchased currency must be granted once through a payment webhook and server ledger. The client never grants it.", connection: "Online Connection", language: "KO"
     }
   };
-  I18N.ko.dailyReward = "접속 보상 · XC 200";
-  I18N.en.dailyReward = "Daily login reward · 200 XC";
   const ASSET_ROOTS = {
     card: "./assets/cards/",
     portrait: "./assets/portraits/",
@@ -42,7 +41,7 @@
   const CARD_ART_ROOT = ASSET_ROOTS.card;
   const PORTRAIT_ART_ROOT = ASSET_ROOTS.portrait;
   function assetSrc(root, file) {
-    const keepPng = /^(unit_t2_|emote_xena_|emote_sovran_|pack_|frame_|fx_frequency_pulse_v1|fx_sky_verdict_v1|skin_xena_ethereal_|xena_override_v1|nayun_mother_v1|space_|battlefield_)/i.test(file || "");
+    const keepPng = /^(unit_t2_|emote_(xena|sovran)_|pack_|frame_|fx_frequency_pulse_v1|fx_sky_verdict_v1|skin_xena_ethereal_|nayun_mother_v1|space_|battlefield_)/i.test(file || "");
     const optimized = root !== "card" && !keepPng && /\.png$/i.test(file) ? file.replace(/\.png$/i, ".webp") : file;
     return (ASSET_ROOTS[root] || CARD_ART_ROOT) + optimized;
   }
@@ -214,7 +213,7 @@
     { id: "unit-drone2", character: "DRONE-02", name: "시스템 드론-02", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "UNCOMMON", art: "drone_02_v1.png", artRoot: "portrait", credit: 520 },
     { id: "unit-mood-worker", character: "MOOD+ WORKER", name: "무드 플러스 작업자", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "RARE", art: "mood_worker_v1.png", artRoot: "portrait", credit: 680 },
     { id: "unit-shadow-watcher", character: "SHADOW WATCHER", name: "그림자 감시자", pack: "sovran", faction: "SYSTEM DOMINION", role: "signal", rarity: "RARE", art: "shadow_watcher_v1.png", artRoot: "portrait", credit: 680 },
-    { id: "unit-t2-xena-ethereal", character: "XENA ETHEREAL", name: "제나 이더리얼", pack: "crystal", faction: "CRYSTAL REBELLION", role: "leader", rarity: "HERO", art: "unit_t2_xena_ethereal_leader_v1.png", artRoot: "portrait", credit: 4200 },
+    { id: "unit-t2-xena-ethereal", character: "XENA ETHEREAL", name: "XENA ETHEREAL", pack: "crystal", faction: "CRYSTAL REBELLION", role: "leader", rarity: "HERO", art: "unit_t2_xena_ethereal_leader_v1.png", artRoot: "portrait", credit: 4200 },
     { id: "unit-t2-crystal-bastion", character: "CRYSTAL BASTION", name: "크리스탈 바스티온", pack: "crystal", faction: "CRYSTAL REBELLION", role: "bastion", rarity: "EPIC", art: "unit_t2_crystal_bastion_v1.png", artRoot: "portrait", credit: 2800 },
     { id: "unit-t2-lyra-vector", character: "LYRA MEMORY VECTOR", name: "라이라 메모리 벡터", pack: "crystal", faction: "CRYSTAL REBELLION", role: "vector", rarity: "LEGACY", art: "unit_t2_lyra_memory_vector_v1.png", artRoot: "portrait", credit: 2100 },
     { id: "unit-t2-nix09-catalyst", character: "NIX-09 CATALYST", name: "NIX-09 캐털리스트", pack: "crystal", faction: "CRYSTAL REBELLION", role: "catalyst", rarity: "SECRET", art: "unit_t2_nix09_catalyst_v1.png", artRoot: "portrait", credit: 3600 },
@@ -297,7 +296,6 @@
     { id: "frame-gold-sovereign", name: "Sovereign Gold Frame", kind: "frame", role: "말 테두리", tier: "SOVEREIGN", shards: 160, frameStyle: "gold-sovereign", artRoot: "ui", art: "frame_gold_sovereign_preview_v1.png", description: "아군 말에 백금·금빛 왕관 회로 테두리를 적용" },
     { id: "frame-crimson-eclipse", name: "Crimson Eclipse Frame", kind: "frame", role: "말 테두리", tier: "BOSS", credit: 4800, frameStyle: "crimson-eclipse", artRoot: "ui", art: "frame_crimson_eclipse_preview_v1.png", description: "아군 말에 붉은 일식과 판결 회로 테두리를 적용" },
     { id: "emote-signal", name: "XENA Reaction Pack", kind: "emote", role: "캐릭터 이모트", tier: "EPIC", credit: 3600, artRoot: "emote", art: "emote_xena_good_game_v1.png", description: "제나의 웃음·눈물·도발·존중·압박·엄지 인사 리액션 6종" },
-    { id: "emote-sovran", name: "SOVRAN System Dominion Emotes", kind: "emote", role: "캐릭터 이모트", tier: "BOSS", credit: 5200, artRoot: "emote", art: "emote_sovran_system_dominion_v1.png", description: "소브란의 승인·실망·조롱·경악·경례·승리 리액션 6종" },
   ];
   SHOP_ITEMS.push(
     { id: "arena-aurora-lounge", name: "Aurora Signal Lounge", kind: "arena", role: "게임 공간 스킨", tier: "SECRET", credit: 5600, artRoot: "board", art: "space_aurora_lounge_v1.png", arenaStyle: "aurora-lounge", description: "오로라 신호와 고급 라운지 조명이 겹쳐지는 게임 공간" },
@@ -318,16 +316,6 @@
     if (item.kind === "skin") { item.credit = 18000 + premiumSkinIndex * 700; delete item.shards; premiumSkinIndex += 1; }
     if (item.kind === "arena") { item.credit = 26000 + premiumArenaIndex * 700; delete item.shards; premiumArenaIndex += 1; }
   });
-  const PACK_LABELS = { xena: "XENA · REBEL MEMORY", sovran: "SOVRAN · SYSTEM DOMINION", crystal: "XENA ETHEREAL · CRYSTAL REBELLION" };
-  function skinPack(item) {
-    if (item.pack) return item.pack;
-    if (item.targetCharacter === "XENA ETHEREAL") return "crystal";
-    if (["SOVRAN", "ARCHITECT-MAN", "HUNTER", "DRAGOON"].includes(item.targetCharacter)) return "sovran";
-    return "xena";
-  }
-  function canUseSkin(item) {
-    return item.kind !== "skin" || owned.includes(skinPack(item));
-  }
   const SHOP_DETAILS = {
     "cyan-xena": { role: "캐릭터 스킨", tier: "SOVEREIGN", order: 8 },
     "crimson-sovran": { role: "캐릭터 스킨", tier: "SOVEREIGN", order: 8 },
@@ -348,8 +336,6 @@
     { id: "AS_650", name: "Anomaly Shards 700", amount: 700, price: "₩7,500" },
     { id: "AS_1400", name: "Anomaly Shards 1,600", amount: 1600, price: "₩15,000" },
   ];
-  // 현 체험판 운영에서는 현금 결제를 열지 않는다. 국내 PG 연동 완료 후 true로 전환한다.
-  const CASH_PAYMENTS_ENABLED = false;
   const EMOTES = {
     smile: { mark: "◇", ko: "좋은 수", en: "Good move", art: "emote_xena_good_move_v1.png" },
     cry: { mark: "!", ko: "아쉬워", en: "So close", art: "emote_xena_cry_v1.png" },
@@ -358,12 +344,15 @@
     pressure: { mark: "//", ko: "집중해", en: "Focus", art: "emote_xena_pressure_v1.png" },
     gg: { mark: "GG", ko: "좋은 게임", en: "Good game", art: "emote_xena_good_game_v1.png" },
   };
+  const SOVRAN_EMOTE_ART = {
+    smile: "emote_sovran_good_move_v1.png",
+    cry: "emote_sovran_cry_v1.png",
+    tease: "emote_sovran_tease_v1.png",
+    respect: "emote_sovran_respect_v1.png",
+    pressure: "emote_sovran_pressure_v1.png",
+    gg: "emote_sovran_good_game_v1.png",
+  };
   const FREE_EMOTES = new Set();
-  const SOVRAN_EMOTE_POSITION = { smile: "0% 0%", cry: "50% 0%", tease: "100% 0%", respect: "0% 100%", pressure: "50% 100%", gg: "100% 100%" };
-  function emoteVisual(id, emote) {
-    if (activeEmote === "emote-sovran" && cosmeticOwned.includes("emote-sovran")) return `<span class="emote-sprite" style="background-image:url('${assetSrc("emote", "emote_sovran_system_dominion_v1.png")}');background-position:${SOVRAN_EMOTE_POSITION[id] || "0% 0%"}" role="img" aria-label="${emote[language]}"></span>`;
-    return `<img src="${assetSrc("emote", emote.art)}"${fallbackAttr("emote", emote.fallbackArt)} alt="${emote[language]}">`;
-  }
   const FORMATION_SLOTS = [
     ...Array.from({ length: 6 }, (_, index) => ({ key: `signal${index + 1}`, role: "signal", label: `시그널 ${index + 1} · 폰` })),
     { key: "bastion", role: "bastion", label: "바스티온 · 룩" },
@@ -454,11 +443,10 @@
   if (hubNickname && !profile.nickname) profile.nickname = hubNickname;
   if (hubNickname) profile.nickname = hubNickname;
   let committedStarter = storage.get("og_starter");
-  let chosen = storage.get("og_active_pack") || committedStarter || "xena";
+  let chosen = committedStarter || "xena";
   let owned = storedArray("og_owned");
   if (!owned.length && committedStarter) owned = [committedStarter];
-  const legacySignal = Math.max(0, Number(storage.get("og_signal") || storage.get("og_signal_credits") || 0) || 0);
-  let credits = Math.max(0, Number(storage.get("og_credits") || legacySignal) || 0);
+  let credits = Math.max(0, Number(storage.get("og_credits") || 0) || 0);
   let shards = Math.max(0, Number(storage.get("og_shards") || 0) || 0);
   let timeRule = storage.get("og_time_rule") || "beginner";
   let gameMode = storage.get("og_game_mode") || "ai";
@@ -469,8 +457,6 @@
   let eventClaims = safeJson(storage.get("og_event_claims"), {}) || {};
   let gridRating = Math.max(0, Number(storage.get("og_grid_rating") || 0) || 0);
   let cosmeticOwned = storedArray("og_cosmetics");
-  const storedEmote = storage.get("og_active_emote") || "";
-  let activeEmote = ["emote-signal", "emote-sovran"].includes(storedEmote) && cosmeticOwned.includes(storedEmote) ? storedEmote : "";
   const storedBoard = storage.get("og_active_board") || storage.get("og_active_cosmetic") || "";
   let activeBoard = SHOP_ITEMS.some((item) => item.id === storedBoard && item.kind === "board") ? storedBoard : "";
   const storedArena = storage.get("og_active_arena") || "";
@@ -484,8 +470,8 @@
   let unitEffects = safeJson(storage.get("og_unit_effects"), {}) || {};
   let selectedUnitSlot = null;
   let showLoadoutOptions = false;
-  let lineupPack = chosen;
-  let pendingPack = null;
+  let lineupPack = committedStarter || "xena";
+  let pendingLineupPack = "";
   let dailyLogin = safeJson(storage.get("og_daily_login"), {}) || {};
   let activity = safeJson(storage.get("og_activity"), { totalMinutes: 0, games: {}, lastGame: "" }) || { totalMinutes: 0, games: {}, lastGame: "" };
   let records = safeJson(storage.get("og_records"), null) || { ai: { wins: 0, losses: 0, draws: 0 }, human: { wins: 0, losses: 0, draws: 0 }, rating: 0 };
@@ -679,19 +665,15 @@
     else storage.remove("og_starter");
     storage.set("og_owned", JSON.stringify(owned));
     storage.set("og_credits", String(credits));
-    storage.remove("og_signal");
-    storage.remove("og_signal_credits");
     storage.set("og_shards", String(shards));
     storage.set("og_time_rule", timeRule);
     storage.set("og_game_mode", gameMode);
-    storage.set("og_active_pack", chosen);
     storage.set("og_language", language);
     storage.set("og_ai_difficulty", aiDifficulty);
     storage.set("og_ai_opponent_pack", aiOpponentPack);
     storage.set("og_event_claims", JSON.stringify(eventClaims));
     storage.set("og_grid_rating", String(gridRating));
     storage.set("og_cosmetics", JSON.stringify(cosmeticOwned));
-    storage.set("og_active_emote", activeEmote || "");
     storage.set("og_active_board", activeBoard);
     storage.set("og_active_arena", activeArena);
     storage.set("og_active_cosmetic", activeBoard);
@@ -710,18 +692,6 @@
     return { totalMinutes: Math.max(0, Number(activity.totalMinutes) || 0), games: activity.games || {}, lastGame: activity.lastGame || "" };
   }
 
-  function recordsMeta() {
-    return {
-      ai: { wins: Math.max(0, Number(records.ai?.wins) || 0), losses: Math.max(0, Number(records.ai?.losses) || 0), draws: Math.max(0, Number(records.ai?.draws) || 0) },
-      human: { wins: Math.max(0, Number(records.human?.wins) || 0), losses: Math.max(0, Number(records.human?.losses) || 0), draws: Math.max(0, Number(records.human?.draws) || 0) },
-      rating: Math.max(0, Number(records.rating) || 0),
-    };
-  }
-
-  function cloudProgressMeta() {
-    return { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta(), records: recordsMeta() };
-  }
-
   function recordActivity(gameName, startedAt) {
     const elapsed = Math.max(0, Math.round((Date.now() - startedAt) / 60000));
     activity.totalMinutes = (Number(activity.totalMinutes) || 0) + elapsed;
@@ -729,7 +699,7 @@
     activity.lastGame = new Date().toISOString();
     saveMeta();
     const cloud = window.XenaCloudSync;
-    if (cloud && cloud.snapshot().user) cloud.save(backupCode({ includeWallet: false }), cloudProgressMeta()).catch(() => {});
+    if (cloud && cloud.snapshot().user) cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
   }
 
   async function syncTrustedWallet() {
@@ -772,11 +742,11 @@
   }
 
   function wallet() {
-    const creditLabel = "XC";
+    const creditLabel = language === "en" ? "Signal" : "시그널";
     const shardLabel = language === "en" ? "Anomaly Shards" : "변칙 파편";
     const cloudUser = window.XenaCloudSync && window.XenaCloudSync.snapshot().user;
     const saveLabel = cloudUser ? "CLOUD LINKED" : storage.available ? "DEVICE SAVE" : "TEMP SESSION";
-    return `<div class="wallet"><div class="wallet-primary"><span class="currency-pill"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${creditLabel} <strong>${credits.toLocaleString()}</strong></span><span class="currency-pill"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${shardLabel} <strong>${shards}</strong></span><span class="rank-pill">${rankLabel()} <strong>${gridRating} GR</strong></span><button class="wallet-store" data-toggle-audio>${audioEnabled ? "SOUND ON" : "SOUND OFF"}</button><button class="wallet-store" data-open-language>${t("language")}</button><button class="wallet-store profile-button" data-open-account>${profile.nickname}<small>${saveLabel}</small></button></div><nav class="wallet-nav" aria-label="게임 메뉴"><button class="wallet-store" data-open-codex>도감</button><button class="wallet-store" data-open-units>${language === "en" ? "MY UNITS" : "내 유닛"}</button><button class="wallet-store" data-open-store>${t("store")}</button></nav></div>`;
+    return `<div class="wallet"><div class="wallet-primary"><span class="currency-pill"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${creditLabel} <strong>${credits.toLocaleString()}</strong></span><span class="currency-pill"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${shardLabel} <strong>${shards}</strong></span><span class="rank-pill">${rankLabel()} <strong>${gridRating} GR</strong></span><button class="wallet-store" data-toggle-audio>${audioEnabled ? "SOUND ON" : "SOUND OFF"}</button><button class="wallet-store" data-open-language>${t("language")}</button><button class="wallet-store profile-button" data-open-account>${profile.nickname}<small>${saveLabel}</small></button></div><nav class="wallet-nav" aria-label="${language === "en" ? "Game menu" : "게임 메뉴"}"><button class="wallet-store" data-open-codex>${language === "en" ? "CODEX" : "도감"}</button><button class="wallet-store" data-open-units>${language === "en" ? "MY UNITS" : "내 유닛"}</button><button class="wallet-store" data-open-store>${t("store")}</button></nav></div>`;
   }
 
   function encodeBackup(data) {
@@ -909,10 +879,10 @@
     overlay.querySelectorAll("[data-close-account]").forEach((element) => element.addEventListener("click", (event) => {
       if (event.target === element || event.target.closest(".showcase-close")) closeAccount();
     }));
-    overlay.querySelector("[data-reset-records]")?.addEventListener("click", async () => {
+    overlay.querySelector("[data-reset-records]")?.addEventListener("click", () => {
       if (credits < 500) return alert(language === "en" ? "You need 500 XC." : "XC 500이 필요합니다.");
       if (!confirm(language === "en" ? "Reset human records and rank for 500 XC?" : "500 XC를 사용해 사람 전적과 등급을 초기화할까요?")) return;
-      if (!await spendXc(500, "profile:reset-records")) return;
+      credits -= 500;
       records.human = { wins: 0, losses: 0, draws: 0 };
       records.rating = 0;
       saveMeta();
@@ -950,7 +920,7 @@
           await syncTrustedWallet();
           const remote = await cloud.load();
           if (!remote) {
-            await cloud.save(backupCode({ includeWallet: false }), cloudProgressMeta());
+            await cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
             alert(language === "en" ? "This device save is now backed up to the cloud." : "이 기기의 저장 기록을 클라우드에 처음 백업했습니다.");
           } else if (screen !== "game" && confirm(language === "en" ? "A cloud save already exists. Load it on this device now?" : "기존 클라우드 저장이 있습니다. 지금 이 기기에 불러올까요?")) {
             restoreBackup(remote.saveCode, { trustedWallet: false });
@@ -963,7 +933,7 @@
       if (upload) upload.addEventListener("click", async () => {
         if (cloudState.remoteExists && !confirm(language === "en" ? "Replace the cloud save with this device's progress?" : "클라우드 저장을 이 기기의 진행 기록으로 덮어쓸까요?")) return;
         try {
-          await cloud.save(backupCode({ includeWallet: false }), cloudProgressMeta());
+          await cloud.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() });
           alert(language === "en" ? "Cloud save complete." : "클라우드 저장을 완료했습니다.");
         } catch (_) { /* The cloud panel shows a localized error. */ }
       });
@@ -1014,7 +984,7 @@
     const ai = records.ai;
     const human = records.human;
     const placement = Math.min(5, recordTotal(human));
-    return `<div class="profile-rank-card" style="--rank-color:${rank.color}"><div class="profile-badge"><b>${rank.badge}</b><span>${escapeMarkup(profile.nickname)}</span></div><div><small>HUMAN RANK</small><strong>${rank.label}</strong><em>${placement < 5 ? `배치전 ${placement}/5` : `${humanRating()} RP`}</em></div></div><div class="profile-stat-grid"><div><small>AI 전적</small><b>${ai.wins}승 ${ai.losses}패 ${ai.draws}무</b><span>승률 ${winRate(ai)}%</span></div><div><small>사람 전적</small><b>${human.wins}승 ${human.losses}패 ${human.draws}무</b><span>승률 ${winRate(human)}%</span></div></div><button class="secondary profile-reset" data-reset-records>사람 전적·등급 리셋 · 500 XC</button><p class="profile-help">사람 대전 5판으로 배치되며, 승리 +25 RP / 패배 -20 RP / 무승부 +5 RP입니다. AI 전적은 등급에 반영되지 않습니다.</p>`;
+    return `<div class="profile-rank-card" style="--rank-color:${rank.color}"><div class="profile-badge"><b>${rank.badge}</b><span>${escapeMarkup(profile.nickname)}</span></div><div><small>HUMAN RANK</small><strong>${rank.label}</strong><em>${placement < 5 ? ui(`Placement ${placement}/5`, `배치전 ${placement}/5`) : `${humanRating()} RP`}</em></div></div><div class="profile-stat-grid"><div><small>${ui("AI RECORD", "AI 전적")}</small><b>${ui(`${ai.wins}W ${ai.losses}L ${ai.draws}D`, `${ai.wins}승 ${ai.losses}패 ${ai.draws}무`)}</b><span>${ui("Win rate", "승률")} ${winRate(ai)}%</span></div><div><small>${ui("HUMAN RECORD", "사람 전적")}</small><b>${ui(`${human.wins}W ${human.losses}L ${human.draws}D`, `${human.wins}승 ${human.losses}패 ${human.draws}무`)}</b><span>${ui("Win rate", "승률")} ${winRate(human)}%</span></div></div><button class="secondary profile-reset" data-reset-records>${ui("RESET HUMAN RECORD & RANK · 500 XC", "사람 전적·등급 리셋 · 500 XC")}</button><p class="profile-help">${ui("Your first 5 human matches determine placement. Win +25 RP / Loss -20 RP / Draw +5 RP. AI records do not affect rank.", "사람 대전 5판으로 배치되며, 승리 +25 RP / 패배 -20 RP / 무승부 +5 RP입니다. AI 전적은 등급에 반영되지 않습니다.")}</p>`;
   }
 
   function todayKey() {
@@ -1033,21 +1003,8 @@
     return dailyLogin.date === todayKey();
   }
 
-  async function claimDailyLogin() {
+  function claimDailyLogin() {
     if (hasDailyLogin()) return;
-    if (window.XenaWallet && window.XenaWallet.getBalance() !== null) {
-      try {
-        const result = await window.XenaWallet.claimDailySignal();
-        dailyLogin = { date: todayKey() };
-        credits = Math.max(0, Number(result.credits) || 0);
-        saveMeta();
-        playSfx("reward", 0.48);
-        refreshCurrentScreen();
-      } catch (_) {
-        alert(language === "en" ? "Today's XC reward is already claimed or unavailable." : "오늘의 XC 보상을 이미 받았거나 받을 수 없습니다.");
-      }
-      return;
-    }
     dailyLogin = { date: todayKey() };
     credits += 200;
     saveMeta();
@@ -1090,7 +1047,7 @@
       return `<button class="pack ${id} ${chosen === id ? "selected" : ""}" data-pack="${id}">
         <small>${isOwned ? t("owned") : (!committedStarter && isStarterAllowed ? "FREE STARTER" : t("locked"))}</small><span class="pack-portrait"><img src="${cover ? assetSrc("ui", cover) : characterArtSrc(pack.back.leader)}" alt="${pack.leaderName}"><i>${packLetter}</i></span>
         <span class="pack-copy"><h2>${pack.leaderName}</h2><p>${pack.name}</p></span>
-        ${isOwned ? "" : `<span class="lock">${!committedStarter && isStarterAllowed ? (language === "en" ? "First starter is free" : "첫 스타터 무료") : `${packPrice(id).toLocaleString()} XC`}</span>`}
+        ${isOwned ? "" : `<span class="lock">${!committedStarter && isStarterAllowed ? (language === "en" ? "First starter is free" : "첫 스타터 무료") : `${packPrice(id).toLocaleString()} ${language === "en" ? "Signal Credits" : "시그널 크레딧"}`}</span>`}
       </button>`;
     };
     const packIds = Object.keys(G.PACKS);
@@ -1111,7 +1068,7 @@
       <div class="time-control"><small>${t("timePreview")}</small><div class="time-options">${Object.entries(TIME_RULES).map(([id, rule]) => `<button class="time-option ${timeRule === id ? "active" : ""}" data-time-rule="${id}"><b>${language === "en" ? rule.note.replace("초보", "Beginner").replace("표준", "Standard").replace("상위", "Advanced").replace("최상위", "Elite").replace("분", " min") : rule.note}</b><span>${rule.label}</span></button>`).join("")}</div></div>
       <div class="rank-status"><small>${t("rankReady")}</small><b>${rankLabel()} · ${gridRating} GR</b><span>${t("rankNote")}</span></div>
       <div class="actions"><button class="primary" id="start" ${canStartSelected ? "" : "disabled"}>${committedStarter ? `${modeText(gameMode, 0)} ${t("start")}` : t("starterStart")}</button>
-      ${committedStarter && !owned.includes(chosen) ? `<button class="secondary" id="buy">${packPrice(chosen).toLocaleString()} XC ${t("buy")}</button>` : ""}
+      ${committedStarter && !owned.includes(chosen) ? `<button class="secondary" id="buy">${packPrice(chosen).toLocaleString()} ${language === "en" ? "Credits" : "크레딧"} ${t("buy")}</button>` : ""}
       ${new URLSearchParams(window.location.search).get("debug") === "1" ? `<button class="secondary" id="reset">${t("reset")}</button>` : ""}</div></section></div>`;
     app.querySelectorAll("[data-pack]").forEach((button) => button.addEventListener("click", () => { chosen = button.dataset.pack; renderSetup(); }));
     app.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => { gameMode = button.dataset.mode; saveMeta(); renderSetup(); }));
@@ -1124,18 +1081,17 @@
     if (dailyButton) dailyButton.addEventListener("click", () => { claimDailyLogin(); renderSetup(); });
     document.getElementById("start").addEventListener("click", startGame);
     const buy = document.getElementById("buy");
-    if (buy) buy.addEventListener("click", async () => {
+    if (buy) buy.addEventListener("click", () => {
       const price = packPrice(chosen);
-      if (credits < price) return alert(`XC가 ${price - credits} 부족합니다.`);
+      if (credits < price) return alert(ui(`You need ${price - credits} more Credits.`, `크레딧이 ${price - credits} 부족합니다.`));
       const pack = G.PACKS[chosen];
-      if (!confirm(`${pack.leaderName} 팩을 ${price.toLocaleString()} XC에 구매하시겠습니까?\n\n확인: 구매   취소: 돌아가기`)) return;
-      if (!await spendXc(price, `pack:${chosen}`)) return;
-      owned.push(chosen); unitLineups = normalizedLineups(unitLineups); playSfx("purchase", 0.52); saveMeta(); renderSetup();
+      if (!confirm(ui(`Purchase the ${pack.leaderName} pack for ${price.toLocaleString()} Signal Credits?\n\nOK: Purchase   Cancel: Go back`, `${pack.leaderName} 팩을 ${price.toLocaleString()} 시그널 크레딧에 구매하시겠습니까?\n\n확인: 구매   취소: 돌아가기`))) return;
+      credits -= price; owned.push(chosen); unitLineups = normalizedLineups(unitLineups); playSfx("purchase", 0.52); saveMeta(); renderSetup();
     });
     const reset = document.getElementById("reset");
     if (reset) reset.addEventListener("click", () => {
-      ["og_starter", "og_owned", "og_credits", "og_shards", "og_event_claims", "og_grid_rating", "og_records", "og_cosmetics", "og_active_cosmetic", "og_active_emote", "og_active_pack", "og_active_board", "og_active_arena", "og_active_frame", "og_unit_lineups", "og_unit_skins", "og_unit_effects", "og_daily_login", "og_codex_owned"].forEach((key) => storage.remove(key));
-      committedStarter = null; chosen = "xena"; owned = []; credits = 0; shards = 0; eventClaims = {}; gridRating = 0; records = { ai: { wins: 0, losses: 0, draws: 0 }, human: { wins: 0, losses: 0, draws: 0 }, rating: 0 }; cosmeticOwned = []; activeEmote = ""; activeBoard = ""; activeArena = ""; activeFrame = ""; unitLineups = normalizedLineups({}); unitSkins = {}; unitEffects = {}; dailyLogin = {}; codexOwned = []; showcase = null; saveMeta(); renderSetup();
+      ["og_starter", "og_owned", "og_credits", "og_shards", "og_event_claims", "og_grid_rating", "og_records", "og_cosmetics", "og_active_cosmetic", "og_active_board", "og_active_arena", "og_active_frame", "og_unit_lineups", "og_unit_skins", "og_unit_effects", "og_daily_login", "og_codex_owned"].forEach((key) => storage.remove(key));
+      committedStarter = null; chosen = "xena"; owned = []; credits = 0; shards = 0; eventClaims = {}; gridRating = 0; records = { ai: { wins: 0, losses: 0, draws: 0 }, human: { wins: 0, losses: 0, draws: 0 }, rating: 0 }; cosmeticOwned = []; activeBoard = ""; activeArena = ""; activeFrame = ""; unitLineups = normalizedLineups({}); unitSkins = {}; unitEffects = {}; dailyLogin = {}; codexOwned = []; showcase = null; saveMeta(); renderSetup();
     });
     syncBgm();
   }
@@ -1143,16 +1099,63 @@
   function eventMarkup() {
     const claimed = dailyEvent();
     const complete = claimed.easy && claimed.normal && claimed.hard;
-      return `<div class="event-control"><div><small>${t("eventTitle")}</small><b>${language === "en" ? "Complete all 3 trials" : "3단계 완주"} ${complete ? t("complete") : t("inProgress")}</b></div><div class="event-options">${Object.entries(EVENT_REWARDS).map(([id, reward]) => `<button class="event-option ${eventDifficulty === id ? "active" : ""}" data-event-difficulty="${id}"><b>${language === "en" ? ({ easy: "Easy", normal: "Normal", hard: "Hard" })[id] : DIFFICULTIES[id].label}</b><span>${claimed[id] ? t("rewardsClaimed") : `XC +${reward.credits} · ${language === "en" ? "Shards" : "파편"} +${reward.shards}`}</span></button>`).join("")}</div><span>${language === "en" ? "Complete all trials for +500 XC · +3 Anomaly Shards" : "세 난이도를 모두 이기면 보너스 XC +500 · 변칙 파편 +3"}</span></div>`;
+    return `<div class="event-control"><div><small>${t("eventTitle")}</small><b>${language === "en" ? "Complete all 3 trials" : "3단계 완주"} ${complete ? t("complete") : t("inProgress")}</b></div><div class="event-options">${Object.entries(EVENT_REWARDS).map(([id, reward]) => `<button class="event-option ${eventDifficulty === id ? "active" : ""}" data-event-difficulty="${id}"><b>${language === "en" ? ({ easy: "Easy", normal: "Normal", hard: "Hard" })[id] : DIFFICULTIES[id].label}</b><span>${claimed[id] ? t("rewardsClaimed") : `${language === "en" ? "Credits" : "크레딧"} +${reward.credits} · ${language === "en" ? "Shards" : "파편"} +${reward.shards}`}</span></button>`).join("")}</div><span>${language === "en" ? "Complete all trials for +500 Credits · +3 Anomaly Shards" : "세 난이도를 모두 이기면 보너스 크레딧 +500 · 변칙 파편 +3"}</span></div>`;
   }
 
   function cosmeticPrice(item) {
-    return item.credit ? `XC ${item.credit.toLocaleString()}` : `${language === "en" ? "Anomaly Shards" : "변칙 파편"} ${item.shards}`;
+    return item.credit ? `${language === "en" ? "Signal" : "시그널"} ${item.credit.toLocaleString()}` : `${language === "en" ? "Anomaly Shards" : "변칙 파편"} ${item.shards}`;
+  }
+
+  function ui(en, ko) {
+    return language === "en" ? en : ko;
+  }
+
+  function unitDisplayName(unit) {
+    return unit ? (language === "en" ? unit.character : unit.name) : "";
+  }
+
+  function slotDisplayLabel(slot) {
+    if (language !== "en") return slot.label;
+    if (slot.role === "signal") return `SIGNAL ${slot.key.replace("signal", "")} · PAWN`;
+    const labels = {
+      bastion: "BASTION · ROOK",
+      vector1: "VECTOR A · BISHOP",
+      vector2: "VECTOR B · BISHOP",
+      catalyst: "CATALYST · TRIGGER",
+      leader: "LEADER",
+      glitch: "GLITCH · KNIGHT",
+    };
+    return labels[slot.key] || slot.role.toUpperCase();
+  }
+
+  function itemKindLabel(kind) {
+    const labels = {
+      skin: ["Character Skin", "캐릭터 스킨"],
+      effect: ["Attack Effect", "공격 이펙트"],
+      board: ["Battlefield", "전장"],
+      arena: ["Game Space Skin", "게임 공간 스킨"],
+      frame: ["Unit Frame", "말 테두리"],
+      emote: ["Character Emote", "캐릭터 이모트"],
+    };
+    return (labels[kind] || [kind, kind])[language === "en" ? 0 : 1];
+  }
+
+  function itemDescription(item) {
+    if (language !== "en") return item.description || "";
+    const descriptions = {
+      skin: "A cosmetic character appearance. It does not change battle power.",
+      effect: "A cosmetic combat effect that can be assigned in My Units.",
+      board: "A cosmetic battlefield theme shared across your loadout.",
+      arena: "A cosmetic game-space theme for panels and battle backgrounds.",
+      frame: "A cosmetic frame applied to allied units.",
+      emote: "A social reaction pack for matches.",
+    };
+    return descriptions[item.kind] || "";
   }
 
   function shopDetails(item) {
     const legacy = SHOP_DETAILS[item.id] || {};
-    return { role: item.role || legacy.role || item.kind, tier: item.tier || legacy.tier || "STANDARD", order: item.order || legacy.order || 0 };
+    return { role: language === "en" ? itemKindLabel(item.kind) : (item.role || legacy.role || item.kind), tier: item.tier || legacy.tier || "STANDARD", order: item.order || legacy.order || 0 };
   }
 
   function itemArtSrc(item) {
@@ -1208,36 +1211,17 @@
     if (item.kind === "board") return activeBoard === item.id;
     if (item.kind === "arena") return activeArena === item.id;
     if (item.kind === "frame") return activeFrame === item.id;
-    if (item.kind === "emote") return activeEmote === item.id;
     if (item.kind === "skin") return Object.values(unitSkins).includes(item.id);
     if (item.kind === "effect") return Object.values(unitEffects).some((setting) => setting && setting.id === item.id && setting.enabled !== false);
     return false;
   }
 
-  async function spendXc(amount, reason) {
-    const walletApi = window.XenaWallet;
-    if (!walletApi || walletApi.getBalance() === null) {
-      alert(language === "en" ? "Sign in with Google to use your shared XC wallet." : "공용 XC 지갑을 사용하려면 Google 로그인이 필요합니다.");
-      return false;
-    }
-    try {
-      const result = await walletApi.spend(amount, reason);
-      credits = Math.max(0, Number(result.credits) || 0);
-      saveMeta();
-      return true;
-    } catch (_) {
-      alert(language === "en" ? "XC payment failed or the balance is insufficient." : "XC 결제에 실패했거나 잔액이 부족합니다.");
-      return false;
-    }
-  }
-
-  async function buyCosmetic(id) {
+  function buyCosmetic(id) {
     const item = SHOP_ITEMS.find((entry) => entry.id === id);
     if (!item || cosmeticOwned.includes(id)) return;
-    if (item.kind === "skin" && !canUseSkin(item)) return alert(`${PACK_LABELS[skinPack(item)]} 팩을 먼저 보유해야 이 스킨을 구매할 수 있습니다.`);
-    if (item.credit && credits < item.credit) return alert(`XC가 ${item.credit - credits} 부족합니다.`);
-    if (item.shards && shards < item.shards) return alert(`변칙 파편이 ${item.shards - shards} 부족합니다.`);
-    if (item.credit && !await spendXc(item.credit, `cosmetic:${item.id}`)) return;
+    if (item.credit && credits < item.credit) return alert(ui(`You need ${item.credit - credits} more Signal Credits.`, `시그널 크레딧이 ${item.credit - credits} 부족합니다.`));
+    if (item.shards && shards < item.shards) return alert(ui(`You need ${item.shards - shards} more Anomaly Shards.`, `변칙 파편이 ${item.shards - shards} 부족합니다.`));
+    if (item.credit) credits -= item.credit;
     if (item.shards) shards -= item.shards;
     cosmeticOwned.push(id);
     playSfx("purchase", 0.52);
@@ -1246,10 +1230,6 @@
   }
 
   async function startCheckout(productId) {
-    if (!CASH_PAYMENTS_ENABLED) {
-      alert(language === "en" ? "Cash payments are not open in the free pilot yet." : "현재 무료 체험판에서는 현금 결제를 받지 않습니다. 정식 결제 오픈 후 이용할 수 있습니다.");
-      return;
-    }
     const cloud = window.XenaCloudSync;
     if (!cloud || !cloud.snapshot().user || !cloud.createCheckoutSession) {
       alert(language === "en" ? "Sign in with Google before purchasing." : "구매 전에 Google 로그인이 필요합니다.");
@@ -1269,11 +1249,11 @@
     return codexOwned.includes(card.id) || Boolean(card.pack && owned.includes(card.pack));
   }
 
-  async function buyCodexCard(id) {
+  function buyCodexCard(id) {
     const card = CODEX_CARDS.find((entry) => entry.id === id);
     if (!card || ownsCodexCard(card)) return;
-    if (credits < card.credit) return alert(`XC가 ${card.credit - credits} 부족합니다.`);
-    if (!await spendXc(card.credit, `codex:${card.id}`)) return;
+    if (credits < card.credit) return alert(ui(`You need ${card.credit - credits} more Signal Credits.`, `시그널이 ${card.credit - credits} 부족합니다.`));
+    credits -= card.credit;
     codexOwned.push(card.id);
     showcase = null;
     playSfx("purchase", 0.52);
@@ -1285,17 +1265,17 @@
     const isCodex = source === "codex";
     const isUnit = source === "units" && !item.kind;
     const ownedItem = isCodex || isUnit ? true : cosmeticOwned.includes(item.id);
-    const price = isCodex ? `시그널 ${item.credit.toLocaleString()}` : cosmeticPrice(item);
+    const price = isCodex ? `${ui("Signal", "시그널")} ${item.credit.toLocaleString()}` : cosmeticPrice(item);
     const details = isCodex || isUnit ? null : shopDetails(item);
-    const description = isCodex || isUnit ? `${item.faction} · ${roleLabel(item.role)} · ${item.rarity}` : `${details.role} · ${details.tier} · ${item.description}`;
+    const description = isCodex || isUnit ? `${item.faction} · ${roleLabel(item.role)} · ${item.rarity}` : `${details.role} · ${details.tier} · ${itemDescription(item)}`;
     let action;
-    if (isCodex) action = ownedItem ? `<button class="secondary" data-go-my-units>내 유닛에서 장착</button>` : `<button class="primary" data-modal-buy-card="${item.id}">${price}로 해금</button>`;
-    else if (isUnit) action = `<span class="showcase-owned">현재 편성 캐릭터 · 슬롯 선택은 아래에서 진행</span>`;
+    if (isCodex) action = ownedItem ? `<button class="secondary" data-go-my-units>${ui("EQUIP IN MY UNITS", "내 유닛에서 장착")}</button>` : `<button class="primary" data-modal-buy-card="${item.id}">${ui(`UNLOCK FOR ${price}`, `${price}로 해금`)}</button>`;
+    else if (isUnit) action = `<span class="showcase-owned">${ui("Currently deployed · Select a slot below", "현재 편성 캐릭터 · 슬롯 선택은 아래에서 진행")}</span>`;
     else if (!ownedItem) action = `<button class="primary" data-modal-buy-cosmetic="${item.id}">${t("purchase")} · ${price}</button>`;
-    else if (source === "units") action = `<button class="primary" data-modal-equip-units="${item.id}">장착</button>`;
-    else if (["board", "arena", "frame", "skin", "effect"].includes(item.kind)) action = `<button class="secondary" data-go-my-units>내 유닛에서 장착</button>`;
-    else action = `<span class="showcase-owned">보유 중 · 자동 활성화</span>`;
-    return `<div class="showcase-overlay" data-close-showcase><section class="showcase-modal kind-${item.kind || "unit"}" role="dialog" aria-modal="true" aria-label="${item.name}" data-showcase-panel><button class="showcase-close" data-close-showcase aria-label="닫기">×</button><div class="showcase-radiance"></div><div class="showcase-art"><img src="${itemArtSrc(item)}"${fallbackAttr(item.artRoot || "card", item.fallbackArt)} alt="${item.name}"></div><div class="showcase-copy"><small>${isCodex || isUnit ? "SIGNAL ARCHIVE" : `${details.role} · ${details.tier}`}</small><h2>${item.name}</h2><p>${description}</p><b>${ownedItem ? "OWNED" : price}</b><div class="showcase-action">${action}</div></div></section></div>`;
+    else if (source === "units") action = `<button class="primary" data-modal-equip-units="${item.id}">${t("equip")}</button>`;
+    else if (["board", "arena", "frame", "skin", "effect"].includes(item.kind)) action = `<button class="secondary" data-go-my-units>${ui("EQUIP IN MY UNITS", "내 유닛에서 장착")}</button>`;
+    else action = `<span class="showcase-owned">${ui("OWNED · AUTO-ACTIVE", "보유 중 · 자동 활성화")}</span>`;
+    return `<div class="showcase-overlay" data-close-showcase><section class="showcase-modal kind-${item.kind || "unit"}" role="dialog" aria-modal="true" aria-label="${item.name}" data-showcase-panel><button class="showcase-close" data-close-showcase aria-label="${ui("Close", "닫기")}">×</button><div class="showcase-radiance"></div><div class="showcase-art"><img src="${itemArtSrc(item)}"${fallbackAttr(item.artRoot || "card", item.fallbackArt)} alt="${item.name}"></div><div class="showcase-copy"><small>${isCodex || isUnit ? "SIGNAL ARCHIVE" : `${details.role} · ${details.tier}`}</small><h2>${isCodex || isUnit ? unitDisplayName(item) : item.name}</h2><p>${description}</p><b>${ownedItem ? "OWNED" : price}</b><div class="showcase-action">${action}</div></div></section></div>`;
   }
 
   function renderStore() {
@@ -1304,34 +1284,17 @@
       const ownedItem = cosmeticOwned.includes(item.id);
       const selected = storeItemActive(item);
       const details = shopDetails(item);
-      const packLocked = item.kind === "skin" && !canUseSkin(item);
       const ownedAction = item.kind === "board" || item.kind === "arena" || item.kind === "frame"
         ? `<button class="secondary" data-go-my-units>${language === "en" ? "EQUIP IN MY UNITS" : "내 유닛에서 장착"}</button>`
         : item.kind === "skin" || item.kind === "effect"
           ? `<button class="secondary" data-go-my-units>${language === "en" ? "SET IN MY UNITS" : "내 유닛에서 설정"}</button>`
           : `<button class="secondary" disabled>${language === "en" ? "ACTIVE" : "자동 활성화"}</button>`;
-      const action = ownedItem ? ownedAction : packLocked ? `<button class="secondary" disabled>${language === "en" ? "PACK REQUIRED" : "팩 보유 필요"}</button>` : `<button class="primary" data-buy-cosmetic="${item.id}">${t("purchase")}</button>`;
-      return `<article class="shop-card kind-${item.kind} ${ownedItem ? "owned" : ""} ${selected ? "equipped" : ""}" data-skin-pack="${item.kind === "skin" ? skinPack(item) : ""}"><button class="shop-visual" data-preview-shop="${item.id}" aria-label="${item.name} 자세히 보기"><img class="shop-art" src="${shopArtSrc(item)}"${fallbackAttr(item.artRoot || "card", item.fallbackArt)} alt="${item.name}" loading="lazy" decoding="async"><span>VIEW</span>${ownedItem ? `<b class="owned-ribbon">${language === "en" ? "OWNED" : "보유 중"}</b>` : ""}</button><div class="shop-copy"><small>${details.role} · ${details.tier}</small><h2>${item.name}</h2><h3 class="skin-pack-label">${item.kind === "skin" ? PACK_LABELS[skinPack(item)] : ""}</h3><p>${item.description}</p><b>${ownedItem ? (language === "en" ? "OWNED" : "보유 중") : cosmeticPrice(item)}</b><div class="shop-card-actions">${action}</div></div></article>`;
+      return `<article class="shop-card kind-${item.kind} ${ownedItem ? "owned" : ""} ${selected ? "equipped" : ""}"><button class="shop-visual" data-preview-shop="${item.id}" aria-label="${ui(`View ${item.name}`, `${item.name} 자세히 보기`)}"><img class="shop-art" src="${shopArtSrc(item)}"${fallbackAttr(item.artRoot || "card", item.fallbackArt)} alt="${item.name}" loading="lazy" decoding="async"><span>VIEW</span>${ownedItem ? `<b class="owned-ribbon">${language === "en" ? "OWNED" : "보유 중"}</b>` : ""}</button><div class="shop-copy"><small>${details.role} · ${details.tier}</small><h2>${item.name}</h2><p>${itemDescription(item)}</p><b>${ownedItem ? (language === "en" ? "OWNED" : "보유 중") : cosmeticPrice(item)}</b><div class="shop-card-actions">${ownedItem ? ownedAction : `<button class="primary" data-buy-cosmetic="${item.id}">${t("purchase")}</button>`}</div></div></article>`;
     };
-    const paymentCard = (item) => `<article class="shop-card payment-card payment-paused"><small>ANOMALY SHARD · FREE PILOT</small><h2>${item.name}</h2><p>${language === "en" ? "Cash payments are paused during the free pilot. Earn rewards in game; paid currency will open later with a verified domestic payment provider." : "현재는 무료 체험판 운영 기간이라 현금 결제를 받지 않습니다. 게임 보상으로 플레이하고, 정식 오픈 때 국내 PG와 서버 검증을 거쳐 유료재화를 제공합니다."}</p><b>${item.price}</b><div class="shop-card-actions"><button class="primary" data-buy-shards="${item.id}" ${CASH_PAYMENTS_ENABLED ? "" : "disabled"}>${language === "en" ? "COMING LATER" : "정식 오픈 예정"}</button></div></article>`;
+    const paymentCard = (item) => `<article class="shop-card payment-card"><small>ANOMALY SHARD · SECURE CHECKOUT</small><h2>${item.name}</h2><p>${language === "en" ? "Premium currency is credited only after server-confirmed payment." : "결제 확인 웹훅이 승인된 뒤에만 서버 장부에서 변칙 파편을 지급합니다."}</p><b>${item.price}</b><div class="shop-card-actions"><button class="primary" data-buy-shards="${item.id}">${language === "en" ? "BUY SECURELY" : "안전하게 구매"}</button></div></article>`;
     const section = (id, title, note, items) => `<section class="store-section ${storeFilter === id ? "active" : ""}" id="store-${id}"><div class="section-title"><h2>${title}</h2><span>${note}</span></div><div class="shop-grid">${items.map(cosmeticCard).join("")}</div></section>`;
-    app.innerHTML = `<div class="shell store-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="store-page"><div class="store-heading"><div><small>COSMETIC ARMORY · WEB PROTOTYPE</small><h1>OVERRIDE <span>STORE</span></h1><p>전투 캐릭터는 도감에서 해금합니다. 상점에서는 코스메틱을 구매하고, 장착과 변경은 내 유닛에서 진행합니다.</p></div><button class="secondary" id="back-to-setup">${t("play")}</button></div><div class="store-guide"><b>도감</b><span>새 캐릭터 해금</span><b>상점</b><span>외형과 연출 구매</span><b>내 유닛</b><span>전장·공간·테두리·스킨·이펙트·이모트 장착</span></div><nav class="store-tabs" aria-label="상품 종류">${[["skin","스킨"],["effect","이펙트"],["board","전장"],["arena","게임 공간"],["frame","말 테두리"],["emote","캐릭터 이모트"]].map(([id, label]) => `<button type="button" class="${storeFilter === id ? "active" : ""}" data-store-filter="${id}">${label}</button>`).join("")}</nav>${section("skin", "캐릭터 스킨", "같은 캐릭터의 의상과 초상을 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "skin"))}${section("effect", "공격 이펙트", "보유 후 내 유닛에서 캐릭터별로 적용하거나 끌 수 있습니다.", SHOP_ITEMS.filter((item) => item.kind === "effect"))}${section("board", "전장", "구매 후 내 유닛의 전장 설정에서 장착합니다.", SHOP_ITEMS.filter((item) => item.kind === "board"))}${section("arena", "게임 공간 스킨", "전투 중 좌우 패널과 배경 분위기를 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "arena"))}${section("frame", "말 테두리", "아군 말 전체에 적용할 테두리를 구매합니다.", SHOP_ITEMS.filter((item) => item.kind === "frame"))}${section("emote", "캐릭터 이모트", "구매 후 내 유닛에서 제나·소브란 이모트 팩을 장착하거나 해제합니다.", SHOP_ITEMS.filter((item) => item.kind === "emote"))}<section class="store-section"><div class="section-title"><h2>${t("shardStore")}</h2><span>무료 체험판 · 현금 결제는 정식 오픈 후 제공</span></div><div class="shop-grid payment-grid">${PAYMENT_PRODUCTS.map(paymentCard).join("")}</div></section><p class="store-notice">${t("paymentNotice")}</p></section></div>`;
-    const skinStore = app.querySelector("#store-skin");
-    if (skinStore) {
-      const skinGrid = skinStore.querySelector(".shop-grid");
-      if (skinGrid) {
-        const skinCards = [...skinGrid.children];
-        skinGrid.remove();
-        ["xena", "sovran", "crystal"].forEach((packId) => {
-          const group = document.createElement("section");
-          group.className = "skin-pack-group";
-          group.innerHTML = `<h3>${PACK_LABELS[packId]}</h3><div class="shop-grid"></div>`;
-          skinStore.appendChild(group);
-          const groupGrid = group.querySelector(".shop-grid");
-          skinCards.filter((card) => card.dataset.skinPack === packId).forEach((card) => groupGrid.appendChild(card));
-        });
-      }
-    }
+    const storeTabs = [["skin", ui("Skins", "스킨")], ["effect", ui("Effects", "이펙트")], ["board", ui("Battlefields", "전장")], ["arena", ui("Game Spaces", "게임 공간")], ["frame", ui("Unit Frames", "말 테두리")], ["emote", ui("Character Emotes", "캐릭터 이모트")]];
+    app.innerHTML = `<div class="shell store-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="store-page"><div class="store-heading"><div><small>COSMETIC ARMORY · WEB PROTOTYPE</small><h1>OVERRIDE <span>STORE</span></h1><p>${ui("Unlock combat characters in the Codex. Buy cosmetics here, then equip them in My Units.", "전투 캐릭터는 도감에서 해금합니다. 상점에서는 코스메틱을 구매하고, 장착과 변경은 내 유닛에서 진행합니다.")}</p></div><button class="secondary" id="back-to-setup">${t("play")}</button></div><div class="store-guide"><b>${ui("Codex", "도감")}</b><span>${ui("Unlock characters", "새 캐릭터 해금")}</span><b>${ui("Store", "상점")}</b><span>${ui("Buy cosmetics", "외형과 연출 구매")}</span><b>${ui("My Units", "내 유닛")}</b><span>${ui("Equip your collection", "전장·공간·테두리·스킨·이펙트 장착")}</span></div><nav class="store-tabs" aria-label="${ui("Product categories", "상품 종류")}">${storeTabs.map(([id, label]) => `<button type="button" class="${storeFilter === id ? "active" : ""}" data-store-filter="${id}">${label}</button>`).join("")}</nav>${section("skin", ui("Character Skins", "캐릭터 스킨"), ui("Change a character's outfit and portrait.", "같은 캐릭터의 의상과 초상을 변경합니다."), SHOP_ITEMS.filter((item) => item.kind === "skin"))}${section("effect", ui("Attack Effects", "공격 이펙트"), ui("Assign or disable effects per character in My Units.", "보유 후 내 유닛에서 캐릭터별로 적용하거나 끌 수 있습니다."), SHOP_ITEMS.filter((item) => item.kind === "effect"))}${section("board", ui("Battlefields", "전장"), ui("Equip purchased battlefields in My Units.", "구매 후 내 유닛의 전장 설정에서 장착합니다."), SHOP_ITEMS.filter((item) => item.kind === "board"))}${section("arena", ui("Game Space Skins", "게임 공간 스킨"), ui("Change the battle panels and background atmosphere.", "전투 중 좌우 패널과 배경 분위기를 변경합니다."), SHOP_ITEMS.filter((item) => item.kind === "arena"))}${section("frame", ui("Unit Frames", "말 테두리"), ui("Apply a shared frame to all allied units.", "아군 말 전체에 적용할 테두리를 구매합니다."), SHOP_ITEMS.filter((item) => item.kind === "frame"))}${section("emote", ui("Character Emotes", "캐릭터 이모트"), ui("Social reaction packs for matches.", "캐릭터별 소셜 리액션 팩입니다."), SHOP_ITEMS.filter((item) => item.kind === "emote"))}<section class="store-section"><div class="section-title"><h2>${t("shardStore")}</h2><span>${ui("Product preview · Secure checkout coming soon", "상품 미리보기 · 안전 결제는 준비 중")}</span></div><div class="shop-grid payment-grid">${PAYMENT_PRODUCTS.map(paymentCard).join("")}</div></section><p class="store-notice">${t("paymentNotice")}</p></section></div>`;
     if (showcase && showcase.source === "store") {
       const item = SHOP_ITEMS.find((entry) => entry.id === showcase.id);
       if (item) app.insertAdjacentHTML("beforeend", showcaseMarkup(item, "store"));
@@ -1339,7 +1302,7 @@
     bindStoreButton();
     const effectHeader = app.querySelector(".effect-toggle")?.parentElement;
     if (effectHeader && !effectHeader.querySelector("[data-equip-all-effects]")) {
-      effectHeader.insertAdjacentHTML("beforeend", `<button class="secondary effect-equip-all" data-equip-all-effects>전체 착용</button>`);
+      effectHeader.insertAdjacentHTML("beforeend", `<button class="secondary effect-equip-all" data-equip-all-effects>${ui("EQUIP ALL", "전체 착용")}</button>`);
     }
     document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
     app.querySelectorAll("[data-store-filter]").forEach((button) => button.addEventListener("click", () => { storeFilter = button.dataset.storeFilter; showcase = null; renderStore(); }));
@@ -1357,12 +1320,12 @@
     const unlocked = CODEX_CARDS.filter(ownsCodexCard).length;
     const entry = (card) => {
       const isOwned = ownsCodexCard(card);
-      return `<button class="codex-entry ${isOwned ? "owned" : "locked"}" data-preview-codex="${card.id}"><span class="codex-art"><img src="${itemArtSrc(card)}" alt="${card.name}" loading="lazy" decoding="async"></span><span class="codex-meta"><small>${card.faction} · ${card.rarity}</small><b>${card.name}</b><em>${roleLabel(card.role)}</em><span>${isOwned ? "보유 중" : `시그널 ${card.credit.toLocaleString()}`}</span></span></button>`;
+      return `<button class="codex-entry ${isOwned ? "owned" : "locked"}" data-preview-codex="${card.id}"><span class="codex-art"><img src="${itemArtSrc(card)}" alt="${card.character}" loading="lazy" decoding="async"></span><span class="codex-meta"><small>${card.faction} · ${card.rarity}</small><b>${unitDisplayName(card)}</b><em>${roleLabel(card.role)}</em><span>${isOwned ? ui("OWNED", "보유 중") : `${ui("Signal", "시그널")} ${card.credit.toLocaleString()}`}</span></span></button>`;
     };
-    const factionGroup = (packId, title) => `<section class="codex-faction"><div class="section-title"><h2>${title}</h2><span>${owned.includes(packId) ? "팩 보유 · 12명 자동 해금" : "미보유 캐릭터는 개별 해금 가능"}</span></div><div class="codex-grid">${CODEX_CARDS.filter((card) => card.pack === packId).map(entry).join("")}</div></section>`;
-    const codexTabs = [["all", "전체"], ["xena", "제나 반란군"], ["sovran", "소브란 시스템"], ["crystal", "Stay Bright"]];
+    const factionGroup = (packId, title) => `<section class="codex-faction"><div class="section-title"><h2>${title}</h2><span>${owned.includes(packId) ? ui("Pack owned · 12 units unlocked", "팩 보유 · 12명 자동 해금") : ui("Unlock unowned characters individually", "미보유 캐릭터는 개별 해금 가능")}</span></div><div class="codex-grid">${CODEX_CARDS.filter((card) => card.pack === packId).map(entry).join("")}</div></section>`;
+    const codexTabs = [["all", ui("All", "전체")], ["xena", ui("XENA Rebels", "제나 반란군")], ["sovran", ui("SOVRAN System", "소브란 시스템")], ["crystal", "Stay Bright"]];
     const groups = codexFilter === "all" ? codexTabs.slice(1) : codexTabs.filter(([id]) => id !== "all" && id === codexFilter);
-    app.innerHTML = `<div class="shell codex-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="codex-page"><div class="store-heading"><div><small>ALL CHARACTER ARCHIVE · WEB PROTOTYPE</small><h1>UNIT <span>CODEX</span></h1><p>현재 게임의 모든 캐릭터를 확인하고 해금하는 곳입니다. 보유 캐릭터는 컬러, 미보유 캐릭터는 무채색으로 표시됩니다.</p></div><div class="header-actions"><button class="primary" data-open-units>내 유닛</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><nav class="codex-tabs" aria-label="도감 필터">${codexTabs.map(([id, label]) => `<button type="button" class="${codexFilter === id ? "active" : ""}" data-codex-filter="${id}">${label}</button>`).join("")}</nav><div class="codex-progress"><span>${codexFilter === "all" ? "전체 캐릭터 컬렉션" : "선택 팩 캐릭터 컬렉션"}</span><b>${unlocked} / ${CODEX_CARDS.length} 보유</b></div>${groups.map(([id, label]) => factionGroup(id, label.toUpperCase())).join("")}</section></div>`;
+    app.innerHTML = `<div class="shell codex-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="codex-page"><div class="store-heading"><div><small>ALL CHARACTER ARCHIVE · WEB PROTOTYPE</small><h1>UNIT <span>CODEX</span></h1><p>${ui("View and unlock every character in the game. Owned characters appear in color; locked characters appear desaturated.", "현재 게임의 모든 캐릭터를 확인하고 해금하는 곳입니다. 보유 캐릭터는 컬러, 미보유 캐릭터는 무채색으로 표시됩니다.")}</p></div><div class="header-actions"><button class="primary" data-open-units>${ui("MY UNITS", "내 유닛")}</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><nav class="codex-tabs" aria-label="${ui("Codex filters", "도감 필터")}">${codexTabs.map(([id, label]) => `<button type="button" class="${codexFilter === id ? "active" : ""}" data-codex-filter="${id}">${label}</button>`).join("")}</nav><div class="codex-progress"><span>${codexFilter === "all" ? ui("All character collection", "전체 캐릭터 컬렉션") : ui("Selected pack collection", "선택 팩 캐릭터 컬렉션")}</span><b>${unlocked} / ${CODEX_CARDS.length} ${ui("OWNED", "보유")}</b></div>${groups.map(([id, label]) => factionGroup(id, label.toUpperCase())).join("")}</section></div>`;
     if (showcase && showcase.source === "codex") {
       const card = CODEX_CARDS.find((entry) => entry.id === showcase.id);
       if (card) app.insertAdjacentHTML("beforeend", showcaseMarkup(card, "codex"));
@@ -1381,7 +1344,7 @@
     const activeUnitShowcase = showcase && showcase.source === "units" ? showcase : null;
     clearInterval(timer); screen = "units"; showcase = activeUnitShowcase; applyCosmeticTheme();
     if (!committedStarter && !owned.length) {
-      app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>내 <span>유닛</span></h1><p>보유 캐릭터를 같은 직업 슬롯에 장착하고, 캐릭터별 스킨과 공격 이펙트를 설정합니다.</p></div><div class="header-actions"><button class="secondary" data-open-codex>도감</button><button class="secondary" data-open-store>상점</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><section class="loadout-empty"><small>STARTER REQUIRED</small><h2>스타터 팩을 먼저 확정해 주세요</h2><p>첫 대전을 시작하면 선택한 진영의 12명이 자동으로 해금됩니다. 이후 이곳에서 같은 직업의 보유 캐릭터를 교체하고 스킨과 공격 이펙트를 설정할 수 있습니다.</p><button class="primary" id="choose-starter">스타터 선택으로 이동</button></section></section></div>`;
+      app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>${ui("MY <span>UNITS</span>", "내 <span>유닛</span>")}</h1><p>${ui("Assign owned characters to matching role slots, then set skins and attack effects.", "보유 캐릭터를 같은 직업 슬롯에 장착하고, 캐릭터별 스킨과 공격 이펙트를 설정합니다.")}</p></div><div class="header-actions"><button class="secondary" data-open-codex>${ui("CODEX", "도감")}</button><button class="secondary" data-open-store>${ui("STORE", "상점")}</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><section class="loadout-empty"><small>STARTER REQUIRED</small><h2>${ui("Confirm a starter pack first", "스타터 팩을 먼저 확정해 주세요")}</h2><p>${ui("Starting your first match unlocks all 12 units in the selected faction. You can then change units, skins and attack effects here.", "첫 대전을 시작하면 선택한 진영의 12명이 자동으로 해금됩니다. 이후 이곳에서 같은 직업의 보유 캐릭터를 교체하고 스킨과 공격 이펙트를 설정할 수 있습니다.")}</p><button class="primary" id="choose-starter">${ui("CHOOSE A STARTER", "스타터 선택으로 이동")}</button></section></section></div>`;
       bindStoreButton();
       app.querySelectorAll("#back-to-setup, #choose-starter").forEach((button) => button.addEventListener("click", () => { screen = "setup"; renderSetup(); }));
       syncBgm();
@@ -1395,37 +1358,34 @@
     const selectedUnit = unitForCharacter(selectedCharacter);
     const deployedElsewhere = new Set(Object.entries(unitLineups[lineupPack]).filter(([key]) => key !== slot.key).map(([, character]) => character));
     const candidates = CODEX_CARDS.filter((card) => card.role === slot.role && ownsCodexCard(card) && !deployedElsewhere.has(card.character));
-    const skinItems = SHOP_ITEMS.filter((item) => item.kind === "skin" && item.targetCharacter === selectedCharacter && canUseSkin(item));
+    const skinItems = SHOP_ITEMS.filter((item) => item.kind === "skin" && item.targetCharacter === selectedCharacter);
     const effectItems = SHOP_ITEMS.filter((item) => item.kind === "effect");
     const boardItems = SHOP_ITEMS.filter((item) => item.kind === "board");
     const arenaItems = SHOP_ITEMS.filter((item) => item.kind === "arena");
     const frameItems = SHOP_ITEMS.filter((item) => item.kind === "frame");
     const effectSetting = unitEffects[selectedCharacter] || { id: "", enabled: false };
     const selectedEffect = effectItems.find((item) => item.id === effectSetting.id);
-    const selectedEffectName = selectedEffect ? selectedEffect.name : "기본 효과";
+    const selectedEffectName = selectedEffect ? selectedEffect.name : ui("Default Effect", "기본 효과");
     const formationCharacters = [...new Set(Object.values(unitLineups[lineupPack]))];
     const allUseSelectedEffect = Boolean(selectedEffect && formationCharacters.every((character) => unitEffects[character]?.id === selectedEffect.id && unitEffects[character]?.enabled !== false));
-    const effectBroadcast = allUseSelectedEffect ? `모든 캐릭터가 <b>${selectedEffectName}</b> 이펙터를 사용합니다.` : `현재 선택 캐릭터: <b>${selectedEffectName}</b> · 전체 장착하려면 이펙트를 선택한 뒤 버튼을 누르세요.`;
+    const effectBroadcast = allUseSelectedEffect ? ui(`All characters use <b>${selectedEffectName}</b>.`, `모든 캐릭터가 <b>${selectedEffectName}</b> 이펙터를 사용합니다.`) : ui(`Selected character: <b>${selectedEffectName}</b> · Choose an effect, then use Equip All.`, `현재 선택 캐릭터: <b>${selectedEffectName}</b> · 전체 장착하려면 이펙트를 선택한 뒤 버튼을 누르세요.`);
     const slotCard = (entry) => {
       const character = unitLineups[lineupPack][entry.key];
       const unit = unitForCharacter(character);
-      return `<button class="formation-slot ${entry.key === slot.key ? "selected" : ""}" data-unit-slot="${entry.key}">${unitPortraitMarkup(character)}<span><small>${entry.label}</small><b>${unit ? unit.name : character}</b></span></button>`;
+      return `<button class="formation-slot ${entry.key === slot.key ? "selected" : ""}" data-unit-slot="${entry.key}">${unitPortraitMarkup(character)}<span><small>${slotDisplayLabel(entry)}</small><b>${unitDisplayName(unit) || character}</b></span></button>`;
     };
-    const choiceCard = (unit) => `<button class="unit-choice ${unit.character === selectedCharacter ? "selected" : ""}" data-equip-character="${unit.character}">${unitPortraitMarkup(unit.character)}<span><b>${unit.name}</b><small>${unit.faction}</small></span></button>`;
-    const skinChoice = (item) => `<button class="appearance-choice ${unitSkins[selectedCharacter] === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-skin="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
-    const effectChoice = (item) => `<button class="appearance-choice ${effectSetting.id === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-effect="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
-    const boardChoice = (item) => `<button class="global-cosmetic-choice ${activeBoard === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-board="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
-    const frameChoice = (item) => `<button class="global-cosmetic-choice frame-choice ${activeFrame === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-frame="${item.id}"` : "disabled"}><span class="frame-sample frame-${item.frameStyle}"><img src="${itemArtSrc(item)}" alt=""></span><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`;
-    app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>내 <span>유닛</span></h1><p>보유 캐릭터를 편성하고, 전장·말 테두리·스킨·공격 이펙트를 장착합니다.</p></div><div class="header-actions"><button class="secondary" data-open-codex>도감</button><button class="secondary" data-open-store>상점</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><div class="loadout-pack-tabs">${availablePacks.map((packId) => `<button class="${lineupPack === packId ? "active" : ""}" data-lineup-pack="${packId}">${G.PACKS[packId].leaderName} · ${G.PACKS[packId].name}</button>`).join("")}</div><section class="global-loadout ${showLoadoutOptions ? "expanded" : "collapsed"}"><div class="global-loadout-block"><div class="section-title"><h2>전장 장착</h2><span>상점에서 구매한 전장을 여기서 변경</span></div><div class="global-cosmetic-grid"><button class="global-cosmetic-choice ${activeBoard ? "" : "selected"}" data-apply-board=""><span class="default-cosmetic">GRID</span><span><b>기본 전장</b><small>보유</small></span></button>${boardItems.map(boardChoice).join("")}</div></div><div class="global-loadout-block"><div class="section-title"><h2>아군 말 테두리</h2><span>능력치 변화 없는 계정 공용 외형</span></div><div class="global-cosmetic-grid"><button class="global-cosmetic-choice ${activeFrame ? "" : "selected"}" data-apply-frame=""><span class="default-cosmetic">BASE</span><span><b>기본 진영 테두리</b><small>보유</small></span></button>${frameItems.map(frameChoice).join("")}</div></div></section><button class="secondary loadout-more" data-toggle-loadout>${showLoadoutOptions ? "닫기" : "더보기"}</button><div class="units-layout"><section><div class="section-title"><h2>12 UNIT FORMATION</h2><span>폰은 위쪽, 룩·비숍·트리거·리더·비숍·나이트는 아래쪽</span></div><div class="formation-grid">${FORMATION_SLOTS.map(slotCard).join("")}</div></section><aside class="unit-config"><div class="selected-unit-hero">${unitPortraitMarkup(selectedCharacter, "hero-portrait")}<div><small>${slot.label}</small><h2>${selectedUnit ? selectedUnit.name : selectedCharacter}</h2><span>${selectedUnit ? selectedUnit.faction : ""}</span></div></div><div class="config-block"><div class="section-title"><h3>캐릭터 교체</h3><span>같은 직업 중 현재 편성되지 않은 보유 캐릭터만 표시</span></div><div class="unit-choice-grid">${candidates.map(choiceCard).join("")}</div></div><div class="config-block"><div class="section-title"><h3>스킨</h3><span>상점에서 구매한 전용 외형</span></div><div class="appearance-grid"><button class="appearance-choice ${unitSkins[selectedCharacter] ? "" : "selected"}" data-apply-skin=""><span><b>기본 외형</b><small>보유</small></span></button>${skinItems.map(skinChoice).join("")}</div></div><div class="config-block"><div class="section-title"><h3>공격 이펙트</h3><button class="secondary effect-equip-all" data-equip-all-effects>전체 장착</button><label class="effect-toggle"><input type="checkbox" data-toggle-effect ${effectSetting.id && effectSetting.enabled !== false ? "checked" : ""} ${effectSetting.id ? "" : "disabled"}><span>효과 ${effectSetting.enabled !== false && effectSetting.id ? "ON" : "OFF"}</span></label></div><p class="effect-broadcast">모든 캐릭터가 <b>${selectedEffectName}</b> 이펙터를 사용합니다.</p><div class="appearance-grid"><button class="appearance-choice ${effectSetting.id ? "" : "selected"}" data-apply-effect=""><span><b>캐릭터 기본 효과</b><small>기본</small></span></button>${effectItems.map(effectChoice).join("")}</div></div></aside></div></section></div>`;
+    const choiceCard = (unit) => `<button class="unit-choice ${unit.character === selectedCharacter ? "selected" : ""}" data-equip-character="${unit.character}">${unitPortraitMarkup(unit.character)}<span><b>${unitDisplayName(unit)}</b><small>${unit.faction}</small></span></button>`;
+    const ownershipLabel = (ownedItem) => ownedItem ? ui("OWNED", "보유") : ui("BUY IN STORE", "상점에서 구매");
+    const skinChoice = (item) => `<button class="appearance-choice ${unitSkins[selectedCharacter] === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-skin="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span><b>${item.name}</b><small>${ownershipLabel(cosmeticOwned.includes(item.id))}</small></span></button>`;
+    const effectChoice = (item) => `<button class="appearance-choice ${effectSetting.id === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-effect="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span><b>${item.name}</b><small>${ownershipLabel(cosmeticOwned.includes(item.id))}</small></span></button>`;
+    const boardChoice = (item) => `<button class="global-cosmetic-choice ${activeBoard === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-board="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}" loading="lazy" decoding="async"><span><b>${item.name}</b><small>${ownershipLabel(cosmeticOwned.includes(item.id))}</small></span></button>`;
+    const frameChoice = (item) => `<button class="global-cosmetic-choice frame-choice ${activeFrame === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-frame="${item.id}"` : "disabled"}><span class="frame-sample frame-${item.frameStyle}"><img src="${itemArtSrc(item)}" alt=""></span><span><b>${item.name}</b><small>${ownershipLabel(cosmeticOwned.includes(item.id))}</small></span></button>`;
+    const packTabsMarkup = availablePacks.map((packId) => `<div class="loadout-pack-tab"><button class="${lineupPack === packId ? "active" : ""}" data-lineup-pack="${packId}">${G.PACKS[packId].leaderName} · ${G.PACKS[packId].name}</button>${pendingLineupPack === packId ? `<div class="pack-equip-confirm"><span>${ui("Equip this pack?", "이 팩을 장착하시겠습니까?")}</span><button class="primary" data-confirm-lineup-pack="${packId}">${ui("EQUIP", "장착")}</button><button class="secondary" data-cancel-lineup-pack>${ui("CANCEL", "취소")}</button></div>` : ""}</div>`).join("");
+    app.innerHTML = `<div class="shell units-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="units-page"><div class="store-heading"><div><small>MY GRID · LOADOUT</small><h1>${ui("MY <span>UNITS</span>", "내 <span>유닛</span>")}</h1><p>${ui("Build your formation and equip battlefields, frames, skins and attack effects.", "보유 캐릭터를 편성하고, 전장·말 테두리·스킨·공격 이펙트를 장착합니다.")}</p></div><div class="header-actions"><button class="secondary" data-open-codex>${ui("CODEX", "도감")}</button><button class="secondary" data-open-store>${ui("STORE", "상점")}</button><button class="secondary" id="back-to-setup">${t("play")}</button></div></div><div class="loadout-pack-tabs">${packTabsMarkup}</div><section class="global-loadout ${showLoadoutOptions ? "expanded" : "collapsed"}"><div class="global-loadout-block"><div class="section-title"><h2>${ui("EQUIP BATTLEFIELD", "전장 장착")}</h2><span>${ui("Change purchased battlefields here", "상점에서 구매한 전장을 여기서 변경")}</span></div><div class="global-cosmetic-grid"><button class="global-cosmetic-choice ${activeBoard ? "" : "selected"}" data-apply-board=""><span class="default-cosmetic">GRID</span><span><b>${ui("Default Battlefield", "기본 전장")}</b><small>${ui("OWNED", "보유")}</small></span></button>${boardItems.map(boardChoice).join("")}</div></div><div class="global-loadout-block"><div class="section-title"><h2>${ui("ALLY UNIT FRAMES", "아군 말 테두리")}</h2><span>${ui("Account-wide cosmetics with no stat changes", "능력치 변화 없는 계정 공용 외형")}</span></div><div class="global-cosmetic-grid"><button class="global-cosmetic-choice ${activeFrame ? "" : "selected"}" data-apply-frame=""><span class="default-cosmetic">BASE</span><span><b>${ui("Default Faction Frame", "기본 진영 테두리")}</b><small>${ui("OWNED", "보유")}</small></span></button>${frameItems.map(frameChoice).join("")}</div></div></section><button class="secondary loadout-more" data-toggle-loadout>${showLoadoutOptions ? ui("CLOSE", "닫기") : ui("MORE", "더보기")}</button><div class="units-layout"><section><div class="section-title"><h2>12 UNIT FORMATION</h2><span>${ui("Pawns on top; rook, bishop, trigger, leader, bishop and knight below", "폰은 위쪽, 룩·비숍·트리거·리더·비숍·나이트는 아래쪽")}</span></div><div class="formation-grid">${FORMATION_SLOTS.map(slotCard).join("")}</div></section><aside class="unit-config"><div class="selected-unit-hero">${unitPortraitMarkup(selectedCharacter, "hero-portrait")}<div><small>${slotDisplayLabel(slot)}</small><h2>${unitDisplayName(selectedUnit) || selectedCharacter}</h2><span>${selectedUnit ? selectedUnit.faction : ""}</span></div></div><div class="config-block"><div class="section-title"><h3>${ui("CHANGE CHARACTER", "캐릭터 교체")}</h3><span>${ui("Shows owned characters with the same role that are not already deployed", "같은 직업 중 현재 편성되지 않은 보유 캐릭터만 표시")}</span></div><div class="unit-choice-grid">${candidates.map(choiceCard).join("")}</div></div><div class="config-block"><div class="section-title"><h3>${ui("SKINS", "스킨")}</h3><span>${ui("Character appearances purchased in the Store", "상점에서 구매한 전용 외형")}</span></div><div class="appearance-grid"><button class="appearance-choice ${unitSkins[selectedCharacter] ? "" : "selected"}" data-apply-skin=""><span><b>${ui("Default Appearance", "기본 외형")}</b><small>${ui("OWNED", "보유")}</small></span></button>${skinItems.map(skinChoice).join("")}</div></div><div class="config-block"><div class="section-title"><h3>${ui("ATTACK EFFECTS", "공격 이펙트")}</h3><button class="secondary effect-equip-all" data-equip-all-effects>${ui("EQUIP ALL", "전체 장착")}</button><label class="effect-toggle"><input type="checkbox" data-toggle-effect ${effectSetting.id && effectSetting.enabled !== false ? "checked" : ""} ${effectSetting.id ? "" : "disabled"}><span>${ui("EFFECT", "효과")} ${effectSetting.enabled !== false && effectSetting.id ? "ON" : "OFF"}</span></label></div><p class="effect-broadcast">${effectBroadcast}</p><div class="appearance-grid"><button class="appearance-choice ${effectSetting.id ? "" : "selected"}" data-apply-effect=""><span><b>${ui("Default Character Effect", "캐릭터 기본 효과")}</b><small>${ui("DEFAULT", "기본")}</small></span></button>${effectItems.map(effectChoice).join("")}</div></div></aside></div></section></div>`;
     const globalLoadout = app.querySelector(".global-loadout");
-    if (globalLoadout) globalLoadout.insertAdjacentHTML("beforeend", `<div class="global-loadout-block"><div class="section-title"><h2>게임 공간 스킨</h2><span>좌우 패널과 전투 배경을 함께 변경</span></div><div class="global-cosmetic-grid">${arenaItems.map((item) => `<button class="global-cosmetic-choice ${activeArena === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-arena="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}"><span><b>${item.name}</b><small>${cosmeticOwned.includes(item.id) ? "보유" : "상점에서 구매"}</small></span></button>`).join("")}</div></div>`);
-    const emoteItems = SHOP_ITEMS.filter((item) => item.kind === "emote");
+    if (globalLoadout) globalLoadout.insertAdjacentHTML("beforeend", `<div class="global-loadout-block"><div class="section-title"><h2>${ui("GAME SPACE SKINS", "게임 공간 스킨")}</h2><span>${ui("Change side panels and battle backgrounds together", "좌우 패널과 전투 배경을 함께 변경")}</span></div><div class="global-cosmetic-grid">${arenaItems.map((item) => `<button class="global-cosmetic-choice ${activeArena === item.id ? "selected" : ""} ${cosmeticOwned.includes(item.id) ? "" : "locked"}" ${cosmeticOwned.includes(item.id) ? `data-apply-arena="${item.id}"` : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}"><span><b>${item.name}</b><small>${ownershipLabel(cosmeticOwned.includes(item.id))}</small></span></button>`).join("")}</div></div>`);
     const packTabs = app.querySelector(".loadout-pack-tabs");
     const formationArea = app.querySelector(".units-layout");
-    const crystalPackButton = app.querySelector('[data-lineup-pack="crystal"]');
-    if (crystalPackButton) crystalPackButton.textContent = "제나 이더리얼";
-    if (packTabs && pendingPack && G.PACKS[pendingPack]) packTabs.insertAdjacentHTML("afterend", `<div class="pack-equip-confirm"><b>${G.PACKS[pendingPack].leaderName === "XENA ETHEREAL" ? "제나 이더리얼" : G.PACKS[pendingPack].leaderName + " 팩"}</b><span>이 팩을 장착하시겠습니까?</span><button class="primary" data-confirm-pack="${pendingPack}">장착</button><button class="secondary" data-cancel-pack>취소</button></div>`);
-    if (formationArea) formationArea.insertAdjacentHTML("beforebegin", `<section class="emote-loadout global-loadout-block"><div class="section-title"><h2>캐릭터 이모트</h2><span>게임 중 사용할 이모트 팩을 장착하거나 해제합니다.</span></div><div class="global-cosmetic-grid">${emoteItems.map((item) => { const ownedEmote = cosmeticOwned.includes(item.id); return `<button class="global-cosmetic-choice ${activeEmote === item.id ? "selected" : ""} ${ownedEmote ? "" : "locked"}" data-apply-emote="${ownedEmote ? item.id : ""}" ${ownedEmote ? "" : "disabled"}><img src="${itemArtSrc(item)}" alt="${item.name}"><span><b>${item.name}</b><small>${activeEmote === item.id ? "장착됨" : ownedEmote ? "장착" : "상점에서 구매"}</small></span></button>`; }).join("")}<button class="global-cosmetic-choice ${activeEmote ? "" : "selected"}" data-apply-emote=""><span class="default-cosmetic">OFF</span><span><b>이모트 해제</b><small>사용 안 함</small></span></button></div></section>`);
     if (packTabs && formationArea) formationArea.parentElement.insertBefore(packTabs, formationArea);
     const cosmeticGroups = [
       ["data-apply-board", "board"],
@@ -1447,7 +1407,7 @@
         equip.type = "button";
         equip.className = "secondary cosmetic-equip";
         equip.dataset.equipCosmetic = id;
-        equip.textContent = "장착";
+        equip.textContent = t("equip");
         wrapper.appendChild(equip);
       });
     });
@@ -1459,9 +1419,23 @@
     const loadoutToggle = app.querySelector("[data-toggle-loadout]");
     if (loadoutToggle) loadoutToggle.addEventListener("click", () => { showLoadoutOptions = !showLoadoutOptions; renderMyUnits(); });
     document.getElementById("back-to-setup").addEventListener("click", () => { screen = "setup"; renderSetup(); });
-    app.querySelectorAll("[data-lineup-pack]").forEach((button) => button.addEventListener("click", () => { pendingPack = button.dataset.lineupPack; renderMyUnits(); }));
-    app.querySelector("[data-confirm-pack]")?.addEventListener("click", () => { const packId = pendingPack; if (!packId || !owned.includes(packId)) return; lineupPack = packId; chosen = packId; unitLineups[packId] = defaultLineup(packId); pendingPack = null; selectedUnitSlot = "leader"; saveMeta(); renderMyUnits(); });
-    app.querySelector("[data-cancel-pack]")?.addEventListener("click", () => { pendingPack = null; renderMyUnits(); });
+    app.querySelectorAll("[data-lineup-pack]").forEach((button) => button.addEventListener("click", () => {
+      pendingLineupPack = button.dataset.lineupPack;
+      renderMyUnits();
+    }));
+    app.querySelectorAll("[data-confirm-lineup-pack]").forEach((button) => button.addEventListener("click", () => {
+      lineupPack = button.dataset.confirmLineupPack;
+      unitLineups[lineupPack] = unitLineups[lineupPack] || defaultLineup(lineupPack);
+      selectedUnitSlot = "leader";
+      pendingLineupPack = "";
+      playSfx("equip", 0.48);
+      saveMeta();
+      renderMyUnits();
+    }));
+    app.querySelectorAll("[data-cancel-lineup-pack]").forEach((button) => button.addEventListener("click", () => {
+      pendingLineupPack = "";
+      renderMyUnits();
+    }));
     app.querySelectorAll("[data-unit-slot]").forEach((button) => button.addEventListener("click", () => { selectedUnitSlot = button.dataset.unitSlot; renderMyUnits(); }));
     app.querySelectorAll("[data-equip-character]").forEach((button) => button.addEventListener("click", () => {
       const character = button.dataset.equipCharacter;
@@ -1476,8 +1450,7 @@
     app.querySelectorAll("[data-apply-skin]").forEach((button) => button.addEventListener("click", () => { const id = button.dataset.applySkin; if (id) unitSkins[selectedCharacter] = id; else delete unitSkins[selectedCharacter]; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
     app.querySelectorAll("[data-apply-effect]").forEach((button) => button.addEventListener("click", () => { const effectGrid = app.querySelector(".unit-config .config-block:last-child .appearance-grid"); const effectScrollTop = effectGrid ? effectGrid.scrollTop : 0; const id = button.dataset.applyEffect; if (id) unitEffects[selectedCharacter] = { id, enabled: true }; else delete unitEffects[selectedCharacter]; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); requestAnimationFrame(() => { const nextEffectGrid = app.querySelector(".unit-config .config-block:last-child .appearance-grid"); if (nextEffectGrid) nextEffectGrid.scrollTop = effectScrollTop; }); }));
     app.querySelectorAll("[data-apply-board]").forEach((button) => button.addEventListener("click", () => { activeBoard = button.dataset.applyBoard; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
-     app.querySelectorAll("[data-apply-arena]").forEach((button) => button.addEventListener("click", () => { activeArena = button.dataset.applyArena; playSfx("equip", 0.48); saveMeta(); applyCosmeticTheme(); renderMyUnits(); }));
-     app.querySelectorAll("[data-apply-emote]").forEach((button) => button.addEventListener("click", () => { activeEmote = button.dataset.applyEmote || ""; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
+    app.querySelectorAll("[data-apply-arena]").forEach((button) => button.addEventListener("click", () => { activeArena = button.dataset.applyArena; playSfx("equip", 0.48); saveMeta(); applyCosmeticTheme(); renderMyUnits(); }));
     app.querySelectorAll("[data-apply-frame]").forEach((button) => button.addEventListener("click", () => { activeFrame = button.dataset.applyFrame; playSfx("equip", 0.48); saveMeta(); renderMyUnits(); }));
     app.querySelectorAll("[data-preview-unit-cosmetic]").forEach((button) => button.addEventListener("click", () => { showcase = { source: "units", id: button.dataset.previewUnitCosmetic }; renderMyUnits(); }));
     app.querySelectorAll("[data-equip-cosmetic]").forEach((button) => button.addEventListener("click", (event) => {
@@ -1504,7 +1477,7 @@
       const effectScrollTop = effectGrid ? effectGrid.scrollTop : 0;
       const selectedId = unitEffects[selectedCharacter]?.id;
       const selectedItem = effectItems.find((item) => item.id === selectedId && cosmeticOwned.includes(item.id));
-      if (!selectedItem) return alert("먼저 현재 캐릭터에 적용할 이펙트를 하나 선택해주세요.");
+      if (!selectedItem) return alert(ui("Choose an effect for the current character first.", "먼저 현재 캐릭터에 적용할 이펙트를 하나 선택해주세요."));
       const characters = [...new Set(Object.values(unitLineups[lineupPack]))];
       characters.forEach((character) => { unitEffects[character] = { id: selectedItem.id, enabled: true }; });
       playSfx("equip", 0.5); saveMeta(); renderMyUnits(); requestAnimationFrame(() => { const nextEffectGrid = app.querySelector(".unit-config .config-block:last-child .appearance-grid"); if (nextEffectGrid) nextEffectGrid.scrollTop = effectScrollTop; });
@@ -1584,7 +1557,7 @@
     } else if (online.room && online.room.status === "waiting") {
       controls = `<div class="online-room-card"><small>INVITE CODE</small><button class="online-room-code" data-copy-room>${online.roomCode}</button><p>${language === "en" ? "Select the code to copy an invite link. The match starts when the opponent joins." : "코드를 누르면 초대 링크가 복사됩니다. 상대가 입장하면 대전이 시작됩니다."}</p><button class="secondary" data-leave-room>${language === "en" ? "Cancel waiting" : "대기 취소"}</button></div>`;
     } else {
-      controls = `<div class="online-actions"><button class="primary" data-create-room>${t("createRoom")}</button><div class="online-join"><input data-room-code value="${pendingRoomCode}" maxlength="8" inputmode="text" autocomplete="off" placeholder="8-DIGIT CODE" aria-label="Invite code"><button class="secondary" data-join-room>${t("joinRoom")}</button></div><button class="secondary" disabled>${t("quickMatch")} · ${language === "en" ? "NEXT PHASE" : "다음 단계"}</button>${online.status === "offline" ? `<button class="secondary online-retry" data-online-retry>${language === "en" ? "RETRY CONNECTION" : "연결 재시도"}</button>` : ""}</div>`;
+      controls = `<div class="online-actions"><button class="primary" data-create-room>${t("createRoom")}</button><div class="online-join"><input data-room-code value="${pendingRoomCode}" maxlength="8" inputmode="text" autocomplete="off" placeholder="8-DIGIT CODE" aria-label="Invite code"><button class="secondary" data-join-room>${t("joinRoom")}</button></div><button class="secondary" disabled>${t("quickMatch")} · ${language === "en" ? "NEXT PHASE" : "다음 단계"}</button></div>`;
     }
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="online-page"><div class="online-heading"><small>${t("onlineLobby")} · FIRESTORE PILOT</small><h1>${t("onlineTitle")}</h1><p>${t("onlineNote")}</p></div><div class="online-status ${online.status}"><span>${t("connection")}</span><b>${statusText}</b><small>${statusDetail}</small></div>${controls}<div class="online-contract"><div><b>01</b><span>${language === "en" ? "Google identity seats" : "Google 계정 좌석 확인"}</span></div><div><b>02</b><span>${language === "en" ? "Turn revision synchronization" : "수순 번호 동기화"}</span></div><div><b>03</b><span>${language === "en" ? "No ranked rewards in pilot" : "체험판 랭크 보상 없음"}</span></div></div><button class="secondary" id="back-to-setup">${t("play")}</button></section></div>`;
     bindStoreButton();
@@ -1630,12 +1603,6 @@
     });
     const leaveRoom = app.querySelector("[data-leave-room]");
     if (leaveRoom) leaveRoom.addEventListener("click", () => client.leave());
-    const retry = app.querySelector("[data-online-retry]");
-    if (retry) retry.addEventListener("click", async () => {
-      retry.disabled = true;
-      try { await client.connect(); } catch (_) {}
-      renderOnlineLobby();
-    });
     document.getElementById("back-to-setup").addEventListener("click", () => { if (online.room) client.leave(); screen = "setup"; renderSetup(); });
     syncBgm();
   }
@@ -1772,7 +1739,7 @@
       timerWarningKey = warningKey;
       playSfx("timer10", 0.45);
     }
-    if (clocks[state.turn] <= 0) finish(G.other(state.turn), "시간 종료");
+    if (clocks[state.turn] <= 0) finish(G.other(state.turn), ui("Time expired", "시간 종료"));
     else renderGame();
   }
 
@@ -1871,14 +1838,21 @@
   }
 
   function emoteMarkup() {
-    return `<div class="emote-float-layer">${emoteFeed.map((emote) => `<div class="emote-float ${emote.color}" data-emote-nonce="${emote.nonce}">${emoteVisual(emote.id, EMOTES[emote.id])}<span>${EMOTES[emote.id][language]}</span></div>`).join("")}</div>`;
+    return `<div class="emote-float-layer">${emoteFeed.map((emote) => {
+      const definition = EMOTES[emote.id];
+      const art = state?.packs?.[emote.color] === "sovran" ? SOVRAN_EMOTE_ART[emote.id] : definition.art;
+      return `<div class="emote-float ${emote.color}" data-emote-nonce="${emote.nonce}"><img src="${assetSrc("emote", art)}"${fallbackAttr("emote", definition.fallbackArt)} alt=""><span>${definition[language]}</span></div>`;
+    }).join("")}</div>`;
   }
 
   function emoteBar() {
-    const hasPack = cosmeticOwned.includes("emote-signal") || cosmeticOwned.includes("emote-sovran");
+    const hasPack = cosmeticOwned.includes("emote-signal");
+    const color = gameMode === "local" ? state.turn : playerColor;
+    const useSovranArt = state?.packs?.[color] === "sovran";
     return `<div class="emote-bar" aria-label="Emotes">${Object.entries(EMOTES).map(([id, emote]) => {
       const available = FREE_EMOTES.has(id) || hasPack;
-      return `<button class="emote-button ${available ? "" : "locked"}" data-emote="${id}" title="${available ? emote[language] : (language === "en" ? "Unlock XENA Reaction Pack" : "제나 리액션 팩에서 해금")}" ${available ? "" : "disabled"}>${emoteVisual(id, emote)}<span>${available ? emote[language] : (language === "en" ? "Locked" : "잠김")}</span></button>`;
+      const art = useSovranArt ? SOVRAN_EMOTE_ART[id] : emote.art;
+      return `<button class="emote-button ${available ? "" : "locked"}" data-emote="${id}" title="${available ? emote[language] : (language === "en" ? "Unlock Reaction Pack" : "리액션 팩에서 해금")}" ${available ? "" : "disabled"}><img src="${assetSrc("emote", art)}"${fallbackAttr("emote", emote.fallbackArt)} alt=""><span>${available ? emote[language] : (language === "en" ? "Locked" : "잠김")}</span></button>`;
     }).join("")}</div>`;
   }
 
@@ -1951,11 +1925,11 @@
     const turnPack = turnLeader ? turnLeader.character : G.PACKS[state.packs[state.turn]].leaderName;
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
       <div class="game-layout">${panel("white", gameMode !== "local" && playerColor !== "white")}<section class="arena"><div class="status-strip"><strong>${animating ? t("cinematic") : thinking ? t("thinking") : `${turnPack} ${t("turn")}${status.check ? " · CHECK" : ""}`}</strong><span>${state.ply + 1} ${t("move")}</span></div>
-      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<div class="replay-actions"><button class="secondary threat-toggle ${showOpponentThreats ? "active" : ""}" id="toggle-threats">${language === "en" ? "Threats ON" : "위협 보기"}</button><button class="secondary" id="exit">${t("exit")}</button></div>`}</div></section>${panel("black", gameMode !== "local" && playerColor !== "black")}</div>
+      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${language === "en" ? TIME_RULES[timeRule].note.replace("초보", "Beginner").replace("표준", "Standard").replace("상위", "Advanced").replace("최상위", "Elite").replace("분", " min") : TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<div class="replay-actions"><button class="secondary threat-toggle ${showOpponentThreats ? "active" : ""}" id="toggle-threats">${language === "en" ? "Threats ON" : "위협 보기"}</button><button class="secondary" id="exit">${t("exit")}</button></div>`}</div></section>${panel("black", gameMode !== "local" && playerColor !== "black")}</div>
       ${result ? resultMarkup() : ""}${promotionMarkup()}${recoveryMarkup()}</div>`;
     if (result) {
       const resultActions = app.querySelector(".result-box .actions");
-      if (resultActions && !resultActions.querySelector("#return-lobby")) resultActions.insertAdjacentHTML("beforeend", `<button class="secondary" id="return-lobby">로비로</button>`);
+      if (resultActions && !resultActions.querySelector("#return-lobby")) resultActions.insertAdjacentHTML("beforeend", `<button class="secondary" id="return-lobby">${ui("LOBBY", "로비로")}</button>`);
     }
     app.querySelectorAll("[data-square]").forEach((button) => button.addEventListener("click", () => clickSquare(Number(button.dataset.square))));
     app.querySelectorAll("[data-skill]").forEach((button) => button.addEventListener("click", () => selectSkill(button.dataset.skill)));
@@ -2276,7 +2250,7 @@
     if (!result.localGame && !result.online) {
       const opened = chestOpened ? " is-open" : "";
       const rewardList = `<div class="reward-list${chestOpened ? " reveal" : ""}" id="reward-list">`
-        + `<div class="reward"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">XC +${result.reward}</div>`
+        + `<div class="reward"><img src="${assetSrc("ui", "currency_signal_credit_v1.png")}" alt="">${language === "en" ? "Signal Credits" : "시그널 크레딧"} +${result.reward}</div>`
         + `${result.shards || result.bonus ? `<div class="reward shard-reward"><img src="${assetSrc("ui", "currency_anomaly_shard_v1.png")}" alt="">${language === "en" ? "Anomaly Shards" : "변칙 파편"} +${shardTotal}${result.bonus ? (language === "en" ? " (completion bonus)" : " (완주 보너스 포함)") : ""}</div>` : ""}`
         + `</div>`;
       const hint = chestOpened ? "" : `<div class="chest-hint" id="chest-hint">${language === "en" ? "TAP TO OPEN" : "탭하여 열기"}</div>`;
@@ -2429,18 +2403,6 @@
   else if (pendingRoomCode) renderOnlineLobby();
   else if (launchParams.get("demo") === "1") startGame();
   else renderSetup();
-  let sharedWalletBound = false;
-  function bindSharedWallet() {
-    if (sharedWalletBound || !window.XenaWallet) return;
-    sharedWalletBound = true;
-    window.XenaWallet.subscribe((balance) => {
-      if (balance === null) return;
-      credits = Math.max(0, Number(balance) || 0);
-      saveMeta();
-      refreshCurrentScreen();
-    });
-  }
-  setTimeout(bindSharedWallet, 0);
   if (window.XenaCloudSync?.snapshot().configured) {
     window.XenaCloudSync.connect().then(async () => {
       const cloudState = window.XenaCloudSync.snapshot();
@@ -2451,14 +2413,7 @@
         setTimeout(() => syncTrustedWallet(), 5000);
       }
       const remote = await window.XenaCloudSync.load().catch(() => null);
-      if (remote?.records) {
-        const remoteRecords = remote.records;
-        records.ai = { wins: Math.max(records.ai.wins, Number(remoteRecords.ai?.wins) || 0), losses: Math.max(records.ai.losses, Number(remoteRecords.ai?.losses) || 0), draws: Math.max(records.ai.draws, Number(remoteRecords.ai?.draws) || 0) };
-        records.human = { wins: Math.max(records.human.wins, Number(remoteRecords.human?.wins) || 0), losses: Math.max(records.human.losses, Number(remoteRecords.human?.losses) || 0), draws: Math.max(records.human.draws, Number(remoteRecords.human?.draws) || 0) };
-        records.rating = Math.max(records.rating, Number(remoteRecords.rating) || 0);
-        saveMeta();
-      }
-      if (!remote) window.XenaCloudSync.save(backupCode({ includeWallet: false }), cloudProgressMeta()).catch(() => {});
+      if (!remote) window.XenaCloudSync.save(backupCode({ includeWallet: false }), { profile: { nickname: profile.nickname, createdAt: profile.createdAt }, activity: activityMeta() }).catch(() => {});
     }).catch(() => {});
   }
   if (launchParams.get("account") === "1") setTimeout(openAccount, 0);

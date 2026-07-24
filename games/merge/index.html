@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>XENA MERGE — Beta</title>
-<meta name="description" content="Drop and merge matching orbs before the jar overflows. XENA Merge, early beta build.">
+<meta name="description" content="Drop and merge matching orbs before the jar overflows. XENA Merge.">
 <meta property="og:title" content="XENA MERGE — Beta">
 <meta property="og:url" content="https://xenauniverse.com/games/merge/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%23a06bff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
@@ -109,7 +109,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   line-height:1;cursor:pointer;transition:.2s;}
 .zoom-ctl button:hover{background:rgba(160,107,255,.25);box-shadow:0 0 12px rgba(160,107,255,.35);}
 /* [2026-07-26] "1.5배는 너무 크다, 1.2배만" 요청 — 840 기준 1.2배(1008)로 재조정 */
-#jar-wrap{position:relative;width:100%;aspect-ratio:3/4;max-width:1008px;margin:0 auto;border-radius:18px;overflow:hidden;
+#jar-wrap{position:relative;width:100%;aspect-ratio:3/4;max-width:958px;margin:0 auto;border-radius:18px;overflow:hidden;
   transform-origin:top center;transition:transform .2s ease;
   border:2px solid rgba(160,107,255,.35);
   background:linear-gradient(180deg, rgba(160,107,255,.04), rgba(6,8,16,.5)), url('jar-bg.jpg') center/cover no-repeat;
@@ -140,6 +140,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 <div class="wrap">
   <div class="topbar">
     <a class="back-link" href="../"><span lang="en">&larr; XENA GAMES</span><span lang="ko">&larr; XENA GAMES</span></a>
+    <a class="back-link" href="../" style="margin-left:auto"><span lang="en">LOBBY</span><span lang="ko">로비</span></a>
     <div class="lang-toggle" role="group" aria-label="Language">
       <button data-set="en">EN</button>
       <button data-set="ko">KO</button>
@@ -147,7 +148,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   </div>
 
   <div class="head">
-    <div class="eyebrow"><span lang="en">Merge Puzzle · Beta</span><span lang="ko">머지 퍼즐 · 베타</span></div>
+    <div class="eyebrow"><span lang="en">Merge Puzzle · Live</span><span lang="ko">머지 퍼즐 · 라이브</span></div>
     <h1>XENA MERGE</h1>
     <p>
       <span lang="en">Aim and drop. Two of the same orb merge into the next tier. Don't let the jar overflow.</span>
@@ -224,6 +225,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       <p id="ov-score"></p>
       <p class="rank-note" id="rank-note"></p>
       <p class="rank-note" id="ov-reward"></p>
+      <p class="rank-note" id="ov-ranking" style="font-size:.72rem;color:var(--text-dim);white-space:pre-line;line-height:1.7;"></p>
       <button id="btn-retry"><span lang="en">RETRY</span><span lang="ko">다시하기</span></button>
     </div>
   </div>
@@ -232,8 +234,8 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   <div class="tier-legend" id="tier-legend"></div>
 
   <div class="beta-note">
-    <span lang="en">Early beta — physics &amp; tiers only for now.<br>Rewards, leaderboard and full art come in a later update.</span>
-    <span lang="ko">초기 베타 — 아직 물리 연산과 단계 합성만 구현돼 있습니다.<br>보상 · 랭킹 · 완성된 아트는 다음 업데이트에서 추가됩니다.</span>
+    <span lang="en">Daily reward (up to 3 runs) · S rank +120 XC · A +60 XC · B +28 XC · C +10 XC · D no reward<br>Weekly top 3 displayed at game over · global leaderboard updates each run</span>
+    <span lang="ko">일일 보상 최대 3판 · S등급 +120 XC · A등급 +60 XC · B등급 +28 XC · C등급 +10 XC · D등급 보상 없음<br>게임오버 화면에서 이번주 랭킹 TOP 3 확인 · 매 판 종료 시 글로벌 랭킹 업데이트</span>
   </div>
 </div>
 
@@ -250,14 +252,14 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
      [2026-07-26] "1.3배는 너무 크다, 1.2배만" 요청 — 1.5배 적용 이전 기준(17/23/30/41/
      53/66/83/105)에 1.2배로 재조정. */
   var TIERS = [
-    {r:20, color:'#5f6478', label:'SEED', score:1}, /* N(근백색)과 뚜렷이 구분되도록 더 어둡고 진한 슬레이트톤으로 */
-    {r:28, color:'#e6e6ee', label:'N',    score:2},
-    {r:36, color:'#3fe0ff', label:'R',    score:5},
-    {r:49, color:'#5cffc0', label:'S',    score:13},
-    {r:64, color:'#a06bff', label:'SR',   score:32},
-    {r:79, color:'#e8c468', label:'SSR',  score:75},
-    {r:100,color:'#ff2fb0', label:'XENA', score:170},
-    {r:126,color:'#fff2c8', label:'OVR',  score:380}
+    {r:19, color:'#5f6478', label:'SEED', score:1}, /* N(근백색)과 뚜렷이 구분되도록 더 어둡고 진한 슬레이트톤으로 */
+    {r:27, color:'#e6e6ee', label:'N',    score:2},
+    {r:34, color:'#3fe0ff', label:'R',    score:5},
+    {r:47, color:'#5cffc0', label:'S',    score:13},
+    {r:61, color:'#a06bff', label:'SR',   score:32},
+    {r:75, color:'#e8c468', label:'SSR',  score:75},
+    {r:95, color:'#ff2fb0', label:'XENA', score:170},
+    {r:120,color:'#fff2c8', label:'OVR',  score:380}
   ];
   var OVERRIDE_TIER = TIERS.length - 1; /* 제나 오버라이드 — 최상위 티어 */
   /* 합체 SFX 4종을 등급 구간별로 나눠서 재생 — 높은 티어일수록 더 웅장한 사운드 */
@@ -309,7 +311,8 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
      적용 — 좌표를 다시 스케일하면 진행 중인 공들의 위치/반지름이 TIERS 기준과 어긋나는
      위험이 있어, 안전하게 "보이는 크기만" 조절한다. 확대 시 아래 요소와 겹치지 않도록
      jar-area에 여백을 보정해준다. */
-  var jarZoom = 1;
+  /* Default bottle scale: 0.9. Orb physics/rendering coordinates remain unchanged. */
+  var jarZoom = 0.9;
   var ZOOM_MIN = 0.7, ZOOM_MAX = 1.3, ZOOM_STEP = 0.1;
   var jarArea = document.querySelector('.jar-area');
   function applyJarZoom(){
@@ -317,6 +320,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     var extra = wrap.getBoundingClientRect().height * (jarZoom - 1);
     jarArea.style.marginBottom = (extra > 0 ? extra : 0) + 'px';
   }
+  applyJarZoom();
   $('zoom-in').addEventListener('click', function(){
     jarZoom = Math.min(ZOOM_MAX, +(jarZoom + ZOOM_STEP).toFixed(2));
     applyJarZoom();
@@ -708,19 +712,31 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     $('ov-over').classList.add('on');
     if (window.XenaAudio) window.XenaAudio.sfx('match_fail_a');
 
-    /* [2026-07-25] 점수 비례 XC 지급 — 서버(claimMergeScore)가 최종 검증/지급 */
+    /* 점수 비례 XC 지급 — 서버(claimMergeScore)가 최종 검증/지급 */
     var rewardEl = $('ov-reward');
+    var rankingEl = $('ov-ranking');
+    rankingEl.textContent = '';
     if (window.XenaWallet && window.XenaWallet.claimMergeScore){
       rewardEl.textContent = t('Submitting score…', '점수 제출 중…');
       window.XenaWallet.claimMergeScore(score).then(function(r){
-        rewardEl.textContent = '+' + r.granted + ' XC  ·  ' + t('Today ' + r.played + '/' + r.limit, '오늘 ' + r.played + '/' + r.limit);
+        rewardEl.textContent = '+' + r.granted + ' XC  ·  ' + t('Today ' + r.played + '/' + r.limit + ' runs', '오늘 ' + r.played + '/' + r.limit + '판 완료');
+        if (r.played >= r.limit) rewardEl.textContent += '  ·  ' + t('daily limit reached', '일일 보상 한도 도달');
         if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
       }).catch(function(err){
         var code = err && err.code || '';
         rewardEl.textContent = code.indexOf('resource-exhausted') >= 0
-          ? t('Daily reward limit reached', '일일 보상 한도 도달')
+          ? t('Daily reward limit reached (3/3)', '일일 보상 한도 도달 (3/3)')
           : t('Could not submit score', '점수 제출 실패');
       });
+      if (window.XenaWallet.getMergeLeaderboard){
+        window.XenaWallet.getMergeLeaderboard().then(function(lb){
+          if (!lb || !lb.top3 || lb.top3.length === 0) return;
+          var medals = ['🥇','🥈','🥉'];
+          var lines = [t('── Weekly Top 3 ──', '── 이번주 랭킹 TOP 3 ──')];
+          lb.top3.forEach(function(e, i){ lines.push(medals[i] + ' ' + e.nickname + '  ' + e.score); });
+          rankingEl.textContent = lines.join('\n');
+        }).catch(function(){});
+      }
     } else {
       rewardEl.textContent = '';
     }

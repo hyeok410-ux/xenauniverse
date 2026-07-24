@@ -175,6 +175,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
         <button data-set="en">EN</button>
         <button data-set="ko">KO</button>
       </div>
+      <span id="hub-xc" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#e8c468;letter-spacing:.06em;display:none;">— XC</span>
       <div class="top-mark">XENA <span>GAMES</span></div>
     </div>
   </div>
@@ -216,40 +217,6 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
           <span lang="ko">XENA 세계관의 사이버펑크 전략 체스. 시스템의 보드 위에서 룰을 다시 쓰세요. 3D 전투 · 구글 로그인 온라인 대전 지원.</span>
         </p>
         <a class="play-btn" href="../game/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
-      </div>
-    </div>
-
-    <!-- CRISIS: OVERRIDE -->
-    <div class="gcard live grid-theme" data-id="raid" data-cat="popular,puzzle">
-      <div class="thumb">
-        <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/thumbs/thumb-grid.jpg" alt="CRISIS: OVERRIDE boss raid">
-      </div>
-      <div class="gbody">
-        <div class="gkind">Single Player Boss Raid</div>
-        <h3>CRISIS: OVERRIDE</h3>
-        <p>
-          <span lang="en">Break a live-signal catastrophe in six turns. Spend Mana, stack Power, and save XENA's stage.</span>
-          <span lang="ko">6턴 안에 라이브 신호를 삼킨 위기를 무너뜨리세요. 마나를 쓰고 파워를 쌓아 제나의 무대를 지키는 싱글 레이드.</span>
-        </p>
-        <a class="play-btn" href="raid/"><span lang="en">PLAY RAID →</span><span lang="ko">레이드 시작 →</span></a>
-      </div>
-    </div>
-
-    <!-- STAY BRIGHT: STAGEGUARD -->
-    <div class="gcard soon grid-theme" data-id="stageguard" data-cat="popular,puzzle">
-      <div class="thumb">
-        <span class="badge">SOON · ADMIN PREVIEW</span>
-        <img src="../images/thumbs/thumb-stageguard.png" alt="STAY BRIGHT STAGEGUARD defense game">
-      </div>
-      <div class="gbody">
-        <div class="gkind">Card Defense</div>
-        <h3>STAY BRIGHT: STAGEGUARD</h3>
-        <p>
-          <span lang="en">Place signal cards, clash with intruders, and protect XENA's stage for 60 seconds.</span>
-          <span lang="ko">신호 카드를 길목에 배치하고 방해꾼과 충돌해 60초 동안 제나의 무대를 지키세요.</span>
-        </p>
-        <a class="play-btn" href="stageguard/"><span lang="en">DEFEND NOW →</span><span lang="ko">방어 시작 →</span></a>
       </div>
     </div>
 
@@ -321,54 +288,54 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- XENA MERGE (베타) -->
-    <div class="gcard live cup-theme" data-id="merge" data-cat="puzzle">
+    <!-- XENA MERGE (라이브) -->
+    <div class="gcard live cup-theme" data-id="merge" data-cat="popular,puzzle">
       <div class="thumb">
-        <span class="badge live-b" style="background:rgba(160,107,255,.18);border-color:rgba(160,107,255,.55);color:#c9b3ff;">&#9679; BETA</span>
+        <span class="badge live-b">&#9679; LIVE</span>
         <img src="../images/thumbs/thumb-merge.jpg" alt="XENA MERGE">
       </div>
       <div class="gbody">
         <div class="gkind" style="color:var(--purple-light);text-shadow:0 0 12px rgba(160,107,255,.4);">Merge Puzzle</div>
         <h3>XENA MERGE</h3>
         <p>
-          <span lang="en">Drop and merge matching orbs before the jar overflows. Same rules everyone knows, XENA skin — early build, more content coming.</span>
-          <span lang="ko">같은 구슬을 합쳐서 더 큰 구슬로 — 병이 넘치면 게임오버. 다들 아는 그 룰, XENA 스킨. 초기 베타라 계속 추가됩니다.</span>
+          <span lang="en">Drop and merge matching orbs before the jar overflows. Earn XC every run — up to 3 rewarded runs per day, weekly leaderboard.</span>
+          <span lang="ko">같은 구슬을 합쳐서 더 큰 구슬로 — 병이 넘치면 게임오버. 매 판 XC 획득 · 하루 최대 3판 보상 · 주간 랭킹.</span>
         </p>
-        <a class="play-btn" href="merge/"><span lang="en">PLAY BETA →</span><span lang="ko">베타 플레이 →</span></a>
+        <a class="play-btn" href="merge/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
     </div>
 
     <!-- SIGNAL CLASH (관리자 전용 베타 — 일반 사용자에겐 SOON) -->
-    <div class="gcard live grid-theme soon-lock" data-id="tcg" data-cat="soon">
+    <div class="gcard live grid-theme" data-id="tcg" data-cat="all">
       <div class="thumb">
-        <span class="badge soon-b">&#9679; SOON</span>
+        <span class="badge live-b">&#9679; LIVE</span>
         <img src="../images/thumbs/thumb-tcg.jpg" alt="SIGNAL CLASH">
       </div>
       <div class="gbody">
         <div class="gkind" style="color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);">Card Battle</div>
         <h3>SIGNAL CLASH</h3>
         <p>
-          <span lang="en">6 turns, 3 zones, win two of three. A XENA card battle — coming soon.</span>
+          <span lang="en">6 turns, 3 zones, win two of three. A XENA card battle.</span>
           <span lang="ko">6턴, 3구역, 2곳 이상 우세 시 승리. XENA 카드 배틀 — 곧 출시됩니다.</span>
         </p>
-        <a class="play-btn admin-beta-btn" href="tcg/" data-beta-label-en="PLAY BETA →" data-beta-label-ko="베타 플레이 →"><span lang="en">SOON</span><span lang="ko">출시 예정</span></a>
+        <a class="play-btn" href="tcg/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
     </div>
 
     <!-- LIVE TOUR (관리자 전용 베타 — 일반 사용자에겐 SOON) -->
-    <div class="gcard live gacha-theme soon-lock" data-id="idle" data-cat="soon">
+    <div class="gcard live gacha-theme" data-id="idle" data-cat="all">
       <div class="thumb">
-        <span class="badge soon-b">&#9679; SOON</span>
+        <span class="badge live-b">&#9679; LIVE</span>
         <img src="../images/thumbs/thumb-idle.jpg" alt="LIVE TOUR">
       </div>
       <div class="gbody">
         <div class="gkind" style="color:var(--gold);text-shadow:0 0 12px rgba(232,196,104,.4);">Idle Dispatch</div>
         <h3>LIVE TOUR</h3>
         <p>
-          <span lang="en">Send your cards on tour to Seoul, Tokyo, New York, London. Come back later to collect XC — coming soon.</span>
+          <span lang="en">Send your cards on tour to Seoul, Tokyo, New York, London. Come back later to collect XC.</span>
           <span lang="ko">보유 카드를 서울·도쿄·뉴욕·런던으로 투어 보내고, 나중에 돌아와서 XC를 수령하세요 — 곧 출시됩니다.</span>
         </p>
-        <a class="play-btn admin-beta-btn" href="idle/" data-beta-label-en="PLAY BETA →" data-beta-label-ko="베타 플레이 →"><span lang="en">SOON</span><span lang="ko">출시 예정</span></a>
+        <a class="play-btn" href="idle/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
     </div>
   </div>
@@ -397,8 +364,8 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 /* [2026-07-26] "베타는 인기/포토/퍼즐에서 빼고 SOON 탭 신설" 요청 —
    tcg/idle을 전 카테고리에서 제외하고 전용 soon 탭으로만 노출한다. */
 var CAT_ORDER = {
-  all:     ['grid','cards','shisen','memory','merge','worldcup'],
-  popular: ['cards','grid'],
+  all:     ['grid','cards','shisen','memory','merge','worldcup','tcg','idle'],
+  popular: ['cards','grid','merge','tcg','idle'],
   photo:   ['cards','worldcup'],
   puzzle:  ['grid','shisen','memory','merge'],
   soon:    ['tcg','idle']
@@ -429,8 +396,17 @@ applyCategory('popular'); /* 기본 탭 = 인기 */
 <script src="./shared-identity.js?v=20260721"></script>
 <script src="./shared-gate.js?v=20260721"></script>
 <script src="./shared-audio.js?v=20260721"></script>
+<script src="./shared-wallet.js?v=20260721"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('hub');
+(function(){
+  var xcEl = document.getElementById('hub-xc');
+  if (xcEl && window.XenaWallet) {
+    window.XenaWallet.subscribe(function(w){
+      if (w && typeof w.xc === 'number'){ xcEl.textContent = w.xc + ' XC'; xcEl.style.display = ''; }
+    });
+  }
+})();
 document.querySelectorAll('.game-card, a, button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });

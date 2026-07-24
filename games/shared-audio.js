@@ -27,15 +27,12 @@
     worldcup: ['worldcup_1.mp3','worldcup_2.mp3'],
     merge:    ['merge_1.mp3','merge_2.mp3'],
     dispatch: ['dispatch_1.mp3','dispatch_2.mp3'],
-    tcg:      ['tcg_1.mp3','tcg_2.mp3'],
-    raid:     ['hub_1.mp3','hub_2.mp3'],
-    stageguard:['signal_1.mp3','signal_2.mp3']
+    tcg:      ['tcg_1.mp3','tcg_2.mp3']
   };
   var BG_FILES = {
     hub:'hub.jpg', gacha:'gacha.jpg', memory:'memory.jpg',
     shisen:'shisen.jpg', signal:'signal.jpg', worldcup:'worldcup.jpg', merge:'merge.jpg',
-    dispatch:'dispatch.jpg', tcg:'tcg.jpg',
-    raid:'hub.jpg', stageguard:'signal.jpg'
+    dispatch:'dispatch.jpg', tcg:'tcg.jpg'
   };
   /* center = 가운데 어둡기(높을수록 어두움), edge = 양 사이드 어둡기(낮을수록 밝음) */
   var BG_TUNE = {
@@ -47,9 +44,7 @@
     worldcup: {center:.86, edge:.24, bright:1.02},
     merge:    {center:.55, edge:.28, bright:1.05},
     dispatch: {center:.68, edge:.26, bright:1.05},
-    tcg:      {center:.86, edge:.24, bright:1.02},
-    raid:     {center:.62, edge:.25, bright:1.08},
-    stageguard:{center:.58, edge:.25, bright:1.08}
+    tcg:      {center:.86, edge:.24, bright:1.02}
   };
 
   function loadState(){

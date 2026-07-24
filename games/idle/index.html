@@ -597,6 +597,7 @@ function claimTour(cityKey){
     markTourClaimedToday();
     var synergyTxt = r.bonus > 0 ? ' (' + t('SYNERGY +', '시너지 +') + Math.round(r.bonus*100) + '%)' : '';
     toast('+' + r.granted.toLocaleString() + ' XC — ' + t(cname.en, cname.ko) + synergyTxt);
+    if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
     renderAll();
   }).catch(function(err){
     toast(t('Could not claim — try again.', '수령 실패 — 다시 시도해주세요.'));
@@ -873,7 +874,6 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden){ 
 <script src="../../game/firebase-config.js?v=20260722"></script>
 <script src="../../game/cloud-sync.js?v=20260722"></script>
 <script src="../shared-identity.js?v=20260722"></script>
-<script>window.__xenaAdminOnly = true;</script> <!-- 비공개 베타: 관리자만 플레이 가능 -->
 <script src="../shared-gate.js?v=20260722"></script>
 <script src="../shared-audio.js?v=20260722"></script>
 <script src="../shared-wallet.js?v=20260722"></script>
