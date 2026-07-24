@@ -377,6 +377,7 @@ body[data-arena]:not([data-arena=""]) { background-image: linear-gradient(rgba(3
 .global-loadout.collapsed .global-loadout-block .section-title span, .global-loadout.collapsed .global-cosmetic-grid { display: none; }
 .loadout-more { display: block; width: min(220px, 100%); margin: 0 auto 14px; color: var(--cyan); border-color: rgba(50,230,239,.4); }
 .global-loadout-block { min-width: 0; padding: 14px; border: 1px solid var(--line); background: rgba(7,10,17,.88); }
+.emote-loadout { margin: 0 0 14px; }
 .global-cosmetic-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
 .global-cosmetic-choice { min-width: 0; min-height: 76px; display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 8px; overflow: hidden; padding: 7px; color: #eef4ff; border: 1px solid var(--line); background: #090d15; text-align: left; cursor: pointer; }
 .global-cosmetic-choice > img, .frame-sample, .default-cosmetic { width: 58px; height: 58px; object-fit: cover; }
