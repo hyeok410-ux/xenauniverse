@@ -95,7 +95,7 @@
     if (state.muted || suspended || document.hidden) return;
     var a = sfxCache[name];
     if (!a){
-      a = new Audio(ASSET_BASE + 'sfx/' + name + '.mp3');
+      a = new Audio(ASSET_BASE + 'sfx/' + name + '.mp3?v=20260724');
       sfxCache[name] = a;
     }
     try{
