@@ -376,6 +376,8 @@ body[data-arena]:not([data-arena=""]) { background-image: linear-gradient(rgba(3
 .global-loadout.collapsed .global-loadout-block .section-title { margin: 0; }
 .global-loadout.collapsed .global-loadout-block .section-title span, .global-loadout.collapsed .global-cosmetic-grid { display: none; }
 .loadout-more { display: block; width: min(220px, 100%); margin: 0 auto 14px; color: var(--cyan); border-color: rgba(50,230,239,.4); }
+.pack-equip-confirm { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 12px 14px; border: 1px solid rgba(50,230,239,.42); background: rgba(7,10,17,.94); box-shadow: 0 0 20px rgba(50,230,239,.08); }
+.pack-equip-confirm span { color: var(--muted); margin-right: auto; }
 .global-loadout-block { min-width: 0; padding: 14px; border: 1px solid var(--line); background: rgba(7,10,17,.88); }
 .emote-loadout { margin: 0 0 14px; }
 .global-cosmetic-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
