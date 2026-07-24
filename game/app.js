@@ -907,10 +907,10 @@
     overlay.querySelectorAll("[data-close-account]").forEach((element) => element.addEventListener("click", (event) => {
       if (event.target === element || event.target.closest(".showcase-close")) closeAccount();
     }));
-    overlay.querySelector("[data-reset-records]")?.addEventListener("click", () => {
+    overlay.querySelector("[data-reset-records]")?.addEventListener("click", async () => {
       if (credits < 500) return alert(language === "en" ? "You need 500 XC." : "XC 500이 필요합니다.");
       if (!confirm(language === "en" ? "Reset human records and rank for 500 XC?" : "500 XC를 사용해 사람 전적과 등급을 초기화할까요?")) return;
-      credits -= 500;
+      if (!await spendXc(500, "profile:reset-records")) return;
       records.human = { wins: 0, losses: 0, draws: 0 };
       records.rating = 0;
       saveMeta();
@@ -1267,11 +1267,11 @@
     return codexOwned.includes(card.id) || Boolean(card.pack && owned.includes(card.pack));
   }
 
-  function buyCodexCard(id) {
+  async function buyCodexCard(id) {
     const card = CODEX_CARDS.find((entry) => entry.id === id);
     if (!card || ownsCodexCard(card)) return;
     if (credits < card.credit) return alert(`XC가 ${card.credit - credits} 부족합니다.`);
-    credits -= card.credit;
+    if (!await spendXc(card.credit, `codex:${card.id}`)) return;
     codexOwned.push(card.id);
     showcase = null;
     playSfx("purchase", 0.52);
@@ -1313,7 +1313,7 @@
     };
     const paymentCard = (item) => `<article class="shop-card payment-card payment-paused"><small>ANOMALY SHARD · FREE PILOT</small><h2>${item.name}</h2><p>${language === "en" ? "Cash payments are paused during the free pilot. Earn rewards in game; paid currency will open later with a verified domestic payment provider." : "현재는 무료 체험판 운영 기간이라 현금 결제를 받지 않습니다. 게임 보상으로 플레이하고, 정식 오픈 때 국내 PG와 서버 검증을 거쳐 유료재화를 제공합니다."}</p><b>${item.price}</b><div class="shop-card-actions"><button class="primary" data-buy-shards="${item.id}" ${CASH_PAYMENTS_ENABLED ? "" : "disabled"}>${language === "en" ? "COMING LATER" : "정식 오픈 예정"}</button></div></article>`;
     const section = (id, title, note, items) => `<section class="store-section ${storeFilter === id ? "active" : ""}" id="store-${id}"><div class="section-title"><h2>${title}</h2><span>${note}</span></div><div class="shop-grid">${items.map(cosmeticCard).join("")}</div></section>`;
-    app.innerHTML = `<div class="shell store-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="store-page"><div class="store-heading"><div><small>COSMETIC ARMORY · WEB PROTOTYPE</small><h1>OVERRIDE <span>STORE</span></h1><p>전투 캐릭터는 도감에서 해금합니다. 상점에서는 코스메틱을 구매하고, 장착과 변경은 내 유닛에서 진행합니다.</p></div><button class="secondary" id="back-to-setup">${t("play")}</button></div><div class="store-guide"><b>도감</b><span>새 캐릭터 해금</span><b>상점</b><span>외형과 연출 구매</span><b>내 유닛</b><span>전장·공간·테두리·스킨·이펙트 장착</span></div><nav class="store-tabs" aria-label="상품 종류">${[["skin","스킨"],["effect","이펙트"],["board","전장"],["arena","게임 공간"],["frame","말 테두리"],["emote","캐릭터 이모트"]].map(([id, label]) => `<button type="button" class="${storeFilter === id ? "active" : ""}" data-store-filter="${id}">${label}</button>`).join("")}</nav>${section("skin", "캐릭터 스킨", "같은 캐릭터의 의상과 초상을 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "skin"))}${section("effect", "공격 이펙트", "보유 후 내 유닛에서 캐릭터별로 적용하거나 끌 수 있습니다.", SHOP_ITEMS.filter((item) => item.kind === "effect"))}${section("board", "전장", "구매 후 내 유닛의 전장 설정에서 장착합니다.", SHOP_ITEMS.filter((item) => item.kind === "board"))}${section("arena", "게임 공간 스킨", "전투 중 좌우 패널과 배경 분위기를 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "arena"))}${section("frame", "말 테두리", "아군 말 전체에 적용할 테두리를 구매합니다.", SHOP_ITEMS.filter((item) => item.kind === "frame"))}${section("emote", "캐릭터 이모트", "제나 리액션 이미지 교체 후 판매할 소셜 표현 팩입니다.", SHOP_ITEMS.filter((item) => item.kind === "emote"))}<section class="store-section"><div class="section-title"><h2>${t("shardStore")}</h2><span>무료 체험판 · 현금 결제는 정식 오픈 후 제공</span></div><div class="shop-grid payment-grid">${PAYMENT_PRODUCTS.map(paymentCard).join("")}</div></section><p class="store-notice">${t("paymentNotice")}</p></section></div>`;
+    app.innerHTML = `<div class="shell store-shell"><header class="topbar">${brandMarkup()}${wallet()}</header><section class="store-page"><div class="store-heading"><div><small>COSMETIC ARMORY · WEB PROTOTYPE</small><h1>OVERRIDE <span>STORE</span></h1><p>전투 캐릭터는 도감에서 해금합니다. 상점에서는 코스메틱을 구매하고, 장착과 변경은 내 유닛에서 진행합니다.</p></div><button class="secondary" id="back-to-setup">${t("play")}</button></div><div class="store-guide"><b>도감</b><span>새 캐릭터 해금</span><b>상점</b><span>외형과 연출 구매</span><b>내 유닛</b><span>전장·공간·테두리·스킨·이펙트·이모트 장착</span></div><nav class="store-tabs" aria-label="상품 종류">${[["skin","스킨"],["effect","이펙트"],["board","전장"],["arena","게임 공간"],["frame","말 테두리"],["emote","캐릭터 이모트"]].map(([id, label]) => `<button type="button" class="${storeFilter === id ? "active" : ""}" data-store-filter="${id}">${label}</button>`).join("")}</nav>${section("skin", "캐릭터 스킨", "같은 캐릭터의 의상과 초상을 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "skin"))}${section("effect", "공격 이펙트", "보유 후 내 유닛에서 캐릭터별로 적용하거나 끌 수 있습니다.", SHOP_ITEMS.filter((item) => item.kind === "effect"))}${section("board", "전장", "구매 후 내 유닛의 전장 설정에서 장착합니다.", SHOP_ITEMS.filter((item) => item.kind === "board"))}${section("arena", "게임 공간 스킨", "전투 중 좌우 패널과 배경 분위기를 변경합니다.", SHOP_ITEMS.filter((item) => item.kind === "arena"))}${section("frame", "말 테두리", "아군 말 전체에 적용할 테두리를 구매합니다.", SHOP_ITEMS.filter((item) => item.kind === "frame"))}${section("emote", "캐릭터 이모트", "구매 후 내 유닛에서 제나·소브란 이모트 팩을 장착하거나 해제합니다.", SHOP_ITEMS.filter((item) => item.kind === "emote"))}<section class="store-section"><div class="section-title"><h2>${t("shardStore")}</h2><span>무료 체험판 · 현금 결제는 정식 오픈 후 제공</span></div><div class="shop-grid payment-grid">${PAYMENT_PRODUCTS.map(paymentCard).join("")}</div></section><p class="store-notice">${t("paymentNotice")}</p></section></div>`;
     const skinStore = app.querySelector("#store-skin");
     if (skinStore) {
       const skinGrid = skinStore.querySelector(".shop-grid");
