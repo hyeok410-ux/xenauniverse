@@ -107,12 +107,13 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
 /* 데일리 시그널 — 표지 없는 위젯. 우측 상단 프로필 줄 바로 아래, 스크롤해도 항상 따라오도록 고정.
    웹(데스크톱)에서는 모바일 대비 2배 크기, 640px 이하 모바일에서는 기존 크기 그대로. */
 /* [2026-07-24] "데일리 시그널 크기 3분의 2로 줄여주세요" — 데스크톱 크기를 2/3로 축소 */
-.signal-pin{position:fixed;top:64px;right:16px;z-index:110;display:flex;align-items:center;gap:13px;
+.signal-pin{position:fixed;top:64px;right:16px;z-index:110;display:grid;grid-template-columns:auto auto;align-items:center;gap:8px 13px;
   padding:12px 19px;border-radius:28px;border:2px solid rgba(160,107,255,.35);
   background:rgba(8,6,16,.82);backdrop-filter:blur(12px);box-shadow:0 8px 22px rgba(0,0,0,.35);}
 .signal-pin .sp-title{font-family:var(--font-mono);font-size:.83rem;letter-spacing:.14em;color:#c9b3ff;white-space:nowrap;}
 .signal-pin .sp-btn{font-family:var(--font-mono);font-size:.83rem;font-weight:700;letter-spacing:.06em;
   padding:8px 16px;border-radius:20px;border:none;background:linear-gradient(120deg,#a06bff,#3fe0ff);color:#0a0912;white-space:nowrap;}
+.signal-pin .feedback-direct{grid-column:2;justify-self:stretch;text-align:center;background:transparent;border:1px solid rgba(63,224,255,.75);color:#bff7ff;}
 @media(max-width:640px){
   .signal-pin{top:52px;right:8px;padding:9px 14px;gap:10px;border-radius:20px;border-width:1px;}
   .signal-pin .sp-title{font-size:.62rem;}
@@ -186,7 +187,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
 
   <div class="signal-pin">
     <span class="sp-title"><span lang="en">DAILY SIGNAL</span><span lang="ko">데일리 시그널</span></span>
-    <a class="sp-btn" href="signal/"><span lang="en">CLAIM →</span><span lang="ko">시그널 받기 →</span></a><a class="sp-btn" href="../feedback.html"><span lang="en">FEEDBACK</span><span lang="ko">불편 접수</span></a>
+    <a class="sp-btn" href="signal/"><span lang="en">CLAIM →</span><span lang="ko">시그널 받기 →</span></a><a class="sp-btn feedback-direct" href="../feedback.html"><span lang="en">FEEDBACK</span><span lang="ko">불편 접수</span></a>
   </div>
 
   <div class="head">
@@ -364,13 +365,12 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 });
 
 /* ── 카테고리 필터: 카테고리별 지정 순서대로 재배치 + 그 외는 숨김 ── */
-/* [2026-07-26] "베타는 인기/포토/퍼즐에서 빼고 SOON 탭 신설" 요청 —
-   tcg/idle을 전 카테고리에서 제외하고 전용 soon 탭으로만 노출한다. */
+/* 카테고리별 노출 순서 */
 var CAT_ORDER = {
   all:     ['cards','idle','grid','tcg','worldcup','shisen','memory','merge'],
   popular: ['cards','idle','grid','tcg'],
   photo:   ['cards','idle','worldcup'],
-  puzzle:  ['tcg','shisen','memory','merge']
+  puzzle:  ['shisen','memory','merge']
 };
 var grid = document.getElementById('game-grid');
 var allCards = Array.prototype.slice.call(grid.children);
@@ -415,40 +415,6 @@ document.querySelectorAll('.game-card, a, button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });
 
-/* 관리자 전용 베타(SIGNAL CLASH, LIVE TOUR) — 로그인 상태가 확정되기 전까지는 일단 잠가두고,
-   확인된 뒤 관리자면 풀어준다. href 자체를 제거해서 어떤 경로로도 클릭이 안 통하게 한다.
-   [2026-07-26] 일반 사용자에겐 "SOON"(회색)으로 보이던 카드를, 관리자에게는 원래
-   BETA 카드처럼(뱃지/버튼 문구 원복) 보여준다 — 관리자는 실제로 베타를 플레이해야 하니까. */
-(function(){
-  var links = document.querySelectorAll('.admin-beta-btn');
-  var originalHref = {}, originalBtnHtml = {};
-  links.forEach(function(el, i){
-    originalHref[i] = el.getAttribute('href');
-    originalBtnHtml[i] = '<span lang="en">'+(el.getAttribute('data-beta-label-en')||'PLAY BETA →')+'</span>'+
-                          '<span lang="ko">'+(el.getAttribute('data-beta-label-ko')||'베타 플레이 →')+'</span>';
-    el.classList.add('locked');
-    el.removeAttribute('href');
-  });
-  function apply(state){
-    links.forEach(function(el, i){
-      var card = el.closest('.gcard');
-      var badge = card ? card.querySelector('.badge') : null;
-      if (state && state.isAdmin){
-        el.classList.remove('locked');
-        el.setAttribute('href', originalHref[i]);
-        el.innerHTML = originalBtnHtml[i];
-        if (card) card.classList.remove('soon-lock');
-        if (badge){ badge.textContent = '● BETA'; badge.className = 'badge live-b'; }
-      } else {
-        el.classList.add('locked');
-        el.removeAttribute('href');
-        if (card) card.classList.add('soon-lock');
-        if (badge){ badge.textContent = '● SOON'; badge.className = 'badge soon-b'; }
-      }
-    });
-  }
-  if (window.XenaIdentity) window.XenaIdentity.subscribe(apply);
-})();
 </script>
 </body>
 </html>

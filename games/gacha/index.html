@@ -866,6 +866,12 @@ function tickCooldowns(){
     wCool.textContent = t('Next reset in '+fmtLeftLong(leftW)+' · '+wPrice+' XC per open', '다음 초기화까지 '+fmtLeftLong(leftW)+' · 오픈당 '+wPrice+' XC');
     $('ptab-alert-weekly').hidden = true;
   }
+  var freeWeeklyBtn = $('btn-weekly-free');
+  if (freeWeeklyBtn) {
+    var weeklyFreeClaimed = st.packs.weeklyFreeClaimed === nyWeekMondayKey();
+    freeWeeklyBtn.disabled = weeklyFreeClaimed;
+    freeWeeklyBtn.textContent = weeklyFreeClaimed ? t('FREE DRAW CLAIMED', '무료 수령 완료') : t('FREE WEEKLY DRAW', '주간 무료 수령');
+  }
   /* 아카이브 팩: 하루 1회 무료 1장(뉴욕 자정 리셋) + 언제든 3000 XC로 3장 */
   var aBtn = $('btn-archive'), aCool = $('cool-archive'), aXcBtn = $('btn-archive-xc');
   var aPrice = PACKS.archive.price;

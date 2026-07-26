@@ -218,8 +218,15 @@ const client = {
     } catch (error) {
       rewardText = `Reward sync failed: ${error.message}`;
     }
-    alert(won ? `Victory! ${rewardText}` : `Defeat. ${rewardText}`);
-    this.game = null; this.show('lobby'); this.wireWallet();
+    const board = document.querySelector('#battle-view');
+    const result = document.createElement('section');
+    result.className = 'match-result-overlay';
+    result.innerHTML = `<div class="match-result-card"><h2>${won ? 'VICTORY' : 'DEFEAT'}</h2><p>${rewardText}</p><button type="button">RETURN TO LOBBY</button></div>`;
+    Object.assign(result.style, { position:'absolute', inset:'0', zIndex:'50', display:'grid', placeItems:'center', background:'rgba(5,5,12,.35)', backdropFilter:'blur(2px)' });
+    const card = result.firstElementChild;
+    Object.assign(card.style, { textAlign:'center', padding:'28px 36px', border:'1px solid rgba(63,224,255,.8)', borderRadius:'18px', background:'rgba(7,10,24,.92)', boxShadow:'0 0 44px rgba(63,224,255,.3)' });
+    result.querySelector('button').onclick = () => { result.remove(); this.game = null; this.show('lobby'); this.wireWallet(); };
+    board.append(result);
   },
   playSfx(src) { const audio = new Audio(pickAsset(src)); audio.volume = .78; audio.play().catch(() => {}); },
 };
