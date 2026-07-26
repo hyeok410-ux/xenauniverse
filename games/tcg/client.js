@@ -1,233 +1,44 @@
-const ASSETS = {
-  lobbyArt: ['assets/images/XENA_SignalWarfare_Cover_v1.webp', 'assets/images/BG_Track01_Chase.webp', 'assets/images/BG_Track02_Purity.webp', 'assets/images/BG_Track04_Sovereign.webp'],
-  battleArt: ['assets/images/XENA_Battlefield_TheNode_TopView_01.webp', 'assets/images/XENA_Battlefield_TheNode_TopView_02.webp'],
-  lobbyBgm: ['assets/audio/bgm_main_theme_01.mp3', 'assets/audio/bgm_main_theme_02.mp3'],
-  battleBgm: ['assets/audio/bgm_battle_01.mp3', 'assets/audio/bgm_battle_02.mp3'],
-  victorySfx: ['assets/audio/bgm_victory_01.mp3', 'assets/audio/bgm_victory_02.mp3'],
-  drawSfx: 'assets/audio/sfx_card_draw.mp3',
-  summonSfx: 'assets/audio/sfx_card_summon.mp3',
-  attackSfx: 'assets/audio/sfx_attack_impact.mp3',
-  shatterSfx: 'assets/audio/sfx_card_shatter.mp3',
-};
-const pickAsset = (assets) => Array.isArray(assets) ? assets[Math.floor(Math.random() * assets.length)] : assets;
-const DIFFICULTIES = {
-  easy: { label: 'EASY', core: 20, reward: 20, pool: (card) => ['N', 'R'].includes(card.grade) },
-  normal: { label: 'NORMAL', core: 30, reward: 50, pool: () => true },
-  hard: { label: 'HARD', core: 40, reward: 100, pool: (card) => ['SR', 'SSR', 'BOSS'].includes(card.grade) },
-};
+const ASSETS={lobbyBgm:['assets/audio/bgm_main_theme_01.mp3','assets/audio/bgm_main_theme_02.mp3'],battleBgm:['assets/audio/bgm_battle_01.mp3','assets/audio/bgm_battle_02.mp3'],victory:['assets/audio/bgm_victory_01.mp3','assets/audio/bgm_victory_02.mp3'],draw:'assets/audio/sfx_card_draw.mp3',summon:'assets/audio/sfx_card_summon.mp3',attack:'assets/audio/sfx_attack_impact.mp3',shatter:'assets/audio/sfx_card_shatter.mp3',confirm:'assets/audio/sfx_card_summon.mp3'};
+const DIFFICULTIES={easy:{core:20,pool:c=>['N','R'].includes(c.grade)},normal:{core:30,pool:()=>true},hard:{core:40,pool:c=>['SR','SSR','S','BOSS'].includes(c.grade)}};
+const ART=['Track1_Card01_XENA_front_KR_v4_anomaly_layout.png','Track1_Card02_NIX09_front_KR_v2.png','Track1_Card03_LYRA_front_KR_v1.png','Track1_Card04_NOVA_front_KR_v1.png','Track1_Card05_ECHO_front_KR_v1.png','Track1_Card06_SOVRAN_front_KR_v1.png','Track1_Card07_ARCHITECT_MAN_front_KR_v1.png','Track1_Card08_CLEANSE_TEAM_CLONE_front_KR_v1.png','Track1_Card09_SYSTEM_DRONE_front_KR_v1.png','Track1_Card10_HUNTER_front_KR_v1.png','Track1_Card11_DRAGOON_front_KR_v1.png','Track1_Card12_MOTHERSHIP_front_KR_v1.png','Track1_Card13_ERASED_CITIZEN_front_KR_v1.png','Track1_Card14_XENA_OVERRIDE_front_KR_v1.png'];
+const TEXT={ko:{backToGames:'← 제나 게임즈로',xcBalance:'XC 잔액',refresh:'새로고침',myCards:'내 카드',selectDifficulty:'AI 난이도 선택',easy:'쉬움',easyDesc:'코어 20 · 기본 덱',normal:'보통',normalDesc:'코어 30 · 균형 덱',hard:'어려움',hardDesc:'코어 40 · 상급 덱',playNow:'지금 플레이',titleSubtitle:'나의 신호로 AI 코어를 무너뜨려라',buildDeck:'나만의 덱 구성',deckHint:'보유 카드 중 정확히 15장을 선택하세요.',saveDeck:'구성 완료',backToLobby:'로비로',enemyCore:'AI 코어',yourCore:'내 코어',enemyField:'상대 필드',yourField:'내 필드',yourHand:'내 손패',endTurn:'턴 넘김',yourTurn:'내 턴',aiTurn:'AI 턴',firstTurn:'첫 턴: 공격 불가',chooseDeck:'내 카드에서 15장 덱을 먼저 구성하세요.',deckSaved:'덱이 저장되었습니다.',need15:'정확히 15장을 선택해야 합니다.',coinPlayer:'내가 선공입니다',coinAi:'AI가 선공입니다',victory:'승리',defeat:'패배',returnLobby:'로비로 돌아가기',rewardPending:'보상 동기화 중',rewardFailed:'보상 동기화 실패',signIn:'로그인이 필요합니다',mana:'마나',cost:'코스트',attack:'공격',hp:'체력'},en:{backToGames:'← XENA GAMES',xcBalance:'XC BALANCE',refresh:'REFRESH',myCards:'MY CARDS',selectDifficulty:'SELECT AI DIFFICULTY',easy:'EASY',easyDesc:'Core 20 · Base deck',normal:'NORMAL',normalDesc:'Core 30 · Balanced deck',hard:'HARD',hardDesc:'Core 40 · Elite deck',playNow:'PLAY NOW',titleSubtitle:'Break the AI core with your signal.',buildDeck:'BUILD YOUR DECK',deckHint:'Choose exactly 15 cards you own.',saveDeck:'SAVE DECK',backToLobby:'BACK TO LOBBY',enemyCore:'AI CORE',yourCore:'YOUR CORE',enemyField:'ENEMY FIELD',yourField:'YOUR FIELD',yourHand:'YOUR HAND',endTurn:'END TURN',yourTurn:'YOUR TURN',aiTurn:'AI TURN',firstTurn:'FIRST TURN: NO ATTACK',chooseDeck:'Build a 15-card deck in My Cards first.',deckSaved:'Deck saved.',need15:'Select exactly 15 cards.',coinPlayer:'YOU GO FIRST',coinAi:'AI GOES FIRST',victory:'VICTORY',defeat:'DEFEAT',returnLobby:'RETURN TO LOBBY',rewardPending:'Synchronizing reward…',rewardFailed:'Reward sync failed',signIn:'SIGN IN REQUIRED',mana:'MANA',cost:'COST',attack:'ATK',hp:'HP'}};
+const pick=a=>Array.isArray(a)?a[Math.floor(Math.random()*a.length)]:a;
+const escapeHTML=value=>String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 
-const client = {
-  userId: new URLSearchParams(location.search).get('userId') || 'demo-user',
-  selectedDifficulty: 'normal', selectedCardIds: new Set(), deck: [], balance: null, game: null, selectedHand: null, selectedAttacker: null, effectLock: false, drawAnimationPending: false, summonSlot: null,
-
-  init() {
-    this.selectedCardIds = new Set(JSON.parse(localStorage.getItem('xena-deck') || '[]'));
-    document.querySelector('#start-pve').addEventListener('click', () => this.startBattle());
-    document.querySelector('#my-cards-button').addEventListener('click', () => this.showCards());
-    document.querySelector('#cards-back').addEventListener('click', () => this.show('lobby'));
-    document.querySelector('#save-deck').addEventListener('click', () => this.saveDeck());
-    document.querySelector('#refresh-balance').addEventListener('click', () => this.wireWallet());
-    document.querySelector('#end-turn').addEventListener('click', () => this.endTurn());
-    document.querySelector('#battle-exit').addEventListener('click', () => this.show('lobby'));
-    document.querySelectorAll('[data-difficulty]').forEach((button) => button.addEventListener('click', () => {
-      this.selectedDifficulty = button.dataset.difficulty;
-      document.querySelectorAll('[data-difficulty]').forEach((item) => item.classList.toggle('selected', item === button));
-    }));
-    this.wireWallet();
-    this.applyAsset('lobby');
-  },
-
-  wireWallet() {
-    const paint = (value) => { this.balance = value; document.querySelector('#xc-display').textContent = value == null ? 'SIGN IN REQUIRED' : `${value} XC`; };
-    if (!window.XenaWallet) { paint(null); return; }
-    paint(window.XenaWallet.getBalance());
-    if (!this.walletUnsubscribe) this.walletUnsubscribe = window.XenaWallet.subscribe(paint);
-  },
-
-  normalizeCard(card) {
-    const stats = (window.XenaCards && XenaCards.GRADE_STATS && XenaCards.GRADE_STATS[card.grade]) || { cost: card.cost || 1, power: card.power || 1 };
-    const atk = Number(card.atk ?? card.power ?? stats.power ?? 1);
-    return { ...card, cost: Number(card.cost ?? stats.cost), atk, hp: Number(card.hp ?? (atk + 3)), count: Number(card.count || 1) };
-  },
-  getOwnedCards() { return window.XenaCards ? XenaCards.owned().map((card) => this.normalizeCard(card)) : []; },
-  getCardCatalog() { return window.XenaCards ? (XenaCards.available ? XenaCards.available() : XenaCards.all()).map((card) => this.normalizeCard(card)) : []; },
-
-  show(screen) {
-    ['lobby', 'cards-view', 'battle-view'].forEach((id) => { document.querySelector(`#${id}`).hidden = id !== (screen === 'lobby' ? 'lobby' : `${screen}-view`); });
-    this.applyAsset(screen);
-  },
-  applyAsset(screen) {
-    const app = document.querySelector('#app');
-    app.classList.toggle('battle-art', screen === 'battle');
-    app.classList.toggle('lobby-art', screen !== 'battle');
-    const art = pickAsset(screen === 'battle' ? ASSETS.battleArt : ASSETS.lobbyArt);
-    app.style.backgroundImage = `linear-gradient(145deg, rgba(5,5,8,.72), rgba(7,15,35,.9)), url("${art}")`;
-    document.querySelector('#bgm').src = pickAsset(screen === 'battle' ? ASSETS.battleBgm : ASSETS.lobbyBgm);
-    document.querySelector('#bgm-status').textContent = screen === 'battle' ? 'BGM: BATTLE' : '';
-    document.querySelector('#bgm').play().catch(() => {});
-  },
-
-  showCards() {
-    this.show('cards');
-    const list = document.querySelector('#card-list');
-    list.replaceChildren(...this.getOwnedCards().map((card) => {
-      const item = document.createElement('button'); item.className = `collection-card ${this.selectedCardIds.has(card.id) ? 'selected' : ''}`;
-      item.innerHTML = `<small>${card.grade} · ${card.element}</small><strong>${card.name}</strong><span>COST ${card.cost} · ATK ${card.atk} / HP ${card.hp}</span>`;
-      item.addEventListener('click', () => this.toggleCard(card.id, item)); return item;
-    }));
-    this.updateDeckCount();
-  },
-  toggleCard(id, element) {
-    if (this.selectedCardIds.has(id)) this.selectedCardIds.delete(id);
-    else if (this.selectedCardIds.size < 15) this.selectedCardIds.add(id);
-    else return;
-    element.classList.toggle('selected', this.selectedCardIds.has(id)); this.updateDeckCount();
-  },
-  updateDeckCount() { document.querySelector('#deck-count').textContent = this.selectedCardIds.size; },
-  saveDeck() {
-    if (this.selectedCardIds.size !== 15) return (document.querySelector('#deck-status').textContent = '정확히 15장을 선택해야 합니다.');
-    localStorage.setItem('xena-deck', JSON.stringify([...this.selectedCardIds]));
-    document.querySelector('#deck-status').textContent = '덱을 저장했습니다.';
-  },
-
-  startBattle() {
-    if (window.XenaWallet && window.XenaWallet.consumeEnergy && !this._energyGranted) {
-      window.XenaWallet.consumeEnergy('signal_clash').then(() => { this._energyGranted = true; this.startBattle(); this._energyGranted = false; }).catch(() => { document.querySelector('#lobby-status').textContent = 'No energy. Recharges every 10 minutes.'; });
-      return;
-    }
-    if (this.selectedCardIds.size !== 15) { document.querySelector('#lobby-status').textContent = '먼저 MY CARDS에서 15장 덱을 저장하세요.'; return; }
-    const config = DIFFICULTIES[this.selectedDifficulty];
-    const owned = this.getOwnedCards();
-    const catalog = this.getCardCatalog();
-    const selected = owned.filter((card) => this.selectedCardIds.has(card.id));
-    const aiPool = catalog.filter(config.pool);
-    this.deck = [...selected];
-    this.game = { matchId: `PVE_${Date.now()}`, difficulty: this.selectedDifficulty, phase: 'ACTION', active: 'player', selectedHand: null,
-      player: this.makePlayer('player', selected, 30), ai: this.makePlayer('ai', aiPool, config.core) };
-    this.selectedAttacker = null;
-    this.startTurn(this.game.player);
-    this.show('battle'); this.renderBattle();
-  },
-  makePlayer(id, deck, core) {
-    const cards = [...deck]; for (let i = cards.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [cards[i], cards[j]] = [cards[j], cards[i]]; }
-    return { id, core, memory: 0, maxMemory: 0, hand: cards.splice(0, 5), deck: cards, field: Array(7).fill(null) };
-  },
-  startTurn(player) {
-    player.maxMemory = Math.min(10, player.maxMemory + 1);
-    player.memory = player.maxMemory;
-    player.field.forEach((unit) => { if (unit) unit.hasAttacked = false; });
-    if (player.deck.length) { player.hand.push(player.deck.shift()); if (player.id === 'player') { this.drawAnimationPending = true; this.playSfx(ASSETS.drawSfx); } }
-    this.game.phase = 'ACTION';
-  },
-  endTurn() {
-    if (!this.game || this.game.active !== 'player') return;
-    this.game.phase = 'CLEANUP';
-    this.game.active = 'ai';
-    this.aiTurn();
-  },
-  aiTurn() {
-    const game = this.game; const ai = game.ai;
-    this.startTurn(ai);
-    while (ai.hand.length && ai.field.some((slot) => !slot)) { const idx = ai.hand.findIndex((card) => card.cost <= ai.memory); if (idx < 0) break; const slot = ai.field.findIndex((item) => !item); const card = ai.hand.splice(idx, 1)[0]; ai.memory -= card.cost; ai.field[slot] = { ...card, hasAttacked: true }; }
-    ai.field.forEach((attacker) => {
-      if (!attacker) return;
-      const targetSlot = game.player.field.findIndex(Boolean);
-      if (targetSlot >= 0) {
-        const target = game.player.field[targetSlot]; target.hp -= attacker.atk;
-        if (target.hp <= 0) game.player.field[targetSlot] = null;
-      } else game.player.core = Math.max(0, game.player.core - attacker.atk);
-    });
-    if (game.player.core <= 0) return this.finishBattle(false);
-    game.active = 'player'; this.startTurn(game.player); this.renderBattle();
-  },
-  deploy(slot) {
-    const game = this.game; if (!game || this.effectLock || game.active !== 'player' || game.phase !== 'ACTION' || this.selectedHand === null) return;
-    const player = game.player; const card = player.hand[this.selectedHand]; if (!card || player.field[slot] || player.memory < card.cost) return;
-    player.memory -= card.cost; player.field[slot] = { ...card, hasAttacked: false }; player.hand.splice(this.selectedHand, 1); this.selectedHand = null; this.summonSlot = slot; this.playSfx(ASSETS.summonSfx); this.renderBattle(); this.triggerRipple(slot);
-  },
-  selectAttacker(slot) {
-    const game = this.game; const attacker = game?.player.field[slot];
-    if (!attacker || game.active !== 'player' || game.phase !== 'ACTION' || attacker.hasAttacked) return;
-    this.selectedAttacker = this.selectedAttacker === slot ? null : slot;
-    this.renderBattle();
-  },
-  attackUnit(targetSlot) {
-    const game = this.game; const attacker = game?.player.field[this.selectedAttacker]; const target = game?.ai.field[targetSlot];
-    if (!attacker || !target || this.effectLock || game.active !== 'player' || game.phase !== 'ACTION' || attacker.hasAttacked) return;
-    const attackerSlot = this.selectedAttacker;
-    attacker.hasAttacked = true;
-    this.selectedAttacker = null;
-    this.runAttackAnimation(attackerSlot, targetSlot, false, () => {
-      target.hp -= attacker.atk;
-      this.showDamage(targetSlot, attacker.atk, false);
-      if (target.hp <= 0) this.destroyUnit(targetSlot, false);
-      else { this.effectLock = false; this.renderBattle(); }
-    });
-  },
-  attackCore() {
-    const game = this.game; const attacker = game?.player.field[this.selectedAttacker];
-    if (!attacker || this.effectLock || game.active !== 'player' || game.phase !== 'ACTION' || attacker.hasAttacked || game.ai.field.some(Boolean)) return;
-    const attackerSlot = this.selectedAttacker; attacker.hasAttacked = true; this.selectedAttacker = null;
-    this.runAttackAnimation(attackerSlot, null, true, () => {
-      game.ai.core = Math.max(0, game.ai.core - attacker.atk); this.showDamage('ai-core', attacker.atk, true);
-      if (game.ai.core <= 0) this.finishBattle(true); else { this.effectLock = false; this.renderBattle(); }
-    });
-  },
-  runAttackAnimation(attackerSlot, targetSlot, coreTarget, onHit) {
-    this.effectLock = true;
-    const attackerEl = document.querySelector(`[data-field="player"][data-slot="${attackerSlot}"]`);
-    const targetEl = coreTarget ? document.querySelector('#ai-core') : document.querySelector(`[data-field="ai"][data-slot="${targetSlot}"]`);
-    if (!attackerEl || !targetEl) { this.effectLock = false; onHit(); return; }
-    const distance = targetEl.getBoundingClientRect().left - attackerEl.getBoundingClientRect().left;
-    attackerEl.style.setProperty('--attack-x', `${distance}px`); attackerEl.classList.add('dash-attack');
-    setTimeout(() => { this.playSfx(ASSETS.attackSfx); this.shakeCamera(); onHit(); }, 330);
-  },
-  destroyUnit(slot, isPlayerUnit) {
-    const selector = isPlayerUnit ? `[data-field="player"][data-slot="${slot}"]` : `[data-field="ai"][data-slot="${slot}"]`;
-    const element = document.querySelector(selector); if (element) { element.classList.add('death-shatter'); this.playSfx(ASSETS.shatterSfx); }
-    setTimeout(() => { if (isPlayerUnit) this.game.player.field[slot] = null; else this.game.ai.field[slot] = null; this.effectLock = false; this.renderBattle(); }, 480);
-  },
-  showDamage(target, amount, coreTarget) {
-    const element = coreTarget ? document.querySelector(`#${target}`) : document.querySelector(`[data-field="ai"][data-slot="${target}"]`);
-    const container = document.querySelector('#xena-tcg-container'); if (!element || !container) return;
-    const rect = element.getBoundingClientRect(); const base = container.getBoundingClientRect(); const pop = document.createElement('span');
-    pop.className = 'damage-pop'; pop.textContent = `-${amount}`; pop.style.left = `${rect.left - base.left + rect.width / 2}px`; pop.style.top = `${rect.top - base.top + rect.height * .28}px`; container.append(pop); setTimeout(() => pop.remove(), 700);
-  },
-  shakeCamera() { const container = document.querySelector('#xena-tcg-container'); container.classList.remove('camera-shake'); void container.offsetWidth; container.classList.add('camera-shake'); setTimeout(() => container.classList.remove('camera-shake'), 360); },
-  triggerRipple(slot) { const element = document.querySelector(`[data-field="player"][data-slot="${slot}"]`)?.parentElement; if (!element) return; const ripple = document.createElement('span'); ripple.className = 'ripple-ring'; element.append(ripple); setTimeout(() => ripple.remove(), 650); },
-  renderBattle() {
-    const game = this.game; if (!game) return; const p = game.player; const ai = game.ai;
-    document.querySelector('#difficulty-label').textContent = `AI: ${DIFFICULTIES[game.difficulty].label}`; document.querySelector('#phase-label').textContent = game.active === 'player' ? 'YOUR TURN · ACTIONS FREE' : 'AI TURN';
-    document.querySelector('#player-core').textContent = `YOUR CORE: ${p.core} | MANA ${p.memory}/${p.maxMemory}`; document.querySelector('#ai-core').textContent = `AI CORE: ${ai.core}`; document.querySelector('#end-turn').disabled = game.active !== 'player';
-    const aiCore = document.querySelector('#ai-core'); aiCore.classList.toggle('target-ready', this.selectedAttacker !== null && !ai.field.some(Boolean)); aiCore.onclick = () => this.attackCore();
-    this.renderZone('#player-field', p.field, true); this.renderZone('#ai-field', ai.field, false);
-    const hand = document.querySelector('#hand'); hand.replaceChildren(...p.hand.map((card, i) => { const el = this.cardElement(card); el.classList.toggle('selected', this.selectedHand === i); if (this.drawAnimationPending && i === p.hand.length - 1) el.classList.add('draw-in'); el.addEventListener('click', () => { this.selectedHand = i; this.renderBattle(); }); return el; })); this.drawAnimationPending = false;
-  },
-  renderZone(selector, field, own) { const zone = document.querySelector(selector); zone.replaceChildren(...field.map((card, i) => { const slot = document.createElement('div'); slot.className = 'slot'; if (own && this.selectedHand !== null && !card) slot.classList.add('can-drop'); if (card) { const el = this.cardElement(card); el.dataset.field = own ? 'player' : 'ai'; el.dataset.slot = i; if (own && this.summonSlot === i) el.classList.add('summon-in'); if (own && !card.hasAttacked) { el.classList.toggle('attacker-selected', this.selectedAttacker === i); el.addEventListener('click', (event) => { event.stopPropagation(); this.selectAttacker(i); }); } if (!own && this.selectedAttacker !== null) { el.classList.add('target-ready'); el.addEventListener('click', (event) => { event.stopPropagation(); this.attackUnit(i); }); } slot.append(el); } if (own) slot.addEventListener('click', () => this.deploy(i)); return slot; })); this.summonSlot = null; },
-  cardElement(card) { const el = document.createElement('article'); el.className = 'card-unit'; el.innerHTML = `<small>${card.grade} · ${card.element}</small><strong>${card.name}</strong><span>COST ${card.cost}</span><footer>${card.atk} ATK / ${card.hp} HP</footer>`; return el; },
-  /* Firebase Functions is the only authoritative match reward ledger. */
-  async finishBattle(won) {
-    if (!this.game) return;
-    const match = this.game;
-    if (won) this.playSfx(ASSETS.victorySfx);
-    let rewardText = won ? 'Reward pending' : 'Loss recorded';
-    try {
-      if (!window.XenaWallet || !window.XenaWallet.claimTcgMatch) throw new Error('Wallet is not ready.');
-      const result = await window.XenaWallet.claimTcgMatch(match.difficulty, won ? 'win' : 'loss');
-      rewardText = `${result.granted || 0} XC credited`;
-    } catch (error) {
-      rewardText = `Reward sync failed: ${error.message}`;
-    }
-    const board = document.querySelector('#battle-view');
-    const result = document.createElement('section');
-    result.className = 'match-result-overlay';
-    result.innerHTML = `<div class="match-result-card"><h2>${won ? 'VICTORY' : 'DEFEAT'}</h2><p>${rewardText}</p><button type="button">RETURN TO LOBBY</button></div>`;
-    Object.assign(result.style, { position:'absolute', inset:'0', zIndex:'50', display:'grid', placeItems:'center', background:'rgba(5,5,12,.35)', backdropFilter:'blur(2px)' });
-    const card = result.firstElementChild;
-    Object.assign(card.style, { textAlign:'center', padding:'28px 36px', border:'1px solid rgba(63,224,255,.8)', borderRadius:'18px', background:'rgba(7,10,24,.92)', boxShadow:'0 0 44px rgba(63,224,255,.3)' });
-    result.querySelector('button').onclick = () => { result.remove(); this.game = null; this.show('lobby'); this.wireWallet(); };
-    board.append(result);
-  },
-  playSfx(src) { const audio = new Audio(pickAsset(src)); audio.volume = .78; audio.play().catch(() => {}); },
-};
-client.init();
+const client={language:localStorage.getItem('xena_tcg_lang')||'ko',selectedDifficulty:'normal',selectedCardIds:new Set(),deck:[],game:null,selectedHand:null,selectedAttacker:null,effectLock:false,drawAnimationPending:false,summonSlot:null,aiSummonSlot:null,walletUnsubscribe:null,activeSfx:new Set(),
+  t(key){return TEXT[this.language][key]||key},
+  init(){this.selectedCardIds=new Set(JSON.parse(localStorage.getItem('xena-deck')||'[]'));document.querySelector('#start-pve').onclick=()=>this.startBattle();document.querySelector('#my-cards-button').onclick=()=>this.showCards();document.querySelector('#cards-back').onclick=()=>this.show('lobby');document.querySelector('#save-deck').onclick=()=>this.saveDeck();document.querySelector('#refresh-balance').onclick=()=>this.wireWallet();document.querySelector('#end-turn').onclick=()=>this.endTurn();document.querySelector('#battle-exit').onclick=()=>location.assign('../');document.querySelector('#mute-local').onclick=()=>window.XenaAudio?.toggleMute?.();document.querySelectorAll('[data-language]').forEach(b=>b.onclick=()=>this.setLanguage(b.dataset.language));document.querySelectorAll('[data-difficulty]').forEach(b=>b.onclick=()=>{this.selectedDifficulty=b.dataset.difficulty;document.querySelectorAll('[data-difficulty]').forEach(x=>x.classList.toggle('selected',x===b))});window.addEventListener('xena-audio-mutechange',e=>this.syncMute(e.detail?.muted));this.setLanguage(this.language);this.wireWallet();},
+  setLanguage(language){this.language=language;localStorage.setItem('xena_tcg_lang',language);document.documentElement.lang=language;document.querySelectorAll('[data-language]').forEach(b=>b.classList.toggle('active',b.dataset.language===language));document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=this.t(el.dataset.i18n));if(this.game)this.renderBattle();},
+  syncMute(muted){document.querySelector('#mute-local').textContent=muted?'×))':'◖))';if(muted)this.activeSfx.forEach(a=>{a.pause();a.currentTime=0})},
+  isMuted(){try{return JSON.parse(localStorage.getItem('xena_audio_v1')||'{}').muted===true}catch{return false}},
+  playSfx(src){if(this.isMuted())return;const audio=new Audio(pick(src));audio.volume=.78;audio.muted=this.isMuted();this.activeSfx.add(audio);audio.addEventListener('ended',()=>this.activeSfx.delete(audio),{once:true});audio.play().catch(()=>{});},
+  wireWallet(){const paint=value=>document.querySelector('#xc-display').textContent=value==null?this.t('signIn'):`${value} XC`;if(!window.XenaWallet){paint(null);return}paint(window.XenaWallet.getBalance());if(!this.walletUnsubscribe)this.walletUnsubscribe=window.XenaWallet.subscribe(paint)},
+  normalizeCard(card){const stats=window.XenaCards?.GRADE_STATS?.[card.grade]||{cost:card.cost||1,power:card.power||1};const atk=Number(card.atk??card.power??stats.power??1);return{...card,cost:Number(card.cost??stats.cost??1),atk,hp:Number(card.hp??atk+3),count:Number(card.count||1)}},
+  getOwnedCards(){return window.XenaCards?XenaCards.owned().map(c=>this.normalizeCard(c)):[]},getCatalog(){return window.XenaCards?(XenaCards.available?XenaCards.available():XenaCards.all()).map(c=>this.normalizeCard(c)):[]},
+  artFor(card){const id=String(card.id||'');const number=Number((id.match(/PC-(\d+)/)||[])[1]);if(number&&ART[number-1])return`../../game/assets/cards/${ART[number-1]}`;if(card.image&&/^(https?:|\/)/.test(card.image))return card.image;return'../../game/assets/backgrounds/xena-hero-bg.jpg'},
+  show(name){['lobby','cards-view','battle-view'].forEach(id=>document.querySelector(`#${id}`).hidden=id!==({lobby:'lobby',cards:'cards-view',battle:'battle-view'}[name]));},
+  showCards(){this.show('cards');const owned=this.getOwnedCards();const list=document.querySelector('#card-list');list.replaceChildren(...owned.map(card=>{const el=this.collectionCard(card);el.classList.toggle('selected',this.selectedCardIds.has(card.id));el.onclick=()=>this.toggleCard(card.id,el);return el}));this.updateDeckCount();},
+  collectionCard(card){const el=document.createElement('button');el.type='button';el.className='collection-card';el.innerHTML=this.cardMarkup(card);return el},
+  cardMarkup(card){return`<img class="card-art" src="${escapeHTML(this.artFor(card))}" alt="${escapeHTML(card.name)}" loading="lazy"><div class="card-meta"><span class="card-grade">${escapeHTML(card.grade)} · ${escapeHTML(card.element||'SIGNAL')}</span><span class="card-hp">♥ ${card.hp}</span><strong class="card-name">${escapeHTML(card.name)}</strong><div class="card-stats"><b class="card-cost">◈ ${card.cost}</b><b class="card-atk">⚔ ${card.atk}</b></div></div>`},
+  toggleCard(id,el){if(this.selectedCardIds.has(id))this.selectedCardIds.delete(id);else if(this.selectedCardIds.size<15)this.selectedCardIds.add(id);else return;el.classList.toggle('selected',this.selectedCardIds.has(id));this.updateDeckCount()},updateDeckCount(){document.querySelector('#deck-count').textContent=this.selectedCardIds.size},
+  saveDeck(){const status=document.querySelector('#deck-status');if(this.selectedCardIds.size!==15){status.textContent=this.t('need15');return}localStorage.setItem('xena-deck',JSON.stringify([...this.selectedCardIds]));status.textContent=this.t('deckSaved');this.playSfx(ASSETS.confirm)},
+  shuffle(cards){const clone=[...cards];for(let i=clone.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[clone[i],clone[j]]=[clone[j],clone[i]]}return clone},makePlayer(id,deck,core){const cards=this.shuffle(deck);return{id,core,mana:0,maxMana:0,hand:cards.splice(0,5),deck:cards,field:Array(7).fill(null)}},
+  async startBattle(){if(this.selectedCardIds.size!==15){document.querySelector('#lobby-status').textContent=this.t('chooseDeck');return}if(window.XenaWallet?.consumeEnergy&&!this.energyBusy){this.energyBusy=true;try{await window.XenaWallet.consumeEnergy('signal_clash')}catch{document.querySelector('#lobby-status').textContent='Energy unavailable.';this.energyBusy=false;return}this.energyBusy=false}const own=this.getOwnedCards().filter(c=>this.selectedCardIds.has(c.id));const config=DIFFICULTIES[this.selectedDifficulty];const aiPool=this.getCatalog().filter(config.pool);this.game={matchId:`PVE_${Date.now()}`,difficulty:this.selectedDifficulty,active:null,round:1,firstPlayer:null,player:this.makePlayer('player',own,30),ai:this.makePlayer('ai',aiPool.length?aiPool:this.getCatalog(),config.core)};this.selectedAttacker=null;this.show('battle');await this.coinToss();this.startTurn(this.game[this.game.firstPlayer]);this.renderBattle();if(this.game.active==='ai')this.aiTurn()},
+  async coinToss(){const playerFirst=Math.random()>=.5;this.game.firstPlayer=playerFirst?'player':'ai';const overlay=document.querySelector('#coin-toss');const result=document.querySelector('#coin-result');overlay.hidden=false;result.textContent='';await new Promise(r=>setTimeout(r,2200));result.textContent=this.t(playerFirst?'coinPlayer':'coinAi');await new Promise(r=>setTimeout(r,900));overlay.hidden=true},
+  startTurn(player){this.game.active=player.id;player.maxMana=Math.min(10,player.maxMana+1);player.mana=player.maxMana;player.field.forEach(u=>{if(u)u.hasAttacked=false});if(player.deck.length){player.hand.push(player.deck.shift());if(player.id==='player'){this.drawAnimationPending=true;this.playSfx(ASSETS.draw)}}},
+  firstTurnBlocked(){return this.game.round===1&&this.game.active===this.game.firstPlayer},canAttack(){return !this.firstTurnBlocked()},
+  endTurn(){if(!this.game||this.game.active!=='player'||this.effectLock)return;this.selectedHand=null;this.selectedAttacker=null;this.startTurn(this.game.ai);this.renderBattle();this.aiTurn()},
+  async aiTurn(){const game=this.game,ai=game.ai;if(!game||game.active!=='ai')return;await this.wait(550);while(ai.hand.length&&ai.field.some(x=>!x)){const idx=ai.hand.findIndex(c=>c.cost<=ai.mana);if(idx<0)break;const slot=ai.field.findIndex(x=>!x);const card=ai.hand.splice(idx,1)[0];ai.mana-=card.cost;ai.field[slot]={...card,hasAttacked:false};this.aiSummonSlot=slot;this.playSfx(ASSETS.summon);this.renderBattle();await this.wait(620)}if(this.canAttack()){for(let i=0;i<ai.field.length;i++){const attacker=ai.field[i];if(!attacker||attacker.hasAttacked)continue;const target=game.player.field.findIndex(Boolean);attacker.hasAttacked=true;await this.animateAttack('ai',i,target>=0?'player':null,target>=0?target:'player-core');if(target>=0){game.player.field[target].hp-=attacker.atk;if(game.player.field[target].hp<=0)await this.destroyUnit(target,true)}else{game.player.core=Math.max(0,game.player.core-attacker.atk);this.damage('player-core',attacker.atk)}if(game.player.core<=0){this.finishBattle(false);return}await this.wait(260)}}this.game.round+=1;this.startTurn(game.player);this.renderBattle()},
+  deploy(slot){const g=this.game,p=g?.player;if(!g||g.active!=='player'||this.effectLock||this.selectedHand===null||p.field[slot])return;const card=p.hand[this.selectedHand];if(!card||p.mana<card.cost)return;p.mana-=card.cost;p.field[slot]={...card,hasAttacked:false};p.hand.splice(this.selectedHand,1);this.selectedHand=null;this.summonSlot=slot;this.playSfx(ASSETS.summon);this.renderBattle();this.ripple(slot)},
+  selectAttacker(slot){const unit=this.game?.player.field[slot];if(!unit||this.game.active!=='player'||unit.hasAttacked||!this.canAttack())return;this.selectedAttacker=this.selectedAttacker===slot?null:slot;this.renderBattle()},
+  async attackUnit(targetSlot){const g=this.game,attacker=g?.player.field[this.selectedAttacker],target=g?.ai.field[targetSlot];if(!attacker||!target||this.effectLock||!this.canAttack()||attacker.hasAttacked)return;const source=this.selectedAttacker;attacker.hasAttacked=true;this.selectedAttacker=null;await this.animateAttack('player',source,'ai',targetSlot);target.hp-=attacker.atk;if(target.hp<=0)await this.destroyUnit(targetSlot,false);else this.renderBattle()},
+  async attackCore(){const g=this.game,attacker=g?.player.field[this.selectedAttacker];if(!attacker||g.ai.field.some(Boolean)||this.effectLock||!this.canAttack()||attacker.hasAttacked)return;const source=this.selectedAttacker;attacker.hasAttacked=true;this.selectedAttacker=null;await this.animateAttack('player',source,null,'ai-core');g.ai.core=Math.max(0,g.ai.core-attacker.atk);this.damage('ai-core',attacker.atk);if(g.ai.core<=0)this.finishBattle(true);else this.renderBattle()},
+  async animateAttack(from,source,to,target){this.effectLock=true;const attacker=document.querySelector(`[data-field="${from}"][data-slot="${source}"]`),victim=String(target).includes('core')?document.querySelector(`#${target}`):document.querySelector(`[data-field="${to}"][data-slot="${target}"]`);if(!attacker||!victim){this.effectLock=false;return}const a=attacker.getBoundingClientRect(),b=victim.getBoundingClientRect();attacker.style.setProperty('--attack-x',`${b.left-a.left}px`);attacker.style.setProperty('--attack-y',`${b.top-a.top}px`);attacker.classList.add('dash-attack');await this.wait(360);this.playSfx(ASSETS.attack);this.damage(target,Number(this.game[from].field[source].atk),to);document.querySelector('#xena-tcg-container').classList.add('camera-shake');await this.wait(140);document.querySelector('#xena-tcg-container').classList.remove('camera-shake');attacker.classList.remove('dash-attack');this.effectLock=false},
+  async destroyUnit(slot,player){const el=document.querySelector(`[data-field="${player?'player':'ai'}"][data-slot="${slot}"]`);if(el){el.classList.add('death-shatter');this.playSfx(ASSETS.shatter);await this.wait(500)}this.game[player?'player':'ai'].field[slot]=null;this.effectLock=false;this.renderBattle()},
+  damage(target,amount,field='ai'){const el=String(target).includes('core')?document.querySelector(`#${target}`):document.querySelector(`[data-field="${field}"][data-slot="${target}"]`);const root=document.querySelector('#xena-tcg-container');if(!el)return;const r=el.getBoundingClientRect(),base=root.getBoundingClientRect(),pop=document.createElement('span');pop.className='damage-pop';pop.textContent=`-${amount}`;pop.style.left=`${r.left-base.left+r.width/2}px`;pop.style.top=`${r.top-base.top+r.height*.3}px`;root.append(pop);setTimeout(()=>pop.remove(),700)},
+  ripple(slot){const el=document.querySelector(`[data-field="player"][data-slot="${slot}"]`)?.parentElement;if(!el)return;const ring=document.createElement('i');ring.className='ripple-ring';el.append(ring);setTimeout(()=>ring.remove(),650)},wait(ms){return new Promise(r=>setTimeout(r,ms))},
+  renderBattle(){const g=this.game;if(!g)return;const p=g.player,ai=g.ai;document.querySelector('#difficulty-label').textContent=`AI · ${this.t(g.difficulty)}`;document.querySelector('#phase-label').textContent=this.t(g.active==='player'?'yourTurn':'aiTurn');document.querySelector('#turn-rule').textContent=this.firstTurnBlocked()?this.t('firstTurn'):'';document.querySelector('#player-core').innerHTML=`<span>${this.t('yourCore')} · ${this.t('mana')} ${p.mana}/${p.maxMana}</span><b>${p.core}</b>`;document.querySelector('#ai-core').innerHTML=`<span>${this.t('enemyCore')}</span><b>${ai.core}</b>`;const aiCore=document.querySelector('#ai-core');aiCore.classList.toggle('target-ready',this.selectedAttacker!==null&&!ai.field.some(Boolean));aiCore.onclick=()=>this.attackCore();this.renderZone('#player-field',p.field,true);this.renderZone('#ai-field',ai.field,false);const hand=document.querySelector('#hand');hand.replaceChildren(...p.hand.map((card,i)=>{const el=this.unit(card);el.classList.toggle('selected',this.selectedHand===i);if(this.drawAnimationPending&&i===p.hand.length-1)el.classList.add('ai-summon');el.onclick=()=>{if(g.active==='player'){this.selectedHand=i;this.selectedAttacker=null;this.renderBattle()}};return el}));this.drawAnimationPending=false;document.querySelector('#end-turn').disabled=g.active!=='player'||this.effectLock;document.querySelector('#xena-tcg-container').classList.toggle('attack-mode',this.selectedAttacker!==null)},
+  renderZone(selector,field,own){const zone=document.querySelector(selector);zone.replaceChildren(...field.map((card,i)=>{const slot=document.createElement('div');slot.className='slot';if(own&&this.selectedHand!==null&&!card)slot.classList.add('can-drop');if(card){const el=this.unit(card);el.dataset.field=own?'player':'ai';el.dataset.slot=i;if(own&&this.summonSlot===i)el.classList.add('ai-summon');if(!own&&this.aiSummonSlot===i)el.classList.add('ai-summon');if(own&&!card.hasAttacked&&this.canAttack()){el.classList.toggle('attacker-selected',this.selectedAttacker===i);el.onclick=e=>{e.stopPropagation();this.selectAttacker(i)}}if(!own&&this.selectedAttacker!==null){el.classList.add('target-ready');el.onclick=e=>{e.stopPropagation();this.attackUnit(i)}}slot.append(el)}if(own)slot.onclick=()=>this.deploy(i);return slot}));this.summonSlot=null;this.aiSummonSlot=null},
+  unit(card){const el=document.createElement('article');el.className='card-unit';el.innerHTML=this.cardMarkup(card);return el},
+  async finishBattle(won){if(!this.game)return;const match=this.game;let message=this.t('rewardPending');if(won)this.playSfx(ASSETS.victory);try{if(!window.XenaWallet?.claimTcgMatch)throw new Error('wallet');const result=await window.XenaWallet.claimTcgMatch(match.difficulty,won?'win':'loss');message=won?`${result.granted||0} XC`:(this.language==='ko'?'전투 기록 완료':'Match recorded')}catch{message=this.t('rewardFailed')}const overlay=document.createElement('section');overlay.className='coin-overlay';overlay.innerHTML=`<div class="lobby-panel" style="max-width:390px;text-align:center"><h2>${this.t(won?'victory':'defeat')}</h2><p>${escapeHTML(message)}</p><button class="button button-primary" type="button">${this.t('returnLobby')}</button></div>`;overlay.querySelector('button').onclick=()=>{overlay.remove();this.game=null;this.show('lobby');this.wireWallet()};document.querySelector('#battle-view').append(overlay)}
+};client.init();

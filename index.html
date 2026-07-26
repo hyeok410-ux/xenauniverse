@@ -349,6 +349,17 @@
     background:radial-gradient(ellipse, rgba(232,196,104,.14), transparent 65%);}
   @media(max-width:800px){.game-box{padding:34px 24px;gap:30px;}}
 
+  /* SIGNAL WARFARE launch card */
+  .signal-warfare-box{background:linear-gradient(135deg,rgba(63,224,255,.08),rgba(110,47,217,.14));border-color:rgba(63,224,255,.38);box-shadow:0 0 42px rgba(63,224,255,.1),inset 0 0 34px rgba(110,47,217,.08);}
+  .signal-warfare-box::before{background:linear-gradient(rgba(63,224,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(63,224,255,.06) 1px,transparent 1px);}
+  .signal-warfare-box .game-eyebrow{color:var(--cyan);text-shadow:0 0 14px rgba(63,224,255,.55);}
+  .signal-warfare-box h3{background:linear-gradient(90deg,#fff,var(--cyan),var(--purple-light));-webkit-background-clip:text;background-clip:text;}
+  .signal-warfare-box .game-features li::before{background:var(--cyan);box-shadow:0 0 10px rgba(63,224,255,.8);}
+  .signal-warfare-box .game-btn{background:linear-gradient(100deg,var(--cyan),#a06bff);color:#080812;box-shadow:0 8px 34px rgba(63,224,255,.26);}
+  .signal-warfare-box .game-btn:hover{box-shadow:0 12px 46px rgba(63,224,255,.45),0 0 28px rgba(160,107,255,.35);}
+  .new-badge{display:inline-block;margin-right:9px;padding:4px 9px;border:1px solid rgba(63,224,255,.75);border-radius:12px;color:#071017;background:var(--cyan);font-size:.58rem;letter-spacing:.14em;box-shadow:0 0 16px rgba(63,224,255,.55);animation:signalPulse 2.2s ease-in-out infinite;}
+  @keyframes signalPulse{0%,100%{box-shadow:0 0 10px rgba(63,224,255,.35)}50%{box-shadow:0 0 24px rgba(63,224,255,.8)}}
+
   /* MERCH — glassmorphism */
   .merch-box{background:linear-gradient(160deg, rgba(255,255,255,.03), rgba(255,255,255,.008));
     backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);
@@ -696,6 +707,31 @@
       </div>
       <div class="game-card-visual reveal">
         <img src="images/gallery/game-scene.jpg" alt="OVERRIDE GRID — in-game board">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GAME — SIGNAL WARFARE ============ -->
+<section id="signal-warfare-section">
+  <div class="container reveal">
+    <div class="game-box signal-warfare-box">
+      <div class="game-text">
+        <div class="game-eyebrow"><span class="new-badge">NEW</span> XENA GAMES · PVE TCG</div>
+        <h3>XENA: SIGNAL WARFARE</h3>
+        <p>
+          <span lang="ko">제나의 신호를 지키는 시네마틱 PvE 카드 전투. 내 카드로 덱을 만들고 AI 코어를 무너뜨리세요.</span>
+          <span lang="en">A cinematic PvE card battle in XENA's universe. Build your deck from your collection and break the AI core.</span>
+        </p>
+        <ul class="game-features">
+          <li>Fluid action phase · End Turn</li>
+          <li>Easy · Normal · Hard AI cores</li>
+          <li>Owned XENA cards · Firebase rewards</li>
+        </ul>
+        <a class="game-btn" href="games/tcg/"><span lang="ko">지금 플레이</span><span lang="en">PLAY NOW</span> →</a>
+      </div>
+      <div class="game-card-visual reveal">
+        <img src="images/thumbs/thumb-tcg.jpg" alt="XENA: SIGNAL WARFARE" loading="lazy">
       </div>
     </div>
   </div>

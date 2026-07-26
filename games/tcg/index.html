@@ -1,45 +1,68 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>XENA: SIGNAL WARFARE</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <audio id="bgm" loop preload="none"></audio>
   <div id="xena-tcg-container">
+    <header class="game-header">
+      <a class="hub-link" href="../" data-i18n="backToGames">← 제나 게임즈로</a>
+      <div class="brand-lockup"><span>XENA</span><strong>SIGNAL WARFARE</strong></div>
+      <div class="header-actions">
+        <div class="language-toggle" role="group" aria-label="Language"><button type="button" data-language="ko">한글</button><button type="button" data-language="en">English</button></div>
+        <button id="mute-local" type="button" class="icon-button" aria-label="Mute">◖))</button>
+      </div>
+    </header>
+
     <main id="app">
-      <section id="lobby" class="screen">
-        <div class="title-plate"><p class="eyebrow">XENA GAMES // PVE PROTOCOL</p><h1>XENA</h1><h2>SIGNAL WARFARE</h2></div>
-        <div class="economy">XC BALANCE: <span id="xc-display">CONNECTING…</span></div>
-        <div class="lobby-actions"><button id="my-cards-button" class="btn-gold">MY CARDS</button><button id="refresh-balance" class="btn-ghost">REFRESH XC</button></div>
-        <div class="difficulty-grid"><p>SELECT AI DIFFICULTY</p><button data-difficulty="easy" class="difficulty">EASY</button><button data-difficulty="normal" class="difficulty selected">NORMAL</button><button data-difficulty="hard" class="difficulty">HARD</button></div>
-        <button id="start-pve" class="btn-neon">START PVE BATTLE</button><p id="lobby-status" role="status"></p>
+      <section id="lobby" class="screen lobby-screen">
+        <div class="title-plate">
+          <p class="eyebrow">XENA GAMES · PVE CARD BATTLE</p>
+          <p class="xena-word">XENA</p>
+          <h1>SIGNAL <em>WARFARE</em></h1>
+          <p class="title-subtitle" data-i18n="titleSubtitle">나의 신호로 AI 코어를 무너뜨려라</p>
+        </div>
+        <div class="lobby-panel">
+          <div class="economy"><span data-i18n="xcBalance">XC 잔액</span><strong id="xc-display">CONNECTING…</strong><button id="refresh-balance" type="button" class="text-button" data-i18n="refresh">새로고침</button></div>
+          <div class="lobby-actions"><button id="my-cards-button" type="button" class="button button-outline" data-i18n="myCards">내 카드</button></div>
+          <div class="difficulty-grid"><p data-i18n="selectDifficulty">AI 난이도 선택</p><button data-difficulty="easy" type="button" class="difficulty"><b data-i18n="easy">쉬움</b><small data-i18n="easyDesc">코어 20 · 기본 덱</small></button><button data-difficulty="normal" type="button" class="difficulty selected"><b data-i18n="normal">보통</b><small data-i18n="normalDesc">코어 30 · 균형 덱</small></button><button data-difficulty="hard" type="button" class="difficulty"><b data-i18n="hard">어려움</b><small data-i18n="hardDesc">코어 40 · 상급 덱</small></button></div>
+          <button id="start-pve" type="button" class="button button-primary" data-i18n="playNow">지금 플레이</button>
+          <p id="lobby-status" class="status" role="status"></p>
+        </div>
       </section>
+
       <section id="cards-view" class="screen" hidden>
-        <div class="panel"><h2>MY CARDS</h2><p>Select exactly 15 owned cards for your battle deck.</p><p><span id="deck-count">0</span> / 15</p><div class="panel-actions"><button id="save-deck" class="btn-neon">구성 완료</button><button id="cards-back" class="btn-ghost">로비로</button></div><div id="card-list" class="card-grid"></div><p id="deck-status" role="status"></p></div>
+        <div class="collection-panel">
+          <div class="panel-head"><div><p class="eyebrow" data-i18n="myCards">내 카드</p><h2 data-i18n="buildDeck">나만의 덱 구성</h2><p data-i18n="deckHint">보유 카드 중 정확히 15장을 선택하세요.</p></div><strong class="deck-count"><span id="deck-count">0</span> / 15</strong></div>
+          <div id="card-list" class="card-grid"></div>
+          <div class="panel-actions"><button id="save-deck" type="button" class="button button-primary" data-i18n="saveDeck">구성 완료</button><button id="cards-back" type="button" class="button button-outline" data-i18n="backToLobby">로비로</button></div>
+          <p id="deck-status" class="status" role="status"></p>
+        </div>
       </section>
-      <section id="battle-view" class="screen" hidden>
-        <div class="battle-top"><span id="difficulty-label"></span><span id="battle-status"></span><span id="bgm-status"></span></div>
-        <div class="core-row"><div id="ai-core" class="core ai">AI CORE: 30</div><div id="player-core" class="core player">YOUR CORE: 30</div></div>
-        <div id="battlefield"><div><p>AI FIELD</p><div id="ai-field" class="zone"></div></div><div><p>YOUR FIELD</p><div id="player-field" class="zone"></div></div></div>
-        <div id="hand" class="hand"></div>
-        <div class="phase-controls"><span id="phase-label">YOUR TURN</span><button id="end-turn" class="btn-neon">END TURN</button><button id="battle-exit" class="btn-ghost">QUIT</button></div>
+
+      <section id="battle-view" class="screen battle-screen" hidden>
+        <div class="battle-top"><span id="difficulty-label"></span><strong id="phase-label"></strong><span id="battle-status"></span></div>
+        <div class="core-row"><button id="ai-core" type="button" class="core ai"><span data-i18n="enemyCore">AI 코어</span><b>30</b></button><div class="turn-rule" id="turn-rule"></div><div id="player-core" class="core player"><span data-i18n="yourCore">내 코어</span><b>30</b></div></div>
+        <div id="battlefield" aria-label="Battlefield"><div class="field-row enemy-row"><p data-i18n="enemyField">상대 필드</p><div id="ai-field" class="zone"></div></div><div class="field-divider"><span>◈</span></div><div class="field-row player-row"><p data-i18n="yourField">내 필드</p><div id="player-field" class="zone"></div></div></div>
+        <div class="hand-wrap"><p data-i18n="yourHand">내 손패</p><div id="hand" class="hand"></div></div>
+        <div class="phase-controls"><button id="battle-exit" type="button" class="button button-outline" data-i18n="backToGames">제나 게임즈로</button><button id="end-turn" type="button" class="button button-primary" data-i18n="endTurn">턴 넘김</button></div>
       </section>
     </main>
+    <div id="coin-toss" class="coin-overlay" hidden><div class="coin-stage"><div class="xena-coin"><div class="coin-face coin-front">X</div><div class="coin-face coin-back">AI</div></div><p id="coin-result"></p></div></div>
   </div>
-  <!-- Main XENA Firebase/auth/economy/card ecosystem. shared-auth.js is represented by xena-auth.js in this repository. -->
   <script src="../../game/firebase-config.js?v=20260722"></script>
   <script src="../../game/cloud-sync.js?v=20260722"></script>
   <script src="../shared-identity.js?v=20260722"></script>
   <script src="../shared-gate.js?v=20260722"></script>
   <script src="../../shared/xena-auth.js?v=20260726"></script>
-  <script src="../shared-audio.js?v=20260724"></script>
+  <script src="../shared-audio.js?v=20260727"></script>
   <script src="../shared-wallet.js?v=20260722"></script>
   <script src="../gacha/cards.js?v=20260723"></script>
   <script src="../../shared/xena-cards.js?v=20260723"></script>
-  <script src="client.js?v=20260726"></script>
-  <script>if (window.XenaAudio) window.XenaAudio.init('tcg'); if (window.XenaWallet) window.XenaWallet.initEnergyUI('signal_clash');</script>
+  <script src="client.js?v=20260727"></script>
+  <script>if(window.XenaAudio)window.XenaAudio.init('tcg');if(window.XenaWallet)window.XenaWallet.initEnergyUI('signal_clash');</script>
 </body>
 </html>

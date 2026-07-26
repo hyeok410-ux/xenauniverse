@@ -58,10 +58,58 @@
 
   var state = loadState();
   var bgmAudio = null;
+  var audioCtx = null;
+  var bgmSource = null;
+  var bgmGain = null;
+  var fxGain = null;
+  var masterGain = null;
+  var duckTimer = null;
   var currentSetKey = null;
   var sfxCache = {};
   var suspended = false;      /* 화면잠금/탭전환으로 정지된 상태 */
   var wasPlaying = false;
+
+  function ensureAudioGraph(){
+    if (audioCtx) return true;
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return false;
+    try{
+      audioCtx = new AudioContext();
+      window.__xAudioCtxs = window.__xAudioCtxs || [];
+      window.__xAudioCtxs.push(audioCtx);
+      bgmGain = audioCtx.createGain();
+      fxGain = audioCtx.createGain();
+      masterGain = audioCtx.createGain();
+      bgmGain.gain.value = state.muted ? 0 : state.volume;
+      fxGain.gain.value = state.muted ? 0 : state.sfxVolume;
+      masterGain.gain.value = 1;
+      bgmGain.connect(masterGain);
+      fxGain.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+      return true;
+    }catch(e){ audioCtx = null; return false; }
+  }
+
+  function resumeAudioGraph(){
+    if (ensureAudioGraph() && audioCtx.state === 'suspended') audioCtx.resume().catch(function(){});
+  }
+
+  function triggerDucking(duration){
+    duration = Math.max(120, Number(duration) || 700);
+    if (!ensureAudioGraph() || !bgmGain) return;
+    resumeAudioGraph();
+    var now = audioCtx.currentTime;
+    var normal = state.muted ? 0 : state.volume;
+    bgmGain.gain.cancelScheduledValues(now);
+    bgmGain.gain.setValueAtTime(Math.max(0.0001, bgmGain.gain.value), now);
+    bgmGain.gain.linearRampToValueAtTime(normal * 0.2, now + 0.025);
+    if (duckTimer) clearTimeout(duckTimer);
+    duckTimer = setTimeout(function(){
+      var releaseAt = audioCtx.currentTime;
+      bgmGain.gain.cancelScheduledValues(releaseAt);
+      bgmGain.gain.setTargetAtTime(normal, releaseAt, 0.22);
+    }, duration);
+  }
 
   function pickNext(list, excludeSrc){
     if (list.length <= 1) return list[0];
@@ -76,6 +124,7 @@
     currentSetKey = setKey;
     if (!bgmAudio){
       bgmAudio = new Audio();
+      if (ensureAudioGraph()) bgmSource = audioCtx.createMediaElementSource(bgmAudio), bgmSource.connect(bgmGain);
       bgmAudio.addEventListener('ended', function(){
         if (!currentSetKey || suspended) return;
         startTrack(pickNext(BGM_SETS[currentSetKey], bgmAudio.src));
@@ -87,7 +136,9 @@
   function startTrack(file){
     if (suspended) return;
     bgmAudio.src = ASSET_BASE + 'bgm/' + file;
-    bgmAudio.volume = state.muted ? 0 : state.volume;
+    bgmAudio.volume = 1;
+    if (bgmGain) bgmGain.gain.value = state.muted ? 0 : state.volume;
+    resumeAudioGraph();
     bgmAudio.play().catch(function(){});
   }
 
@@ -100,7 +151,13 @@
     }
     try{
       var node = a.cloneNode();
-      node.volume = state.sfxVolume;
+      node.volume = 1;
+      if (ensureAudioGraph()){
+        var source = audioCtx.createMediaElementSource(node);
+        source.connect(fxGain);
+        resumeAudioGraph();
+      }
+      if (/hit|attack|destroy|break|error|staybright|impact|critical/i.test(name)) triggerDucking(850);
       node.play().catch(function(){});
     }catch(e){}
   }
@@ -178,9 +235,12 @@
 
   function toggleMute(){
     state.muted = !state.muted;
-    if (bgmAudio) bgmAudio.volume = state.muted ? 0 : state.volume;
+    if (bgmAudio) bgmAudio.volume = 1;
+    if (bgmGain) bgmGain.gain.value = state.muted ? 0 : state.volume;
+    if (fxGain) fxGain.gain.value = state.muted ? 0 : state.sfxVolume;
     saveState(state);
     updateMuteBtn();
+    window.dispatchEvent(new CustomEvent('xena-audio-mutechange', {detail:{muted:state.muted}}));
   }
 
   var muteBtn;
@@ -224,6 +284,17 @@
       unlockOnFirstGesture();
     },
     sfx: sfx,
+    triggerDucking: triggerDucking,
+    isMuted: function(){ return state.muted; },
+    toggleMute: toggleMute,
+    debugMix: function () {
+      return {
+        contextState: audioCtx && audioCtx.state,
+        bgmGain: bgmGain && bgmGain.gain.value,
+        fxGain: fxGain && fxGain.gain.value,
+        targetBgm: state.muted ? 0 : state.volume,
+      };
+    },
     suspendAll: suspendAll,
     resumeAll: resumeAll
   };
