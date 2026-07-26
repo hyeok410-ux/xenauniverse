@@ -14,7 +14,6 @@
 (function(){
   'use strict';
   var PKEY = 'xena_local_v1'; /* 아바타/뱃지/플레이타임 등 로컬 전용 데이터 */
-  var ADMIN_UID = 'PiegXmg9KjNJS9JDS3piP0agUB02'; /* UI 노출 여부만 결정 — 실제 권한은 서버(functions)가 재검증 */
   var DEFAULT_AVATAR = 'data:image/svg+xml,' + encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#181022"/><circle cx="32" cy="24" r="12" fill="#5a4a7a"/><path d="M10 58c0-14 10-22 22-22s22 8 22 22" fill="#5a4a7a"/></svg>'
   );
@@ -56,11 +55,12 @@
   /* ── 로그인 상태 / 닉네임 (Firestore users/{uid}) ── */
   var cloudReady = null;
   var authUser = null;        /* Firebase Auth user (uid, displayName, photoURL...) */
+  var adminClaim = false;
   var nickname = null;        /* 확정된 닉네임 (없으면 null = 아직 설정 전) */
   var nicknameChecked = false;
   var subs = [];
   function notify(){ subs.forEach(function(fn){ try{ fn(state()); }catch(e){} }); }
-  function state(){ return { signedIn: !!authUser, uid: authUser ? authUser.uid : null, nickname: nickname, avatar: L.avatar, isAdmin: !!(authUser && authUser.uid === ADMIN_UID) }; }
+  function state(){ return { signedIn: !!authUser, uid: authUser ? authUser.uid : null, nickname: nickname, avatar: L.avatar, isAdmin: adminClaim }; }
 
   function ctx(){
     if (!window.XenaCloudSync) return Promise.reject(new Error('CLOUD_UNAVAILABLE'));
@@ -123,10 +123,12 @@
       var was = authUser;
       authUser = snap.user;
       if (authUser && (!was || was.uid !== authUser.uid)){
+        adminClaim = false;
+        authUser.getIdTokenResult(true).then(function(token){ adminClaim = !!(token.claims && token.claims.admin); notify(); renderButton(); renderAdminBox(); }).catch(function(){});
         nickname = null; nicknameChecked = false;
         fetchOrCreateNickname(authUser.uid);
       } else if (!authUser){
-        nickname = null; nicknameChecked = false;
+        nickname = null; nicknameChecked = false; adminClaim = false;
       }
       notify();
       renderButton();
@@ -351,7 +353,7 @@
   }
   function renderAdminBox(){
     var box = document.getElementById('xprof-admin');
-    box.classList.toggle('show', !!(authUser && authUser.uid === ADMIN_UID));
+    box.classList.toggle('show', adminClaim);
   }
   var xaOut = null;
   function adminLog(v){

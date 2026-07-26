@@ -234,6 +234,7 @@ h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;lin
 
   <!-- 플레이 -->
   <section class="screen" id="screen-play">
+    <button class="r-btn" id="btn-lobby" style="align-self:flex-start;margin-bottom:10px">LOBBY로</button>
     <div class="hud">
       <div class="pill"><span lang="en">STAGE </span><span lang="ko">스테이지 </span><b id="hud-stage">1</b></div>
       <div class="pill timer" id="hud-timer-box">⏱ <b id="hud-timer">30</b>s</div>
@@ -329,7 +330,7 @@ function weekKey(){
 if(!st.weekly || st.weekly.week !== weekKey()) st.weekly = {week: weekKey(), best: {}};
 var PLAYS_PER_DAY = 5, RESET_COST = 30;
 
-var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1; });
+var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1 && String(d[0]).indexOf('PC-') !== 0; });
 
 function renderWallet(){
   var bal = window.XenaWallet ? window.XenaWallet.getBalance() : null;
@@ -345,6 +346,7 @@ function toast(msg){
   toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2600);
 }
 var screens = {intro:$('screen-intro'), play:$('screen-play'), result:$('screen-result')};
+document.getElementById('btn-lobby').addEventListener('click', function(){ show('intro'); renderStages(); });
 function show(name){
   Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('on', k===name); });
   if(name === 'intro'){ document.body.classList.remove('playing'); exitFs(); }
@@ -539,7 +541,11 @@ $('wk-overlay').addEventListener('click', function(e){ if(e.target === this) thi
 
 /* ── 플레이 ── */
 var cur = null;
-function start(idx){
+function start(idx, energyGranted){
+  if (!energyGranted && window.XenaWallet && window.XenaWallet.consumeEnergy){
+    window.XenaWallet.consumeEnergy('memory_grid').then(function(){ start(idx, true); }).catch(function(){ toast(t('No energy. Recharges every 10 minutes.', '행동력이 없습니다. 10분마다 충전됩니다.')); });
+    return;
+  }
   var used = st.daily.plays[idx+1] || 0;
   if(used >= PLAYS_PER_DAY){
     toast(t('No plays left today for this stage — reset with XC or come back tomorrow', '오늘 이 스테이지 도전 횟수를 다 썼습니다 — XC로 초기화하거나 내일 다시 오세요'));
@@ -700,6 +706,7 @@ renderStages();
 <script>
 if (window.XenaAudio) window.XenaAudio.init('memory');
 if (window.__wireMemoryWallet) window.__wireMemoryWallet();
+if (window.XenaWallet) window.XenaWallet.initEnergyUI('memory_grid');
 document.querySelectorAll('button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });

@@ -394,7 +394,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var zenaCharge = 0;
   var SKILL_A_COST = 2, SKILL_B_COST = 3, SKILL_C_COST = 1;
   var FLOOR_RELIEF = 100; /* 스킬A 한 번에 바닥을 밀어내리는 양(px) */
-  var FLOOR_FREEZE_SECONDS = 3;
+  var FLOOR_FREEZE_SECONDS = 5;
   var floorFreezeRemaining = 0; /* >0 인 동안은 바닥이 차오르지 않음 */
 
   function updateSkillUI(){
@@ -760,14 +760,16 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   $('skill-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
 
   $('btn-start').addEventListener('click', function(){
-    $('ov-start').classList.remove('on');
-    resetGame();
-    running = true;
+    var begin = function(){ $('ov-start').classList.remove('on'); resetGame(); running = true; };
+    if(window.XenaWallet && window.XenaWallet.consumeEnergy){
+      window.XenaWallet.consumeEnergy('xena_merge').then(begin).catch(function(){ toast(t('No energy. Recharges every 10 minutes.', '행동력이 없습니다. 10분마다 충전됩니다.')); });
+    } else begin();
   });
   $('btn-retry').addEventListener('click', function(){
-    $('ov-over').classList.remove('on');
-    resetGame();
-    running = true;
+    var begin = function(){ $('ov-over').classList.remove('on'); resetGame(); running = true; };
+    if(window.XenaWallet && window.XenaWallet.consumeEnergy){
+      window.XenaWallet.consumeEnergy('xena_merge').then(begin).catch(function(){ toast(t('No energy. Recharges every 10 minutes.', '행동력이 없습니다. 10분마다 충전됩니다.')); });
+    } else begin();
   });
 
   document.querySelectorAll('.lang-toggle button').forEach(function(b){
@@ -799,6 +801,6 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 <script src="../shared-gate.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
 <script src="../shared-wallet.js?v=20260725"></script>
-<script>if (window.XenaAudio) window.XenaAudio.init('merge');</script>
+<script>if (window.XenaAudio) window.XenaAudio.init('merge'); if (window.XenaWallet) window.XenaWallet.initEnergyUI('xena_merge');</script>
 </body>
 </html>

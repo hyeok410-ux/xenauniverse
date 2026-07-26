@@ -549,7 +549,11 @@ $('wk-overlay').addEventListener('click', function(e){ if(e.target === this) thi
  * grid[y][x] = 타일 종류번호 (0 = 빈칸). 실제 보드 밖 1칸 여백 포함: 크기 (w+2)x(h+2)
  */
 var cur = null;
-function start(idx){
+function start(idx, energyGranted){
+  if (!energyGranted && window.XenaWallet && window.XenaWallet.consumeEnergy){
+    window.XenaWallet.consumeEnergy('signal_link').then(function(){ start(idx, true); }).catch(function(){ toast(t('No energy. Recharges every 10 minutes.', '행동력이 없습니다. 10분마다 충전됩니다.')); });
+    return;
+  }
   var used = st.daily.plays[idx+1] || 0;
   if(used >= PLAYS_PER_DAY){
     toast(t('No plays left today for this stage — reset with XC or come back tomorrow', '오늘 이 스테이지 도전 횟수를 다 썼습니다 — XC로 초기화하거나 내일 다시 오세요'));
@@ -884,6 +888,7 @@ renderStages();
 <script>
 if (window.XenaAudio) window.XenaAudio.init('shisen');
 if (window.__wireShisenWallet) window.__wireShisenWallet();
+if (window.XenaWallet) window.XenaWallet.initEnergyUI('signal_link');
 document.querySelectorAll('.pill, .lang-toggle button').forEach(function(el){
   el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
 });

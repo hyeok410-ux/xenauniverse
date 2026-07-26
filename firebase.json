@@ -1,4 +1,15 @@
 {
   "firestore": { "rules": "firestore.rules" },
-  "functions": { "source": "functions" }
+  "functions": { "source": "functions" },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**",
+      "_deploy_xenauniverse_20260718/**"
+    ],
+    "cleanUrls": true
+  }
 }

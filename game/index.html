@@ -57,9 +57,28 @@
   <div id="xena-topcenter"><div id="xena-xc">0 XC</div></div>
   <main id="app"></main>
   <noscript>이 게임을 실행하려면 브라우저에서 JavaScript를 켜주세요.</noscript>
-  <script src="./three.min.js?v=20260719c"></script>
   <script src="./engine.js?v=20260719c"></script>
-  <script src="./scene3d.js?v=20260719c"></script>
+  <script>
+    /* Three.js and the VFX scene are loaded only when a battle board is rendered. */
+    window.loadOverrideGridScene = (function () {
+      let promise;
+      function load(src) {
+        return new Promise(function (resolve, reject) {
+          const script = document.createElement("script");
+          script.src = src; script.async = true;
+          script.onload = resolve; script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      return function () {
+        if (window.OverrideGridScene) return Promise.resolve(window.OverrideGridScene);
+        if (!promise) promise = load("./three.min.js?v=20260719c")
+          .then(() => load("./scene3d.js?v=20260719c"))
+          .then(() => window.OverrideGridScene);
+        return promise;
+      };
+    })();
+  </script>
   <script src="./online-client.js?v=20260719c"></script>
   <script src="./firebase-config.js?v=20260719c"></script>
   <script src="./cloud-sync.js?v=20260719c"></script>
@@ -68,6 +87,7 @@
   <script src="../games/shared-gate.js?v=20260721"></script>
   <script src="../games/shared-audio.js?v=20260721"></script>
   <script src="../games/shared-wallet.js?v=20260721"></script>
+  <script>if (window.XenaWallet) window.XenaWallet.initEnergyUI('override_grid');</script>
   <script>
     /* XC 잔액 표시 — 이제 미니게임과 완전히 같은 서버 지갑(wallets/{uid}.credits)을 그대로 보여준다.
        체스 자체 재화(크레딧)와 미니게임 XC가 이 시점부터 진짜로 같은 숫자다. */

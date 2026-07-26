@@ -296,6 +296,7 @@
     { id: "frame-gold-sovereign", name: "Sovereign Gold Frame", kind: "frame", role: "말 테두리", tier: "SOVEREIGN", shards: 160, frameStyle: "gold-sovereign", artRoot: "ui", art: "frame_gold_sovereign_preview_v1.png", description: "아군 말에 백금·금빛 왕관 회로 테두리를 적용" },
     { id: "frame-crimson-eclipse", name: "Crimson Eclipse Frame", kind: "frame", role: "말 테두리", tier: "BOSS", credit: 4800, frameStyle: "crimson-eclipse", artRoot: "ui", art: "frame_crimson_eclipse_preview_v1.png", description: "아군 말에 붉은 일식과 판결 회로 테두리를 적용" },
     { id: "emote-signal", name: "XENA Reaction Pack", kind: "emote", role: "캐릭터 이모트", tier: "EPIC", credit: 3600, artRoot: "emote", art: "emote_xena_good_game_v1.png", description: "제나의 웃음·눈물·도발·존중·압박·엄지 인사 리액션 6종" },
+    { id: "emote-sovran", name: "SOVRAN Reaction Pack", kind: "emote", role: "Character Emote", tier: "EPIC", credit: 3600, artRoot: "emote", art: "emote_sovran_good_game_v1.png", description: "SOVRAN reaction pack for matches." },
   ];
   SHOP_ITEMS.push(
     { id: "arena-aurora-lounge", name: "Aurora Signal Lounge", kind: "arena", role: "게임 공간 스킨", tier: "SECRET", credit: 5600, artRoot: "board", art: "space_aurora_lounge_v1.png", arenaStyle: "aurora-lounge", description: "오로라 신호와 고급 라운지 조명이 겹쳐지는 게임 공간" },
@@ -742,7 +743,7 @@
   }
 
   function wallet() {
-    const creditLabel = language === "en" ? "Signal" : "시그널";
+    const creditLabel = "XC";
     const shardLabel = language === "en" ? "Anomaly Shards" : "변칙 파편";
     const cloudUser = window.XenaCloudSync && window.XenaCloudSync.snapshot().user;
     const saveLabel = cloudUser ? "CLOUD LINKED" : storage.available ? "DEVICE SAVE" : "TEMP SESSION";
@@ -1103,7 +1104,7 @@
   }
 
   function cosmeticPrice(item) {
-    return item.credit ? `${language === "en" ? "Signal" : "시그널"} ${item.credit.toLocaleString()}` : `${language === "en" ? "Anomaly Shards" : "변칙 파편"} ${item.shards}`;
+    return item.credit ? `${language === "en" ? "XC" : "XC"} ${Math.min(9000, item.credit).toLocaleString()}` : `${language === "en" ? "Anomaly Shards" : "변칙 파편"} ${item.shards}`;
   }
 
   function ui(en, ko) {
@@ -1216,12 +1217,17 @@
     return false;
   }
 
-  function buyCosmetic(id) {
+  async function buyCosmetic(id) {
     const item = SHOP_ITEMS.find((entry) => entry.id === id);
     if (!item || cosmeticOwned.includes(id)) return;
-    if (item.credit && credits < item.credit) return alert(ui(`You need ${item.credit - credits} more Signal Credits.`, `시그널 크레딧이 ${item.credit - credits} 부족합니다.`));
+    const creditPrice = item.credit ? Math.min(9000, item.credit) : 0;
+    if (creditPrice && credits < creditPrice) return alert(ui(`You need ${creditPrice - credits} more XC.`, `XC가 ${creditPrice - credits} 부족합니다.`));
     if (item.shards && shards < item.shards) return alert(ui(`You need ${item.shards - shards} more Anomaly Shards.`, `변칙 파편이 ${item.shards - shards} 부족합니다.`));
-    if (item.credit) credits -= item.credit;
+    if (creditPrice) {
+      try { await window.XenaWallet.spend(creditPrice, `override_store_${id}`); }
+      catch (_) { return alert(ui("Purchase failed. Please try again.", "구매에 실패했습니다. 다시 시도해주세요.")); }
+      credits -= creditPrice;
+    }
     if (item.shards) shards -= item.shards;
     cosmeticOwned.push(id);
     playSfx("purchase", 0.52);
@@ -1504,6 +1510,27 @@
   }
 
   function ensureOnlineConnection() {
+    if (!window.__xenaRecoverStateBound) {
+      window.__xenaRecoverStateBound = true;
+      window.addEventListener("recover_state", (event) => {
+        if (gameMode !== "online" || screen !== "game" || !event.detail) return;
+        try {
+          state = JSON.parse(event.detail.stateJson);
+          onlineRevision = Number(event.detail.revision || onlineRevision);
+          clocks = event.detail.clocks || clocks;
+          selected = null;
+          selectedSkill = null;
+          legal = [];
+          animating = false;
+          cinematicAction = null;
+          thinking = false;
+          recordSnapshot();
+          renderGame();
+        } catch (_) {
+          document.body.classList.add("online-desync");
+        }
+      });
+    }
     const client = window.OverrideGridOnline;
     if (!client) return;
     if (!onlineUiUnsubscribe && !onlineBinding) {
@@ -1689,6 +1716,10 @@
       saveMeta();
     }
     if (gameMode === "online") return renderOnlineLobby();
+    if (!startGame._energyGranted && window.XenaWallet && window.XenaWallet.consumeEnergy) {
+      window.XenaWallet.consumeEnergy("override_grid").then(() => { startGame._energyGranted = true; startGame(); startGame._energyGranted = false; }).catch(() => alert(language === "en" ? "No energy. Recharges every 10 minutes." : "행동력이 없습니다. 10분마다 충전됩니다."));
+      return;
+    }
     screen = "game"; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = []; timerWarningKey = ""; activityStartedAt = Date.now();
     replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
     const enemy = gameMode === "ai" && G.PACKS[aiOpponentPack] ? aiOpponentPack : chosen === "xena" ? "sovran" : "xena";
@@ -1961,10 +1992,13 @@
     const replay = document.getElementById("replay"); if (replay) replay.addEventListener("click", startReplay);
     bindRewardChest();
     if (result && result.celebrate) launchFireworks();
-    if (window.OverrideGridScene) {
-      window.OverrideGridScene.mount(document.getElementById("scene3d"));
-      window.OverrideGridScene.sync(state, { selected, legal, action: lastVisualMove, flipped: gameMode === "online" && playerColor === "black" });
-    }
+    const syncThreeScene = (sceneApi) => {
+      if (!sceneApi || !state || !document.getElementById("scene3d")) return;
+      sceneApi.mount(document.getElementById("scene3d"));
+      sceneApi.sync(state, { selected, legal, action: lastVisualMove, flipped: gameMode === "online" && playerColor === "black" });
+    };
+    if (window.OverrideGridScene) syncThreeScene(window.OverrideGridScene);
+    else if (window.loadOverrideGridScene) window.loadOverrideGridScene().then(syncThreeScene).catch(() => document.body.classList.add("three-unavailable"));
     syncBgm();
   }
 
@@ -2214,7 +2248,7 @@
     thinking = true;
     renderGame();
     try {
-      await client.submit({
+      const submitPromise = client.submit({
         expectedRevision,
         gameState: cloneState(state),
         clocks: { ...clocks },
@@ -2223,13 +2257,19 @@
         winnerColor: status.over ? status.result : null,
         finishReason: status.over ? status.reason : "",
       });
+      await Promise.race([
+        submitPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("SYNC_TIMEOUT")), 8000)),
+      ]);
       onlineRevision = Math.max(onlineRevision, expectedRevision + 1);
       thinking = false;
       afterMove();
-    } catch (_) {
+    } catch (error) {
       state = cloneState(before);
       thinking = false;
       selected = null; selectedSkill = null; legal = [];
+      document.body.classList.add("online-desync");
+      setTimeout(() => document.body.classList.remove("online-desync"), 520);
       alert(language === "en" ? "The move was not synchronized. The previous position was restored." : "수가 동기화되지 않아 이전 상태로 복구했습니다.");
       renderGame();
     }

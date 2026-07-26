@@ -125,6 +125,10 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
 .gcard.grid-theme:hover{border-color:rgba(232,196,104,.5);box-shadow:0 18px 50px rgba(232,196,104,.14);}
 .gcard.cup-theme:hover{border-color:rgba(63,224,255,.5);box-shadow:0 18px 50px rgba(63,224,255,.14);}
 .gcard.gacha-theme:hover{border-color:rgba(255,47,176,.5);box-shadow:0 18px 50px rgba(255,47,176,.14);}
+.gcard.signal-warfare-theme{border-color:rgba(63,224,255,.45);box-shadow:0 0 28px rgba(63,224,255,.12);}
+.gcard.signal-warfare-theme:hover{border-color:var(--cyan);box-shadow:0 18px 60px rgba(63,224,255,.25),0 0 35px rgba(160,107,255,.18);}
+.signal-new-badge{background:linear-gradient(100deg,var(--cyan),#a06bff);border:1px solid rgba(255,255,255,.45);color:#071017;text-shadow:none;animation:signalPulse 2.2s ease-in-out infinite;}
+@keyframes signalPulse{0%,100%{box-shadow:0 0 10px rgba(63,224,255,.35)}50%{box-shadow:0 0 24px rgba(63,224,255,.8)}}
 .gcard .thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:#07040e;}
 .gcard .thumb img{width:100%;height:100%;object-fit:cover;object-position:50% 25%;display:block;transition:transform .5s ease;}
 .gcard.live:hover .thumb img{transform:scale(1.05);}
@@ -175,14 +179,14 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
         <button data-set="en">EN</button>
         <button data-set="ko">KO</button>
       </div>
-      <span id="hub-xc" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#e8c468;letter-spacing:.06em;display:none;">— XC</span>
+      <span id="hub-xc" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#e8c468;letter-spacing:.06em;display:none;">— XC</span><span id="hub-energy" style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#b9ff3c;letter-spacing:.06em;">💎 6/6</span>
       <div class="top-mark">XENA <span>GAMES</span></div>
     </div>
   </div>
 
   <div class="signal-pin">
     <span class="sp-title"><span lang="en">DAILY SIGNAL</span><span lang="ko">데일리 시그널</span></span>
-    <a class="sp-btn" href="signal/"><span lang="en">CLAIM →</span><span lang="ko">시그널 받기 →</span></a>
+    <a class="sp-btn" href="signal/"><span lang="en">CLAIM →</span><span lang="ko">시그널 받기 →</span></a><a class="sp-btn" href="../feedback.html"><span lang="en">FEEDBACK</span><span lang="ko">불편 접수</span></a>
   </div>
 
   <div class="head">
@@ -196,10 +200,9 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
 
   <div class="cat-bar" id="cat-bar">
     <button class="cat-btn" data-cat="all"><span lang="en">ALL</span><span lang="ko">전체</span></button>
-    <button class="cat-btn sel" data-cat="popular">🔥 <span lang="en">POPULAR</span><span lang="ko">인기</span></button>
+    <button class="cat-btn sel" data-cat="popular">🔥 <span lang="en">MAIN</span><span lang="ko">메인</span></button>
     <button class="cat-btn" data-cat="photo">📸 <span lang="en">PHOTO &amp; VIBES</span><span lang="ko">포토 &amp; 감성</span></button>
-    <button class="cat-btn" data-cat="puzzle">🧩 <span lang="en">PUZZLE &amp; STRATEGY</span><span lang="ko">퍼즐 &amp; 전략</span></button>
-    <button class="cat-btn" data-cat="soon">⏳ <span lang="en">COMING SOON</span><span lang="ko">출시 예정</span></button>
+    <button class="cat-btn" data-cat="puzzle">🧩 <span lang="en">MINI GAMES</span><span lang="ko">미니 게임</span></button>
   </div>
 
   <div class="grid" id="game-grid">
@@ -305,20 +308,20 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
       </div>
     </div>
 
-    <!-- SIGNAL CLASH (관리자 전용 베타 — 일반 사용자에겐 SOON) -->
-    <div class="gcard live grid-theme" data-id="tcg" data-cat="all">
+    <!-- SIGNAL WARFARE (신규 메인 PvE TCG) -->
+    <div class="gcard live signal-warfare-theme" data-id="tcg" data-cat="popular,puzzle">
       <div class="thumb">
-        <span class="badge live-b">&#9679; LIVE</span>
-        <img src="../images/thumbs/thumb-tcg.jpg" alt="SIGNAL CLASH">
+        <span class="badge signal-new-badge">NEW · LIVE</span>
+        <img src="tcg/assets/images/XENA_SignalWarfare_Cover_v1.webp" alt="XENA: SIGNAL WARFARE" loading="lazy">
       </div>
       <div class="gbody">
-        <div class="gkind" style="color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);">Card Battle</div>
-        <h3>SIGNAL CLASH</h3>
+        <div class="gkind" style="color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);">PvE TCG</div>
+        <h3>XENA: SIGNAL WARFARE</h3>
         <p>
-          <span lang="en">6 turns, 3 zones, win two of three. A XENA card battle.</span>
-          <span lang="ko">6턴, 3구역, 2곳 이상 우세 시 승리. XENA 카드 배틀 — 곧 출시됩니다.</span>
+          <span lang="en">Fluid action turns, owned XENA cards and three AI difficulties.</span>
+          <span lang="ko">내 카드로 덱을 만들고 AI 코어와 자유롭게 전투하세요.</span>
         </p>
-        <a class="play-btn" href="tcg/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
+        <a class="play-btn" href="tcg/"><span lang="en">PLAY SIGNAL WARFARE →</span><span lang="ko">게임 시작 →</span></a>
       </div>
     </div>
 
@@ -333,7 +336,7 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
         <h3>LIVE TOUR</h3>
         <p>
           <span lang="en">Send your cards on tour to Seoul, Tokyo, New York, London. Come back later to collect XC.</span>
-          <span lang="ko">보유 카드를 서울·도쿄·뉴욕·런던으로 투어 보내고, 나중에 돌아와서 XC를 수령하세요 — 곧 출시됩니다.</span>
+          <span lang="ko">보유 카드를 서울·도쿄·뉴욕·런던으로 투어 보내고, 나중에 돌아와서 XC를 수령하세요.</span>
         </p>
         <a class="play-btn" href="idle/"><span lang="en">PLAY NOW →</span><span lang="ko">지금 플레이 →</span></a>
       </div>
@@ -364,11 +367,10 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
 /* [2026-07-26] "베타는 인기/포토/퍼즐에서 빼고 SOON 탭 신설" 요청 —
    tcg/idle을 전 카테고리에서 제외하고 전용 soon 탭으로만 노출한다. */
 var CAT_ORDER = {
-  all:     ['grid','cards','shisen','memory','merge','worldcup','tcg','idle'],
-  popular: ['cards','grid','merge','tcg','idle'],
-  photo:   ['cards','worldcup'],
-  puzzle:  ['grid','shisen','memory','merge'],
-  soon:    ['tcg','idle']
+  all:     ['cards','idle','grid','tcg','worldcup','shisen','memory','merge'],
+  popular: ['cards','idle','grid','tcg'],
+  photo:   ['cards','idle','worldcup'],
+  puzzle:  ['tcg','shisen','memory','merge']
 };
 var grid = document.getElementById('game-grid');
 var allCards = Array.prototype.slice.call(grid.children);
@@ -404,6 +406,8 @@ if (window.XenaAudio) window.XenaAudio.init('hub');
   if (xcEl && window.XenaWallet) {
     window.XenaWallet.subscribe(function(w){
       if (w && typeof w.xc === 'number'){ xcEl.textContent = w.xc + ' XC'; xcEl.style.display = ''; }
+      var energyEl = document.getElementById('hub-energy');
+      if (energyEl && window.XenaWallet.getEnergy) energyEl.textContent = '💎 ' + (window.XenaWallet.getEnergy() === null ? '—' : window.XenaWallet.getEnergy()) + '/6';
     });
   }
 })();

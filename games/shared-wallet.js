@@ -27,8 +27,9 @@
   'use strict';
   var subs = [];
   var balance = null; /* null = 아직 모름(로딩중) */
+  var energyPools = {};
   var ctxReady = null;
-  var unsub = null;
+  var unsub = null, energyUnsub = null, energyUiTimer = null;
 
   function notify(){ subs.forEach(function(fn){ try{ fn(balance); }catch(e){} }); }
 
@@ -45,8 +46,16 @@
     });
   }
 
+  function energyFor(game){
+    var pool = energyPools[game] || {};
+    var stored = typeof pool.energy === 'number' ? pool.energy : 6;
+    var updated = pool.energyUpdatedAt && typeof pool.energyUpdatedAt.toMillis === 'function' ? pool.energyUpdatedAt.toMillis() : Date.now();
+    return Math.min(6, stored + Math.floor(Math.max(0, Date.now() - updated) / 600000));
+  }
+
   function startListening(uid){
     if (unsub) { unsub(); unsub = null; }
+    if (energyUnsub) { energyUnsub(); energyUnsub = null; }
     ctx().then(function(c){
       var fs = c.firestoreApi, db = c.db;
       var ref = fs.doc(db, 'wallets', uid);
@@ -55,6 +64,10 @@
         balance = (typeof v.credits === 'number') ? v.credits : 0;
         notify();
       }, function(){ /* 권한/네트워크 에러는 조용히 무시 — 표시만 못 할 뿐 게임엔 영향 없음 */ });
+      energyUnsub = fs.onSnapshot(fs.doc(db, 'energyPools', uid), function(snap){
+        energyPools = snap.exists() ? (snap.data().pools || {}) : {};
+        notify();
+      }, function(){});
     }).catch(function(){});
   }
 
@@ -62,7 +75,7 @@
     if (!window.XenaCloudSync) return;
     window.XenaCloudSync.subscribe(function(snap){
       if (snap.user) startListening(snap.user.uid);
-      else { balance = null; if (unsub) { unsub(); unsub = null; } notify(); }
+      else { balance = null; energyPools = {}; if (unsub) { unsub(); unsub = null; } if (energyUnsub) { energyUnsub(); energyUnsub = null; } notify(); }
     });
   }
   init();
@@ -75,7 +88,27 @@
   function claimStageReward(game, stage){ return callFn('claimStageReward', {game: game, stage: Number(stage)}); }
   function claimWorldcupFinish(){ return callFn('claimWorldcupFinish', {}); }
   function claimChessMatch(){ return callFn('claimChessMatch', {}); }
-  function spend(amount, reason){ return callFn('spendCredits', {amount: amount, reason: reason||''}); }
+  function spend(amount, reason, idempotencyKey){
+    var key = String(idempotencyKey || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + String(Math.random()).slice(2))));
+    return callFn('spendCredits', {amount: amount, reason: reason||'', idempotencyKey: key});
+  }
+  function consumeEnergy(game){ return callFn('consumeEnergy', {game: game}); }
+  function initEnergyUI(game){
+    if(!game) return;
+    var el = document.getElementById('xena-global-economy');
+    if(!el){
+      el = document.createElement('div'); el.id = 'xena-global-economy';
+      el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9998;display:flex;align-items:center;gap:14px;padding:12px 20px;border:1px solid rgba(183,255,60,.55);border-radius:18px;background:rgba(4,6,12,.92);box-shadow:0 0 26px rgba(50,230,239,.22);font:800 18px/1 monospace;color:#f5f7ff;backdrop-filter:blur(12px)';
+      document.body.appendChild(el);
+    }
+    function render(){
+      var n = energyFor(game), pool = energyPools[game] || {};
+      var updated = pool.energyUpdatedAt && typeof pool.energyUpdatedAt.toMillis === 'function' ? pool.energyUpdatedAt.toMillis() : Date.now();
+      var wait = n >= 6 ? '' : ' '+Math.ceil(Math.max(0, 600000 - ((Date.now() - updated) % 600000))/1000)+'s';
+      el.innerHTML = '<span style="color:#e8c468">'+(balance === null ? '…' : balance.toLocaleString())+' XC</span><span style="color:#b9ff3c;letter-spacing:2px">'+Array.from({length:6}, function(_,i){ return i<n ? '💎' : '◇'; }).join('')+'</span><small style="color:#b9ff3c;font-size:13px">'+(wait || 'FULL')+'</small>';
+    }
+    render(); if(energyUiTimer) clearInterval(energyUiTimer); energyUiTimer = setInterval(render, 1000); subscribe(render);
+  }
 
   /* ── SIGNAL CLASH (TCG) / LIVE TOUR (방치형 디스패치) — 2026-07-22 추가 ── */
   function claimTcgMatch(difficulty, outcome){ return callFn('claimTcgMatch', {difficulty: difficulty, outcome: outcome}); }
@@ -112,6 +145,9 @@
     claimWorldcupFinish: claimWorldcupFinish,
     claimChessMatch: claimChessMatch,
     spend: spend,
+    consumeEnergy: consumeEnergy,
+    getEnergy: energyFor,
+    initEnergyUI: initEnergyUI,
     purchase: purchase,
     claimTcgMatch: claimTcgMatch,
     unlockCity: unlockCity,

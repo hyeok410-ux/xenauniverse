@@ -55,7 +55,6 @@ function verifyStripeSignature(rawBody, signature) {
 
 // 대표님 전용 관리자 UID. 로그인 후 프로필 패널에 표시되는 UID를 여기에 채워 넣어야
 // adminGrantCredits / adminListWallets 가 동작한다. 비어 있으면 항상 거부된다.
-const ADMIN_UID = "PiegXmg9KjNJS9JDS3piP0agUB02";
 
 const MATCH_REWARDS = Object.freeze({
   ai_easy_win: { credits: 20, shards: 0 },
@@ -88,6 +87,59 @@ function newYorkDateKey(date = new Date()) {
 function requireAuth(request) {
   if (!request.auth || !request.auth.uid) throw new HttpsError("unauthenticated", "Google sign-in is required.");
   return request.auth.uid;
+}
+
+const MAX_ENERGY = 6;
+const ENERGY_REFILL_MS = 10 * 60 * 1000;
+const ENERGY_GAMES = new Set(["override_grid", "signal_link", "memory_grid", "xena_merge", "signal_clash"]);
+
+function energyState(walletData, nowMs = Date.now()) {
+  const stored = Number.isInteger(walletData && walletData.energy)
+    ? walletData.energy
+    : MAX_ENERGY;
+  const updatedAt = walletData && walletData.energyUpdatedAt;
+  const updatedMs = updatedAt && typeof updatedAt.toMillis === "function"
+    ? updatedAt.toMillis()
+    : Number(updatedAt || nowMs);
+  const elapsed = Math.max(0, nowMs - updatedMs);
+  const refilled = Math.floor(elapsed / ENERGY_REFILL_MS);
+  const energy = Math.min(MAX_ENERGY, stored + refilled);
+  const baseMs = energy >= MAX_ENERGY ? nowMs : updatedMs + refilled * ENERGY_REFILL_MS;
+  return { energy, energyUpdatedAt: baseMs };
+}
+
+exports.consumeEnergy = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const game = String(request.data && request.data.game || "");
+  if (!ENERGY_GAMES.has(game)) throw new HttpsError("invalid-argument", "Unknown energy game.");
+  const energyRef = db.doc(`energyPools/${uid}`);
+  const result = await db.runTransaction(async (tx) => {
+    const energyDoc = await tx.get(energyRef);
+    const pools = energyDoc.exists ? (energyDoc.get("pools") || {}) : {};
+    const next = energyState(pools[game] || {}, Date.now());
+    if (next.energy <= 0) {
+      throw new HttpsError("resource-exhausted", "No energy available.");
+    }
+    const remaining = next.energy - 1;
+    tx.set(energyRef, {
+      uid,
+      pools: { ...pools, [game]: { energy: remaining, energyUpdatedAt: FieldValue.serverTimestamp() } },
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { game, energy: remaining, maxEnergy: MAX_ENERGY, refillMs: ENERGY_REFILL_MS };
+  });
+  return result;
+});
+
+function requireIdempotencyKey(request, fallback) {
+  const raw = String(request.data && request.data.idempotencyKey || fallback || "").trim();
+  if (!/^[A-Za-z0-9:_-]{8,128}$/.test(raw)) throw new HttpsError("invalid-argument", "A valid idempotencyKey is required.");
+  return raw;
+}
+
+function idempotencyRef(uid, operation, key) {
+  const digest = crypto.createHash("sha256").update(`${operation}:${key}`).digest("hex").slice(0, 40);
+  return db.doc(`idempotency/${uid}_${operation}_${digest}`);
 }
 
 function cleanNickname(value) {
@@ -265,14 +317,24 @@ exports.awardMatchReward = onCall(async (request) => {
   const rewardKey = String(request.data && request.data.rewardKey || "");
   const reward = MATCH_REWARDS[rewardKey];
   if (!eventId || !reward) throw new HttpsError("invalid-argument", "Invalid reward request.");
+  const idempotencyKey = requireIdempotencyKey(request, eventId);
   const dayKey = newYorkDateKey();
   const eventRef = db.doc(`rewardEvents/${uid}_${dayKey}_${eventId}`);
   const dailyRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
   const walletRef = db.doc(`wallets/${uid}`);
+  const idemRef = idempotencyRef(uid, "awardMatchReward", idempotencyKey);
   let granted = { credits: 0, shards: 0 };
+  let duplicate = false;
   await db.runTransaction(async (transaction) => {
+    const idem = await transaction.get(idemRef);
+    if (idem.exists) { granted = idem.data().granted || granted; duplicate = true; return; }
     const event = await transaction.get(eventRef);
-    if (event.exists) return;
+    if (event.exists) {
+      const old = event.data() || {};
+      granted = old.granted || { credits: Number(old.credits || 0), shards: Number(old.shards || 0) };
+      duplicate = true;
+      return;
+    }
     const daily = await transaction.get(dailyRef);
     const dailyData = daily.exists ? daily.data() : {};
     const eventWins = dailyData.eventWins || {};
@@ -298,11 +360,12 @@ exports.awardMatchReward = onCall(async (request) => {
       transaction.set(dailyRef, { uid, dayKey, aiCounts: { ...aiCounts, [rewardKey]: current + 1 }, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     }
 
-    transaction.set(eventRef, { uid, dayKey, eventId, rewardKey, credits: granted.credits, shards: granted.shards, createdAt: FieldValue.serverTimestamp() });
+    transaction.set(eventRef, { uid, dayKey, eventId, rewardKey, granted, credits: granted.credits, shards: granted.shards, createdAt: FieldValue.serverTimestamp() });
     transaction.set(walletRef, { uid, credits: FieldValue.increment(granted.credits), shards: FieldValue.increment(granted.shards), schemaVersion: 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    transaction.set(idemRef, { uid, operation: "awardMatchReward", granted, status: "completed", createdAt: FieldValue.serverTimestamp() });
   });
   const wallet = await walletRef.get();
-  return { credits: wallet.get("credits") || 0, shards: wallet.get("shards") || 0, granted };
+  return { credits: wallet.get("credits") || 0, shards: wallet.get("shards") || 0, granted, duplicate };
 });
 
 /* ── 주간 랭킹: 서버 검증 기록 제출 ──
@@ -381,8 +444,8 @@ exports.submitScore = onCall(async (request) => {
    submitScore 가 오늘 실제로 그 스테이지를 클리어했다고 남긴 dailyClears 기록이
    있을 때만 지급한다 — 클라이언트가 그냥 "클리어했다"고 우기는 걸로는 못 받는다. */
 const STAGE_REWARD = Object.freeze({
-  shisen: (stage) => stage * 2,
-  memory: (stage) => stage,
+  shisen: (stage) => Math.min(50, stage * 2),
+  memory: (stage) => Math.min(50, stage),
 });
 exports.claimStageReward = onCall(async (request) => {
   const uid = requireAuth(request);
@@ -566,7 +629,10 @@ exports.claimChessMatch = onCall(async (request) => {
   const dayKey = newYorkDateKey();
   const claimRef = db.doc(`dailyRewardClaims/${uid}_${dayKey}`);
   const walletRef = db.doc(`wallets/${uid}`);
-  const LIMIT = 3, AMOUNT = 8;
+  const LIMIT = 3;
+  const difficulty = String(request.data && request.data.difficulty || "normal");
+  const AMOUNT = ({ easy: 50, normal: 100, hard: 150 })[difficulty];
+  if (!AMOUNT) throw new HttpsError("invalid-argument", "Unknown difficulty.");
 
   const result = await db.runTransaction(async (tx) => {
     const claim = await tx.get(claimRef);
@@ -590,12 +656,18 @@ exports.spendCredits = onCall(async (request) => {
     throw new HttpsError("invalid-argument", "Invalid amount.");
   }
   const walletRef = db.doc(`wallets/${uid}`);
+  const idempotencyKey = requireIdempotencyKey(request);
+  const idemRef = idempotencyRef(uid, "spendCredits", idempotencyKey);
   const result = await db.runTransaction(async (tx) => {
+    const idem = await tx.get(idemRef);
+    if (idem.exists) return { ...(idem.data().response || {}), duplicate: true };
     const wallet = await tx.get(walletRef);
     const current = (wallet.exists && wallet.get("credits")) || 0;
     if (current < amount) throw new HttpsError("failed-precondition", "Insufficient balance.");
     tx.set(walletRef, { uid, credits: FieldValue.increment(-amount), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    return { spent: amount, reason };
+    const response = { spent: amount, reason };
+    tx.set(idemRef, { uid, operation: "spendCredits", status: "completed", response, createdAt: FieldValue.serverTimestamp() });
+    return response;
   });
   const wallet = await walletRef.get();
   return { ...result, credits: wallet.get("credits") || 0 };
@@ -620,9 +692,9 @@ const REWARD_PER_POWER = 15;
 
 /* ── SIGNAL CLASH: AI 난이도별 승/패 보상. 하루 총 5판(난이도 무관 합산)까지만 지급.
    승수는 하루 제한과 별개로 wallets/{uid}.tcgWins 에 영구 누적 — LIVE TOUR 4번째 슬롯 게이트가 이 값을 본다. */
-const TCG_REWARDS = Object.freeze({ easy: 8, normal: 15, hard: 30, veryhard: 50 });
+const TCG_REWARDS = Object.freeze({ easy: 50, normal: 100, hard: 150, veryhard: 150 });
 const TCG_LOSS_REWARD = 5;
-const TCG_FIRST_WIN_BONUS = 20;
+const TCG_FIRST_WIN_BONUS = 0;
 const TCG_DAILY_LIMIT = 5;
 
 exports.claimTcgMatch = onCall(async (request) => {
@@ -668,7 +740,7 @@ exports.claimTcgMatch = onCall(async (request) => {
    받을 수 있는 점수에 상한을 두고, (2) 하루 지급 횟수를 제한해서 무한 반복 수령을 막는다. */
 const MERGE_MAX_SCORE_PER_CLAIM = 20000;   /* 이보다 큰 점수를 보내면 이 값으로 잘라서 계산 */
 const MERGE_XC_PER_SCORE = 1 / 25;         /* 점수 25당 XC 1 */
-const MERGE_MAX_REWARD = 300;              /* 한 판 보상 상한 */
+const MERGE_MAX_REWARD = 50;               /* 기타 미니게임 보상 상한 */
 const MERGE_DAILY_LIMIT = 3;
 exports.claimMergeScore = onCall(async (request) => {
   const uid = requireAuth(request);
@@ -686,7 +758,7 @@ exports.claimMergeScore = onCall(async (request) => {
     const played = Number(data.mergePlays || 0);
     if (played >= MERGE_DAILY_LIMIT) throw new HttpsError("resource-exhausted", "Daily reward limit reached.");
 
-    const granted = Math.min(MERGE_MAX_REWARD, Math.floor(score * MERGE_XC_PER_SCORE));
+    const granted = Math.min(50, MERGE_MAX_REWARD, Math.floor(score * MERGE_XC_PER_SCORE));
     tx.set(claimRef, { uid, dayKey, mergePlays: played + 1, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     tx.set(walletRef, { uid, credits: FieldValue.increment(granted), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     return { granted, played: played + 1, limit: MERGE_DAILY_LIMIT };
@@ -835,7 +907,7 @@ exports.claimTourReward = onCall(async (request) => {
 
     const sumPower = t.grades.reduce((s, g) => s + (GRADE_POWER[g] || 0), 0);
     const bonus = synergyBonus(t.elements, cityInfo.element);
-    const granted = Math.floor(sumPower * REWARD_PER_POWER * cityInfo.mult * (1 + bonus));
+    const granted = Math.min(9000, Math.floor(sumPower * REWARD_PER_POWER * cityInfo.mult * (1 + bonus)));
 
     tx.delete(tourRef);
     tx.set(walletRef, { uid, credits: FieldValue.increment(granted), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
@@ -960,7 +1032,7 @@ exports.claimWeeklyReward = onCall(async (request) => {
 /* ── 관리자 전용 ── */
 function requireAdmin(request) {
   const uid = requireAuth(request);
-  if (!ADMIN_UID || uid !== ADMIN_UID) throw new HttpsError("permission-denied", "Admin only.");
+  if (!request.auth.token || request.auth.token.admin !== true) throw new HttpsError("permission-denied", "Admin only.");
   return uid;
 }
 
@@ -1024,15 +1096,13 @@ exports.submitFeedback = onCall(async (request) => {
 });
 
 exports.adminListFeedback = onCall(async (request) => {
-  const uid = requireAuth(request);
-  if (uid !== ADMIN_UID) throw new HttpsError('permission-denied', 'Admin only.');
+  requireAdmin(request);
   const snap = await db.collection('feedback').orderBy('createdAt', 'desc').limit(100).get();
   return { items: snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) };
 });
 
 exports.adminDeleteFeedback = onCall(async (request) => {
-  const uid = requireAuth(request);
-  if (uid !== ADMIN_UID) throw new HttpsError('permission-denied', 'Admin only.');
+  requireAdmin(request);
   const id = String(request.data?.id || '').trim();
   if (!id || id.length > 120) throw new HttpsError('invalid-argument', 'Feedback id is required.');
   await db.doc(`feedback/${id}`).delete();

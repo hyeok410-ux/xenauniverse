@@ -430,7 +430,8 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <h3>WEEKLY PACK</h3>
       <div class="cool" id="cool-weekly">—</div>
       <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
-      <button class="draw-btn" id="btn-weekly-pack">FREE + 1500 XC</button>
+      <button class="draw-btn" id="btn-weekly-free">FREE WEEKLY DRAW</button>
+      <button class="xc-btn" id="btn-weekly-pack">OPEN · 1,500 XC</button>
       <div class="odds"><span class="oN">N 20%</span> · <span class="oR">R 40%</span> · <span class="oS">S 26%</span> · <span class="oSR">SR 11%</span> · <span class="oSSR">SSR 3%</span></div>
     </div>
     <div class="pack archive" data-ptab="premium">
@@ -885,10 +886,17 @@ function tickCooldowns(){
 }
 setInterval(tickCooldowns, 1000);
 
+function claimWeeklyFree(){
+  var wk = nyWeekMondayKey();
+  if(st.packs.weeklyFreeClaimed === wk){ toast(t('Free weekly pack already opened', '이번 주간 무료 팩은 이미 열었습니다')); return; }
+  st.packs.weeklyFreeClaimed = wk; save(SAVE_KEY, st); doPull('weekly');
+}
+
 $('btn-signal').addEventListener('click', function(){ draw('signal', false); });
 $('btn-sov').addEventListener('click', function(){ draw('sov', false); });
 $('btn-elite').addEventListener('click', function(){ draw('elite', false); });
-$('btn-weekly-pack').addEventListener('click', function(){ draw('weekly', false); });
+$('btn-weekly-free').addEventListener('click', claimWeeklyFree);
+$('btn-weekly-pack').addEventListener('click', function(){ draw('weekly', true); });
 $('btn-archive').addEventListener('click', function(){ draw('archive', false); });
 $('btn-archive-xc').addEventListener('click', function(){ draw('archive', true); });
 $('btn-signal-xc').addEventListener('click', function(){ draw('signal', true); });
