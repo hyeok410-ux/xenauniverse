@@ -119,6 +119,15 @@
     }
     render(); if(energyUiTimer) clearInterval(energyUiTimer); energyUiTimer = setInterval(render, 1000);
     if (window.XenaWallet && typeof window.XenaWallet.subscribe === 'function') window.XenaWallet.subscribe(function(){ render(); });
+    setTimeout(function(){
+      var hud = document.getElementById('xena-global-economy');
+      if (!hud || hud.querySelector('.xena-gem')) return;
+      var current = energyFor(game), svg = '<svg viewBox="0 0 32 36" width="26" height="29" aria-hidden="true"><path d="M16 1 30 12 24 31 16 35 8 31 2 12Z" fill="currentColor" opacity=".22"/><path d="M16 1 30 12 16 16 2 12Z" fill="currentColor" opacity=".95"/><path d="M2 12 16 16 16 35 8 31Z" fill="currentColor" opacity=".62"/><path d="M30 12 16 16 16 35 24 31Z" fill="currentColor" opacity=".8"/></svg>';
+      var gems = Array.from({length:6}, function(_,i){ return '<span class="xena-gem '+(i < current ? 'filled' : 'empty')+'">'+svg+'</span>'; }).join('');
+      var xc = hud.querySelector('.xena-xc'); if (!xc) { var first = hud.firstElementChild; if (first) first.className = 'xena-xc'; }
+      var balanceText = hud.querySelector('.xena-xc');
+      hud.innerHTML = '<span class="xena-xc">'+(balance === null ? '--' : String(balance))+' XC</span><span class="xena-gems">'+gems+'</span><small class="xena-refill">'+(current >= 6 ? 'FULL' : 'REFILL')+'</small>';
+    }, 0);
   }
 
   /* ── SIGNAL CLASH (TCG) / LIVE TOUR (방치형 디스패치) — 2026-07-22 추가 ── */
