@@ -133,7 +133,27 @@
       notify();
       renderButton();
     });
-    window.XenaCloudSync.connect().catch(function(){});
+    window.XenaCloudSync.connect().then(function(){
+      return ctx();
+    }).then(function(c){
+      /* onAuthStateChanged may have fired before this module subscribed;
+         read the authoritative Firebase user once more so admin/profile UI
+         cannot remain stuck in the guest or nickname-pending state. */
+      var u = c && c.auth && c.auth.currentUser;
+      if (!u) return;
+      var changed = !authUser || authUser.uid !== u.uid;
+      authUser = u;
+      if (changed || !nicknameChecked){
+        adminClaim = false;
+        u.getIdTokenResult(true).then(function(token){
+          adminClaim = !!(token.claims && token.claims.admin);
+          notify(); renderButton(); renderAdminBox();
+        }).catch(function(){});
+        nickname = null; nicknameChecked = false;
+        fetchOrCreateNickname(u.uid);
+      }
+      notify(); renderButton();
+    }).catch(function(){});
   }
 
   function signIn(){
