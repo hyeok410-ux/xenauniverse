@@ -91,7 +91,7 @@ function requireAuth(request) {
 
 const MAX_ENERGY = 6;
 const ENERGY_REFILL_MS = 10 * 60 * 1000;
-const ENERGY_GAMES = new Set(["override_grid", "signal_link", "memory_grid", "xena_merge", "signal_clash"]);
+const ENERGY_GAMES = new Set(["override_grid", "signal_link", "memory_grid", "xena_merge", "signal_clash", "signal_warfare"]);
 
 function energyState(walletData, nowMs = Date.now()) {
   const stored = Number.isInteger(walletData && walletData.energy)
