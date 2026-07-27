@@ -393,7 +393,13 @@
   function callFn(name, data){
     return ctx().then(function(c){
       if (!c.functionsApi || !c.functionsInstance) return Promise.reject(new Error('FUNCTIONS_UNAVAILABLE'));
-      return c.functionsApi.httpsCallable(c.functionsInstance, name)(data || {}).then(function(r){ return r.data; });
+      /* Refresh the Auth token immediately before privileged calls. This avoids
+         a stale/empty Authorization header after a long-lived hub tab resumes. */
+      var current = c.auth && c.auth.currentUser;
+      if (!current || typeof current.getIdToken !== 'function') return Promise.reject(new Error('AUTH_REQUIRED'));
+      return current.getIdToken(true).then(function(){
+        return c.functionsApi.httpsCallable(c.functionsInstance, name)(data || {});
+      }).then(function(r){ return r.data; });
     });
   }
   function renderAdminBox(){

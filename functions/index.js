@@ -586,16 +586,31 @@ exports.claimGachaDust = onCall(async (request) => {
   const uid = requireAuth(request);
   const grade = String(request.data && request.data.grade || "");
   const count = Number(request.data && request.data.count);
-  const unit = DUST_VALUE[grade];
-  if (!unit) throw new HttpsError("invalid-argument", "Unknown grade.");
+  const cardId = String(request.data && request.data.cardId || "").trim();
+  const isTcg = /^PC-\d{2}$/i.test(cardId);
+  const baseUnit = DUST_VALUE[grade];
+  if (!baseUnit) throw new HttpsError("invalid-argument", "Unknown grade.");
+  if (!/^(?:PC-\d{2}|[A-Z0-9][A-Z0-9-]{1,39})$/i.test(cardId)) {
+    throw new HttpsError("invalid-argument", "Invalid card id.");
+  }
   if (!Number.isInteger(count) || count <= 0 || count > 500) {
     throw new HttpsError("invalid-argument", "Invalid count.");
   }
+  const unit = baseUnit * (isTcg ? 2 : 1);
   const amount = unit * count;
   const walletRef = db.doc(`wallets/${uid}`);
-  await walletRef.set({ uid, credits: FieldValue.increment(amount), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  const idempotencyKey = requireIdempotencyKey(request);
+  const idemRef = idempotencyRef(uid, "claimGachaDust", idempotencyKey);
+  const result = await db.runTransaction(async (tx) => {
+    const idem = await tx.get(idemRef);
+    if (idem.exists) return { ...(idem.data().response || {}), duplicate: true };
+    const response = { granted: amount, unit, cardId, isTcg };
+    tx.set(walletRef, { uid, credits: FieldValue.increment(amount), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(idemRef, { uid, operation: "claimGachaDust", status: "completed", response, createdAt: FieldValue.serverTimestamp() });
+    return response;
+  });
   const wallet = await walletRef.get();
-  return { granted: amount, credits: wallet.get("credits") || 0 };
+  return { ...result, credits: wallet.get("credits") || 0 };
 });
 
 /* ── 이상형 월드컵 완주 보상: 5 XC, 하루 3회 한도 ── */
@@ -1095,29 +1110,69 @@ exports.submitFeedback = onCall(async (request) => {
    the raw Admin SDK object was the source of the generic "Internal" error in
    the feedback inbox. */
 function timestampToIso(value) {
-  if (!value) return null;
-  if (typeof value.toDate === "function") return value.toDate().toISOString();
-  if (value instanceof Date) return value.toISOString();
-  const ms = Number(value);
-  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+  try {
+    if (!value) return null;
+    if (typeof value.toDate === "function") {
+      const date = value.toDate();
+      return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+    }
+    if (value instanceof Date) return Number.isFinite(value.getTime()) ? value.toISOString() : null;
+    const ms = Number(value);
+    return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function safeFeedbackValue(value, maxLength = 2400) {
+  try {
+    if (value == null) return "";
+    if (typeof value === "string") return value.slice(0, maxLength);
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    return JSON.stringify(value).slice(0, maxLength);
+  } catch (_) {
+    return "[unreadable legacy value]";
+  }
+}
+
+function feedbackCreatedMs(item) {
+  try {
+    const value = item && item.createdAt;
+    if (value && typeof value.toMillis === "function") return value.toMillis();
+    if (value instanceof Date) return value.getTime();
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch (_) {
+    return 0;
+  }
 }
 
 exports.adminListFeedback = onCall(async (request) => {
   requireAdmin(request);
-  const snap = await db.collection('feedback').orderBy('createdAt', 'desc').limit(100).get();
+  let docs;
+  try {
+    docs = (await db.collection('feedback').orderBy('createdAt', 'desc').limit(100).get()).docs;
+  } catch (error) {
+    /* Old hand-created test records can have absent or non-sortable createdAt
+       values. They must not make the entire admin inbox unavailable. */
+    console.error('adminListFeedback ordered query failed; using safe fallback', error);
+    docs = (await db.collection('feedback').limit(100).get()).docs;
+  }
+  const items = docs.map((doc) => {
+    const item = doc.data() || {};
+    return {
+      id: doc.id,
+      uid: safeFeedbackValue(item.uid, 180),
+      category: safeFeedbackValue(item.category || 'general', 60),
+      text: safeFeedbackValue(item.text, 2000),
+      language: safeFeedbackValue(item.language || 'en', 12),
+      status: safeFeedbackValue(item.status || 'open', 60),
+      createdAt: timestampToIso(item.createdAt),
+      _sortMs: feedbackCreatedMs(item),
+    };
+  }).sort((a, b) => b._sortMs - a._sortMs).map(({ _sortMs, ...item }) => item);
   return {
-    items: snap.docs.map((doc) => {
-      const item = doc.data() || {};
-      return {
-        id: doc.id,
-        uid: String(item.uid || ''),
-        category: String(item.category || 'general'),
-        text: String(item.text || ''),
-        language: String(item.language || 'en'),
-        status: String(item.status || 'open'),
-        createdAt: timestampToIso(item.createdAt),
-      };
-    }),
+    items,
   };
 });
 
