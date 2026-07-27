@@ -2141,7 +2141,11 @@
     const reasonText = draw ? ({ threefold: language === "en" ? "Draw: the same position repeated four times." : "무승부: 같은 포지션이 네 번 반복되었습니다.", "forty-move": language === "en" ? "Draw: 80 quiet moves passed without a capture or Signal move." : "무승부: 포획이나 시그널 이동 없이 80번의 조용한 수가 진행되었습니다.", stalemate: language === "en" ? "Draw: the player to move has no legal move, but is not in check." : "무승부: 둘 차례에 합법적인 수가 없지만 체크 상태는 아닙니다." }[reason] || (language === "en" ? "Draw by the board rules." : "보드 규칙에 따른 무승부입니다.")) : reason;
     const title = draw ? t("draw") : localGame ? `${winner === "white" ? t("playerOne") : t("playerTwo")} ${t("win")}` : win ? t("win") : t("defeat");
     const celebrate = win || (localGame && !draw);
-    result = { title, reason: reasonText, reward: serverReward ? 0 : creditReward, shards: serverReward ? 0 : shardReward, bonus: 0, localGame, online: gameMode === "online", win, celebrate, rewardStatus: serverReward ? "pending" : "" };
+    // The earned amount is deterministic from the selected difficulty.  Paint it
+    // immediately so the reward chest never opens with a misleading “XC +0”.
+    // The server call below remains the source of truth for the wallet ledger and
+    // may still correct the amount if a daily claim was already consumed.
+    result = { title, reason: reasonText, reward: creditReward, shards: shardReward, bonus: 0, localGame, online: gameMode === "online", win, celebrate, rewardStatus: serverReward ? "pending" : "" };
     chestOpened = false;
     renderGame();
     if (serverReward) {

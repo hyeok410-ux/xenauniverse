@@ -71,11 +71,23 @@
     } catch (err) { status('No energy available. Wait for a gem to recharge.'); start.disabled = false; return; }
     var deck = deckForBattle(), conf = DIFFICULTY[state.difficulty], first = Math.random() < .5 ? 'player' : 'ai';
     state.game = { difficulty: state.difficulty, first: first, active: first, round: 1, player: player('player', deck, 30), ai: player('ai', shuffle(cards().concat(cards())), conf.core) };
-    show('battle'); await coin(first); startTurn(state.game[first]); renderBattle(); if (first === 'ai') aiTurn();
+    /* setup → Start click → coin toss → battle.  Do not mount the battle board
+       until the toss resolves, which prevents the old overlay/render deadlock. */
+    await coin(first);
+    startTurn(state.game[first]);
+    show('battle');
+    renderBattle();
+    if (first === 'ai') aiTurn();
   }
   function coin(first) {
     var overlay = $('#coin-toss'), result = $('#coin-result'); overlay.hidden = false; result.textContent = '';
-    return new Promise(function (resolve) { setTimeout(function () { result.textContent = first === 'player' ? 'YOU GO FIRST' : 'AI GOES FIRST'; setTimeout(function () { overlay.hidden = true; resolve(); }, 700); }, 1400); });
+    return new Promise(function (resolve) {
+      var done = false;
+      function finish() { if (done) return; done = true; overlay.hidden = true; resolve(); }
+      setTimeout(function () { result.textContent = first === 'player' ? 'YOU GO FIRST' : 'AI GOES FIRST'; setTimeout(finish, 700); }, 1400);
+      /* Fail-open guard: a visual asset may fail, but a match must never freeze. */
+      setTimeout(finish, 2600);
+    });
   }
   function unit(c, side, slot) {
     var el = document.createElement('article'); el.className = 'card-unit'; el.dataset.side = side; el.dataset.slot = slot; el.innerHTML = cardHtml(c);
