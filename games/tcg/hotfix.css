@@ -1,0 +1,2 @@
+.coin-overlay[hidden]{display:none!important}
+.deck-copy-count{position:absolute;right:7px;bottom:7px;z-index:4;padding:4px 7px;border:1px solid rgba(232,196,104,.75);border-radius:8px;background:rgba(5,8,18,.9);color:#ffe7a3;font:800 .58rem/1 'JetBrains Mono',monospace;letter-spacing:.05em}
