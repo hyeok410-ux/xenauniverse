@@ -92,7 +92,7 @@
        until the toss resolves, which prevents the old overlay/render deadlock. */
     await coin(first);
     startTurn(state.game[first]);
-    show('battle');
+    show('battle-view');
     renderBattle();
     if (first === 'ai') aiTurn();
   }
