@@ -127,6 +127,7 @@
         authUser.getIdTokenResult(true).then(function(token){ adminClaim = !!(token.claims && token.claims.admin); notify(); renderButton(); renderAdminBox(); }).catch(function(){});
         nickname = null; nicknameChecked = false;
         fetchOrCreateNickname(authUser.uid);
+        recordVisitorSession(authUser);
       } else if (!authUser){
         nickname = null; nicknameChecked = false; adminClaim = false;
       }
@@ -151,6 +152,7 @@
         }).catch(function(){});
         nickname = null; nicknameChecked = false;
         fetchOrCreateNickname(u.uid);
+        recordVisitorSession(u);
       }
       notify(); renderButton();
     }).catch(function(){});
@@ -163,6 +165,12 @@
   function signOut(){
     if (!window.XenaCloudSync) return Promise.resolve();
     return window.XenaCloudSync.signOut();
+  }
+  function recordVisitorSession(user){
+    if (!user || !user.uid) return;
+    var key = 'xena_visitor_logged_' + user.uid;
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch(e) {}
+    callFn('recordVisitorLog', {}).catch(function(){});
   }
 
   /* ── XC 누적 / 플레이타임 (로컬 통계 — 뱃지용) ── */
@@ -289,6 +297,9 @@
     '.xprof-feedback-item pre{white-space:pre-wrap;word-break:break-word;color:#e8e6f2;font:12px/1.55 ui-monospace,monospace;margin:0 0 9px;}'+
     '.xprof-feedback-meta{font-size:10px;color:#8d8aa5;margin-bottom:8px;}'+
     '.xprof-feedback-item button{border:0;border-radius:7px;padding:6px 10px;background:#ff6b8a;color:#270510;font:700 10px ui-monospace,monospace;cursor:pointer;}'+
+    '.xprof-admin-table{width:100%;border-collapse:collapse;font:10px/1.45 ui-monospace,monospace;color:#e8e6f2;}'+
+    '.xprof-admin-table th,.xprof-admin-table td{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left;vertical-align:top;word-break:break-all;}'+
+    '.xprof-admin-table th{position:sticky;top:0;background:#111323;color:#3fe0ff;}'+
     '#xprof-toast{position:fixed;top:56px;right:12px;z-index:600;background:linear-gradient(135deg,#a06bff,#3fe0ff);color:#0a0912;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;padding:10px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;transform:translateY(-8px);transition:.35s ease;pointer-events:none;}'+
     '#xprof-toast.on{opacity:1;transform:translateY(0);}';
   document.head.appendChild(style);
@@ -331,7 +342,7 @@
         '<div class="xprof-admin-row"><input id="xa-uid" placeholder="target UID (비우면 나 자신)"></div>'+
         '<div class="xprof-admin-row"><input id="xa-amount" placeholder="credits (예: 1000, -500)"><button id="xa-grant">지급</button></div>'+
         '<div class="xprof-admin-row"><button id="xa-list">비정상 재화 조회</button><button id="xa-reset">대상 UID 초기화</button></div>'+
-        '<div class="xprof-admin-row"><button id="xa-feedback-list">FEEDBACK</button><button id="xa-feedback-delete">DELETE SELECTED</button></div>'+
+        '<div class="xprof-admin-row"><button id="xa-feedback-list">CS INBOX</button><button id="xa-visitors">VISITOR LOG</button></div>'+
         '<div class="xprof-admin-out" id="xa-out"></div>'+
       '</div>'+
       '<button class="xprof-signout" id="xprof-signout">'+tt({ko:'로그아웃',en:'Sign out'})+'</button>'+
@@ -405,8 +416,15 @@
     callFn('adminGrantCredits', {targetUid:targetUid, amount:amount}).then(adminLog).catch(function(e){ adminLog('오류: '+(e.message||e)); });
   });
   if (xaList) xaList.addEventListener('click', function(){
-    adminLog('조회 중…');
-    callFn('adminListWallets', {threshold:500}).then(adminLog).catch(function(e){ adminLog('오류: '+(e.message||e)); });
+    adminLog('Loading flagged wallets…');
+    callFn('adminListWallets', {threshold:500}).then(function(result){
+      var rows = (result && result.flagged) || [];
+      var html = rows.length ? '<table class="xprof-admin-table"><thead><tr><th>UID</th><th>XC</th><th>Shards</th></tr></thead><tbody>'+
+        rows.map(function(x){ return '<tr><td>'+escapeHtml(x.uid)+'</td><td>'+escapeHtml(x.credits)+'</td><td>'+escapeHtml(x.shards)+'</td></tr>'; }).join('')+
+        '</tbody></table>' : '<p style="color:#9a97b5">No wallet reaches the selected threshold.</p>';
+      openAdminModal('FLAGGED WALLETS · '+escapeHtml(result && result.threshold || 500)+'+', html);
+      adminLog(rows.length + ' flagged wallet(s) / '+String(result && result.totalChecked || 0)+' checked.');
+    }).catch(function(e){ adminLog('Error: '+(e.message||e)); });
   });
   if (xaReset) xaReset.addEventListener('click', function(){
     var targetUid = document.getElementById('xa-uid').value.trim();
@@ -418,13 +436,24 @@
 
   var feedbackItems = [];
   var feedbackListEl = document.getElementById('xprof-feedback-list');
+  function escapeHtml(value){
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function openAdminModal(title, html){
+    var card = document.getElementById('xprof-feedback-card');
+    if (!card || !feedbackModal) return;
+    card.innerHTML = '<header><span>'+escapeHtml(title)+'</span><button id="xprof-feedback-close" aria-label="Close">×</button></header><div id="xprof-feedback-list">'+html+'</div>';
+    feedbackListEl = document.getElementById('xprof-feedback-list');
+    feedbackModal.classList.add('on');
+  }
   function renderFeedbackInbox(){
     if (!feedbackListEl) return;
-    if (!feedbackItems.length){ feedbackListEl.innerHTML = '<p style="color:#9a97b5;font:12px ui-monospace,monospace">No feedback.</p>'; return; }
+    if (!feedbackItems.length){ feedbackListEl.innerHTML = '<p style="color:#9a97b5;font:12px ui-monospace,monospace">No feedback has been received.</p>'; return; }
     feedbackListEl.innerHTML = feedbackItems.map(function(x, i){
-      var text = String(x.text || '').replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; });
-      var meta = String(x.uid || '') + (x.createdAt ? ' · ' + String(x.createdAt) : '');
-      return '<article class="xprof-feedback-item"><pre>'+text+'</pre><div class="xprof-feedback-meta">'+meta+'</div><button data-feedback-delete="'+i+'">DELETE</button></article>';
+      var meta = 'ID: '+escapeHtml(x.id)+' · '+escapeHtml(x.category || 'general')+' · '+escapeHtml(x.language || 'en')+'<br>UID: '+escapeHtml(x.uid)+'<br>'+escapeHtml(x.createdAt || 'time unavailable');
+      return '<article class="xprof-feedback-item"><pre>'+escapeHtml(x.text)+'</pre><div class="xprof-feedback-meta">'+meta+'</div><button data-feedback-delete="'+i+'">DELETE</button></article>';
     }).join('');
   }
   if (feedbackModal) feedbackModal.addEventListener('click', function(e){
@@ -436,28 +465,25 @@
     callFn('adminDeleteFeedback', {id:item.id}).then(function(){ feedbackItems.splice(Number(del), 1); renderFeedbackInbox(); adminLog('Deleted.'); }).catch(function(err){ e.target.disabled=false; adminLog('Error: '+(err.message||err)); });
   });
   var xaFeedbackList = document.getElementById('xa-feedback-list');
-  var xaFeedbackDelete = document.getElementById('xa-feedback-delete');
+  var xaVisitors = document.getElementById('xa-visitors');
   if (xaFeedbackList) xaFeedbackList.addEventListener('click', function(){
-    adminLog('Loading feedback…');
+    adminLog('Loading feedback inbox…');
     callFn('adminListFeedback', {}).then(function(r){
       feedbackItems = (r && r.items) || [];
-      adminLog(feedbackItems.map(function(x, i){ return '['+i+'] '+x.id+'\n'+(x.text||'')+'\n'+(x.uid||'')+'\n'; }).join('\n') || 'No feedback.');
+      openAdminModal('CS FEEDBACK INBOX', '');
+      renderFeedbackInbox();
+      adminLog(feedbackItems.length + ' feedback item(s) loaded.');
     }).catch(function(e){ adminLog('Error: '+(e.message||e)); });
   });
-  if (xaFeedbackDelete) xaFeedbackDelete.addEventListener('click', function(){
-    var idx = window.prompt('Enter the feedback number to delete:');
-    if (idx === null || !feedbackItems[Number(idx)]) return;
-    callFn('adminDeleteFeedback', {id: feedbackItems[Number(idx)].id}).then(function(){ adminLog('Deleted. Click FEEDBACK to refresh.'); }).catch(function(e){ adminLog('Error: '+(e.message||e)); });
-  });
-
-  /* Rebind the feedback action with a full-screen inbox. The legacy compact
-     output remains as a fallback, while this listener provides per-item delete. */
-  if (xaFeedbackList) xaFeedbackList.addEventListener('click', function(){
-    callFn('adminListFeedback', {}).then(function(r){
-      feedbackItems = (r && r.items) || [];
-      renderFeedbackInbox();
-      if (feedbackModal) feedbackModal.classList.add('on');
-      adminLog(feedbackItems.length + ' feedback item(s) loaded.');
+  if (xaVisitors) xaVisitors.addEventListener('click', function(){
+    adminLog('Loading visitor logs…');
+    callFn('adminListVisitorLogs', {}).then(function(r){
+      var rows = (r && r.items) || [];
+      var html = rows.length ? '<table class="xprof-admin-table"><thead><tr><th>Email</th><th>Last visit</th><th>First visit</th><th>Visits</th><th>UID</th></tr></thead><tbody>'+
+        rows.map(function(x){ return '<tr><td>'+escapeHtml(x.email)+'</td><td>'+escapeHtml(x.lastSeen || '-')+'</td><td>'+escapeHtml(x.firstSeen || '-')+'</td><td>'+escapeHtml(x.visits)+'</td><td>'+escapeHtml(x.uid)+'</td></tr>'; }).join('')+
+        '</tbody></table>' : '<p style="color:#9a97b5">No signed-in visitor records for the last 30 days.</p>';
+      openAdminModal('VISITOR LOG · LAST 30 DAYS', html);
+      adminLog(rows.length + ' visitor record(s) loaded.');
     }).catch(function(e){ adminLog('Error: '+(e.message||e)); });
   });
 

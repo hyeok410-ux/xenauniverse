@@ -1,5 +1,45 @@
 <!doctype html>
 <html lang="ko">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>XENA Feedback</title><style>body{margin:0;min-height:100vh;background:#05060a;color:#f5f7ff;font:16px system-ui;display:grid;place-items:center}.box{width:min(680px,90vw);padding:28px;border:1px solid #32e6ef;border-radius:18px;background:#0c0f18}textarea{width:100%;min-height:220px;box-sizing:border-box;background:#05060a;color:#fff;border:1px solid #ffffff33;border-radius:10px;padding:12px}button{margin-top:14px;padding:12px 20px;border:0;border-radius:22px;background:#b7ff3c;font-weight:800;cursor:pointer}</style></head>
-<body><main class="box"><h1>불편 접수 / Feedback</h1><p>오류, 버그, 불편사항을 알려주세요. (최대 2,000자)</p><textarea id="feedback" maxlength="2000" placeholder="내용을 입력하세요"></textarea><br><button id="send">접수하기</button><a href="games/" style="margin-left:16px;color:#32e6ef">XENA GAMES</a><p id="status"></p></main>
-<script src="game/firebase-config.js"></script><script src="game/cloud-sync.js"></script><script src="games/shared-wallet.js"></script><script>document.getElementById('send').onclick=function(){var text=document.getElementById('feedback').value.trim(),s=document.getElementById('status');if(!text){s.textContent='내용을 입력하세요.';return;}var button=this;button.disabled=true;s.textContent='접수되었습니다. 감사합니다.';document.getElementById('feedback').value='';if(window.XenaWallet&&window.XenaWallet.submitFeedback){window.XenaWallet.submitFeedback(text,'general',navigator.language).catch(function(){s.textContent='로컬에 임시 저장되었습니다. 서버 동기화를 재시도합니다.';}).finally(function(){button.disabled=false;});}else{button.disabled=false;}};</script><a href="games/" style="display:block;margin:18px auto;color:#b7ff3c;text-align:center">로비로 나가기</a></body></html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>XENA Feedback</title>
+  <style>
+    :root{color-scheme:dark} body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#131b35,#05060a 60%);color:#f5f7ff;font:16px system-ui;display:grid;place-items:center}
+    .box{width:min(680px,90vw);padding:28px;border:1px solid #32e6ef;border-radius:18px;background:#0c0f18;box-shadow:0 18px 70px #0008} h1{margin-top:0} p{color:#bac5d9;line-height:1.6}
+    textarea{width:100%;min-height:220px;box-sizing:border-box;background:#05060a;color:#fff;border:1px solid #ffffff33;border-radius:10px;padding:12px;font:inherit} .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    button,.link{margin-top:14px;padding:12px 20px;border:0;border-radius:22px;background:#b7ff3c;color:#101602;font-weight:800;cursor:pointer;text-decoration:none}.link{background:transparent;border:1px solid #32e6ef;color:#bff7ff}.hidden{display:none} #status{min-height:1.5em}
+  </style>
+</head>
+<body>
+  <main class="box">
+    <h1 id="title"></h1><p id="guide"></p>
+    <textarea id="feedback" maxlength="2000"></textarea>
+    <div class="actions"><button id="send"></button><a class="link" href="games/" id="lobby"></a></div>
+    <p id="status" aria-live="polite"></p>
+  </main>
+  <script src="game/firebase-config.js"></script>
+  <script src="game/cloud-sync.js"></script>
+  <script src="games/shared-wallet.js?v=20260731"></script>
+  <script>
+  (function(){
+    var isKo = (localStorage.getItem('xena-lang') || 'ko') === 'ko';
+    document.documentElement.lang = isKo ? 'ko' : 'en';
+    var copy = isKo ? {
+      title:'오류 · 버그 · 불편 접수', guide:'서비스 이용 중 불편했던 점을 알려주세요. 최대 2,000자까지 작성할 수 있습니다.', placeholder:'내용을 입력해 주세요.', send:'접수하기', lobby:'로비로 나가기', empty:'내용을 입력해 주세요.', sent:'접수되었습니다. 감사합니다.', retry:'전송에 실패했습니다. 잠시 후 다시 시도해 주세요.'
+    } : {
+      title:'REPORT A BUG / FEEDBACK', guide:'Tell us what felt wrong or inconvenient. You can write up to 2,000 characters.', placeholder:'Write your feedback here.', send:'SEND FEEDBACK', lobby:'RETURN TO LOBBY', empty:'Please enter your feedback.', sent:'Feedback received. Thank you.', retry:'Could not send feedback. Please try again shortly.'
+    };
+    document.getElementById('title').textContent=copy.title; document.getElementById('guide').textContent=copy.guide;
+    var text=document.getElementById('feedback'), button=document.getElementById('send'), status=document.getElementById('status');
+    text.placeholder=copy.placeholder; button.textContent=copy.send; document.getElementById('lobby').textContent=copy.lobby;
+    button.addEventListener('click',function(){
+      var value=text.value.trim(); if(!value){status.textContent=copy.empty;return;}
+      button.disabled=true; text.value=''; status.textContent=copy.sent;
+      if(!window.XenaWallet || !window.XenaWallet.submitFeedback){button.disabled=false;status.textContent=copy.retry;return;}
+      window.XenaWallet.submitFeedback(value,'general',isKo?'ko':'en').catch(function(){status.textContent=copy.retry;}).finally(function(){button.disabled=false;});
+    });
+  }());
+  </script>
+</body>
+</html>

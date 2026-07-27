@@ -1090,10 +1090,35 @@ exports.submitFeedback = onCall(async (request) => {
   return { id: ref.id };
 });
 
+/* Admin-facing data must never return Firestore Timestamp instances through
+   the callable serializer. Convert them to plain ISO strings first; returning
+   the raw Admin SDK object was the source of the generic "Internal" error in
+   the feedback inbox. */
+function timestampToIso(value) {
+  if (!value) return null;
+  if (typeof value.toDate === "function") return value.toDate().toISOString();
+  if (value instanceof Date) return value.toISOString();
+  const ms = Number(value);
+  return Number.isFinite(ms) ? new Date(ms).toISOString() : null;
+}
+
 exports.adminListFeedback = onCall(async (request) => {
   requireAdmin(request);
   const snap = await db.collection('feedback').orderBy('createdAt', 'desc').limit(100).get();
-  return { items: snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })) };
+  return {
+    items: snap.docs.map((doc) => {
+      const item = doc.data() || {};
+      return {
+        id: doc.id,
+        uid: String(item.uid || ''),
+        category: String(item.category || 'general'),
+        text: String(item.text || ''),
+        language: String(item.language || 'en'),
+        status: String(item.status || 'open'),
+        createdAt: timestampToIso(item.createdAt),
+      };
+    }),
+  };
 });
 
 exports.adminDeleteFeedback = onCall(async (request) => {
@@ -1102,4 +1127,51 @@ exports.adminDeleteFeedback = onCall(async (request) => {
   if (!id || id.length > 120) throw new HttpsError('invalid-argument', 'Feedback id is required.');
   await db.doc(`feedback/${id}`).delete();
   return { deleted: id };
+});
+
+/* One compact document per signed-in visitor/day is enough for the 30-day
+   operations dashboard. Google email is obtained from the verified Auth token
+   and is never written or returned to non-admin clients. */
+exports.recordVisitorLog = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const token = request.auth.token || {};
+  const email = String(token.email || 'unknown').slice(0, 320);
+  const day = new Date().toISOString().slice(0, 10);
+  const ref = db.doc(`visitorLogs/${day}_${uid}`);
+  await db.runTransaction(async (tx) => {
+    const previous = await tx.get(ref);
+    tx.set(ref, {
+      uid,
+      email,
+      day,
+      ...(previous.exists ? {} : { firstSeen: FieldValue.serverTimestamp() }),
+      lastSeen: FieldValue.serverTimestamp(),
+      visits: FieldValue.increment(1),
+    }, { merge: true });
+  });
+  return { ok: true };
+});
+
+exports.adminListVisitorLogs = onCall(async (request) => {
+  requireAdmin(request);
+  const since = admin.firestore.Timestamp.fromMillis(Date.now() - (30 * 24 * 60 * 60 * 1000));
+  const snap = await db.collection('visitorLogs')
+    .where('lastSeen', '>=', since)
+    .orderBy('lastSeen', 'desc')
+    .limit(500)
+    .get();
+  return {
+    days: 30,
+    items: snap.docs.map((doc) => {
+      const item = doc.data() || {};
+      return {
+        id: doc.id,
+        email: String(item.email || 'unknown'),
+        uid: String(item.uid || ''),
+        firstSeen: timestampToIso(item.firstSeen),
+        lastSeen: timestampToIso(item.lastSeen),
+        visits: Number(item.visits || 0),
+      };
+    }),
+  };
 });
