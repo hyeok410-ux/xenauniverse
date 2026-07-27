@@ -95,6 +95,11 @@
   function consumeEnergy(game){ return callFn('consumeEnergy', {game: game}); }
   function initEnergyUI(game){
     if(!game) return;
+    if (!document.getElementById('xena-energy-style')) {
+      var energyStyle = document.createElement('style'); energyStyle.id = 'xena-energy-style';
+      energyStyle.textContent = '#xena-global-economy{gap:16px!important;padding:10px 16px!important;border:1px solid rgba(94,239,255,.45)!important;border-radius:18px!important;background:linear-gradient(135deg,rgba(10,18,35,.96),rgba(20,10,38,.94))!important;box-shadow:0 8px 34px rgba(0,0,0,.42),0 0 24px rgba(63,224,255,.16)!important}#xena-global-economy .xena-xc{font:800 16px/1.1 ui-monospace,monospace;color:#f4d77b;white-space:nowrap}#xena-global-economy .xena-gems{display:flex;gap:3px;align-items:center;color:#5eefff}#xena-global-economy .xena-gem{display:grid;place-items:center;width:27px;height:30px;filter:drop-shadow(0 0 5px currentColor)}#xena-global-economy .xena-gem.empty{color:#6f7790;opacity:.35;filter:none}#xena-global-economy .xena-gem.filled{color:#5eefff}#xena-global-economy .xena-refill{font:700 11px/1.2 ui-monospace,monospace;color:#b9ff3c;min-width:42px;text-align:right}@media(max-width:600px){#xena-global-economy{top:8px!important;gap:8px!important;padding:8px 10px!important}#xena-global-economy .xena-xc{font-size:12px}#xena-global-economy .xena-gem{width:21px;height:24px}#xena-global-economy .xena-refill{font-size:9px;min-width:30px}}';
+      document.head.appendChild(energyStyle);
+    }
     var el = document.getElementById('xena-global-economy');
     if(!el){
       el = document.createElement('div'); el.id = 'xena-global-economy';
@@ -108,7 +113,9 @@
       el.innerHTML = '<span style="color:#e8c468">'+(balance === null ? '…' : balance.toLocaleString())+' XC</span><span style="color:#b9ff3c;letter-spacing:2px">'+Array.from({length:6}, function(_,i){ return i<n ? '💎' : '◇'; }).join('')+'</span><small style="color:#b9ff3c;font-size:13px">'+(wait || 'FULL')+'</small>';
       var xcText = balance === null ? '—' : Number(balance).toLocaleString();
       var slots = Array.from({length:6}, function(_,i){ return i < n ? '◆' : '◇'; }).join('');
-      el.innerHTML = '<span style="color:#e8c468">'+(balance === null ? '--' : String(balance))+' XC</span><span style="color:#b9ff3c;letter-spacing:2px">'+Array.from({length:6}, function(_,i){ return i < n ? '*' : '.'; }).join('')+'</span><small style="color:#b9ff3c;font-size:13px">'+(wait || 'FULL')+'</small>';
+      var gemSvg = '<svg viewBox="0 0 32 36" width="26" height="29" aria-hidden="true"><path d="M16 1 30 12 24 31 16 35 8 31 2 12Z" fill="currentColor" opacity=".22"/><path d="M16 1 30 12 16 16 2 12Z" fill="currentColor" opacity=".95"/><path d="M2 12 16 16 16 35 8 31Z" fill="currentColor" opacity=".62"/><path d="M30 12 16 16 16 35 24 31Z" fill="currentColor" opacity=".8"/></svg>';
+      var gems = Array.from({length:6}, function(_,i){ return '<span class="xena-gem '+(i < n ? 'filled' : 'empty')+'">'+gemSvg+'</span>'; }).join('');
+      el.innerHTML = '<span class="xena-xc">'+(balance === null ? '--' : String(balance))+' XC</span><span class="xena-gems">'+gems+'</span><small class="xena-refill">'+(wait || 'FULL')+'</small>';
     }
     render(); if(energyUiTimer) clearInterval(energyUiTimer); energyUiTimer = setInterval(render, 1000);
     if (window.XenaWallet && typeof window.XenaWallet.subscribe === 'function') window.XenaWallet.subscribe(function(){ render(); });
