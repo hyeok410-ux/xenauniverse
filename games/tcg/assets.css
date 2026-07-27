@@ -1,0 +1,6 @@
+/* Supplied XENA character artwork — a dedicated lobby visual layer. */
+.lobby-screen {
+  background:
+    linear-gradient(90deg, rgba(3, 5, 13, .86), rgba(4, 7, 19, .28), rgba(3, 5, 13, .82)),
+    url('assets/images/XENA_SignalWarfare_Xena_Character_v1.webp') 72% 36% / cover;
+}
