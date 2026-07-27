@@ -106,8 +106,12 @@
       var updated = pool.energyUpdatedAt && typeof pool.energyUpdatedAt.toMillis === 'function' ? pool.energyUpdatedAt.toMillis() : Date.now();
       var wait = n >= 6 ? '' : ' '+Math.ceil(Math.max(0, 600000 - ((Date.now() - updated) % 600000))/1000)+'s';
       el.innerHTML = '<span style="color:#e8c468">'+(balance === null ? '…' : balance.toLocaleString())+' XC</span><span style="color:#b9ff3c;letter-spacing:2px">'+Array.from({length:6}, function(_,i){ return i<n ? '💎' : '◇'; }).join('')+'</span><small style="color:#b9ff3c;font-size:13px">'+(wait || 'FULL')+'</small>';
+      var xcText = balance === null ? '—' : Number(balance).toLocaleString();
+      var slots = Array.from({length:6}, function(_,i){ return i < n ? '◆' : '◇'; }).join('');
+      el.innerHTML = '<span style="color:#e8c468">'+(balance === null ? '--' : String(balance))+' XC</span><span style="color:#b9ff3c;letter-spacing:2px">'+Array.from({length:6}, function(_,i){ return i < n ? '*' : '.'; }).join('')+'</span><small style="color:#b9ff3c;font-size:13px">'+(wait || 'FULL')+'</small>';
     }
-    render(); if(energyUiTimer) clearInterval(energyUiTimer); energyUiTimer = setInterval(render, 1000); subscribe(render);
+    render(); if(energyUiTimer) clearInterval(energyUiTimer); energyUiTimer = setInterval(render, 1000);
+    if (window.XenaWallet && typeof window.XenaWallet.subscribe === 'function') window.XenaWallet.subscribe(function(){ render(); });
   }
 
   /* ── SIGNAL CLASH (TCG) / LIVE TOUR (방치형 디스패치) — 2026-07-22 추가 ── */
