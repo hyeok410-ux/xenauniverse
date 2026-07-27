@@ -226,7 +226,7 @@ h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;lin
       <button class="r-btn" id="btn-weekly"><span lang="en">🏆 THIS WEEK'S RECORDS</span><span lang="ko">🏆 이번주 순위</span></button>
     </div>
     <p class="intro-note">
-      <span lang="en">First clear each day: Stage n = +n×2 XC (up to +110/day) · Hints 3 per stage<br>5 plays per stage per day · Weekly best times per stage<br>Auto-reshuffle when no moves remain</span>
+      <span lang="en">First clear each day: Stage n = +n×5 XC (up to +50 each stage) · Hints 3 per stage<br>5 plays per stage per day · Weekly best times per stage<br>Auto-reshuffle when no moves remain</span>
       <span lang="ko">하루 첫 클리어: n스테이지 = +n×2 XC (하루 최대 +110) · 힌트 스테이지당 3회<br>스테이지당 하루 5판 · 스테이지별 이번 주 최고기록 표시<br>연결 가능한 짝이 없으면 자동 셔플</span>
     </p>
   </section>
@@ -306,7 +306,8 @@ var STAGES = [
   {w:10, h:7, time:260, kinds:18},
   {w:12, h:7, time:290, kinds:20}
 ];
-function stageReward(idx){ return (idx+1)*2; }
+/* Mini-game economy: every cleared stage pays its stage number × 5 XC. */
+function stageReward(idx){ return (idx+1)*5; }
 var HINTS_PER_STAGE = 3;
 var PLAYS_PER_DAY = 5, RESET_COST = 30;
 
@@ -333,7 +334,10 @@ function weekKey(){
 }
 if(!st.weekly || st.weekly.week !== weekKey()) st.weekly = {week: weekKey(), best: {}};
 
-var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1; });
+/* Signal Link uses only XENA's base/gallery photos, never TCG battle cards. */
+var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){
+  return d[4] === 1 && String(d[0]).indexOf('GA-') === 0;
+});
 function cardSrc(d){ return d[3].indexOf('../../') === 0 ? d[3] : '../gacha/' + d[3]; }
 
 function renderWallet(){
@@ -622,7 +626,7 @@ function tileEl(x, y){
   return $('board').children[(y-1)*cur.s.w + (x-1)];
 }
 function tick(){
-  if(!cur) return;
+  if(!cur || cur.finished) return;
   cur.time--;
   $('hud-timer').textContent = Math.max(0, cur.time);
   if(cur.time <= 15) $('hud-timer-box').classList.add('low');
@@ -807,8 +811,12 @@ $('btn-hint').addEventListener('click', function(){
 
 /* ── 결과 ── */
 function finish(win, reason){
-  if(!cur) return;
+  /* Make clear/fail terminal: the interval or an in-flight tile animation
+     cannot replace a cleared result with a timeout afterwards. */
+  if(!cur || cur.finished) return;
+  cur.finished = true;
   clearInterval(cur.timer);
+  cur.timer = null;
   var idx = cur.idx, s = cur.s;
   var title = $('r-title'), sub = $('r-sub'), next = $('r-next');
   if(win){
@@ -861,7 +869,13 @@ function finish(win, reason){
   renderWallet();
   show('result');
 }
-$('r-home').addEventListener('click', function(){ show('intro'); renderStages(); });
+function returnToStages(){
+  if(cur && cur.timer) clearInterval(cur.timer);
+  cur = null;
+  show('intro');
+  renderStages();
+}
+$('r-home').addEventListener('click', returnToStages);
 
 /* ── 언어 토글 ── */
 document.querySelectorAll('.lang-toggle button').forEach(function(b){
@@ -883,7 +897,7 @@ renderStages();
 <script src="../shared-leaderboard.js?v=20260721"></script>
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
-<script src="../shared-wallet.js?v=20260727"></script>
+<script src="../shared-wallet.js?v=20260730"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('shisen');
 if (window.__wireShisenWallet) window.__wireShisenWallet();

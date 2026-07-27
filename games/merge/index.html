@@ -42,6 +42,8 @@ a{color:inherit;text-decoration:none;}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 10px;gap:10px;flex-wrap:wrap;}
 .back-link{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.18em;color:var(--text-dim);border:1px solid var(--hair);padding:8px 14px;border-radius:20px;transition:.3s ease;background:rgba(255,255,255,.03);backdrop-filter:blur(10px);}
 .back-link:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
+/* The first link is the canonical Games lobby route.  Hide the legacy duplicate. */
+.topbar .back-link[style]{display:none!important;}
 
 .head{text-align:center;padding:6px 0 14px;}
 .eyebrow{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.35em;text-transform:uppercase;color:var(--purple-light);margin-bottom:8px;text-shadow:0 0 16px rgba(160,107,255,.5);}
@@ -67,6 +69,8 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 .skill-btn .sk-cost{font-size:.56rem;color:var(--gold);}
 .skill-btn:not(:disabled):hover{background:rgba(255,47,176,.18);box-shadow:0 0 16px rgba(255,47,176,.3);}
 .skill-btn:disabled{opacity:.32;cursor:not-allowed;}
+.forfeit-btn{margin-left:auto;flex:0 0 auto;font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.08em;color:#ffd2df;border:1px solid rgba(255,107,138,.5);background:rgba(255,107,138,.1);border-radius:14px;padding:10px 14px;}
+.forfeit-btn:hover{background:rgba(255,107,138,.22);box-shadow:0 0 16px rgba(255,107,138,.25);}
 .skill-info-btn{background:none;border:none;color:var(--text-dim);font-size:.85rem;line-height:1;vertical-align:middle;
   padding:0;margin-left:2px;cursor:pointer;transition:.2s;}
 .skill-info-btn:hover{color:var(--gold);}
@@ -81,6 +85,11 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 .skill-modal-box .btn.ghost{width:100%;padding:10px;border-radius:12px;border:1px solid var(--hair);background:rgba(255,255,255,.03);
   color:var(--text-dim);font-family:var(--font-mono);font-size:.68rem;letter-spacing:.1em;cursor:pointer;transition:.2s;}
 .skill-modal-box .btn.ghost:hover{color:#fff;border-color:rgba(255,255,255,.3);}
+.forfeit-modal{position:fixed;inset:0;z-index:240;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.82);backdrop-filter:blur(7px);}
+.forfeit-modal.on{display:flex;}
+.forfeit-box{width:min(390px,100%);padding:26px;border:1px solid rgba(255,107,138,.45);border-radius:18px;background:#100911;box-shadow:0 18px 65px rgba(0,0,0,.55);text-align:center;}
+.forfeit-box h3{font-size:1.05rem;margin-bottom:10px;color:#ffd8e6;}.forfeit-box p{font-size:.82rem;color:var(--text-dim);margin-bottom:20px;}
+.forfeit-actions{display:flex;gap:10px;justify-content:center;}.forfeit-actions button{border-radius:12px;padding:10px 16px;border:1px solid var(--hair);background:#17111f;color:#fff;font-family:var(--font-mono);font-size:.72rem;}.forfeit-actions .danger{border-color:rgba(255,107,138,.6);background:rgba(255,107,138,.18);color:#ffdbe6;}
 
 /* ── 게임오버 랭크 뱃지 (점수 기반 S~D) ── */
 .rank-badge{width:96px;height:96px;margin:14px auto;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -179,6 +188,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       <span class="sk-name"><span lang="en">PUSH BACK FLOOR</span><span lang="ko">바닥 밀어내기</span></span>
       <span class="sk-cost">×2</span>
     </button>
+    <button class="forfeit-btn" id="btn-forfeit" type="button"><span lang="en">FORFEIT</span><span lang="ko">포기하기</span></button>
     <button class="skill-btn" id="skill-b" disabled
       title="Remove up to 4 OVERRIDE-tier orbs from the jar and score bonus points. Costs 3 OVERRIDE charge.">
       <span class="sk-name"><span lang="en">CLEAR OVERRIDE ×4</span><span lang="ko">오버라이드 정리 ×4</span></span>
@@ -203,6 +213,13 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     </div>
   </div>
 
+  <div class="forfeit-modal" id="forfeit-modal" role="dialog" aria-modal="true" aria-labelledby="forfeit-title">
+    <div class="forfeit-box">
+      <h3 id="forfeit-title"><span lang="en">FORFEIT THIS RUN?</span><span lang="ko">게임을 포기하시겠습니까?</span></h3>
+      <p><span lang="en">Your current run will end and no reward will be granted.</span><span lang="ko">현재 게임은 종료되며 보상은 지급되지 않습니다.</span></p>
+      <div class="forfeit-actions"><button id="forfeit-cancel" type="button"><span lang="en">KEEP PLAYING</span><span lang="ko">계속하기</span></button><button id="forfeit-confirm" class="danger" type="button"><span lang="en">FORFEIT</span><span lang="ko">포기</span></button></div>
+    </div>
+  </div>
   <div class="jar-area">
   <div id="jar-wrap">
     <div class="gameover-line"></div>
@@ -274,6 +291,20 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
      xena-mascot.jpg를 원형 클리핑해 얼굴을 채우고, 그 위에 orbs.png(6단계 글래스 오브
      스프라이트)를 얇게 겹쳐 유리질 광택을 더한다. orbs.png는 N~XENA 6단계에만 대응되므로
      SEED/OVERRIDE는 캔버스 자체 글로우로 대체한다. */
+  /* One portrait per orb tier: each merge level has its own XENA artwork. */
+  var tierPortraitPaths = [
+    '../../game/assets/portraits/portrait_xena_base_v1.webp',
+    '../../game/assets/skins/skin_xena_violet_pulse_v1.webp',
+    '../../game/assets/skins/skin_xena_cyan_sovereign_v1.webp',
+    '../../game/assets/skins/skin_xena_black_signal_v1.webp',
+    '../../game/assets/skins/skin_xena_white_ethereal_v1.webp',
+    '../../game/assets/skins/skin_xena_ethereal_crystal_v1.png',
+    '../../game/assets/skins/skin_xena_ethereal_prism_dress_v1.png',
+    '../../game/assets/portraits/xena_override_v1.webp'
+  ];
+  var tierPortraits = tierPortraitPaths.map(function(src){
+    var img = new Image(); img.decoding = 'async'; img.src = src; return img;
+  });
   var mascotImg = new Image();
   var mascotReady = false;
   mascotImg.onload = function(){ mascotReady = true; };
@@ -295,13 +326,15 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var $ = function(id){ return document.getElementById(id); };
   var canvas = $('jar'), ctx = canvas.getContext('2d');
   var wrap = $('jar-wrap');
-  var W = 0, H = 0, DPR = Math.min(2, window.devicePixelRatio || 1);
+  var W = 0, H = 0, DPR = Math.min(3, window.devicePixelRatio || 1);
   function resize(){
     var rect = wrap.getBoundingClientRect();
     W = rect.width; H = rect.height;
     canvas.width = W * DPR; canvas.height = H * DPR;
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     if (floorY > H) floorY = H; /* 창 크기 변경 중에도 바닥이 캔버스 밖으로 나가지 않도록 */
     balls.forEach(function(ball){ ball.r = ballRadius(ball.tier); });
   }
@@ -592,12 +625,17 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
        [2026-07-24] 얼굴이 흐릿해 보인다는 피드백 — 얼굴 위에 틴트(22%)+오브 오버레이(55%,
        screen)가 겹겹이 쌓여 사실상 반투명 레이어 2장을 더 얹은 셈이었다. 얼굴은 완전
        불투명하게 그리고, 그 위 장식 레이어들은 훨씬 옅게 낮춘다. */
-    if (mascotReady){
-      var iw = mascotImg.naturalWidth, ih = mascotImg.naturalHeight;
+    var portrait = tierPortraits[b.tier];
+    if (portrait && portrait.complete && portrait.naturalWidth){
+      var iw = portrait.naturalWidth, ih = portrait.naturalHeight;
       var side = Math.min(iw, ih);
       var sx = (iw-side)/2, sy = ih*0.06; /* 위쪽 얼굴 위주로 크롭 */
       sy = Math.min(sy, ih-side);
-      ctx.drawImage(mascotImg, sx, sy, side, side, b.x-r, b.y-r, r*2, r*2);
+      ctx.drawImage(portrait, sx, sy, side, side, b.x-r, b.y-r, r*2, r*2);
+    } else if (mascotReady){
+      var mw = mascotImg.naturalWidth, mh = mascotImg.naturalHeight;
+      var mside = Math.min(mw, mh);
+      ctx.drawImage(mascotImg, (mw-mside)/2, Math.min(mh-mside, mh*0.06), mside, mside, b.x-r, b.y-r, r*2, r*2);
     }
     /* 등급 색 틴트 — 얼굴은 보이면서도 등급 구분은 되도록.
        [2026-07-24] "구슬 안 배경이 어둡다"는 피드백 — 틴트를 더 옅게(0.16 → 0.10). */
@@ -764,6 +802,22 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   $('skill-info-btn').addEventListener('click', function(){ $('skill-modal').classList.add('on'); });
   $('skill-modal-close').addEventListener('click', function(){ $('skill-modal').classList.remove('on'); });
   $('skill-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
+  $('btn-forfeit').addEventListener('click', function(){
+    if (running) $('forfeit-modal').classList.add('on');
+  });
+  $('forfeit-cancel').addEventListener('click', function(){ $('forfeit-modal').classList.remove('on'); });
+  $('forfeit-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on'); });
+  $('forfeit-confirm').addEventListener('click', function(){
+    /* A forfeit returns to the pre-game screen without score submission or reward. */
+    running = false;
+    balls = [];
+    overTimer = 0;
+    aimX = null;
+    $('forfeit-modal').classList.remove('on');
+    $('ov-over').classList.remove('on');
+    $('ov-start').classList.add('on');
+    resetGame();
+  });
 
   $('btn-start').addEventListener('click', function(){
     var begin = function(){ $('ov-start').classList.remove('on'); resetGame(); running = true; };
@@ -805,7 +859,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 <script src="../../game/cloud-sync.js?v=20260721"></script>
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
-<script src="../shared-wallet.js?v=20260727"></script>
+<script src="../shared-wallet.js?v=20260730"></script>
 <script>if (window.XenaAudio) window.XenaAudio.init('merge'); if (window.XenaWallet) window.XenaWallet.initEnergyUI('xena_merge');</script>
 </body>
 </html>

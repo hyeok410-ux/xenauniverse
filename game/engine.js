@@ -50,7 +50,7 @@
     },
     crystal: {
       id: "crystal",
-      name: "STAY BRIGHT · CRYSTAL REBELLION",
+      name: "Xena Ethereal",
       leaderName: "XENA ETHEREAL",
       accent: "gold",
       back: {

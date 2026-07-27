@@ -1,44 +1,158 @@
-const ASSETS={lobbyBgm:['assets/audio/bgm_main_theme_01.mp3','assets/audio/bgm_main_theme_02.mp3'],battleBgm:['assets/audio/bgm_battle_01.mp3','assets/audio/bgm_battle_02.mp3'],victory:['assets/audio/bgm_victory_01.mp3','assets/audio/bgm_victory_02.mp3'],draw:'assets/audio/sfx_card_draw.mp3',summon:'assets/audio/sfx_card_summon.mp3',attack:'assets/audio/sfx_attack_impact.mp3',shatter:'assets/audio/sfx_card_shatter.mp3',confirm:'assets/audio/sfx_card_summon.mp3'};
-const DIFFICULTIES={easy:{core:20,pool:c=>['N','R'].includes(c.grade)},normal:{core:30,pool:()=>true},hard:{core:40,pool:c=>['SR','SSR','S','BOSS'].includes(c.grade)}};
-const ART=['Track1_Card01_XENA_front_KR_v4_anomaly_layout.png','Track1_Card02_NIX09_front_KR_v2.png','Track1_Card03_LYRA_front_KR_v1.png','Track1_Card04_NOVA_front_KR_v1.png','Track1_Card05_ECHO_front_KR_v1.png','Track1_Card06_SOVRAN_front_KR_v1.png','Track1_Card07_ARCHITECT_MAN_front_KR_v1.png','Track1_Card08_CLEANSE_TEAM_CLONE_front_KR_v1.png','Track1_Card09_SYSTEM_DRONE_front_KR_v1.png','Track1_Card10_HUNTER_front_KR_v1.png','Track1_Card11_DRAGOON_front_KR_v1.png','Track1_Card12_MOTHERSHIP_front_KR_v1.png','Track1_Card13_ERASED_CITIZEN_front_KR_v1.png','Track1_Card14_XENA_OVERRIDE_front_KR_v1.png'];
-const TEXT={ko:{backToGames:'← 제나 게임즈로',xcBalance:'XC 잔액',refresh:'새로고침',myCards:'내 카드',selectDifficulty:'AI 난이도 선택',easy:'쉬움',easyDesc:'코어 20 · 기본 덱',normal:'보통',normalDesc:'코어 30 · 균형 덱',hard:'어려움',hardDesc:'코어 40 · 상급 덱',playNow:'지금 플레이',titleSubtitle:'나의 신호로 AI 코어를 무너뜨려라',buildDeck:'나만의 덱 구성',deckHint:'보유 카드 중 정확히 15장을 선택하세요.',saveDeck:'구성 완료',backToLobby:'로비로',enemyCore:'AI 코어',yourCore:'내 코어',enemyField:'상대 필드',yourField:'내 필드',yourHand:'내 손패',endTurn:'턴 넘김',yourTurn:'내 턴',aiTurn:'AI 턴',firstTurn:'첫 턴: 공격 불가',chooseDeck:'내 카드에서 15장 덱을 먼저 구성하세요.',deckSaved:'덱이 저장되었습니다.',need15:'정확히 15장을 선택해야 합니다.',coinPlayer:'내가 선공입니다',coinAi:'AI가 선공입니다',victory:'승리',defeat:'패배',returnLobby:'로비로 돌아가기',rewardPending:'보상 동기화 중',rewardFailed:'보상 동기화 실패',signIn:'로그인이 필요합니다',mana:'마나',cost:'코스트',attack:'공격',hp:'체력'},en:{backToGames:'← XENA GAMES',xcBalance:'XC BALANCE',refresh:'REFRESH',myCards:'MY CARDS',selectDifficulty:'SELECT AI DIFFICULTY',easy:'EASY',easyDesc:'Core 20 · Base deck',normal:'NORMAL',normalDesc:'Core 30 · Balanced deck',hard:'HARD',hardDesc:'Core 40 · Elite deck',playNow:'PLAY NOW',titleSubtitle:'Break the AI core with your signal.',buildDeck:'BUILD YOUR DECK',deckHint:'Choose exactly 15 cards you own.',saveDeck:'SAVE DECK',backToLobby:'BACK TO LOBBY',enemyCore:'AI CORE',yourCore:'YOUR CORE',enemyField:'ENEMY FIELD',yourField:'YOUR FIELD',yourHand:'YOUR HAND',endTurn:'END TURN',yourTurn:'YOUR TURN',aiTurn:'AI TURN',firstTurn:'FIRST TURN: NO ATTACK',chooseDeck:'Build a 15-card deck in My Cards first.',deckSaved:'Deck saved.',need15:'Select exactly 15 cards.',coinPlayer:'YOU GO FIRST',coinAi:'AI GOES FIRST',victory:'VICTORY',defeat:'DEFEAT',returnLobby:'RETURN TO LOBBY',rewardPending:'Synchronizing reward…',rewardFailed:'Reward sync failed',signIn:'SIGN IN REQUIRED',mana:'MANA',cost:'COST',attack:'ATK',hp:'HP'}};
-const pick=a=>Array.isArray(a)?a[Math.floor(Math.random()*a.length)]:a;
-const escapeHTML=value=>String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+/* XENA: SIGNAL WARFARE — standalone PvE client.  The battle scene is never
+   dependent on an audio, wallet, or collection request completing. */
+(function () {
+  'use strict';
 
-const client={language:localStorage.getItem('xena_tcg_lang')||'ko',selectedDifficulty:'normal',selectedCardIds:new Set(),deck:[],game:null,selectedHand:null,selectedAttacker:null,effectLock:false,drawAnimationPending:false,summonSlot:null,aiSummonSlot:null,walletUnsubscribe:null,activeSfx:new Set(),
-  t(key){return TEXT[this.language][key]||key},
-  init(){this.selectedCardIds=new Set(JSON.parse(localStorage.getItem('xena-deck')||'[]'));document.querySelector('#start-pve').onclick=()=>this.startBattle();document.querySelector('#my-cards-button').onclick=()=>this.showCards();document.querySelector('#cards-back').onclick=()=>this.show('lobby');document.querySelector('#save-deck').onclick=()=>this.saveDeck();document.querySelector('#refresh-balance').onclick=()=>this.wireWallet();document.querySelector('#end-turn').onclick=()=>this.endTurn();document.querySelector('#battle-exit').onclick=()=>location.assign('../');document.querySelector('#mute-local').onclick=()=>window.XenaAudio?.toggleMute?.();document.querySelectorAll('[data-language]').forEach(b=>b.onclick=()=>this.setLanguage(b.dataset.language));document.querySelectorAll('[data-difficulty]').forEach(b=>b.onclick=()=>{this.selectedDifficulty=b.dataset.difficulty;document.querySelectorAll('[data-difficulty]').forEach(x=>x.classList.toggle('selected',x===b))});window.addEventListener('xena-audio-mutechange',e=>this.syncMute(e.detail?.muted));this.setLanguage(this.language);this.wireWallet();},
-  setLanguage(language){this.language=language;localStorage.setItem('xena_tcg_lang',language);document.documentElement.lang=language;document.querySelectorAll('[data-language]').forEach(b=>b.classList.toggle('active',b.dataset.language===language));document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=this.t(el.dataset.i18n));if(this.game)this.renderBattle();},
-  syncMute(muted){document.querySelector('#mute-local').textContent=muted?'×))':'◖))';if(muted)this.activeSfx.forEach(a=>{a.pause();a.currentTime=0})},
-  isMuted(){try{return JSON.parse(localStorage.getItem('xena_audio_v1')||'{}').muted===true}catch{return false}},
-  playSfx(src){if(this.isMuted())return;const audio=new Audio(pick(src));audio.volume=.78;audio.muted=this.isMuted();this.activeSfx.add(audio);audio.addEventListener('ended',()=>this.activeSfx.delete(audio),{once:true});audio.play().catch(()=>{});},
-  wireWallet(){const paint=value=>document.querySelector('#xc-display').textContent=value==null?this.t('signIn'):`${value} XC`;if(!window.XenaWallet){paint(null);return}paint(window.XenaWallet.getBalance());if(!this.walletUnsubscribe)this.walletUnsubscribe=window.XenaWallet.subscribe(paint)},
-  normalizeCard(card){const stats=window.XenaCards?.GRADE_STATS?.[card.grade]||{cost:card.cost||1,power:card.power||1};const atk=Number(card.atk??card.power??stats.power??1);return{...card,cost:Number(card.cost??stats.cost??1),atk,hp:Number(card.hp??atk+3),count:Number(card.count||1)}},
-  getOwnedCards(){return window.XenaCards?XenaCards.owned().map(c=>this.normalizeCard(c)):[]},getCatalog(){return window.XenaCards?(XenaCards.available?XenaCards.available():XenaCards.all()).map(c=>this.normalizeCard(c)):[]},
-  artFor(card){const id=String(card.id||'');const number=Number((id.match(/PC-(\d+)/)||[])[1]);if(number&&ART[number-1])return`../../game/assets/cards/${ART[number-1]}`;if(/^PC-\d+$/.test(id))return`../gacha/cards/${id}.jpg`;if(card.image&&/^(https?:|\/)/.test(card.image))return card.image;return'../../game/assets/backgrounds/xena-hero-bg.jpg'},
-  show(name){['lobby','cards-view','battle-view'].forEach(id=>document.querySelector(`#${id}`).hidden=id!==({lobby:'lobby',cards:'cards-view',battle:'battle-view'}[name]));},
-  showCards(){this.show('cards');const owned=this.getOwnedCards();const list=document.querySelector('#card-list');list.replaceChildren(...owned.map(card=>{const el=this.collectionCard(card);el.classList.toggle('selected',this.selectedCardIds.has(card.id));el.onclick=()=>this.toggleCard(card.id,el);return el}));this.updateDeckCount();},
-  collectionCard(card){const el=document.createElement('button');el.type='button';el.className='collection-card';el.innerHTML=this.cardMarkup(card);return el},
-  cardMarkup(card){return`<img class="card-art" src="${escapeHTML(this.artFor(card))}" alt="${escapeHTML(card.name)}" loading="lazy"><div class="card-meta"><span class="card-grade">${escapeHTML(card.grade)} · ${escapeHTML(card.element||'SIGNAL')}</span><span class="card-hp">♥ ${card.hp}</span><strong class="card-name">${escapeHTML(card.name)}</strong><div class="card-stats"><b class="card-cost">◈ ${card.cost}</b><b class="card-atk">⚔ ${card.atk}</b></div></div>`},
-  toggleCard(id,el){if(this.selectedCardIds.has(id))this.selectedCardIds.delete(id);else if(this.selectedCardIds.size<15)this.selectedCardIds.add(id);else return;el.classList.toggle('selected',this.selectedCardIds.has(id));this.updateDeckCount()},updateDeckCount(){document.querySelector('#deck-count').textContent=this.selectedCardIds.size},
-  saveDeck(){const status=document.querySelector('#deck-status');if(this.selectedCardIds.size!==15){status.textContent=this.t('need15');return}localStorage.setItem('xena-deck',JSON.stringify([...this.selectedCardIds]));status.textContent=this.t('deckSaved');this.playSfx(ASSETS.confirm)},
-  shuffle(cards){const clone=[...cards];for(let i=clone.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[clone[i],clone[j]]=[clone[j],clone[i]]}return clone},makePlayer(id,deck,core){const cards=this.shuffle(deck);return{id,core,mana:0,maxMana:0,hand:cards.splice(0,5),deck:cards,field:Array(7).fill(null)}},
-  async startBattle(){if(this.selectedCardIds.size!==15){document.querySelector('#lobby-status').textContent=this.t('chooseDeck');return}if(window.XenaWallet?.consumeEnergy&&!this.energyBusy){this.energyBusy=true;try{await window.XenaWallet.consumeEnergy('signal_clash')}catch{document.querySelector('#lobby-status').textContent='Energy unavailable.';this.energyBusy=false;return}this.energyBusy=false}const own=this.getOwnedCards().filter(c=>this.selectedCardIds.has(c.id));const config=DIFFICULTIES[this.selectedDifficulty];const aiPool=this.getCatalog().filter(config.pool);this.game={matchId:`PVE_${Date.now()}`,difficulty:this.selectedDifficulty,active:null,round:1,firstPlayer:null,player:this.makePlayer('player',own,30),ai:this.makePlayer('ai',aiPool.length?aiPool:this.getCatalog(),config.core)};this.selectedAttacker=null;this.show('battle');await this.coinToss();this.startTurn(this.game[this.game.firstPlayer]);this.renderBattle();if(this.game.active==='ai')this.aiTurn()},
-  async coinToss(){const playerFirst=Math.random()>=.5;this.game.firstPlayer=playerFirst?'player':'ai';const overlay=document.querySelector('#coin-toss');const result=document.querySelector('#coin-result');overlay.hidden=false;result.textContent='';await new Promise(r=>setTimeout(r,2200));result.textContent=this.t(playerFirst?'coinPlayer':'coinAi');await new Promise(r=>setTimeout(r,900));overlay.hidden=true},
-  startTurn(player){this.game.active=player.id;player.maxMana=Math.min(10,player.maxMana+1);player.mana=player.maxMana;player.field.forEach(u=>{if(u)u.hasAttacked=false});if(player.deck.length){player.hand.push(player.deck.shift());if(player.id==='player'){this.drawAnimationPending=true;this.playSfx(ASSETS.draw)}}},
-  firstTurnBlocked(){return this.game.round===1&&this.game.active===this.game.firstPlayer},canAttack(){return !this.firstTurnBlocked()},
-  endTurn(){if(!this.game||this.game.active!=='player'||this.effectLock)return;this.selectedHand=null;this.selectedAttacker=null;this.startTurn(this.game.ai);this.renderBattle();this.aiTurn()},
-  async aiTurn(){const game=this.game,ai=game.ai;if(!game||game.active!=='ai')return;await this.wait(550);while(ai.hand.length&&ai.field.some(x=>!x)){const idx=ai.hand.findIndex(c=>c.cost<=ai.mana);if(idx<0)break;const slot=ai.field.findIndex(x=>!x);const card=ai.hand.splice(idx,1)[0];ai.mana-=card.cost;ai.field[slot]={...card,hasAttacked:false};this.aiSummonSlot=slot;this.playSfx(ASSETS.summon);this.renderBattle();await this.wait(620)}if(this.canAttack()){for(let i=0;i<ai.field.length;i++){const attacker=ai.field[i];if(!attacker||attacker.hasAttacked)continue;const target=game.player.field.findIndex(Boolean);attacker.hasAttacked=true;await this.animateAttack('ai',i,target>=0?'player':null,target>=0?target:'player-core');if(target>=0){game.player.field[target].hp-=attacker.atk;if(game.player.field[target].hp<=0)await this.destroyUnit(target,true)}else{game.player.core=Math.max(0,game.player.core-attacker.atk);this.damage('player-core',attacker.atk)}if(game.player.core<=0){this.finishBattle(false);return}await this.wait(260)}}this.game.round+=1;this.startTurn(game.player);this.renderBattle()},
-  deploy(slot){const g=this.game,p=g?.player;if(!g||g.active!=='player'||this.effectLock||this.selectedHand===null||p.field[slot])return;const card=p.hand[this.selectedHand];if(!card||p.mana<card.cost)return;p.mana-=card.cost;p.field[slot]={...card,hasAttacked:false};p.hand.splice(this.selectedHand,1);this.selectedHand=null;this.summonSlot=slot;this.playSfx(ASSETS.summon);this.renderBattle();this.ripple(slot)},
-  selectAttacker(slot){const unit=this.game?.player.field[slot];if(!unit||this.game.active!=='player'||unit.hasAttacked||!this.canAttack())return;this.selectedAttacker=this.selectedAttacker===slot?null:slot;this.renderBattle()},
-  async attackUnit(targetSlot){const g=this.game,attacker=g?.player.field[this.selectedAttacker],target=g?.ai.field[targetSlot];if(!attacker||!target||this.effectLock||!this.canAttack()||attacker.hasAttacked)return;const source=this.selectedAttacker;attacker.hasAttacked=true;this.selectedAttacker=null;await this.animateAttack('player',source,'ai',targetSlot);target.hp-=attacker.atk;if(target.hp<=0)await this.destroyUnit(targetSlot,false);else this.renderBattle()},
-  async attackCore(){const g=this.game,attacker=g?.player.field[this.selectedAttacker];if(!attacker||g.ai.field.some(Boolean)||this.effectLock||!this.canAttack()||attacker.hasAttacked)return;const source=this.selectedAttacker;attacker.hasAttacked=true;this.selectedAttacker=null;await this.animateAttack('player',source,null,'ai-core');g.ai.core=Math.max(0,g.ai.core-attacker.atk);this.damage('ai-core',attacker.atk);if(g.ai.core<=0)this.finishBattle(true);else this.renderBattle()},
-  async animateAttack(from,source,to,target){this.effectLock=true;const attacker=document.querySelector(`[data-field="${from}"][data-slot="${source}"]`),victim=String(target).includes('core')?document.querySelector(`#${target}`):document.querySelector(`[data-field="${to}"][data-slot="${target}"]`);if(!attacker||!victim){this.effectLock=false;return}const a=attacker.getBoundingClientRect(),b=victim.getBoundingClientRect();attacker.style.setProperty('--attack-x',`${b.left-a.left}px`);attacker.style.setProperty('--attack-y',`${b.top-a.top}px`);attacker.classList.add('dash-attack');await this.wait(360);this.playSfx(ASSETS.attack);this.damage(target,Number(this.game[from].field[source].atk),to);document.querySelector('#xena-tcg-container').classList.add('camera-shake');await this.wait(140);document.querySelector('#xena-tcg-container').classList.remove('camera-shake');attacker.classList.remove('dash-attack');this.effectLock=false},
-  async destroyUnit(slot,player){const el=document.querySelector(`[data-field="${player?'player':'ai'}"][data-slot="${slot}"]`);if(el){el.classList.add('death-shatter');this.playSfx(ASSETS.shatter);await this.wait(500)}this.game[player?'player':'ai'].field[slot]=null;this.effectLock=false;this.renderBattle()},
-  damage(target,amount,field='ai'){const el=String(target).includes('core')?document.querySelector(`#${target}`):document.querySelector(`[data-field="${field}"][data-slot="${target}"]`);const root=document.querySelector('#xena-tcg-container');if(!el)return;const r=el.getBoundingClientRect(),base=root.getBoundingClientRect(),pop=document.createElement('span');pop.className='damage-pop';pop.textContent=`-${amount}`;pop.style.left=`${r.left-base.left+r.width/2}px`;pop.style.top=`${r.top-base.top+r.height*.3}px`;root.append(pop);setTimeout(()=>pop.remove(),700)},
-  ripple(slot){const el=document.querySelector(`[data-field="player"][data-slot="${slot}"]`)?.parentElement;if(!el)return;const ring=document.createElement('i');ring.className='ripple-ring';el.append(ring);setTimeout(()=>ring.remove(),650)},wait(ms){return new Promise(r=>setTimeout(r,ms))},
-  renderBattle(){const g=this.game;if(!g)return;const p=g.player,ai=g.ai;document.querySelector('#difficulty-label').textContent=`AI · ${this.t(g.difficulty)}`;document.querySelector('#phase-label').textContent=this.t(g.active==='player'?'yourTurn':'aiTurn');document.querySelector('#turn-rule').textContent=this.firstTurnBlocked()?this.t('firstTurn'):'';document.querySelector('#player-core').innerHTML=`<span>${this.t('yourCore')} · ${this.t('mana')} ${p.mana}/${p.maxMana}</span><b>${p.core}</b>`;document.querySelector('#ai-core').innerHTML=`<span>${this.t('enemyCore')}</span><b>${ai.core}</b>`;const aiCore=document.querySelector('#ai-core');aiCore.classList.toggle('target-ready',this.selectedAttacker!==null&&!ai.field.some(Boolean));aiCore.onclick=()=>this.attackCore();this.renderZone('#player-field',p.field,true);this.renderZone('#ai-field',ai.field,false);const hand=document.querySelector('#hand');hand.replaceChildren(...p.hand.map((card,i)=>{const el=this.unit(card);el.classList.toggle('selected',this.selectedHand===i);if(this.drawAnimationPending&&i===p.hand.length-1)el.classList.add('ai-summon');el.onclick=()=>{if(g.active==='player'){this.selectedHand=i;this.selectedAttacker=null;this.renderBattle()}};return el}));this.drawAnimationPending=false;document.querySelector('#end-turn').disabled=g.active!=='player'||this.effectLock;document.querySelector('#xena-tcg-container').classList.toggle('attack-mode',this.selectedAttacker!==null)},
-  renderZone(selector,field,own){const zone=document.querySelector(selector);zone.replaceChildren(...field.map((card,i)=>{const slot=document.createElement('div');slot.className='slot';if(own&&this.selectedHand!==null&&!card)slot.classList.add('can-drop');if(card){const el=this.unit(card);el.dataset.field=own?'player':'ai';el.dataset.slot=i;if(own&&this.summonSlot===i)el.classList.add('ai-summon');if(!own&&this.aiSummonSlot===i)el.classList.add('ai-summon');if(own&&!card.hasAttacked&&this.canAttack()){el.classList.toggle('attacker-selected',this.selectedAttacker===i);el.onclick=e=>{e.stopPropagation();this.selectAttacker(i)}}if(!own&&this.selectedAttacker!==null){el.classList.add('target-ready');el.onclick=e=>{e.stopPropagation();this.attackUnit(i)}}slot.append(el)}if(own)slot.onclick=()=>this.deploy(i);return slot}));this.summonSlot=null;this.aiSummonSlot=null},
-  unit(card){const el=document.createElement('article');el.className='card-unit';el.innerHTML=this.cardMarkup(card);return el},
-  async finishBattle(won){if(!this.game)return;const match=this.game;let message=this.t('rewardPending');if(won)this.playSfx(ASSETS.victory);try{if(!window.XenaWallet?.claimTcgMatch)throw new Error('wallet');const result=await window.XenaWallet.claimTcgMatch(match.difficulty,won?'win':'loss');message=won?`${result.granted||0} XC`:(this.language==='ko'?'전투 기록 완료':'Match recorded')}catch{message=this.t('rewardFailed')}const overlay=document.createElement('section');overlay.className='coin-overlay';overlay.innerHTML=`<div class="lobby-panel" style="max-width:390px;text-align:center"><h2>${this.t(won?'victory':'defeat')}</h2><p>${escapeHTML(message)}</p><button class="button button-primary" type="button">${this.t('returnLobby')}</button></div>`;overlay.querySelector('button').onclick=()=>{overlay.remove();this.game=null;this.show('lobby');this.wireWallet()};document.querySelector('#battle-view').append(overlay)}
-};client.init();
+  var DIFFICULTY = {
+    easy: { core: 20, reward: 50 },
+    normal: { core: 30, reward: 100 },
+    hard: { core: 40, reward: 150 }
+  };
+  var SFX = {
+    draw: 'assets/audio/sfx_card_draw.mp3', summon: 'assets/audio/sfx_card_summon.mp3',
+    hit: 'assets/audio/sfx_attack_impact.mp3', shatter: 'assets/audio/sfx_card_shatter.mp3'
+  };
+  var state = { difficulty: 'normal', selected: new Set(), game: null, handIndex: null, attacker: null, walletOff: null };
+  var $ = function (s) { return document.querySelector(s); };
+
+  function play(path) {
+    if (window.XenaAudio && window.XenaAudio.playSfx) { window.XenaAudio.playSfx(path); return; }
+    try { var a = new Audio(path); a.volume = .65; a.play().catch(function () {}); } catch (_) {}
+  }
+  function cards() {
+    var source = window.XenaCards;
+    var list = source && source.owned ? source.owned() : [];
+    if (!list || !list.length) list = source && source.available ? source.available() : (source && source.all ? source.all() : []);
+    list = (list || []).map(normalize).filter(function (c) { return c.id; });
+    /* A fresh visitor must still be able to enter the tutorial battle. */
+    if (!list.length) {
+      for (var i = 1; i <= 15; i++) list.push({ id: 'tutorial-' + i, name: 'XENA SIGNAL ' + i, grade: 'R', cost: 1 + (i % 4), atk: 2 + (i % 5), hp: 5 + (i % 5), image: '../../game/assets/backgrounds/xena-hero-bg.jpg' });
+    }
+    return list;
+  }
+  function normalize(c) {
+    var stat = (window.XenaCards && window.XenaCards.GRADE_STATS && window.XenaCards.GRADE_STATS[c.grade]) || {};
+    var power = Number(c.power || c.atk || stat.power || 3);
+    return { id: String(c.id), name: c.name || c.id || 'XENA CARD', grade: c.grade || 'N', cost: Number(c.cost || stat.cost || 1), atk: power, hp: Number(c.hp || power + 3), image: c.image || c.img || '../../game/assets/backgrounds/xena-hero-bg.jpg' };
+  }
+  function shuffle(list) { var a = list.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function deckForBattle() {
+    var all = cards(), wanted = Array.from(state.selected), chosen = all.filter(function (c) { return wanted.indexOf(c.id) >= 0; });
+    if (chosen.length < 15) { all.forEach(function (c) { if (chosen.length < 15 && chosen.indexOf(c) < 0) chosen.push(c); }); }
+    while (chosen.length < 15) chosen.push(Object.assign({}, chosen[chosen.length % Math.max(1, chosen.length)] || all[0], { id: 'clone-' + chosen.length }));
+    return shuffle(chosen.slice(0, 15));
+  }
+  function player(id, deck, core) { return { id: id, core: core, mana: 0, maxMana: 0, deck: deck.slice(5), hand: deck.slice(0, 5), field: Array(7).fill(null) }; }
+  function show(view) { ['lobby', 'cards-view', 'battle-view'].forEach(function (id) { $('#' + id).hidden = id !== view; }); }
+  function status(msg) { $('#lobby-status').textContent = msg || ''; }
+  function cardHtml(c) {
+    return '<img class="card-art" src="' + esc(c.image) + '" alt="" loading="lazy"><div class="card-meta"><span class="card-grade">' + esc(c.grade) + '</span><span class="card-hp">HP ' + c.hp + '</span><strong class="card-name">' + esc(c.name) + '</strong><div class="card-stats"><b class="card-cost">C ' + c.cost + '</b><b class="card-atk">ATK ' + c.atk + '</b></div></div>';
+  }
+  function esc(v) { return String(v || '').replace(/[&<>'"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]; }); }
+  function renderCollection() {
+    var list = $('#card-list'); list.innerHTML = '';
+    cards().forEach(function (c) {
+      var el = document.createElement('button'); el.type = 'button'; el.className = 'collection-card' + (state.selected.has(c.id) ? ' selected' : ''); el.innerHTML = cardHtml(c);
+      el.onclick = function () { if (state.selected.has(c.id)) state.selected.delete(c.id); else if (state.selected.size < 15) state.selected.add(c.id); renderCollection(); };
+      list.appendChild(el);
+    });
+    $('#deck-count').textContent = state.selected.size;
+  }
+  function startTurn(p) {
+    p.maxMana = Math.min(10, p.maxMana + 1); p.mana = p.maxMana;
+    p.field.forEach(function (u) { if (u) u.attacked = false; });
+    if (p.deck.length) { p.hand.push(p.deck.shift()); if (p.id === 'player') play(SFX.draw); }
+  }
+  async function startBattle() {
+    if (state.game) return;
+    var start = $('#start-pve'); start.disabled = true; status('Preparing battle…');
+    try {
+      if (window.XenaWallet && window.XenaWallet.consumeEnergy) await window.XenaWallet.consumeEnergy('signal_warfare');
+    } catch (err) { status('No energy available. Wait for a gem to recharge.'); start.disabled = false; return; }
+    var deck = deckForBattle(), conf = DIFFICULTY[state.difficulty], first = Math.random() < .5 ? 'player' : 'ai';
+    state.game = { difficulty: state.difficulty, first: first, active: first, round: 1, player: player('player', deck, 30), ai: player('ai', shuffle(cards().concat(cards())), conf.core) };
+    show('battle'); await coin(first); startTurn(state.game[first]); renderBattle(); if (first === 'ai') aiTurn();
+  }
+  function coin(first) {
+    var overlay = $('#coin-toss'), result = $('#coin-result'); overlay.hidden = false; result.textContent = '';
+    return new Promise(function (resolve) { setTimeout(function () { result.textContent = first === 'player' ? 'YOU GO FIRST' : 'AI GOES FIRST'; setTimeout(function () { overlay.hidden = true; resolve(); }, 700); }, 1400); });
+  }
+  function unit(c, side, slot) {
+    var el = document.createElement('article'); el.className = 'card-unit'; el.dataset.side = side; el.dataset.slot = slot; el.innerHTML = cardHtml(c);
+    if (side === 'player') el.onclick = function (e) { e.stopPropagation(); selectAttacker(slot); };
+    else if (state.attacker !== null) { el.classList.add('target-ready'); el.onclick = function (e) { e.stopPropagation(); attackUnit(slot); }; }
+    if (side === 'player' && state.attacker === slot) el.classList.add('attacker-selected');
+    return el;
+  }
+  function renderZone(node, list, side) {
+    node.innerHTML = '';
+    list.forEach(function (c, i) {
+      var slot = document.createElement('div'); slot.className = 'slot';
+      if (side === 'player' && state.handIndex !== null && !c) slot.classList.add('can-drop');
+      if (c) slot.appendChild(unit(c, side, i));
+      if (side === 'player') slot.onclick = function () { deploy(i); };
+      node.appendChild(slot);
+    });
+  }
+  function renderBattle() {
+    var g = state.game; if (!g) return;
+    var p = g.player, ai = g.ai;
+    $('#difficulty-label').textContent = g.difficulty.toUpperCase() + ' · ' + DIFFICULTY[g.difficulty].reward + ' XC';
+    $('#phase-label').textContent = g.active === 'player' ? 'YOUR TURN' : 'AI TURN';
+    $('#turn-rule').textContent = g.round === 1 ? 'FIRST TURN · NO ATTACK' : '';
+    $('#player-core').innerHTML = '<span>YOUR CORE · MANA ' + p.mana + '/' + p.maxMana + '</span><b>' + p.core + '</b>';
+    $('#ai-core').innerHTML = '<span>AI CORE</span><b>' + ai.core + '</b>';
+    $('#ai-core').onclick = function () { if (!ai.field.some(Boolean)) attackCore(); };
+    $('#ai-core').classList.toggle('target-ready', state.attacker !== null && !ai.field.some(Boolean));
+    renderZone($('#player-field'), p.field, 'player'); renderZone($('#ai-field'), ai.field, 'ai');
+    var hand = $('#hand'); hand.innerHTML = '';
+    p.hand.forEach(function (c, i) { var el = unit(c, 'hand', i); el.classList.toggle('selected', state.handIndex === i); el.onclick = function () { if (g.active === 'player') { state.handIndex = i; state.attacker = null; renderBattle(); } }; hand.appendChild(el); });
+    $('#end-turn').disabled = g.active !== 'player';
+  }
+  function deploy(slot) {
+    var g = state.game, p = g && g.player, c = p && p.hand[state.handIndex];
+    if (!g || g.active !== 'player' || !c || p.field[slot] || p.mana < c.cost) return;
+    p.mana -= c.cost; p.field[slot] = Object.assign({}, c, { attacked: false }); p.hand.splice(state.handIndex, 1); state.handIndex = null; play(SFX.summon); renderBattle();
+  }
+  function selectAttacker(slot) { var g = state.game, c = g && g.player.field[slot]; if (!g || g.active !== 'player' || !c || c.attacked || g.round === 1) return; state.attacker = state.attacker === slot ? null : slot; state.handIndex = null; renderBattle(); }
+  async function attackUnit(slot) { var g = state.game, a = g && g.player.field[state.attacker], target = g && g.ai.field[slot]; if (!a || !target) return; var source = state.attacker; state.attacker = null; a.attacked = true; await hit('player', source, 'ai', slot); target.hp -= a.atk; if (target.hp <= 0) { g.ai.field[slot] = null; play(SFX.shatter); } renderBattle(); }
+  async function attackCore() { var g = state.game, a = g && g.player.field[state.attacker]; if (!a || g.ai.field.some(Boolean)) return; a.attacked = true; state.attacker = null; await hit('player', a, null, 'ai-core'); g.ai.core = Math.max(0, g.ai.core - a.atk); if (g.ai.core <= 0) finish(true); else renderBattle(); }
+  function hit(side, source, targetSide, targetSlot) { play(SFX.hit); $('#xena-tcg-container').classList.add('camera-shake'); return new Promise(function (resolve) { setTimeout(function () { $('#xena-tcg-container').classList.remove('camera-shake'); resolve(); }, 260); }); }
+  function endTurn() { var g = state.game; if (!g || g.active !== 'player') return; state.handIndex = null; state.attacker = null; g.active = 'ai'; startTurn(g.ai); renderBattle(); aiTurn(); }
+  async function aiTurn() {
+    var g = state.game; if (!g || g.active !== 'ai') return;
+    await wait(450);
+    var ai = g.ai, cardIndex = ai.hand.findIndex(function (c) { return c.cost <= ai.mana; }), empty = ai.field.findIndex(function (c) { return !c; });
+    if (cardIndex >= 0 && empty >= 0) { var c = ai.hand.splice(cardIndex, 1)[0]; ai.mana -= c.cost; ai.field[empty] = Object.assign({}, c, { attacked: false }); play(SFX.summon); renderBattle(); await wait(500); }
+    if (g.round > 1) {
+      for (var i = 0; i < ai.field.length; i++) { var a = ai.field[i]; if (!a || a.attacked) continue; a.attacked = true; var target = g.player.field.findIndex(Boolean); await hit('ai', i, target >= 0 ? 'player' : null, target >= 0 ? target : 'player-core'); if (target >= 0) { g.player.field[target].hp -= a.atk; if (g.player.field[target].hp <= 0) { g.player.field[target] = null; play(SFX.shatter); } } else g.player.core = Math.max(0, g.player.core - a.atk); if (g.player.core <= 0) { finish(false); return; } renderBattle(); await wait(220); }
+    }
+    g.round++; g.active = 'player'; startTurn(g.player); renderBattle();
+  }
+  async function finish(won) {
+    var g = state.game; if (!g) return; var msg = won ? 'VICTORY · ' + DIFFICULTY[g.difficulty].reward + ' XC' : 'DEFEAT';
+    if (won && window.XenaWallet && window.XenaWallet.claimTcgMatch) { try { var r = await window.XenaWallet.claimTcgMatch(g.difficulty, 'win'); msg = 'VICTORY · ' + (r.granted || DIFFICULTY[g.difficulty].reward) + ' XC'; } catch (_) { msg += ' · reward sync pending'; } }
+    var overlay = document.createElement('section'); overlay.className = 'coin-overlay'; overlay.innerHTML = '<div class="lobby-panel" style="max-width:390px;text-align:center"><h2>' + msg + '</h2><p>Battle complete.</p><button class="button button-primary">RETURN TO LOBBY</button></div>';
+    overlay.querySelector('button').onclick = function () { overlay.remove(); state.game = null; show('lobby'); $('#start-pve').disabled = false; };
+    $('#battle-view').appendChild(overlay);
+  }
+  function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+  function wireWallet() {
+    function paint(v) { $('#xc-display').textContent = v == null ? 'XC —' : Number(v).toLocaleString() + ' XC'; }
+    if (!window.XenaWallet) return paint(null); paint(window.XenaWallet.getBalance && window.XenaWallet.getBalance());
+    if (!state.walletOff && window.XenaWallet.subscribe) state.walletOff = window.XenaWallet.subscribe(paint);
+  }
+  function init() {
+    try { JSON.parse(localStorage.getItem('xena-signal-warfare-deck') || '[]').forEach(function (id) { state.selected.add(id); }); } catch (_) {}
+    $('[data-difficulty="normal"]').classList.add('selected');
+    document.querySelectorAll('[data-difficulty]').forEach(function (b) { b.onclick = function () { state.difficulty = b.dataset.difficulty; document.querySelectorAll('[data-difficulty]').forEach(function (x) { x.classList.toggle('selected', x === b); }); }; });
+    $('#my-cards-button').onclick = function () { show('cards-view'); renderCollection(); };
+    $('#cards-back').onclick = function () { show('lobby'); };
+    $('#save-deck').onclick = function () { localStorage.setItem('xena-signal-warfare-deck', JSON.stringify(Array.from(state.selected))); $('#deck-status').textContent = 'Deck saved (' + state.selected.size + '/15).'; };
+    $('#start-pve').onclick = startBattle; $('#end-turn').onclick = endTurn; $('#battle-exit').onclick = function () { location.href = '../'; }; $('#refresh-balance').onclick = wireWallet;
+    $('#mute-local').onclick = function () { if (window.XenaAudio && window.XenaAudio.toggleMute) window.XenaAudio.toggleMute(); };
+    document.querySelectorAll('[data-language]').forEach(function (b) { b.onclick = function () { document.documentElement.lang = b.dataset.language; document.querySelectorAll('[data-language]').forEach(function (x) { x.classList.toggle('active', x === b); }); }; });
+    wireWallet();
+  }
+  document.addEventListener('DOMContentLoaded', init);
+}());

@@ -227,7 +227,7 @@ h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;lin
       <button class="r-btn" id="btn-weekly"><span lang="en">🏆 THIS WEEK'S RECORDS</span><span lang="ko">🏆 이번주 순위</span></button>
     </div>
     <p class="intro-note">
-      <span lang="en">First clear each day: Stage 1 = +1 XC ... Stage 10 = +10 XC (up to +55/day)<br>5 plays per stage per day · Weekly best times per stage<br>Cards come from your XENA CARDS pool</span>
+      <span lang="en">First clear each day: Stage 1 = +5 XC · Stage 2 = +10 XC · up to Stage 10 = +50 XC<br>5 plays per stage per day · Weekly best times per stage<br>Cards use XENA base photo artwork only</span>
       <span lang="ko">하루 첫 클리어: 1스테이지 +1 XC ... 10스테이지 +10 XC (하루 최대 +55)<br>스테이지당 하루 5판 · 스테이지별 이번 주 최고기록 표시<br>카드는 XENA CARDS 풀에서 등장합니다</span>
     </p>
   </section>
@@ -303,7 +303,8 @@ var STAGES = [
   {cards:36, time:150, miss:15, cols:8}
 ];
 /* 스테이지가 높을수록 보상 증가: 스테이지 번호 = XC (S1 +1 ... S10 +10, 하루 전체 +55) */
-function stageReward(idx){ return idx + 1; }
+/* Mini-game economy: every cleared stage pays its stage number × 5 XC. */
+function stageReward(idx){ return (idx + 1) * 5; }
 
 var WALLET_KEY = 'xena_wallet_v1', SAVE_KEY = 'xena_memory_v1';
 function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(e){ return def; } }
@@ -330,7 +331,11 @@ function weekKey(){
 if(!st.weekly || st.weekly.week !== weekKey()) st.weekly = {week: weekKey(), best: {}};
 var PLAYS_PER_DAY = 5, RESET_COST = 30;
 
-var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){ return d[4] === 1 && String(d[0]).indexOf('PC-') !== 0; });
+/* Keep this game photo-only.  GA cards are XENA's base/gallery artwork;
+   combat / pack artwork must never enter the mini-game pool. */
+var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){
+  return d[4] === 1 && String(d[0]).indexOf('GA-') === 0;
+});
 
 function renderWallet(){
   var bal = window.XenaWallet ? window.XenaWallet.getBalance() : null;
@@ -587,7 +592,7 @@ function start(idx, energyGranted){
 }
 window.addEventListener('resize', function(){ if(document.body.classList.contains('playing')) fitZoom(); });
 function tick(){
-  if(!cur) return;
+  if(!cur || cur.finished) return;
   cur.left--;
   $('hud-timer').textContent = Math.max(0, cur.left);
   if(cur.left === 10){ $('hud-timer-box').classList.add('low'); if (window.XenaAudio) window.XenaAudio.sfx('time_warning'); }
@@ -623,8 +628,12 @@ function flip(el, card){
   }
 }
 function finish(win, reason){
-  if(!cur) return;
+  /* A match animation and the one-second clock can finish on the same frame.
+     Latching the result prevents a late timeout from overwriting a clear. */
+  if(!cur || cur.finished) return;
+  cur.finished = true;
   clearInterval(cur.timer);
+  cur.timer = null;
   var idx = cur.idx, s = cur.s;
   var title = $('r-title'), sub = $('r-sub'), next = $('r-next');
   if(win){
@@ -679,7 +688,13 @@ function finish(win, reason){
   renderWallet();
   show('result');
 }
-$('r-home').addEventListener('click', function(){ show('intro'); renderStages(); });
+function returnToStages(){
+  if(cur && cur.timer) clearInterval(cur.timer);
+  cur = null;
+  show('intro');
+  renderStages();
+}
+$('r-home').addEventListener('click', returnToStages);
 
 /* ── 언어 토글 ── */
 document.querySelectorAll('.lang-toggle button').forEach(function(b){
@@ -701,7 +716,7 @@ renderStages();
 <script src="../shared-leaderboard.js?v=20260721"></script>
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
-<script src="../shared-wallet.js?v=20260727"></script>
+<script src="../shared-wallet.js?v=20260730"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('memory');
 if (window.__wireMemoryWallet) window.__wireMemoryWallet();

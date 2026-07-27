@@ -28,6 +28,7 @@
   var subs = [];
   var balance = null; /* null = 아직 모름(로딩중) */
   var energyPools = {};
+  var GUEST_ENERGY_KEY = 'xena_guest_energy_v2';
   var ctxReady = null;
   var unsub = null, energyUnsub = null, energyUiTimer = null;
 
@@ -48,9 +49,30 @@
 
   function energyFor(game){
     var pool = energyPools[game] || {};
-    var stored = typeof pool.energy === 'number' ? pool.energy : 6;
-    var updated = pool.energyUpdatedAt && typeof pool.energyUpdatedAt.toMillis === 'function' ? pool.energyUpdatedAt.toMillis() : Date.now();
+    var guest = guestEnergy(game);
+    var stored = typeof pool.energy === 'number' ? pool.energy : guest.energy;
+    var updated = pool.energyUpdatedAt && typeof pool.energyUpdatedAt.toMillis === 'function' ? pool.energyUpdatedAt.toMillis() : guest.updatedAt;
     return Math.min(6, stored + Math.floor(Math.max(0, Date.now() - updated) / 600000));
+  }
+
+  function readGuestEnergy(){
+    try { return JSON.parse(localStorage.getItem(GUEST_ENERGY_KEY) || '{}') || {}; }
+    catch(e) { return {}; }
+  }
+  function guestEnergy(game){
+    var all = readGuestEnergy(), raw = all[game] || {};
+    return { energy: typeof raw.energy === 'number' ? raw.energy : 6, updatedAt: Number(raw.updatedAt) || Date.now() };
+  }
+  function consumeGuestEnergy(game){
+    var current = guestEnergy(game);
+    var available = Math.min(6, current.energy + Math.floor(Math.max(0, Date.now() - current.updatedAt) / 600000));
+    if (available < 1) return Promise.reject(new Error('NO_ENERGY'));
+    var all = readGuestEnergy();
+    all[game] = { energy: available - 1, updatedAt: Date.now() };
+    try { localStorage.setItem(GUEST_ENERGY_KEY, JSON.stringify(all)); } catch(e) {}
+    energyPools[game] = all[game];
+    notify();
+    return Promise.resolve({ game:game, energy:available - 1, maxEnergy:6, refillMs:600000, guest:true });
   }
 
   function startListening(uid){
@@ -92,7 +114,15 @@
     var key = String(idempotencyKey || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + String(Math.random()).slice(2))));
     return callFn('spendCredits', {amount: amount, reason: reason||'', idempotencyKey: key});
   }
-  function consumeEnergy(game){ return callFn('consumeEnergy', {game: game}); }
+  function consumeEnergy(game){
+    return callFn('consumeEnergy', {game: game}).catch(function(error){
+      /* Guest play still gets a real per-game six-ticket pool. Signed-in users
+         remain server-authoritative; only connection/auth bootstrap failures
+         use this device pool so a game never starts without consuming a gem. */
+      if (error && (error.code === 'resource-exhausted' || /No energy/i.test(error.message || ''))) throw error;
+      return consumeGuestEnergy(game);
+    });
+  }
   function initEnergyUI(game){
     if(!game) return;
     if (!document.getElementById('xena-energy-style')) {

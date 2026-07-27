@@ -858,7 +858,7 @@ function tickCooldowns(){
       ? t('OPEN · '+wPrice+' XC', '열기 · '+wPrice+' XC')
       : t('Need '+wPrice+' XC', wPrice+' XC 필요');
     wCool.textContent = t('Once per week · '+wPrice+' XC per open', '주 1회 · 오픈당 '+wPrice+' XC');
-    $('ptab-alert-weekly').hidden = !canAfford;
+    $('ptab-alert-weekly').hidden = !canAfford || st.packs.weeklyFreeClaimed === nyWeekMondayKey();
   } else {
     var leftW = nyNextMondayMs() - Date.now();
     wBtn.disabled = true;
@@ -1176,7 +1176,7 @@ renderAll();
 <script src="../../game/cloud-sync.js?v=20260721"></script>
 <script src="../shared-identity.js?v=20260721"></script>
 <script src="../shared-audio.js?v=20260721"></script>
-<script src="../shared-wallet.js?v=20260727"></script>
+<script src="../shared-wallet.js?v=20260730"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('gacha');
 if (window.__wireGachaWallet) window.__wireGachaWallet();

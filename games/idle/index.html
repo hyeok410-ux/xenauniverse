@@ -101,9 +101,9 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .c-loading{text-align:center;padding:20px 0;font-family:var(--font-mono);font-size:.68rem;color:var(--text-dim);}
 
 .c-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;margin-bottom:10px;}
-.c-name{font-size:.92rem;font-weight:700;letter-spacing:-.01em;}
-.c-flag{font-size:1.1rem;margin-right:5px;}
-.c-mult{font-family:var(--font-mono);font-size:.62rem;font-weight:700;color:var(--ca);white-space:nowrap;}
+.c-name{font-size:1.84rem;font-weight:700;letter-spacing:-.01em;}
+.c-flag{font-size:2.2rem;margin-right:7px;}
+.c-mult{font-family:var(--font-mono);font-size:1.24rem;font-weight:700;color:var(--ca);white-space:nowrap;}
 .c-info-btn{background:none;border:none;color:var(--text-dim);font-size:.85rem;line-height:1;vertical-align:middle;
   padding:0;margin-left:2px;cursor:pointer;transition:.2s;}
 .c-info-btn:hover{color:var(--ca);}
@@ -129,10 +129,10 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 
 /* 진행중 / 완료 */
 .c-thumbs{display:flex;gap:5px;justify-content:center;margin-bottom:9px;}
-.c-thumbs img{width:38px;height:52px;object-fit:cover;border-radius:6px;border:1px solid var(--hair);}
-.c-grade-pill{width:38px;height:52px;border-radius:6px;border:2px solid;display:flex;align-items:center;justify-content:center;
+.c-thumbs img{width:114px;height:156px;object-fit:cover;border-radius:8px;border:1px solid var(--hair);image-rendering:auto;}
+.c-grade-pill{width:114px;height:156px;border-radius:8px;border:2px solid;display:flex;align-items:center;justify-content:center;
   font-family:var(--font-mono);font-size:.62rem;font-weight:700;}
-.c-timer{text-align:center;font-family:var(--font-mono);font-weight:700;font-size:1.15rem;color:var(--ca);letter-spacing:.02em;}
+.c-timer{text-align:center;font-family:var(--font-mono);font-weight:700;font-size:1.5rem;color:var(--ca);letter-spacing:.02em;}
 .c-timer.done{color:var(--gold);}
 .c-bar{height:5px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0;}
 .c-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--ca),var(--gold));transition:width 1s linear;}
@@ -185,10 +185,10 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .pick-elem-filter button.on{color:var(--cyan);border-color:rgba(63,224,255,.5);background:rgba(63,224,255,.12);
   box-shadow:0 0 12px rgba(63,224,255,.2);}
 #pick-preview.has-synergy{color:#5cffc0;font-weight:700;text-shadow:0 0 10px rgba(92,255,192,.5);}
-.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px;}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;}
 @media(min-width:1000px){
   .sheet{max-width:900px;}
-  .picker{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px;}
+  .picker{grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:16px;}
 }
 .picker-more-wrap{text-align:center;margin-top:12px;}
 .picker-more-btn{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;padding:9px 20px;border-radius:20px;
@@ -400,10 +400,11 @@ function reconcileTours(){
   window.XenaWallet.getTours().then(function(serverTours){
     var changed = false;
     for(var city in serverTours){
-      if(!local.tours[city]){
-        local.tours[city] = { cards: null, grades: serverTours[city].grades, elements: serverTours[city].elements || [], startAt: serverTours[city].startAt, durationMs: serverTours[city].durationMs };
-        changed = true;
-      }
+      /* The server timestamp is also what claimTourReward validates. Always
+         refresh it here rather than retaining a client-side approximation. */
+      var previous = local.tours[city] || {};
+      local.tours[city] = { cards: previous.cards || null, grades: serverTours[city].grades, elements: serverTours[city].elements || [], startAt: serverTours[city].startAt, durationMs: serverTours[city].durationMs };
+      changed = true;
     }
     for(var c2 in local.tours){
       if(!serverTours[c2]){ delete local.tours[c2]; changed = true; }   /* 서버에 없으면 이미 클레임/취소된 것 */
@@ -616,6 +617,12 @@ function cancelTour(cityKey){
 
 /* ── 카드 선택 → 파견 ─────────────────────────────────────── */
 var pickCity = null, pickSelected = [];
+/* Exact mirror of functions/index.js GRADE_COST. Dispatch duration is based
+   on grade, not the combat cost printed on an individual card. */
+var SERVER_GRADE_HOURS = { N:1, R:1, S:2, SR:3, SSR:4 };
+function tourHours(cards){
+  return cards.reduce(function(max, card){ return Math.max(max, SERVER_GRADE_HOURS[card.grade] || 1); }, 0);
+}
 
 function openPicker(cityKey){
   if(!XenaCards.ownsAny()){ toast(t('No cards yet — open a pack first.', '보유 카드가 없습니다 — 팩을 먼저 열어주세요.')); return; }
@@ -624,7 +631,7 @@ function openPicker(cityKey){
   pickShowAll = false;
   var c = CITIES.filter(function(x){ return x.key === cityKey; })[0];
   $('pick-title').textContent = t(c.en, c.ko);
-  $('pick-sub').textContent = t('Tour length = your highest Cost card (hours). Reward = total Power × ' + c.mult.toFixed(2) + ' × ' + REWARD_PER_POWER,
+  $('pick-sub').textContent = t('Tour length uses highest card grade (server time). Reward = total Power × ' + c.mult.toFixed(2) + ' × ' + REWARD_PER_POWER,
                                 '투어 시간 = 최고 코스트 카드 기준(시간). 보상 = 파워 합계 × ' + c.mult.toFixed(2) + ' × ' + REWARD_PER_POWER);
   pickElemFilter = 'ALL';
   renderPickElemFilter();
@@ -694,7 +701,7 @@ function updatePickSummary(){
   var cards = pickSelected.map(function(id){ return XenaCards.get(id); });
   var maxCost = 0, sumPower = 0;
   for(var i = 0; i < cards.length; i++){
-    if(cards[i].cost > maxCost) maxCost = cards[i].cost;
+    maxCost = Math.max(maxCost, SERVER_GRADE_HOURS[cards[i].grade] || 1);
     sumPower += cards[i].power;
   }
   var city = cityByKey(pickCity);
@@ -757,6 +764,8 @@ $('pick-send').addEventListener('click', function(){
     $('modal-pick').classList.remove('on');
     toast(t('Cards dispatched!', '카드가 파견되었습니다!'));
     renderAll();
+    /* Fetch the exact Firestore serverTimestamp used by the reward validator. */
+    setTimeout(reconcileTours, 350);
   }).catch(function(err){
     var code = (err && err.code) || '';
     var msg = code.indexOf('already-exists') >= 0 ? t('A tour is already running here.', '이미 이 도시에 투어가 진행 중입니다.')
@@ -875,7 +884,7 @@ document.addEventListener('visibilitychange', function(){ if(!document.hidden){ 
 <script src="../../game/cloud-sync.js?v=20260722"></script>
 <script src="../shared-identity.js?v=20260722"></script>
 <script src="../shared-audio.js?v=20260722"></script>
-<script src="../shared-wallet.js?v=20260727"></script>
+<script src="../shared-wallet.js?v=20260730"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('dispatch');
 if (window.XenaWallet){

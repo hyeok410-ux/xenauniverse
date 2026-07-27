@@ -57,12 +57,12 @@ function verifyStripeSignature(rawBody, signature) {
 // adminGrantCredits / adminListWallets 가 동작한다. 비어 있으면 항상 거부된다.
 
 const MATCH_REWARDS = Object.freeze({
-  ai_easy_win: { credits: 20, shards: 0 },
-  ai_normal_win: { credits: 35, shards: 0 },
-  ai_hard_win: { credits: 55, shards: 0 },
-  event_easy_win: { credits: 100, shards: 2 },
-  event_normal_win: { credits: 180, shards: 5 },
-  event_hard_win: { credits: 300, shards: 10 },
+  ai_easy_win: { credits: 50, shards: 0 },
+  ai_normal_win: { credits: 100, shards: 0 },
+  ai_hard_win: { credits: 150, shards: 0 },
+  event_easy_win: { credits: 50, shards: 0 },
+  event_normal_win: { credits: 100, shards: 0 },
+  event_hard_win: { credits: 150, shards: 0 },
 });
 
 const DAILY_AI_LIMITS = Object.freeze({
@@ -345,13 +345,7 @@ exports.awardMatchReward = onCall(async (request) => {
       if (eventWins[difficulty]) throw new HttpsError("already-exists", "This event reward was already claimed today.");
       granted = { ...reward };
       const nextEventWins = { ...eventWins, [difficulty]: true };
-      if (nextEventWins.easy && nextEventWins.normal && nextEventWins.hard && !dailyData.eventBonusClaimed) {
-        granted.credits += 500;
-        granted.shards += 3;
-        transaction.set(dailyRef, { uid, dayKey, eventWins: nextEventWins, eventBonusClaimed: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-      } else {
-        transaction.set(dailyRef, { uid, dayKey, eventWins: nextEventWins, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-      }
+      transaction.set(dailyRef, { uid, dayKey, eventWins: nextEventWins, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     } else {
       const limit = DAILY_AI_LIMITS[rewardKey] || 0;
       const current = Number(aiCounts[rewardKey] || 0);
@@ -444,8 +438,9 @@ exports.submitScore = onCall(async (request) => {
    submitScore 가 오늘 실제로 그 스테이지를 클리어했다고 남긴 dailyClears 기록이
    있을 때만 지급한다 — 클라이언트가 그냥 "클리어했다"고 우기는 걸로는 못 받는다. */
 const STAGE_REWARD = Object.freeze({
-  shisen: (stage) => Math.min(50, stage * 2),
-  memory: (stage) => Math.min(50, stage),
+  // Mini games: Stage 1 = 5 XC, Stage 2 = 10 XC, … capped at 50 XC.
+  shisen: (stage) => Math.min(50, stage * 5),
+  memory: (stage) => Math.min(50, stage * 5),
 });
 exports.claimStageReward = onCall(async (request) => {
   const uid = requireAuth(request);
