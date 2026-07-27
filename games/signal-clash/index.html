@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SIGNAL CLASH — XENA Card Battle</title>
+<meta name="description" content="6 turns. 3 zones. Win two of three. A XENA card battle.">
+<meta property="og:title" content="SIGNAL CLASH — XENA Card Battle">
+<meta property="og:description" content="6 turns. 3 zones. Win two of three.">
+<meta property="og:url" content="https://xenauniverse.com/games/signal-clash/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%2305030a'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='900' fill='%233fe0ff' text-anchor='middle' font-family='Arial'%3EX%3C/text%3E%3C/svg%3E">
+<script>
+(function(){
+  var saved = null;
+  try{ saved = localStorage.getItem('xena-lang'); }catch(e){}
+  document.documentElement.setAttribute('data-lang', saved === 'ko' ? 'ko' : 'en');
+  document.documentElement.setAttribute('lang', saved === 'ko' ? 'ko' : 'en');
+})();
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+:root{
+  --black:#000000; --purple:#6e2fd9; --purple-light:#a06bff; --silver:#e6e6ee;
+  --cyan:#3fe0ff; --magenta:#ff2fb0; --gold:#e8c468;
+  --hair:rgba(255,255,255,.09); --text-dim:rgba(230,230,238,.55);
+  --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  --g-N:#b9b9c6; --g-R:#3fe0ff; --g-S:#a06bff; --g-SR:#ff2fb0; --g-SSR:#e8c468;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--black);color:var(--silver);font-family:var(--font-sans);font-weight:300;min-height:100%;overflow-x:hidden;}
+body{background-image:radial-gradient(ellipse at 20% 0%,rgba(63,224,255,.10),transparent 55%),radial-gradient(ellipse at 80% 100%,rgba(110,47,217,.14),transparent 55%);background-attachment:fixed;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:3px;}
+[data-lang="ko"] [lang="en"]{display:none;}
+[data-lang="en"] [lang="ko"]{display:none;}
+
+/* ── topbar ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:10px 14px;background:rgba(0,0,0,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--hair);}
+.back{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;color:var(--text-dim);border:1px solid var(--hair);
+  padding:6px 10px;border-radius:16px;transition:.25s;white-space:nowrap;}
+.back:hover{color:var(--cyan);border-color:rgba(63,224,255,.4);}
+.tb-right{display:flex;align-items:center;gap:8px;}
+.xc-chip{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.06em;color:var(--gold);
+  border:1px solid rgba(232,196,104,.35);background:rgba(232,196,104,.08);padding:6px 11px;border-radius:16px;white-space:nowrap;}
+.deck-btn{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;color:var(--cyan);
+  border:1px solid rgba(63,224,255,.4);background:rgba(63,224,255,.08);padding:6px 12px;border-radius:16px;white-space:nowrap;transition:.25s;}
+.deck-btn:hover{background:rgba(63,224,255,.16);box-shadow:0 0 14px rgba(63,224,255,.25);}
+.deck-btn.hidden{display:none;}
+.lang-toggle{display:flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--hair);border-radius:20px;padding:3px;}
+.lang-toggle button{font-family:var(--font-mono);background:transparent;border:none;color:var(--text-dim);font-size:.6rem;
+  font-weight:500;letter-spacing:.1em;padding:4px 9px;border-radius:16px;transition:.3s;}
+[data-lang="ko"] .lang-toggle button[data-set="ko"],
+[data-lang="en"] .lang-toggle button[data-set="en"]{background:rgba(63,224,255,.16);color:var(--cyan);box-shadow:inset 0 0 0 1px rgba(63,224,255,.4);}
+
+.screen{display:none;}
+.screen.on{display:block;}
+main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
+
+/* ── intro ── */
+.hero-title{font-size:clamp(2rem,7vw,3.4rem);font-weight:800;letter-spacing:-.02em;line-height:1;margin-bottom:6px;
+  background:linear-gradient(100deg,var(--cyan),var(--purple-light) 50%,var(--magenta));
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero-sub{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.24em;color:var(--text-dim);margin-bottom:26px;}
+.diff-picker{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:22px;}
+@media(max-width:520px){ .diff-picker{grid-template-columns:repeat(2,1fr);} }
+.diff-btn{border:1px solid var(--hair);border-radius:12px;padding:13px 8px;background:rgba(255,255,255,.02);
+  display:flex;flex-direction:column;align-items:center;gap:4px;transition:.2s;}
+.diff-btn:hover{border-color:rgba(63,224,255,.4);}
+.diff-btn.on{border-color:var(--cyan);background:rgba(63,224,255,.1);box-shadow:0 0 16px -4px var(--cyan);}
+/* [2026-07-25] 난이도 글씨가 안 보인다는 피드백 — 색을 명시적으로 흰색으로 고정.
+   d-desc(AI덱 설명 문구)는 요청대로 완전히 제거. */
+.diff-btn .d-name{font-family:var(--font-mono);font-size:.72rem;font-weight:700;letter-spacing:.08em;color:#fff;}
+.diff-btn .d-reward{font-family:var(--font-mono);font-size:.62rem;color:var(--gold);margin-top:2px;}
+.rules{border:1px solid var(--hair);border-radius:14px;padding:18px 20px;background:rgba(255,255,255,.025);margin-bottom:22px;}
+.rules li{list-style:none;font-size:.86rem;line-height:1.85;color:rgba(230,230,238,.8);padding-left:18px;position:relative;}
+.rules li::before{content:'';position:absolute;left:0;top:.72em;width:5px;height:5px;border-radius:50%;background:var(--cyan);}
+.btn{display:inline-block;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.16em;font-weight:500;
+  padding:13px 30px;border-radius:26px;border:1px solid rgba(63,224,255,.45);background:rgba(63,224,255,.1);
+  color:var(--cyan);transition:.25s;}
+.btn:hover{background:rgba(63,224,255,.2);box-shadow:0 0 22px rgba(63,224,255,.25);}
+.btn.ghost{border-color:var(--hair);background:transparent;color:var(--text-dim);}
+.btn.ghost:hover{color:var(--silver);border-color:rgba(255,255,255,.25);box-shadow:none;}
+.btn:disabled{opacity:.32;cursor:not-allowed;box-shadow:none;}
+.intro-actions .deck-btn{font-size:.72rem;padding:13px 30px;border-radius:26px;letter-spacing:.16em;}
+
+/* ── status bar ── */
+.status{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  border:2px solid rgba(160,107,255,.68);border-radius:16px;padding:13px 18px;
+  background:rgba(9,5,20,.84);box-shadow:0 0 20px rgba(160,107,255,.24),inset 0 0 18px rgba(63,224,255,.05);margin-bottom:12px;}
+.st-item{font-family:var(--font-mono);font-size:.76rem;font-weight:700;letter-spacing:.11em;color:rgba(230,230,238,.8);
+  padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.035);}
+.st-item b{color:var(--silver);font-weight:800;font-size:1rem;margin-left:7px;text-shadow:0 0 10px currentColor;}
+.st-item.mana b{color:var(--cyan);}
+.st-item.turn b{color:var(--purple-light);}
+/* [2026-07-26] 아주 넓은 화면(1400px+)에서는 상태바를 화면 왼쪽 가운데, 액션 버튼을
+   오른쪽 가운데로 — 그보다 좁으면(대부분의 데스크톱/노트북) 보드와 겹칠 위험이 있어
+   기존 상단/하단 배치를 유지한다. */
+@media(min-width:1400px){
+  #screen-play .status{position:fixed;left:18px;top:50%;transform:translateY(-50%);flex-direction:column;
+    align-items:stretch;width:190px;z-index:40;padding:16px 14px;}
+  #screen-play .status .st-item{display:flex;flex-direction:column;gap:5px;font-size:.78rem;padding:12px;}
+  #screen-play .status .st-item b{font-size:1.2rem;margin-left:0;}
+  #screen-play > .actions{position:fixed;right:18px;top:50%;transform:translateY(-50%);flex-direction:column;
+    width:180px;z-index:40;margin-top:0;padding:14px;border:2px solid rgba(63,224,255,.62);border-radius:16px;
+    background:rgba(4,12,20,.86);box-shadow:0 0 22px rgba(63,224,255,.24);}
+  #screen-play > .actions .btn{width:100%;font-size:.78rem;font-weight:800;padding:15px 12px;border-width:2px;
+    text-shadow:0 0 9px currentColor;box-shadow:0 0 13px rgba(63,224,255,.12);}
+}
+
+/* ── board ── */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.zone{position:relative;border:1px solid var(--hair);border-radius:14px;background:rgba(255,255,255,.022);padding:10px 8px;
+  display:flex;flex-direction:column;gap:8px;transition:.22s;background-size:cover;background-position:center;isolation:isolate;}
+.zone::before{content:'';position:absolute;inset:0;border-radius:inherit;z-index:-1;
+  background:linear-gradient(rgba(3,4,10,.74),rgba(3,4,10,.82));}
+.zone-0{background-image:url('assets/zone-cyan.jpg');}
+.zone-1{background-image:url('assets/zone-magenta.jpg');}
+.zone-2{background-image:url('assets/zone-violet.jpg');}
+.zone.targetable{border-color:rgba(63,224,255,.55);background:rgba(63,224,255,.07);cursor:pointer;box-shadow:0 0 18px rgba(63,224,255,.14) inset;}
+.zone.full{opacity:.5;}
+.z-name{font-family:var(--font-mono);font-size:.56rem;letter-spacing:.12em;text-align:center;color:var(--text-dim);
+  padding-bottom:6px;border-bottom:1px solid var(--hair);}
+.z-score{display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--font-mono);font-size:.86rem;font-weight:700;padding:3px 0;}
+.z-score .me{color:var(--cyan);} .z-score .op{color:var(--magenta);} .z-score .vs{color:var(--text-dim);font-size:.6rem;font-weight:400;}
+.z-score.win-me{background:rgba(63,224,255,.12);border-radius:8px;}
+.z-score.win-op{background:rgba(255,47,176,.12);border-radius:8px;}
+/* [2026-07-26] "카드 3장 넣으니 1x3으로 한 줄에 놓인다" 피드백 — 폭에 따라 자동으로
+   줄바꿈되는 flex-wrap 대신, 항상 2열로 고정되는 grid로 바꿔 2x2 형태를 강제한다. */
+.slots{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;justify-items:center;min-height:56px;align-content:start;}
+.slots.op{align-content:end;}
+
+/* ── card ──
+   [2026-07-24] 전면 개편: 카드 이름 문구는 완전히 제거(정보를 다 가려서). 대신
+   기본카드(=has-img 이지만 TCG 전용은 아닌 카드)는 좌상단 비용, 중앙상단 속성,
+   우상단 파워, 카드 하단 중앙 등급, 맨 아래 한 줄 기술을 오버레이로 얹는다.
+   TCG 전용 카드(PC-*, .tcg-pure)는 카드 아트 자체에 이미 비용/파워/속성/기술이
+   그려져 있으므로 오버레이를 절대 얹지 않는다 — 순수 아트만 보여준다. */
+.card{position:relative;width:60px;height:82px;border-radius:8px;border:1px solid var(--hair);
+  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  overflow:hidden;transition:.2s;flex-shrink:0;}
+/* [2026-07-25] "전장 카드가 작다" 피드백 — 구역(board)에 놓인 mini 카드를 2배로. */
+.card.mini{width:104px;height:140px;}
+.zone .card .c-cost,.zone .card .c-pow{font-size:.82rem;}
+.zone .card .c-elem{font-size:.5rem;}
+.zone .card .c-grade{font-size:.72rem;bottom:20px;}
+.zone .card .c-ability{font-size:.46rem;}
+.zone .card .c-effpow{font-size:.7rem;min-width:20px;}
+.card.has-img{background-size:cover;background-position:center;}
+.card .c-cost,.card .c-pow{position:absolute;top:3px;font-family:var(--font-mono);font-size:.64rem;font-weight:800;
+  color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.9);z-index:2;}
+.card .c-cost{left:3px;}
+.card .c-pow{right:3px;}
+.card .c-elem{position:absolute;top:3px;left:50%;transform:translateX(-50%);font-family:var(--font-mono);
+  font-size:.38rem;font-weight:700;letter-spacing:0;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.95);z-index:2;
+  max-width:82%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+.card .c-grade{position:absolute;left:0;right:0;bottom:15px;text-align:center;font-family:var(--font-mono);
+  font-size:.58rem;font-weight:800;letter-spacing:.06em;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.95);z-index:2;}
+.card .c-ability{position:absolute;left:1px;right:1px;bottom:1px;text-align:center;font-size:.36rem;line-height:1.15;
+  color:rgba(255,255,255,.85);padding:1px 2px;background:rgba(0,0,0,.5);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;z-index:2;}
+/* 효과 파워는 실제 TCG 파워 위치인 우상단에 겹쳐 표시한다. */
+.card .c-effpow{position:absolute;right:3px;top:3px;min-width:24px;height:24px;display:grid;place-items:center;
+  text-align:center;font-family:var(--font-mono);font-size:.72rem;font-weight:900;padding:1px 5px;border-radius:50%;z-index:6;color:#fff;
+  box-shadow:0 0 12px currentColor,0 2px 7px rgba(0,0,0,.8);text-shadow:0 1px 3px rgba(0,0,0,.9);}
+.card .c-effpow.up{background:linear-gradient(145deg,#076d75,#20d7ca);border:2px solid #8bfff4;color:#eaffff;}
+.card .c-effpow.down{background:linear-gradient(145deg,#6e102a,#d7355b);border:2px solid #ff9bb2;color:#fff1f4;}
+.card .c-effpow.power-counting{animation:powerBadgeTick .22s ease-out;}
+@keyframes powerBadgeTick{0%{transform:scale(.55);filter:brightness(2.2);}70%{transform:scale(1.24);}100%{transform:scale(1);}}
+/* 오버레이가 있는(기본) 카드는 아래를 살짝 어둡게 깔아 흰 글자가 읽히도록 */
+.card.has-img:not(.tcg-pure)::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(rgba(0,0,0,.42) 0%, transparent 22%, transparent 68%, rgba(0,0,0,.65) 100%);}
+.card[data-grade="N"]{border-color:rgba(185,185,198,.4);}
+.card[data-grade="R"]{border-color:rgba(63,224,255,.45);}
+.card[data-grade="S"]{border-color:rgba(160,107,255,.5);}
+.card[data-grade="SR"]{border-color:rgba(255,47,176,.5);box-shadow:0 0 10px rgba(255,47,176,.12);}
+.card[data-grade="SSR"]{border-color:rgba(232,196,104,.6);box-shadow:0 0 14px rgba(232,196,104,.22);}
+.card.tcg-pure{border-color:rgba(232,196,104,.55);}
+.card.op{border-style:dashed;opacity:.94;}
+.card.reveal{animation:pop .38s ease-out;}
+@keyframes pop{0%{transform:translateY(-14px) scale(.8);opacity:0;}100%{transform:none;opacity:1;}}
+
+/* [2026-07-24] 손패 카드가 너무 작다는 피드백 — 전 구간에서 2배 가까이 확대.
+   [2026-07-25] 추가로 1.5배 더 확대(요청: "지금보다 1.5배 더 크게"). */
+.hand .card{width:165px;height:225px;border-radius:12px;}
+.hand{gap:12px;min-height:235px;}
+.hand .card .c-cost,.hand .card .c-pow{font-size:1.15rem;}
+.hand .card .c-elem{font-size:.7rem;}
+.hand .card .c-grade{font-size:1rem;bottom:30px;}
+.hand .card .c-ability{font-size:.7rem;}
+/* 데스크톱: 배틀 화면을 더 큼직하게 + 화면 정중앙 (base 규칙들 뒤에 위치해야 캐스케이드에서 이김) */
+@media(min-width:900px){
+  #screen-play.on{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;justify-content:center;min-height:calc(100vh - 70px);}
+  .board{gap:22px;margin-bottom:22px;}
+  .zone{padding:22px 18px;border-radius:18px;}
+  .z-name{font-size:.7rem;letter-spacing:.16em;padding-bottom:10px;}
+  .z-score{font-size:1.15rem;gap:18px;padding:8px 0;}
+  .card{width:88px;height:120px;border-radius:10px;}
+  .card.mini{width:156px;height:212px;}
+  .zone .card .c-cost,.zone .card .c-pow{font-size:1rem;}
+  .zone .card .c-elem{font-size:.6rem;}
+  .zone .card .c-grade{font-size:.88rem;bottom:26px;}
+  .zone .card .c-ability{font-size:.56rem;}
+  .hand .card{width:282px;height:384px;border-radius:16px;}
+  .hand{gap:20px;min-height:400px;}
+  .hand .card .c-cost,.hand .card .c-pow{font-size:1.6rem;}
+  .hand .card .c-elem{font-size:.9rem;}
+  .hand .card .c-grade{font-size:1.3rem;bottom:48px;}
+  .hand .card .c-ability{font-size:.85rem;}
+}
+
+/* ── 상대 손패 (내용은 안 보이고 장수만 — 프리미엄 화이트+골드 뒷장으로 통일) ── */
+.opp-hand-wrap{margin-bottom:14px;}
+.opp-hand-wrap .hand-label{text-align:center;}
+.opp-hand{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+/* [2026-07-25] "상대 손패도 3배 더 크게" 요청 반영 */
+.cardback{width:132px;height:180px;border-radius:14px;flex-shrink:0;
+  background-image:url('assets/card-back.jpg');background-size:cover;background-position:center;
+  border:1px solid rgba(160,107,255,.5);
+  box-shadow:0 0 10px rgba(63,224,255,.3);}
+@media(min-width:900px){ .cardback{width:156px;height:210px;} }
+
+/* ── hand ── */
+.hand-wrap{border-top:1px solid var(--hair);padding-top:12px;}
+.hand-label{font-family:var(--font-mono);font-size:.56rem;letter-spacing:.14em;color:var(--text-dim);margin-bottom:8px;}
+.hand{display:flex;gap:8px;flex-wrap:wrap;min-height:88px;align-items:flex-start;}
+.hand .card{cursor:pointer;}
+.hand .card:hover{transform:translateY(-5px);border-color:rgba(63,224,255,.6);}
+/* [2026-07-25] 클릭한 카드가 "커진다"는 느낌이 들도록 1.2배 확대(요청사항) */
+.hand .card.selected{transform:translateY(-9px) scale(1.2);border-color:var(--cyan);box-shadow:0 0 18px rgba(63,224,255,.35);z-index:5;}
+.hand .card.unaffordable{opacity:.34;cursor:not-allowed;}
+.hand .card.unaffordable:hover{transform:none;border-color:var(--hair);}
+.pending{outline:1px dashed rgba(63,224,255,.5);outline-offset:2px;cursor:pointer;}
+
+.actions{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+.hint{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.06em;color:var(--text-dim);text-align:center;margin-top:10px;min-height:16px;}
+
+/* ── 카드 배치 속성 이펙트 / 파워 카운트업 ── */
+.element-burst{--fx:#3fe0ff;position:absolute;inset:8% 5%;z-index:12;pointer-events:none;display:grid;place-items:center;
+  border-radius:18px;overflow:hidden;animation:fxFade .9s ease-out forwards;}
+.element-burst::before{content:'';position:absolute;width:42%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,#fff 0 5%,var(--fx) 10%,color-mix(in srgb,var(--fx) 32%,transparent) 42%,transparent 70%);
+  box-shadow:0 0 28px var(--fx),0 0 58px color-mix(in srgb,var(--fx) 55%,transparent);
+  animation:fxCore .7s cubic-bezier(.16,.8,.2,1) forwards;}
+.element-burst::after{content:'';position:absolute;width:82%;aspect-ratio:1;border:3px solid var(--fx);border-radius:50%;
+  box-shadow:0 0 18px var(--fx),inset 0 0 18px var(--fx);animation:fxRing .75s ease-out forwards;}
+.element-burst span{position:relative;z-index:2;font-family:var(--font-mono);font-size:.64rem;font-weight:900;
+  letter-spacing:.24em;color:#fff;text-shadow:0 0 8px var(--fx),0 0 18px var(--fx);animation:fxLabel .7s ease-out forwards;}
+.element-burst img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:.9;mix-blend-mode:screen;filter:drop-shadow(0 0 14px var(--fx));animation:burstImageIn .9s ease-out forwards;}
+@keyframes burstImageIn{0%{transform:scale(.55);opacity:0;}18%{opacity:.95;}100%{transform:scale(1.08);opacity:0;}}
+.element-burst[data-element="LIGHT"]{--fx:#ffe08b;}
+.element-burst[data-element="DARK"]{--fx:#a06bff;}
+.element-burst[data-element="SOUL"]{--fx:#ff62c4;}
+.element-burst[data-element="SOUND"]{--fx:#3fe0ff;}
+.element-burst[data-element="FIRE"]{--fx:#ff7048;}
+.element-burst[data-element="WATER"]{--fx:#4c91ff;}
+.element-burst[data-element="EARTH"]{--fx:#72d47f;}
+.power-callout{position:absolute;left:50%;top:50%;z-index:15;pointer-events:none;transform:translate(-50%,-50%);
+  font-family:var(--font-mono);font-size:clamp(.8rem,2vw,1.15rem);font-weight:900;letter-spacing:.2em;
+  color:#b9fff7;text-shadow:0 0 8px #20d7ca,0 0 22px #20d7ca;white-space:nowrap;
+  animation:powerCallout .85s ease-out forwards;}
+.power-callout.down{color:#ffc0cf;text-shadow:0 0 8px #d7355b,0 0 22px #d7355b;}
+@keyframes fxCore{0%{transform:scale(.05);opacity:0;}35%{opacity:1;}100%{transform:scale(3.4);opacity:0;}}
+@keyframes fxRing{0%{transform:scale(.1) rotate(0);opacity:0;}20%{opacity:1;}100%{transform:scale(1.45) rotate(35deg);opacity:0;}}
+@keyframes fxLabel{0%{transform:translateY(12px) scale(.7);opacity:0;}35%{opacity:1;}100%{transform:translateY(-14px) scale(1.08);opacity:0;}}
+@keyframes fxFade{0%,70%{opacity:1;}100%{opacity:0;}}
+@keyframes powerCallout{0%{transform:translate(-50%,-20%) scale(.55);opacity:0;}25%{transform:translate(-50%,-50%) scale(1.12);opacity:1;}
+  70%{opacity:1;}100%{transform:translate(-50%,-90%) scale(1);opacity:0;}}
+
+/* ── 덱 빌더 ── */
+.deck-warn{border:1px solid rgba(255,107,138,.4);background:rgba(255,107,138,.08);border-radius:12px;
+  padding:14px 18px;font-family:var(--font-mono);font-size:.72rem;color:#ff8fa8;line-height:1.7;margin-bottom:18px;}
+.deck-progress{font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;color:var(--text-dim);margin-bottom:12px;text-align:center;}
+.deck-progress b{color:var(--cyan);}
+.deck-slots{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:22px;max-width:640px;margin-left:auto;margin-right:auto;}
+@media(max-width:520px){ .deck-slots{grid-template-columns:repeat(4,1fr);} }
+.deck-slot{aspect-ratio:3/4.2;border-radius:10px;border:1px dashed rgba(255,255,255,.18);
+  display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.02);cursor:default;position:relative;overflow:hidden;}
+.deck-slot.filled{border-style:solid;cursor:pointer;}
+.deck-slot.filled:hover{box-shadow:0 0 14px rgba(255,107,138,.35);border-color:rgba(255,107,138,.6);}
+.deck-slot img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;}
+.deck-slot .ds-empty{font-family:var(--font-mono);font-size:.6rem;color:rgba(255,255,255,.2);}
+.deck-collection-title{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.16em;color:var(--text-dim);text-align:center;margin-bottom:10px;}
+.deck-elem-filter{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;}
+.deck-elem-filter button{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.08em;color:var(--text-dim);
+  border:1px solid var(--hair);background:rgba(255,255,255,.03);padding:6px 13px;border-radius:16px;transition:.2s;}
+.deck-elem-filter button:hover{color:var(--silver);border-color:rgba(255,255,255,.3);}
+.deck-elem-filter button.on{color:var(--cyan);border-color:rgba(63,224,255,.5);background:rgba(63,224,255,.12);
+  box-shadow:0 0 12px rgba(63,224,255,.2);}
+/* [2026-07-24] 6열 고정 그리드. 기본은 2줄(12장)만 보여주고 "더보기"로 전체 펼침 —
+   TCG 우선→등급 내림차순 정렬은 renderDeckBuilder()가 담당. */
+.deck-collection{display:grid;grid-template-columns:repeat(6,1fr);gap:14px 10px;padding:8px 4px 4px;margin-bottom:8px;}
+@media(max-width:640px){ .deck-collection{grid-template-columns:repeat(3,1fr);} }
+.deck-card-wrap{position:relative;}
+.deck-card-count{position:absolute;top:-8px;right:-4px;font-family:var(--font-mono);font-size:.56rem;font-weight:800;
+  padding:2px 6px;border-radius:8px;background:#1a1220;border:1px solid rgba(232,196,104,.6);color:var(--gold);z-index:3;}
+.deck-card{width:100%;height:auto;position:relative;aspect-ratio:3/4.2;border-radius:9px;overflow:hidden;cursor:pointer;transition:.2s;border:1px solid var(--hair);}
+.deck-card:hover{transform:translateY(-3px);}
+.deck-card.exhausted{opacity:.3;cursor:not-allowed;}
+.deck-card.exhausted:hover{transform:none;}
+.deck-card img{width:100%;height:100%;object-fit:cover;-webkit-user-drag:none;}
+/* 카드 이름 표기는 완전히 제거 — 정보를 가리지 않는다. 기본카드만 스탯 오버레이(카드 CSS 재사용). */
+.deck-card.tcg{border-color:rgba(232,196,104,.6);box-shadow:0 0 10px rgba(232,196,104,.25);}
+.deck-more-wrap{text-align:center;margin-bottom:20px;}
+.deck-more-btn{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;color:var(--text-dim);
+  border:1px solid var(--hair);padding:8px 18px;border-radius:16px;background:rgba(255,255,255,.03);transition:.2s;}
+.deck-more-btn:hover{color:var(--silver);border-color:rgba(255,255,255,.3);}
+.deck-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+
+/* ── 카드 미리보기(확대) + 장착 모달 ── */
+.card-preview-modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(6px);padding:20px;}
+.card-preview-modal.on{display:flex;}
+.cp-inner{display:flex;align-items:center;gap:32px;flex-wrap:wrap;justify-content:center;max-width:760px;}
+.cp-card{width:min(400px,80vw);height:min(560px,calc(100vh - 160px));aspect-ratio:5/7;border-radius:20px;position:relative;flex-shrink:0;
+  box-shadow:0 24px 70px rgba(0,0,0,.65);}
+.cp-card .c-cost,.cp-card .c-pow{font-size:1.7rem;}
+.cp-card .c-elem{font-size:1.05rem;}
+.cp-card .c-grade{font-size:1.4rem;bottom:50px;}
+.cp-card .c-ability{font-size:.9rem;bottom:8px;white-space:normal;line-height:1.4;padding:6px 10px;}
+.cp-actions{display:flex;flex-direction:column;gap:12px;align-items:flex-start;}
+.cp-actions .cp-name{font-weight:700;font-size:1.1rem;}
+.cp-actions .cp-meta{font-family:var(--font-mono);font-size:.7rem;color:var(--text-dim);}
+.cp-close{position:absolute;top:16px;right:20px;font-size:1.4rem;color:var(--text-dim);cursor:pointer;background:none;border:none;}
+.cp-close:hover{color:#fff;}
+.card-preview-modal.view-only #cp-equip{display:none;}
+
+/* ── 로비 확인 모달 ── */
+.confirm-modal{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.78);backdrop-filter:blur(6px);padding:20px;}
+.confirm-modal.on{display:flex;}
+.confirm-box{background:#0e0a16;border:1px solid var(--hair);border-radius:16px;padding:26px 28px;max-width:340px;text-align:center;}
+.confirm-box p{font-size:.9rem;line-height:1.6;margin-bottom:18px;}
+.confirm-actions{display:flex;gap:10px;justify-content:center;}
+
+/* ── end screen ── */
+.result{text-align:center;padding:30px 0;}
+.result h2{font-size:clamp(1.8rem,6vw,2.8rem);font-weight:800;letter-spacing:-.01em;margin-bottom:8px;}
+.result.win h2{color:var(--cyan);} .result.lose h2{color:var(--magenta);} .result.draw h2{color:var(--text-dim);}
+.result .final{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;}
+.reward{font-family:var(--font-mono);font-size:.9rem;color:var(--gold);margin:14px 0 22px;}
+/* [2026-07-26] "어떻게 이기고 졌는지 모르겠다" 피드백 — 구역별 결과 요약 카드 3개 */
+.res-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:480px;margin:18px auto;}
+.rb-zone{border:1px solid var(--hair);border-radius:12px;padding:10px 8px;background:rgba(255,255,255,.03);}
+.rb-zone.win-me{border-color:rgba(63,224,255,.5);background:rgba(63,224,255,.08);}
+.rb-zone.win-op{border-color:rgba(255,47,176,.5);background:rgba(255,47,176,.08);}
+.rb-zone .rb-name{font-family:var(--font-mono);font-size:.56rem;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;}
+.rb-zone .rb-score{font-family:var(--font-mono);font-size:.92rem;font-weight:700;}
+.rb-zone .rb-score .me{color:var(--cyan);} .rb-zone .rb-score .op{color:var(--magenta);}
+.rb-zone .rb-tag{font-family:var(--font-mono);font-size:.54rem;letter-spacing:.08em;margin-top:4px;color:var(--text-dim);}
+
+@media(max-width:620px){
+  main{padding:60px 9px 18px;}
+  .board{gap:6px;}
+  .zone{padding:8px 5px;}
+  .card{width:50px;height:70px;}
+  .card .c-cost,.card .c-pow{font-size:.5rem;}
+  .card .c-elem{font-size:.32rem;}
+  .card .c-grade{font-size:.46rem;bottom:12px;}
+  .card .c-ability{font-size:.3rem;}
+  .z-name{font-size:.5rem;}
+  .hand .card{width:150px;height:210px;}
+  .hand .card .c-cost,.hand .card .c-pow{font-size:1.05rem;}
+  .hand .card .c-elem{font-size:.62rem;}
+  .hand .card .c-grade{font-size:.9rem;bottom:30px;}
+  .hand .card .c-ability{font-size:.62rem;}
+  .card.mini{width:90px;height:122px;}
+  .cardback{width:100px;height:136px;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="back" href="../">← XENA GAMES</a>
+  <div class="tb-right">
+    <span class="xc-chip" id="xc-chip">XC 0</span>
+    <div class="lang-toggle">
+      <button data-set="en">EN</button><button data-set="ko">KO</button>
+    </div>
+  </div>
+</div>
+
+<main>
+
+  <!-- ══ INTRO ══ -->
+  <section class="screen on" id="screen-intro">
+    <h1 class="hero-title">SIGNAL CLASH</h1>
+    <p class="hero-sub">XENA CARD BATTLE · PROTOTYPE v0.1</p>
+    <div class="rules">
+      <ul>
+        <li><span lang="en"><b>6 turns.</b> Mana equals the turn number (1 → 6).</span><span lang="ko"><b>6턴</b> 진행. 마나는 턴 수와 같습니다 (1 → 6).</span></li>
+        <li><span lang="en"><b>3 zones.</b> Play cards into any zone — up to 4 cards each.</span><span lang="ko"><b>3개 구역.</b> 원하는 구역에 카드를 냅니다 — 구역당 최대 4장.</span></li>
+        <li><span lang="en"><b>Win 2 of 3 zones</b> by total Power when turn 6 ends.</span><span lang="ko">6턴 종료 시 파워 합계로 <b>3개 중 2개 구역</b>을 이기면 승리.</span></li>
+        <li><span lang="en">Tie on zones? Highest total Power wins.</span><span lang="ko">구역 수가 같으면 전체 파워 합계가 높은 쪽이 승리.</span></li>
+        <li><span lang="en">Battles are decided by cost &amp; power — each card's ability line is flavor for now.</span><span lang="ko">승부는 비용/파워로 갈립니다 — 카드의 기술 문구는 아직 수치에 영향을 주지 않습니다.</span></li>
+        <li><span lang="en">You need a 12-card deck from MY CARDS to play.</span><span lang="ko">플레이하려면 내 카드에서 12장 덱을 구성해야 합니다.</span></li>
+      </ul>
+    </div>
+    <div class="diff-picker" id="diff-picker">
+      <button class="diff-btn" data-diff="easy">
+        <span class="d-name"><span lang="en">EASY</span><span lang="ko">쉬움</span></span>
+        <span class="d-reward">+8 XC</span>
+      </button>
+      <button class="diff-btn on" data-diff="normal">
+        <span class="d-name"><span lang="en">NORMAL</span><span lang="ko">보통</span></span>
+        <span class="d-reward">+15 XC</span>
+      </button>
+      <button class="diff-btn" data-diff="hard">
+        <span class="d-name"><span lang="en">HARD</span><span lang="ko">어려움</span></span>
+        <span class="d-reward">+30 XC</span>
+      </button>
+      <button class="diff-btn" data-diff="veryhard">
+        <span class="d-name"><span lang="en">VERY HARD</span><span lang="ko">매우 어려움</span></span>
+        <span class="d-reward">+50 XC</span>
+      </button>
+    </div>
+    <div class="actions intro-actions">
+      <button class="btn" id="btn-start"><span lang="en">START BATTLE</span><span lang="ko">배틀 시작</span></button>
+      <button class="deck-btn" id="btn-mycards"><span lang="en">MY CARDS</span><span lang="ko">내 카드</span></button>
+    </div>
+    <p class="hint" id="intro-hint"></p>
+  </section>
+
+  <!-- ══ DECK BUILDER ══ -->
+  <section class="screen" id="screen-deck">
+    <h1 class="hero-title" style="font-size:clamp(1.6rem,6vw,2.4rem);">
+      <span lang="en">MY CARDS</span><span lang="ko">내 카드</span>
+    </h1>
+    <p class="hero-sub"><span lang="en">Pick exactly 12 cards for your deck</span><span lang="ko">덱에 넣을 카드 12장을 고르세요</span></p>
+
+    <div class="deck-warn" id="deck-warn" style="display:none;"></div>
+
+    <p class="deck-progress"><span lang="en">DECK</span><span lang="ko">덱</span> <b id="deck-count">0</b> / 12</p>
+    <div class="deck-slots" id="deck-slots"></div>
+
+    <div class="deck-collection-title"><span lang="en">CARD LIST</span><span lang="ko">카드 목록</span></div>
+    <div class="deck-elem-filter" id="deck-elem-filter"></div>
+    <div class="deck-collection" id="deck-collection"></div>
+    <div class="deck-more-wrap" id="deck-more-wrap" style="display:none;">
+      <button class="deck-more-btn" id="deck-more-btn"></button>
+    </div>
+
+    <div class="deck-actions">
+      <button class="btn" id="btn-deck-confirm" disabled><span lang="en">DECK COMPLETE</span><span lang="ko">구성 완료</span></button>
+      <button class="btn ghost" id="btn-deck-back"><span lang="en">← BACK</span><span lang="ko">← 뒤로</span></button>
+    </div>
+  </section>
+
+  <!-- ══ 카드 미리보기 + 장착 ══ -->
+  <div class="card-preview-modal" id="card-preview-modal">
+    <div class="cp-inner">
+      <button class="cp-close" id="cp-close">&times;</button>
+      <div class="cp-card" id="cp-card"></div>
+      <div class="cp-actions">
+        <span class="cp-meta" id="cp-meta"></span>
+        <button class="btn" id="cp-equip"><span lang="en">EQUIP →</span><span lang="ko">장착 →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 로비 확인 ══ -->
+  <div class="confirm-modal" id="confirm-lobby">
+    <div class="confirm-box">
+      <p><span lang="en">Go back to the lobby? Current match progress will be lost.</span><span lang="ko">로비로 가시겠습니까? 현재 진행 중인 대전이 취소됩니다.</span></p>
+      <div class="confirm-actions">
+        <button class="btn" id="lobby-yes"><span lang="en">YES</span><span lang="ko">예</span></button>
+        <button class="btn ghost" id="lobby-no"><span lang="en">NO</span><span lang="ko">아니오</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PLAY ══ -->
+  <section class="screen" id="screen-play">
+    <div class="status">
+      <span class="st-item turn"><span lang="en">TURN</span><span lang="ko">턴</span><b id="st-turn">1 / 6</b></span>
+      <span class="st-item mana"><span lang="en">MANA</span><span lang="ko">마나</span><b id="st-mana">1 / 1</b></span>
+      <span class="st-item"><span lang="en">ZONES</span><span lang="ko">구역</span><b id="st-zones">0 - 0</b></span>
+    </div>
+
+    <div class="opp-hand-wrap">
+      <p class="hand-label"><span lang="en">OPPONENT HAND</span><span lang="ko">상대 손패</span></p>
+      <div class="opp-hand" id="opp-hand"></div>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="hand-wrap">
+      <p class="hand-label"><span lang="en">YOUR HAND</span><span lang="ko">내 손패</span> — <span id="deck-left">9</span> <span lang="en">left in deck</span><span lang="ko">장 남음</span></p>
+      <div class="hand" id="hand"></div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="btn-end"><span lang="en">END TURN</span><span lang="ko">턴 종료</span></button>
+      <button class="btn ghost" id="btn-retreat"><span lang="en">RETREAT</span><span lang="ko">기권</span></button>
+      <button class="btn ghost" id="btn-lobby-play"><span lang="en">LOBBY</span><span lang="ko">로비</span></button>
+    </div>
+    <p class="hint" id="hint"></p>
+  </section>
+
+  <!-- ══ END ══ -->
+  <section class="screen" id="screen-end">
+    <div class="result" id="result">
+      <h2 id="res-title"></h2>
+      <p class="final" id="res-zones"></p>
+      <p class="final" id="res-power"></p>
+      <div class="res-breakdown" id="res-breakdown"></div>
+      <p class="reward" id="res-reward"></p>
+      <div class="actions">
+        <button class="btn" id="btn-again"><span lang="en">PLAY AGAIN</span><span lang="ko">다시 하기</span></button>
+        <button class="btn ghost" id="btn-lobby-end"><span lang="en">LOBBY</span><span lang="ko">로비</span></button>
+        <a class="btn ghost" href="../"><span lang="en">BACK TO GAMES</span><span lang="ko">게임 목록</span></a>
+      </div>
+      <p class="hint" id="end-hint"></p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   SIGNAL CLASH — TCG 뼈대 (v0.2 · 서버 지갑 연동 + 난이도 3단계)
+   능력 없음. 6턴 / 3구역 / 마나 증가 / 승패 판정만 검증하는 단계.
+   ─────────────────────────────────────────────────────────
+   XC는 games/shared-wallet.js 의 window.XenaWallet(서버) 이 유일한 출처.
+   보상 지급/일일 5판 한도는 Cloud Function claimTcgMatch 가 검증한다
+   (functions/index.js). 로그인(shared-gate.js) 없이는 이 페이지를 못 연다.
+   ※ 다음 단계(③)에서 CARD_POOL을 /shared/xena-cards.js 의
+     보유 카드(zena_gacha_v1)로 교체하면 그대로 실전이 됩니다.
+     그때 "어려움 = 덱 평균파워 6 이상 필요" 게이트도 함께 건다
+     (지금은 전원 같은 고정 데모 덱이라 게이트를 걸 실제 덱이 없음).
+   ═══════════════════════════════════════════════════════════ */
+
+var $ = function(id){ return document.getElementById(id); };
+function t(en, ko){ return document.documentElement.getAttribute('data-lang') === 'ko' ? ko : en; }
+
+var difficulty = 'normal';
+document.querySelectorAll('.diff-btn').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('.diff-btn').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    difficulty = b.getAttribute('data-diff');
+  });
+});
+
+function paintXC(bal){ $('xc-chip').textContent = 'XC ' + (bal === null ? '…' : bal.toLocaleString()); }
+
+/* ── 카드 풀 (능력 없는 기본 데모/AI 카드 · 등급 파생 스탯) ───────────────────
+   [2026-07-23 수정] 예전엔 이 풀만 power=cost*2+1 이라는 별도 공식을 써서
+   (N1/3, R2/5, S3/7, SR4/9) — 실제 보유 카드가 쓰는 shared/xena-cards.js의
+   GRADE_STATS(=functions/index.js GRADE_COST/GRADE_POWER와 동일: N/R 1·1,
+   S 2·2, SR 3·4, SSR 4·6)와 완전히 다른 숫자였다. 그 결과 "내 카드"로 커스텀
+   덱을 짜서 들어가면 같은 등급이라도 AI 쪽 카드가 실제로 훨씬 세서
+   (예: SR끼리 비교해도 파워 9 vs 4) "AI가 더 좋은 카드를 쥔 것처럼" 보였다 —
+   착시가 아니라 실제 스탯 불일치였다. 이제 전 게임 공통 스탯 체계로 통일한다. */
+var GRADE_ABILITY_LOCAL = {
+  N:   { en:'No special ability.',           ko:'특수 기술 없음.' },
+  R:   { en:'No special ability.',           ko:'특수 기술 없음.' },
+  S:   { en:'Holds the line — steady power.', ko:'구역을 지킨다 — 안정적인 파워.' },
+  SR:  { en:'Turns the tide of close zones.', ko:'접전 구역의 흐름을 바꾼다.' },
+  SSR: { en:'Commands the zone it enters.',   ko:'입장한 구역을 장악한다.' }
+};
+var CARD_POOL = [
+  { id:'B-N-01',   name_en:'SIGNAL DRONE',  name_ko:'시그널 드론',   grade:'N',   cost:1, power:1, element:'SOUND', isTcg:false },
+  { id:'B-R-01',   name_en:'BACKUP DANCER', name_ko:'백업 댄서',     grade:'R',   cost:1, power:1, element:'SOUL',  isTcg:false },
+  { id:'B-S-01',   name_en:'STAGE GUARD',   name_ko:'스테이지 가드', grade:'S',   cost:2, power:2, element:'METAL', isTcg:false },
+  { id:'B-SR-01',  name_en:'LEAD VOCAL',    name_ko:'리드 보컬',     grade:'SR',  cost:3, power:4, element:'DARK',  isTcg:false },
+  { id:'B-SSR-01', name_en:'CENTER STAGE',  name_ko:'센터 스테이지', grade:'SSR', cost:4, power:6, element:'LIGHT', isTcg:false }
+];
+CARD_POOL.forEach(function(c){ c.ability = GRADE_ABILITY_LOCAL[c.grade]; });
+/* 플레이어 덱은 난이도 무관 고정(데모). copies = 덱 장수 — 저코스트를 두텁게 깔아야
+   1턴이 죽지 않는다 (플레이테스트: 균등 3장씩이면 약 38% 확률로 1턴에 낼 카드가 없었음). */
+var PLAYER_COPIES = { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2 };   /* 12장, 평균 파워 1.75 — 커스텀 덱이 없을 때만 이론상 쓰이는 값(현재는 커스텀 덱 필수라 실사용 안 함) */
+/* [2026-07-24] AI 덱: 예전엔 이 5장짜리 데모 풀에서만 뽑아서 AI 카드가 전부 똑같은
+   아트/이름으로 나왔다. 이제 XenaCards 전체 카탈로그(갤러리 R~SSR + TCG전용 PC-*)에서
+   등급 수만 난이도별로 고정하고 실제 카드를 랜덤으로 뽑는다 — AI도 진짜 카드 아트/이름/
+   기술로 낸다. 등급 구성비는 기존 밸런스를 그대로 유지. */
+var AI_GRADE_COUNTS = {
+  easy:     { N:6, R:4, S:2 },                    /* 평균 파워 낮음 */
+  normal:   { N:4, R:3, S:3, SR:2 },               /* 플레이어 기본 12장 덱과 비슷한 밸런스 */
+  hard:     { N:2, R:3, S:4, SR:3 },
+  veryhard: { N:1, R:2, S:3, SR:4, SSR:2 }         /* SSR 포함, 진짜 위협적으로 */
+};
+function buildAiDeck(difficulty){
+  var counts = AI_GRADE_COUNTS[difficulty] || AI_GRADE_COUNTS.normal;
+  var pool = {}; /* grade -> XenaCards 배열(한 번만 조회) */
+  var d = [];
+  for(var grade in counts){
+    if(!counts.hasOwnProperty(grade)) continue;
+    if(!pool[grade]) pool[grade] = (window.XenaCards ? XenaCards.byGrade(grade) : []);
+    var list = pool[grade];
+    var n = counts[grade];
+    for(var i = 0; i < n; i++){
+      if(!list.length) continue;
+      var xc = list[Math.floor(Math.random() * list.length)];
+      d.push(toDeckCard(xc));
+    }
+  }
+  /* Fisher-Yates */
+  for(var j = d.length - 1; j > 0; j--){
+    var k = Math.floor(Math.random() * (j + 1));
+    var tmp = d[j]; d[j] = d[k]; d[k] = tmp;
+  }
+  var guard = 0;
+  while(guard++ < 30){
+    var ok = false;
+    for(var h = d.length - START_HAND; h < d.length; h++){ if(d[h] && d[h].cost <= 1) ok = true; }
+    if(ok || !d.length) break;
+    for(var m = d.length - 1; m > 0; m--){
+      var n2 = Math.floor(Math.random() * (m + 1));
+      var tp = d[m]; d[m] = d[n2]; d[n2] = tp;
+    }
+  }
+  return d;
+}
+var ZONES = [
+  { en:'SIGNAL TOWER',   ko:'시그널 타워' },
+  { en:'NEON ALLEY',     ko:'네온 앨리' },
+  { en:'STAGE CORE',     ko:'스테이지 코어' }
+];
+var MAX_TURNS = 6, MAX_PER_ZONE = 4, START_HAND = 3;
+
+/* ── 게임 상태 ─────────────────────────────────────────── */
+var G = null;
+
+var CARD_POOL_MAP = {};
+CARD_POOL.forEach(function(c){ CARD_POOL_MAP[c.id] = c; });
+
+/* poolMap: id -> {id,name_en,name_ko,grade,cost,power}. 데모덱은 CARD_POOL_MAP, 커스텀덱은
+   보유 카드에서 만든 맵을 넘긴다 — 두 경우 모두 이 함수 하나로 처리된다. */
+function buildDeck(copiesMap, poolMap){
+  poolMap = poolMap || CARD_POOL_MAP;
+  var d = [];
+  for(var id in copiesMap){
+    var card = poolMap[id];
+    if(!card) continue;
+    var n = copiesMap[id] || 0;
+    /* 같은 카드 복사본도 배치 순서를 독립적으로 가져야 하므로 인스턴스를 복제한다. */
+    for(var c = 0; c < n; c++) d.push(Object.assign({}, card));
+  }
+  /* Fisher-Yates */
+  for(var j = d.length - 1; j > 0; j--){
+    var k = Math.floor(Math.random() * (j + 1));
+    var tmp = d[j]; d[j] = d[k]; d[k] = tmp;
+  }
+  /* 오프닝 핸드 보장 — 상위 START_HAND장 안에 1코스트가 없으면 다시 섞는다.
+     (덱 최상단이 pop 되므로 뒤쪽 START_HAND장이 첫 손패) */
+  var guard = 0;
+  while(guard++ < 30){
+    var ok = false;
+    for(var h = d.length - START_HAND; h < d.length; h++){ if(d[h].cost <= 1) ok = true; }
+    if(ok) break;
+    for(var m = d.length - 1; m > 0; m--){
+      var n = Math.floor(Math.random() * (m + 1));
+      var tp = d[m]; d[m] = d[n]; d[n] = tp;
+    }
+  }
+  return d;
+}
+
+/* ── 커스텀 덱 (보유 카드로 직접 구성) ─────────────────────
+   저장 형식: {ids:[12개 카드ID, 중복가능], copiesMap:{id:count}, savedAt}
+   12장이 아니면 무효로 취급하고 데모덱으로 자동 대체된다. */
+var CUSTOM_DECK_KEY = 'xena_tcg_deck_v1';
+function loadCustomDeck(){
+  try{ var d = JSON.parse(localStorage.getItem(CUSTOM_DECK_KEY)); return (d && d.ids && d.ids.length === 12) ? d : null; }
+  catch(e){ return null; }
+}
+function saveCustomDeck(ids){
+  var copiesMap = {};
+  ids.forEach(function(id){ copiesMap[id] = (copiesMap[id]||0) + 1; });
+  localStorage.setItem(CUSTOM_DECK_KEY, JSON.stringify({ids:ids, copiesMap:copiesMap, savedAt:Date.now()}));
+}
+function toDeckCard(xc){
+  var ability = xc.ability;
+  if(xc.id === 'PC-41'){
+    ability = {
+      en:'PASSIVE: The next enemy card played here gets -1 PWR.',
+      ko:'PASSIVE: 이 카드 다음으로 이 구역에 놓이는 적 카드 1장 -1 PWR.'
+    };
+  }
+  return { id:xc.id, name_en:xc.name, name_ko:xc.name, grade:xc.grade, cost:xc.cost, power:xc.power,
+           img:xc.img, element:xc.element, ability:ability, isTcg:xc.isTcg,
+           effect:xc.effect, series:xc.series, person:xc.person };
+}
+/* [2026-07-24] 데모덱 폴백 제거 — 실제 보유 카드로 12장을 맞춘 커스텀 덱이 없으면
+   플레이 자체를 막는다("내카드에서 덱을 맞추세요"). 유효하면 그 덱, 아니면 null. */
+function getPlayerDeckPlan(){
+  var custom = loadCustomDeck();
+  if(custom && window.XenaCards){
+    var poolMap = {};
+    var allFound = true;
+    custom.ids.forEach(function(id){
+      if(poolMap[id]) return;
+      var xc = XenaCards.get(id);
+      if(xc) poolMap[id] = toDeckCard(xc); else allFound = false;
+    });
+    if(allFound) return { copiesMap:custom.copiesMap, poolMap:poolMap, isCustom:true };
+  }
+  return null;
+}
+
+function newGame(){
+  var plan = getPlayerDeckPlan();
+  if(!plan){ return false; }
+  G = {
+    turn: 1,
+    mana: 1,
+    manaUsed: 0,
+    pDeck: buildDeck(plan.copiesMap, plan.poolMap), aDeck: buildAiDeck(difficulty),
+    difficulty: difficulty,
+    pHand: [], aHand: [],
+    zones: [ {p:[],a:[]}, {p:[],a:[]}, {p:[],a:[]} ],
+    pendingP: [],      /* 이번 턴 플레이어가 놓은 것 {card, zone} — 턴 종료 전까지 회수 가능 */
+    pendingA: [],
+    selected: -1,
+    locked: false,
+    playSeq: 0
+  };
+  for(var i = 0; i < START_HAND; i++){ drawP(); drawA(); }
+  render();
+  return true;
+}
+
+function drawP(){ if(G.pDeck.length) G.pHand.push(G.pDeck.pop()); }
+function drawA(){ if(G.aDeck.length) G.aHand.push(G.aDeck.pop()); }
+
+/* ── 렌더 ─────────────────────────────────────────────── */
+/* [2026-07-24] 카드 이름 표기는 완전히 제거. TCG 전용(카드아트에 정보가 이미 그려진) 카드는
+   오버레이를 아예 얹지 않는다 — 정보를 가리는 문제였다. 기본카드만 좌상단 비용/중앙상단
+   속성/우상단 파워/카드 하단 등급/맨아래 한 줄 기술을 얹는다. 배틀·덱빌더 공용. */
+function cardFaceHTML(card){
+  if(card.isTcg) return '';
+  var elName = card.element || '';
+  var ability = card.ability ? t(card.ability.en, card.ability.ko) : '';
+  return '<span class="c-cost">' + card.cost + '</span>' +
+         (elName ? '<span class="c-elem">' + elName + '</span>' : '') +
+         '<span class="c-pow">' + card.power + '</span>' +
+         '<span class="c-grade">' + card.grade + '</span>' +
+         (ability ? '<span class="c-ability" title="' + ability.replace(/"/g,'&quot;') + '">' + ability + '</span>' : '');
+}
+function cardHTML(card, cls){
+  var hasImg = !!card.img;
+  var style = hasImg ? ' style="background-image:url(\'' + card.img + '\')"' : '';
+  return '<div class="card ' + (hasImg ? 'has-img ' : '') + (card.isTcg ? 'tcg-pure ' : '') + (cls || '') +
+         '" data-grade="' + card.grade + '" data-cid="' + card.id + '" data-element="' + (card.element || 'NEUTRAL') + '"' + style + '>' + cardFaceHTML(card) + '</div>';
+}
+/* 구역(board)에 놓인 카드 전용 — 효과 엔진이 계산한 "현재 유효 파워"가 카드 인쇄값(원본
+   power)과 다르면 실제 파워 자리인 우측 상단에 파워 뱃지를 얹는다. 인쇄값과 같으면 뱃지를 안 보여줘 화면이
+   지저분해지지 않게 한다. */
+function cardHTMLWithPower(card, effPower, cls){
+  var base = cardHTML(card, cls);
+  if(effPower === card.power) return base;
+  var diff = effPower > card.power;
+  var badge = '<span class="c-effpow ' + (diff ? 'up' : 'down') + '">' + effPower + '</span>';
+  return base.replace(/<\/div>$/, badge + '</div>');
+}
+
+/* ── 효과 엔진 ─────────────────────────────────────────────
+   [2026-07-24] "효과가 하나도 적용 안 된다"는 피드백 대응. DROP/LINK/PULSE/FINAL 의
+   정확한 발동 타이밍을 전부 재현하진 않고(예: "다음에 내는 카드" 류는 "이 구역의 내
+   카드 전체"로 근사), 구역 파워를 계산하는 시점에 카드별 effect를 일괄 적용하는
+   방식으로 근사한다 — 카드 텍스트가 실제로 승패에 영향을 준다는 목표는 달성한다. */
+function computeZone(z){
+  var p = G.zones[z].p, a = G.zones[z].a;
+  var dp = new Array(p.length).fill(0);
+  var da = new Array(a.length).fill(0);
+  var baseP = 0; for(var bi = 0; bi < p.length; bi++) baseP += p[bi].power;
+  var baseA = 0; for(var bj = 0; bj < a.length; bj++) baseA += a[bj].power;
+
+  function applySide(own, opp, delta, oppDelta, ownBase, oppBase){
+    for(var i = 0; i < own.length; i++){
+      var c = own[i], e = c.effect;
+      if(!e) continue;
+      var k;
+      switch(e.kind){
+        case 'buff_element':
+          for(k = 0; k < own.length; k++){ if(k !== i && own[k].element === e.el) delta[k] += e.amt; }
+          break;
+        case 'buff_self_if_element':
+          for(k = 0; k < own.length; k++){ if(k !== i && own[k].element === e.el){ delta[i] += e.amt; break; } }
+          break;
+        case 'buff_person':
+          for(k = 0; k < own.length; k++){ if(own[k].person === e.person) delta[k] += e.amt; }
+          break;
+        case 'buff_self_if_person':
+          for(k = 0; k < own.length; k++){ if(k !== i && own[k].person === e.person){ delta[i] += e.amt; break; } }
+          break;
+        case 'buff_self_if_series':
+          for(k = 0; k < own.length; k++){ if(k !== i && own[k].series === e.series){ delta[i] += e.amt; break; } }
+          break;
+        case 'buff_self_if_losing':
+          if(ownBase < oppBase) delta[i] += e.amt;
+          break;
+        case 'buff_self_if_only':
+          if(own.length === 1) delta[i] += e.amt;
+          break;
+        case 'buff_self_if_outnumbered':
+          if(opp.length > own.length) delta[i] += e.amt;
+          break;
+        case 'buff_self_if_no_element':
+          var has = false;
+          for(k = 0; k < own.length; k++){ if(own[k].element === e.el){ has = true; break; } }
+          if(!has) delta[i] += e.amt;
+          break;
+        case 'buff_self_if_lowerother':
+          for(k = 0; k < own.length; k++){ if(k !== i && own[k].power < c.power){ delta[i] += e.amt; break; } }
+          break;
+        case 'buff_self_flat':
+          delta[i] += e.amt;
+          break;
+        case 'buff_all_own':
+          for(k = 0; k < own.length; k++) delta[k] += e.amt;
+          break;
+        /* [2026-07-26] 버그 수정: "다른 카드 1장에게 +N"류를 buff_all_own(자기 포함)으로
+           근사했더니, 혼자 있어도 자기 자신에게 +N이 붙는 오류가 있었다(되찾은 시민들 등).
+           자기 자신은 제외하고, 다른 카드가 있을 때만 그 카드들에게 적용한다. */
+        case 'buff_others':
+          /* "다른 카드 1장"은 전체가 아니다. 별도 대상 선택 UI가 없는 현재 규칙에서는
+             가장 파워가 낮은 다른 카드 1장(동률이면 먼저 놓인 카드)을 자동 선택한다. */
+          var otherIdx = -1, otherPower = Infinity;
+          for(k = 0; k < own.length; k++){
+            if(k !== i && own[k].power < otherPower){ otherPower = own[k].power; otherIdx = k; }
+          }
+          if(otherIdx >= 0) delta[otherIdx] += e.amt;
+          break;
+        /* [2026-07-26] 버그 수정: "다음에 내는 카드 +N"류를 buff_element/buff_all_own으로
+           근사했더니, 이미 놓여있던(먼저 낸) 카드까지 버프를 받는 오류가 있었다(시안-골드
+           별표 등). 카드 배열은 실제 배치 순서와 같으므로, 이 카드보다 "나중에"(인덱스가
+           더 큰) 놓인 카드만 대상으로 한다 — 정확히 "다음 카드"만 버프. */
+        case 'buff_next_only':
+          for(k = i + 1; k < own.length; k++){
+            if(e.el && own[k].element !== e.el) continue;
+            delta[k] += e.amt;
+            break; /* 바로 다음 한 장만 */
+          }
+          break;
+        case 'buff_lowest':
+          var lowIdx = -1, lowVal = Infinity;
+          for(k = 0; k < own.length; k++){ if(own[k].power < lowVal){ lowVal = own[k].power; lowIdx = k; } }
+          if(lowIdx >= 0) delta[lowIdx] += e.amt;
+          break;
+        case 'buff_element_count':
+          var els = {};
+          for(k = 0; k < own.length; k++){ if(own[k].element) els[own[k].element] = 1; }
+          var cnt = 0; for(var el2 in els) cnt++;
+          delta[i] += e.amt * cnt;
+          break;
+        case 'debuff_enemy_one':
+          if(opp.length){
+            var hi = 0;
+            for(k = 1; k < opp.length; k++){ if(opp[k].power > opp[hi].power) hi = k; }
+            oppDelta[hi] -= e.amt;
+          }
+          break;
+        case 'debuff_enemy_all':
+          if(c.id === 'PC-41'){
+            /* THE FRAME: 이미 놓인 적은 건드리지 않고, 이후 처음 놓인 적 1장만 -1. */
+            for(k = 0; k < opp.length; k++){
+              if((opp[k]._playedAt || 0) > (c._playedAt || 0)){ oppDelta[k] -= e.amt; break; }
+            }
+          } else {
+            for(k = 0; k < opp.length; k++) oppDelta[k] -= e.amt;
+          }
+          break;
+      }
+    }
+  }
+  applySide(p, a, dp, da, baseP, baseA);
+  applySide(a, p, da, dp, baseA, baseP);
+
+  var pCards = [], aCards = [], pTotal = 0, aTotal = 0;
+  for(var pi = 0; pi < p.length; pi++){ var pw = Math.max(0, p[pi].power + dp[pi]); pTotal += pw; pCards.push({ card:p[pi], power:pw }); }
+  for(var ai = 0; ai < a.length; ai++){ var aw = Math.max(0, a[ai].power + da[ai]); aTotal += aw; aCards.push({ card:a[ai], power:aw }); }
+  return { p:{ total:pTotal, cards:pCards }, a:{ total:aTotal, cards:aCards } };
+}
+function zonePower(z, side){ return computeZone(z)[side].total; }
+function zoneCount(z, side){ return G.zones[z][side].length; }
+
+function zonePowerSnapshot(z){
+  var current = computeZone(z);
+  return {
+    p: current.p.cards.map(function(x){ return x.power; }),
+    a: current.a.cards.map(function(x){ return x.power; })
+  };
+}
+function tcgSfx(name){
+  if(window.XenaAudio) window.XenaAudio.sfx(name);
+}
+function triggerElementBurst(z, card, opponent){
+  var zone = $('board').querySelector('.zone[data-z="' + z + '"]');
+  if(!zone) return;
+  var fx = document.createElement('div');
+  fx.className = 'element-burst';
+  fx.setAttribute('data-element', String(card.element || 'NEUTRAL').toUpperCase());
+  var element = String(card.element || 'NEUTRAL').toUpperCase();
+  var imageMap = {
+    ANOMALY:'signal_clash_attr_anomaly_burst_v01.png', DARK:'signal_clash_attr_dark_burst_v01.png',
+    LIGHT:'signal_clash_attr_light_burst_v01.png', METAL:'signal_clash_attr_metal_burst_v01.png',
+    SOUL:'signal_clash_attr_soul_burst_v01.png', SOUND:'signal_clash_attr_sound_burst_v01.png'
+  };
+  var image = imageMap[element] ? '<img src="assets/effects/'+imageMap[element]+'" alt="" aria-hidden="true">' : '';
+  fx.innerHTML = image + '<span>' + element + '</span>';
+  zone.appendChild(fx);
+  tcgSfx(opponent ? 'tcg_reveal_opponent' : 'tcg_card_place');
+  if(!opponent && imageMap[element]) tcgSfx('tcg_card_place_layer_' + element.toLowerCase());
+  setTimeout(function(){ if(fx.parentNode) fx.parentNode.removeChild(fx); }, 950);
+}
+function animatePowerBadge(node, from, to){
+  if(!node || from === to) return;
+  var badge = node.querySelector('.c-effpow');
+  if(!badge){
+    badge = document.createElement('span');
+    badge.className = 'c-effpow ' + (to > from ? 'up' : 'down');
+    node.appendChild(badge);
+  }
+  var direction = to > from ? 1 : -1;
+  var value = from;
+  badge.textContent = value;
+  var timer = setInterval(function(){
+    value += direction;
+    if((direction > 0 && value > to) || (direction < 0 && value < to)) value = to;
+    badge.textContent = value;
+    badge.classList.remove('power-counting');
+    void badge.offsetWidth;
+    badge.classList.add('power-counting');
+    if(direction > 0) tcgSfx('tcg_power_tick_up');
+    if(value === to) clearInterval(timer);
+  }, 125);
+}
+function animatePowerChanges(z, before){
+  var after = computeZone(z);
+  var zone = $('board').querySelector('.zone[data-z="' + z + '"]');
+  if(!zone) return;
+  var gained = false, lost = false;
+  ['p','a'].forEach(function(side){
+    var nodes = zone.querySelectorAll(side === 'p' ? '.slots:not(.op) .card' : '.slots.op .card');
+    after[side].cards.forEach(function(entry, index){
+      var oldPower = before[side][index];
+      if(typeof oldPower !== 'number') oldPower = entry.card.power;
+      if(entry.power > oldPower) gained = true;
+      if(entry.power < oldPower) lost = true;
+      animatePowerBadge(nodes[index], oldPower, entry.power);
+    });
+  });
+  if(gained || lost){
+    var callout = document.createElement('div');
+    callout.className = 'power-callout' + (!gained && lost ? ' down' : '');
+    callout.textContent = gained ? t('POWER UP', '파워 업') : t('POWER DOWN', '파워 다운');
+    zone.appendChild(callout);
+    tcgSfx(gained ? 'hint_use' : 'match_fail_a');
+    setTimeout(function(){ if(callout.parentNode) callout.parentNode.removeChild(callout); }, 900);
+  }
+}
+
+function zonesWon(){
+  var me = 0, op = 0;
+  for(var z = 0; z < 3; z++){
+    var a = zonePower(z, 'p'), b = zonePower(z, 'a');
+    if(a > b) me++; else if(b > a) op++;
+  }
+  return { me: me, op: op };
+}
+function totalPower(side){
+  var s = 0;
+  for(var z = 0; z < 3; z++) s += zonePower(z, side);
+  return s;
+}
+
+function render(){
+  /* 상태바 */
+  $('st-turn').textContent = G.turn + ' / ' + MAX_TURNS;
+  $('st-mana').textContent = (G.mana - G.manaUsed) + ' / ' + G.mana;
+  var w = zonesWon();
+  $('st-zones').textContent = w.me + ' - ' + w.op;
+  $('deck-left').textContent = G.pDeck.length;
+
+  /* 상대 손패 — 내용은 숨기고 장수만 뒷장으로 표시 */
+  var ohHtml = '';
+  for(var oi = 0; oi < G.aHand.length; oi++) ohHtml += '<div class="cardback"></div>';
+  $('opp-hand').innerHTML = ohHtml;
+
+  /* 보드 */
+  var html = '';
+  for(var z = 0; z < 3; z++){
+    var zc = computeZone(z);
+    var pw = zc.p.total, aw = zc.a.total;
+    var scoreCls = pw > aw ? 'win-me' : (aw > pw ? 'win-op' : '');
+    var full = zoneCount(z, 'p') >= MAX_PER_ZONE;
+    var targetable = G.selected >= 0 && !full && !G.locked &&
+                     G.pHand[G.selected].cost <= (G.mana - G.manaUsed);
+
+    html += '<div class="zone zone-' + z + (targetable ? ' targetable' : '') + (full ? ' full' : '') + '" data-z="' + z + '">';
+    html +=   '<p class="z-name">' + t(ZONES[z].en, ZONES[z].ko) + '</p>';
+
+    /* 상대 슬롯 — 효과 적용된 현재 파워를 뱃지로 표시(카드 아트의 인쇄값과 다를 수 있음) */
+    html +=   '<div class="slots op">';
+    for(var i = 0; i < zc.a.cards.length; i++){
+      html += cardHTMLWithPower(zc.a.cards[i].card, zc.a.cards[i].power, 'mini op');
+    }
+    html +=   '</div>';
+
+    /* 점수 */
+    html +=   '<div class="z-score ' + scoreCls + '"><span class="op">' + aw + '</span>' +
+              '<span class="vs">VS</span><span class="me">' + pw + '</span></div>';
+
+    /* 내 슬롯 */
+    html +=   '<div class="slots">';
+    for(var j = 0; j < zc.p.cards.length; j++){
+      var isPending = false;
+      for(var k = 0; k < G.pendingP.length; k++){
+        if(G.pendingP[k].zone === z && G.pendingP[k].idx === j) isPending = true;
+      }
+      html += cardHTMLWithPower(zc.p.cards[j].card, zc.p.cards[j].power, 'mini' + (isPending ? ' pending' : ''));
+    }
+    html +=   '</div>';
+    html += '</div>';
+  }
+  $('board').innerHTML = html;
+
+  /* 손패 — 카드 노드에 직접 인덱스 부여 */
+  $('hand').innerHTML = '';
+  for(var m = 0; m < G.pHand.length; m++){
+    var card = G.pHand[m];
+    var ok = card.cost <= (G.mana - G.manaUsed);
+    var el = document.createElement('div');
+    el.innerHTML = cardHTML(card, (G.selected === m ? 'selected ' : '') + (ok ? '' : 'unaffordable'));
+    var node = el.firstChild;
+    node.setAttribute('data-h', m);
+    $('hand').appendChild(node);
+  }
+
+  $('btn-end').disabled = G.locked;
+}
+
+/* ── 입력: 손패 선택 ──────────────────────────────────── */
+$('hand').addEventListener('click', function(e){
+  if(G.locked) return;
+  var el = e.target.closest('.card');
+  if(!el) return;
+  var i = parseInt(el.getAttribute('data-h'), 10);
+  if(isNaN(i)) return;
+  if(G.pHand[i].cost > (G.mana - G.manaUsed)){
+    hint(t('Not enough mana.', '마나가 부족합니다.'));
+    return;
+  }
+  G.selected = (G.selected === i) ? -1 : i;
+  hint(G.selected >= 0 ? t('Now pick a zone.', '이제 구역을 선택하세요.') : '');
+  render();
+});
+
+/* ── 입력: 구역에 배치 / 회수 ─────────────────────────── */
+$('board').addEventListener('click', function(e){
+  if(G.locked) return;
+  var zEl = e.target.closest('.zone');
+  if(!zEl) return;
+  var z = parseInt(zEl.getAttribute('data-z'), 10);
+
+  /* 대기중인 내 카드를 클릭하면 회수 */
+  var cardEl = e.target.closest('.card.pending');
+  if(cardEl){
+    var slots = zEl.querySelectorAll('.slots:not(.op) .card');
+    for(var s = 0; s < slots.length; s++){
+      if(slots[s] === cardEl){ takeBack(z, s); return; }
+    }
+  }
+
+  /* [2026-07-25] 확정된(pending 아닌) 카드는 클릭하면 확대 미리보기 — 상대 카드 포함 */
+  var placedEl = e.target.closest('.card:not(.pending)');
+  if(placedEl && zEl.contains(placedEl)){
+    var cid = placedEl.getAttribute('data-cid');
+    var c = cid && window.XenaCards ? XenaCards.get(cid) : null;
+    if(c){ openBoardCardPreview(c); return; }
+  }
+
+  if(G.selected < 0){ return; }
+  var card = G.pHand[G.selected];
+  if(card.cost > (G.mana - G.manaUsed)){ hint(t('Not enough mana.', '마나가 부족합니다.')); return; }
+  if(zoneCount(z, 'p') >= MAX_PER_ZONE){
+    hint(t('That zone is full (4 cards).', '이 구역은 가득 찼습니다 (4장).'));
+    return;
+  }
+
+  var beforePower = zonePowerSnapshot(z);
+  card._playedAt = ++G.playSeq;
+  G.zones[z].p.push(card);
+  G.pendingP.push({ zone: z, idx: G.zones[z].p.length - 1, card: card });
+  G.manaUsed += card.cost;
+  G.pHand.splice(G.selected, 1);
+  G.selected = -1;
+  hint(t('Placed. Click it again to take it back.', '배치됨. 다시 누르면 회수됩니다.'));
+  render();
+  triggerElementBurst(z, card, false);
+  animatePowerChanges(z, beforePower);
+});
+
+function takeBack(z, slotIdx){
+  for(var i = 0; i < G.pendingP.length; i++){
+    if(G.pendingP[i].zone === z && G.pendingP[i].idx === slotIdx){
+      var card = G.zones[z].p[slotIdx];
+      G.zones[z].p.splice(slotIdx, 1);
+      G.manaUsed -= card.cost;
+      G.pHand.push(card);
+      G.pendingP.splice(i, 1);
+      /* 같은 구역에서 뒤에 있던 pending 인덱스 보정 */
+      for(var j = 0; j < G.pendingP.length; j++){
+        if(G.pendingP[j].zone === z && G.pendingP[j].idx > slotIdx) G.pendingP[j].idx--;
+      }
+      hint(t('Taken back.', '회수했습니다.'));
+      render();
+      return;
+    }
+  }
+}
+
+/* ── AI (뼈대 수준: 탐욕적 소비 + 접전 구역 선호) ─────── */
+function aiTurn(){
+  var manaLeft = G.mana;
+  var placed = [];
+  var guard = 0;
+
+  while(guard++ < 12){
+    /* 낼 수 있는 카드 중 가장 비싼 것 (마나 효율 최대화) */
+    var best = -1;
+    for(var i = 0; i < G.aHand.length; i++){
+      if(G.aHand[i].cost <= manaLeft && (best < 0 || G.aHand[i].cost > G.aHand[best].cost)) best = i;
+    }
+    if(best < 0) break;
+
+    /* 구역 선택: 안 찬 구역 중 "지고 있지만 뒤집을 수 있는" 곳 우선 */
+    var pick = -1, bestScore = -Infinity;
+    for(var z = 0; z < 3; z++){
+      if(zoneCount(z, 'a') >= MAX_PER_ZONE) continue;
+      var diff = zonePower(z, 'p') - zonePower(z, 'a');   /* 양수면 AI가 지는 중 */
+      var score;
+      if(diff > 0) score = 100 - Math.abs(diff - G.aHand[best].power);  /* 역전 가능할수록 高 */
+      else score = 40 - Math.abs(diff);                                  /* 이미 이기면 격차 유지만 */
+      score += Math.random() * 12;                                       /* 예측 불가능성 */
+      if(score > bestScore){ bestScore = score; pick = z; }
+    }
+    if(pick < 0) break;
+
+    var card = G.aHand.splice(best, 1)[0];
+    manaLeft -= card.cost;
+    placed.push({ zone: pick, card: card });
+  }
+  return placed;
+}
+
+/* ── 턴 종료 → 공개 → 다음 턴 ─────────────────────────── */
+$('btn-end').addEventListener('click', function(){
+  if(G.locked) return;
+  G.locked = true;
+  G.selected = -1;
+  G.pendingP = [];              /* 확정 — 더 이상 회수 불가 */
+  hint(t('Revealing…', '공개 중…'));
+  render();
+
+  var aiPlays = aiTurn();
+  var i = 0;
+  (function revealNext(){
+    if(i >= aiPlays.length){ setTimeout(endOfTurn, 340); return; }
+    var pl = aiPlays[i++];
+    var beforePower = zonePowerSnapshot(pl.zone);
+    pl.card._playedAt = ++G.playSeq;
+    G.zones[pl.zone].a.push(pl.card);
+    render();
+    var el = $('board').querySelector('.zone[data-z="' + pl.zone + '"] .slots.op .card:last-child');
+    if(el) el.classList.add('reveal');
+    triggerElementBurst(pl.zone, pl.card, true);
+    animatePowerChanges(pl.zone, beforePower);
+    setTimeout(revealNext, 380);
+  })();
+});
+
+function endOfTurn(){
+  if(G.turn >= MAX_TURNS){ finish(); return; }
+  G.turn++;
+  G.mana = Math.min(G.turn, MAX_TURNS);
+  G.manaUsed = 0;
+  drawP(); drawA();
+  G.locked = false;
+  hint(t('Turn ' + G.turn + ' — mana ' + G.mana + '.', G.turn + '턴 — 마나 ' + G.mana + '.'));
+  render();
+}
+
+$('btn-retreat').addEventListener('click', function(){
+  if(!confirm(t('Retreat and forfeit this match?', '기권하시겠습니까?'))) return;
+  finish(true);
+});
+
+/* ── 승패 판정 ─────────────────────────────────────────── */
+/* 데일리 시그널의 "SIGNAL CLASH 플레이" 퀘스트가 감지할 플래그 — 승패 무관 플레이 자체 기록 */
+function markTcgPlayedToday(){
+  try{ localStorage.setItem('xena_tcg_daily_v1', JSON.stringify({date:new Date().toISOString().slice(0,10)})); }catch(e){}
+}
+function finish(retreated){
+  markTcgPlayedToday();
+  var w = zonesWon();
+  var myP = totalPower('p'), opP = totalPower('a');
+  var outcome;                                   /* 'win' | 'lose' | 'draw' */
+
+  if(retreated) outcome = 'lose';
+  else if(w.me > w.op) outcome = 'win';
+  else if(w.op > w.me) outcome = 'lose';
+  else if(myP > opP)  outcome = 'win';           /* 구역 동수 → 총 파워 */
+  else if(opP > myP)  outcome = 'lose';
+  else outcome = 'draw';
+
+  /* 화면 (보상 파트는 서버 응답 오면 채운다) */
+  var res = $('result');
+  res.className = 'result ' + outcome;
+  $('res-title').textContent = outcome === 'win'  ? t('VICTORY', '승리')
+                             : outcome === 'lose' ? t('DEFEAT', '패배')
+                             :                      t('DRAW', '무승부');
+  $('res-zones').textContent = t('Zones  ' + w.me + ' - ' + w.op, '구역  ' + w.me + ' - ' + w.op);
+  $('res-power').textContent = t('Total Power  ' + myP + ' - ' + opP, '총 파워  ' + myP + ' - ' + opP);
+
+  /* [2026-07-26] "어떻게 이기고 졌는지 모르겠다" — 구역별 파워/승패를 요약해서 보여준다 */
+  var bd = '';
+  for(var z = 0; z < 3; z++){
+    var zc = computeZone(z);
+    var pw = zc.p.total, aw = zc.a.total;
+    var tag = pw > aw ? t('WON','승리') : (aw > pw ? t('LOST','패배') : t('TIE','동률'));
+    var cls = pw > aw ? 'win-me' : (aw > pw ? 'win-op' : '');
+    bd += '<div class="rb-zone ' + cls + '">' +
+      '<div class="rb-name">' + t(ZONES[z].en, ZONES[z].ko) + '</div>' +
+      '<div class="rb-score"><span class="me">' + pw + '</span> : <span class="op">' + aw + '</span></div>' +
+      '<div class="rb-tag">' + tag + '</div></div>';
+  }
+  $('res-breakdown').innerHTML = bd;
+
+  $('res-reward').textContent = t('Submitting result…', '결과 제출 중…');
+  $('end-hint').textContent = '';
+  show('end');
+
+  /* 무승부는 보상 없음(승/패만 서버가 인정) */
+  if(outcome === 'draw' || !window.XenaWallet){
+    $('res-reward').textContent = outcome === 'draw' ? t('No reward for a draw', '무승부는 보상이 없습니다') : '';
+    return;
+  }
+  window.XenaWallet.claimTcgMatch(G.difficulty, outcome === 'win' ? 'win' : 'loss').then(function(r){
+    var notes = [];
+    if(outcome === 'win'){
+      notes.push(t('Victory +' + (r.granted - (r.firstWin ? 20 : 0)), '승리 +' + (r.granted - (r.firstWin ? 20 : 0))));
+      if(r.firstWin) notes.push(t('First win of the day +20', '일일 첫 승 +20'));
+    } else {
+      notes.push(t('Participation +' + r.granted, '참여 +' + r.granted));
+    }
+    $('res-reward').textContent = '+' + r.granted + ' XC';
+    $('end-hint').textContent = notes.join(' · ') +
+      '  |  ' + t('Today ' + r.played + '/' + r.limit + ' rewarded', '오늘 ' + r.played + '/' + r.limit + '판 보상됨');
+    if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
+  }).catch(function(err){
+    var code = err && err.code || '';
+    if(code.indexOf('resource-exhausted') >= 0){
+      $('res-reward').textContent = t('Daily reward limit reached', '일일 보상 한도 도달');
+    } else {
+      $('res-reward').textContent = t('Could not reach server — try again later', '서버 연결 실패 — 나중에 다시 시도해주세요');
+    }
+  });
+}
+
+/* ── 화면 전환 ─────────────────────────────────────────── */
+function show(name){
+  var ids = ['intro', 'deck', 'play', 'end'];
+  for(var i = 0; i < ids.length; i++){
+    $('screen-' + ids[i]).classList.toggle('on', ids[i] === name);
+  }
+  /* 덱 빌더는 인트로 화면에서만 접근 — 배틀 중 클릭해서 게임을 끊어먹지 않도록 */
+  $('btn-mycards').classList.toggle('hidden', name !== 'intro');
+  window.scrollTo(0, 0);
+}
+function hint(msg){ $('hint').textContent = msg || ''; }
+
+function updateIntroHint(){
+  var custom = loadCustomDeck();
+  var el = $('intro-hint');
+  var deckMsg = custom
+    ? t('Custom deck equipped (12 cards) — MY CARDS to change it', '커스텀 덱 장착됨 (12장) — 내 카드에서 변경 가능')
+    : t('No deck set — go to MY CARDS and build a 12-card deck to play.', '덱이 없습니다 — 내 카드에서 덱을 맞추세요 (12장 필요).');
+  el.textContent = deckMsg + ' · ' + t('Up to 5 rewarded matches per day (any difficulty).', '난이도 무관 하루 최대 5판까지 보상됩니다.');
+  $('btn-start').disabled = !custom;
+}
+updateIntroHint();
+
+$('btn-start').addEventListener('click', function(){
+  if(!newGame()){ hint(t('No deck set — go to MY CARDS and build a 12-card deck to play.', '덱이 없습니다 — 내 카드에서 덱을 맞추세요 (12장 필요).')); return; }
+  show('play'); hint(t('Turn 1 — mana 1.', '1턴 — 마나 1.'));
+});
+$('btn-again').addEventListener('click', function(){
+  if(!newGame()){ show('intro'); updateIntroHint(); return; }
+  show('play'); hint(t('Turn 1 — mana 1.', '1턴 — 마나 1.'));
+});
+
+/* ── 로비 이동 ── [2026-07-24] 게임이 이미 끝난 "종료 화면"에서 로비를 누르면
+   취소할 진행 중인 대전이 없으므로 확인창 없이 바로 이동한다. 확인창은 배틀이
+   실제로 진행 중일 때(screen-play)만 띄운다. */
+$('btn-lobby-play').addEventListener('click', function(){
+  $('confirm-lobby').classList.add('on');
+});
+$('btn-lobby-end').addEventListener('click', function(){
+  show('intro');
+  updateIntroHint();
+});
+$('lobby-no').addEventListener('click', function(){ $('confirm-lobby').classList.remove('on'); });
+$('lobby-yes').addEventListener('click', function(){
+  $('confirm-lobby').classList.remove('on');
+  show('intro');
+  updateIntroHint();
+});
+
+/* ── 덱 빌더 ────────────────────────────────────────────
+   draft: 이번에 편집 중인 12칸(빈 칸은 null). 확정 전까지는 저장되지 않는다. */
+var deckDraft = [];
+function draftCounts(){
+  var c = {};
+  deckDraft.forEach(function(id){ if(id) c[id] = (c[id]||0) + 1; });
+  return c;
+}
+function openDeckBuilder(){
+  if(!window.XenaCards){ return; }
+  var saved = loadCustomDeck();
+  deckDraft = saved ? saved.ids.slice() : [];
+  while(deckDraft.length < 12) deckDraft.push(null);
+  deckShowAll = false;
+  renderElemFilter();
+  renderDeckBuilder();
+  show('deck');
+}
+var GRADE_RANK_TCG = { SSR:5, SR:4, S:3, R:2, N:1 };
+var DECK_PAGE_N = 12; /* 6열 × 2줄 기본 노출 */
+var deckShowAll = false;
+var deckElemFilter = 'ALL';
+function renderElemFilter(){
+  var els = ['ALL'].concat(window.XenaCards ? XenaCards.ELEMENTS : []);
+  var html = '';
+  els.forEach(function(el){
+    var label = el === 'ALL' ? t('ALL', '전체') : el;
+    html += '<button class="' + (deckElemFilter === el ? 'on' : '') + '" data-el="' + el + '">' + label + '</button>';
+  });
+  $('deck-elem-filter').innerHTML = html;
+}
+$('deck-elem-filter').addEventListener('click', function(e){
+  var btn = e.target.closest('button');
+  if(!btn) return;
+  deckElemFilter = btn.getAttribute('data-el');
+  deckShowAll = false;
+  renderElemFilter();
+  renderDeckBuilder();
+});
+function renderDeckBuilder(){
+  var owned = XenaCards.owned();
+  if(deckElemFilter !== 'ALL'){
+    owned = owned.filter(function(c){ return c.element === deckElemFilter; });
+  }
+  /* TCG 전용(PC-*) 카드를 맨 위로, 그 다음 등급 내림차순 — 우선순위: TCG > 등급 */
+  owned = owned.slice().sort(function(a, b){
+    var ap = a.isTcg, bp = b.isTcg;
+    if(ap !== bp) return ap ? -1 : 1;
+    return (GRADE_RANK_TCG[b.grade]||0) - (GRADE_RANK_TCG[a.grade]||0);
+  });
+  var filled = deckDraft.filter(function(x){ return !!x; }).length;
+  $('deck-count').textContent = filled;
+  $('btn-deck-confirm').disabled = filled !== 12;
+
+  var warn = $('deck-warn');
+  /* 필터가 걸려 있어도 "카드 부족" 경고는 보유 전체 카드 기준으로 판단 — 필터된 목록으로
+     판단하면 특정 속성만 봤을 때 오경고가 뜬다. */
+  var totalOwned = XenaCards.owned().reduce(function(s,c){ return s + c.count; }, 0);
+  if(totalOwned < 12){
+    warn.style.display = 'block';
+    warn.textContent = t(
+      'You need at least 12 owned cards to build a deck (you have '+totalOwned+'). Draw more in XENA CARDS.',
+      '덱을 만들려면 카드가 최소 12장 필요합니다 (현재 '+totalOwned+'장). XENA CARDS에서 더 뽑아보세요.'
+    );
+  } else {
+    warn.style.display = 'none';
+  }
+
+  /* 슬롯 */
+  var counts = draftCounts();
+  var slotsHtml = '';
+  for(var i = 0; i < 12; i++){
+    var id = deckDraft[i];
+    if(id){
+      var c = XenaCards.get(id);
+      slotsHtml += '<div class="deck-slot filled" data-slot="'+i+'">'+
+        (c ? '<img src="'+c.img+'" alt="">' : '') + '</div>';
+    } else {
+      slotsHtml += '<div class="deck-slot"><span class="ds-empty">'+(i+1)+'</span></div>';
+    }
+  }
+  $('deck-slots').innerHTML = slotsHtml;
+
+  /* 컬렉션 — 기본 12장(2줄)만, "더보기"로 전체. 이름 표기 없음. ×수량은 카드 밖 배지로. */
+  var visible = deckShowAll ? owned : owned.slice(0, DECK_PAGE_N);
+  var colHtml = '';
+  visible.forEach(function(c){
+    var used = counts[c.id] || 0;
+    var remaining = c.count - used;
+    var exhausted = remaining <= 0;
+    colHtml += '<div class="deck-card-wrap">' +
+      '<span class="deck-card-count">×'+remaining+'</span>' +
+      '<div class="card deck-card'+(exhausted?' exhausted':'')+(c.isTcg?' tcg tcg-pure':'')+(c.img?' has-img':'')+'" data-id="'+c.id+'" data-grade="'+c.grade+'"'+
+      (c.img ? ' style="background-image:url(\''+c.img+'\')"' : '')+'>'+
+      cardFaceHTML(c)+
+      '</div></div>';
+  });
+  $('deck-collection').innerHTML = colHtml;
+
+  var moreCount = owned.length - visible.length;
+  if(moreCount > 0){
+    $('deck-more-wrap').style.display = '';
+    $('deck-more-btn').textContent = t('+ Show all cards (' + moreCount + ' more)', '+ 전체 카드 더보기 (' + moreCount + '장 더)');
+  } else if(deckShowAll && owned.length > DECK_PAGE_N){
+    $('deck-more-wrap').style.display = '';
+    $('deck-more-btn').textContent = t('Show top ' + DECK_PAGE_N + ' only', '상위 ' + DECK_PAGE_N + '장만 보기');
+  } else {
+    $('deck-more-wrap').style.display = 'none';
+  }
+}
+$('deck-more-btn').addEventListener('click', function(){ deckShowAll = !deckShowAll; renderDeckBuilder(); });
+
+/* ── 카드 미리보기 + 장착 ── */
+var previewCard = null;
+function openCardPreview(id){
+  var c = XenaCards.get(id);
+  if(!c) return;
+  var counts = draftCounts();
+  var remaining = c.count - (counts[c.id] || 0);
+  if(remaining <= 0) return;
+  previewCard = c;
+  $('cp-card').className = 'cp-card card' + (c.isTcg ? ' tcg-pure' : '') + (c.img ? ' has-img' : '');
+  $('cp-card').setAttribute('data-grade', c.grade);
+  $('cp-card').style.backgroundImage = c.img ? 'url(\'' + c.img + '\')' : '';
+  $('cp-card').innerHTML = cardFaceHTML(c);
+  $('cp-meta').textContent = c.grade + (c.isTcg ? ' · TCG' : '') + ' · ' + t('Owned ', '보유 ') + remaining;
+  $('cp-equip').disabled = deckDraft.indexOf(null) < 0;
+  $('card-preview-modal').classList.add('on');
+}
+$('deck-collection').addEventListener('click', function(e){
+  var el = e.target.closest('.deck-card');
+  if(!el || el.classList.contains('exhausted')) return;
+  openCardPreview(el.getAttribute('data-id'));
+});
+/* [2026-07-25] 전장에 낸 카드도 클릭하면 크게 볼 수 있도록 — 장착 버튼 없는 보기 전용 모드 */
+function openBoardCardPreview(card){
+  $('cp-card').className = 'cp-card card' + (card.isTcg ? ' tcg-pure' : '') + (card.img ? ' has-img' : '');
+  $('cp-card').setAttribute('data-grade', card.grade);
+  $('cp-card').style.backgroundImage = card.img ? 'url(\'' + card.img + '\')' : '';
+  $('cp-card').innerHTML = cardFaceHTML(card);
+  $('cp-meta').textContent = card.grade + (card.isTcg ? ' · TCG' : '') + ' · ' + t('Cost ', '비용 ') + card.cost + ' · ' + t('Power ', '파워 ') + card.power;
+  $('card-preview-modal').classList.add('on', 'view-only');
+}
+$('cp-close').addEventListener('click', function(){ $('card-preview-modal').classList.remove('on', 'view-only'); });
+$('card-preview-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on', 'view-only'); });
+$('cp-equip').addEventListener('click', function(){
+  if(!previewCard) return;
+  var emptyIdx = deckDraft.indexOf(null);
+  if(emptyIdx < 0) return;
+  deckDraft[emptyIdx] = previewCard.id;
+  if (window.XenaAudio) window.XenaAudio.sfx('btn_click');
+  $('card-preview-modal').classList.remove('on');
+  renderDeckBuilder();
+});
+$('deck-slots').addEventListener('click', function(e){
+  var el = e.target.closest('.deck-slot.filled');
+  if(!el) return;
+  var idx = parseInt(el.getAttribute('data-slot'), 10);
+  deckDraft[idx] = null;
+  renderDeckBuilder();
+});
+$('btn-deck-confirm').addEventListener('click', function(){
+  var ids = deckDraft.filter(function(x){ return !!x; });
+  if(ids.length !== 12) return;
+  saveCustomDeck(ids);
+  updateIntroHint();
+  show('intro');
+});
+$('btn-deck-back').addEventListener('click', function(){ show('intro'); });
+$('btn-mycards').addEventListener('click', openDeckBuilder);
+
+/* ── 언어 토글 ─────────────────────────────────────────── */
+var toggles = document.querySelectorAll('.lang-toggle button');
+for(var i = 0; i < toggles.length; i++){
+  toggles[i].addEventListener('click', function(){
+    var lang = this.getAttribute('data-set');
+    document.documentElement.setAttribute('data-lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+    try{ localStorage.setItem('xena-lang', lang); }catch(e){}
+    if(window.XenaCards) XenaCards.refresh(); /* TCG 카드는 EN/KR 아트가 갈려 있어 재빌드 필요 */
+    if(G) render();
+    if($('screen-deck').classList.contains('on')){ renderElemFilter(); renderDeckBuilder(); }
+  });
+}
+
+</script>
+<script src="../../game/firebase-config.js?v=20260722"></script>
+<script src="../../game/cloud-sync.js?v=20260722"></script>
+<script src="../shared-identity.js?v=20260731"></script>
+<script src="../shared-audio.js?v=20260724"></script>
+<script src="../shared-wallet.js?v=20260722"></script>
+<script src="../gacha/cards.js?v=20260723"></script>
+<script src="../../shared/xena-cards.js?v=20260723"></script>
+<script>
+if (window.XenaAudio) window.XenaAudio.init('tcg');
+if (window.XenaWallet) window.XenaWallet.subscribe(paintXC);
+document.querySelectorAll('button').forEach(function(el){
+  el.addEventListener('click', function(){ if (window.XenaAudio) window.XenaAudio.sfx('btn_click'); }, {capture:true});
+});
+</script>
+<script>
+/* Signal Clash owns a distinct six-gem pool.  Capture-phase handlers are
+   registered after the legacy handlers so the ticket transaction completes
+   before a new match state can be created. */
+(function () {
+  function beginMatch(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    var launch = function () {
+      if (!newGame()) {
+        hint('Build a 12-card deck in MY CARDS before starting.');
+        return;
+      }
+      show('play');
+      hint('Turn 1 · mana 1.');
+    };
+    if (!window.XenaWallet || !window.XenaWallet.consumeEnergy) { launch(); return; }
+    window.XenaWallet.consumeEnergy('signal_clash').then(launch).catch(function () {
+      hint('No energy available. One gem returns every 10 minutes.');
+    });
+  }
+  ['btn-start', 'btn-again'].forEach(function (id) {
+    var button = document.getElementById(id);
+    if (button) button.addEventListener('click', beginMatch, true);
+  });
+  if (window.XenaWallet && window.XenaWallet.initEnergyUI) window.XenaWallet.initEnergyUI('signal_clash');
+}());
+</script>
+</body>
+</html>

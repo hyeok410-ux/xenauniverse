@@ -244,8 +244,8 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
     </div>
 
     <!-- SIGNAL CLASH — main TCG kept as a separate entry beside Signal Warfare. -->
-    <div class="gcard live grid-theme" data-id="signal-clash" data-cat="popular">
-      <div class="thumb"><span class="badge live-b">&#9679; LIVE</span><img src="tcg/assets/images/XENA_SignalWarfare_Hub_Cover_v1.webp" alt="SIGNAL CLASH card battle"></div>
+    <div class="gcard live grid-theme" data-id="signal-clash" data-cat="popular" data-route="signal-clash/">
+      <div class="thumb"><span class="badge live-b">&#9679; LIVE</span><img src="signal-clash/assets/images/SIGNAL_CLASH_Hub_Cover_v1.png" alt="SIGNAL CLASH tactical card battle" loading="lazy"></div>
       <div class="gbody">
         <div class="gkind">Strategy Card Battle</div>
         <h3>SIGNAL CLASH</h3>
@@ -326,11 +326,11 @@ h1{font-size:clamp(2rem,6.5vw,3.4rem);font-weight:800;letter-spacing:.04em;line-
     <div class="gcard live signal-warfare-theme" data-id="tcg" data-cat="popular,puzzle">
       <div class="thumb">
         <span class="badge signal-new-badge">NEW · LIVE</span>
-        <img src="tcg/assets/images/XENA_SignalWarfare_Hub_Cover_v1.webp" alt="XENA: SIGNAL WARFARE" loading="lazy">
+        <img src="tcg/assets/images/XENA_SignalWarfare_Hub_Cover_v1.webp" alt="SIGNAL WARFARE" loading="lazy">
       </div>
       <div class="gbody">
         <div class="gkind" style="color:var(--cyan);text-shadow:0 0 12px rgba(63,224,255,.4);">PvE TCG</div>
-        <h3>XENA: SIGNAL WARFARE</h3>
+        <h3>SIGNAL WARFARE</h3>
         <p>
           <span lang="en">Fluid action turns, owned XENA cards and three AI difficulties.</span>
           <span lang="ko">내 카드로 덱을 만들고 AI 코어와 자유롭게 전투하세요.</span>
@@ -408,11 +408,15 @@ document.querySelectorAll('.cat-btn').forEach(function(b){
 });
 applyCategory('popular'); /* 기본 탭 = 인기 */
 </script>
-<script src="./shared-identity.js?v=20260731"></script>
+<script src="./shared-identity.js?v=20260732"></script>
 <script src="./shared-audio.js?v=20260721"></script>
 <script src="./shared-wallet.js?v=20260727"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('hub');
+(function(){
+  var clash = document.querySelector('[data-id="signal-clash"] .play-btn');
+  if (clash) clash.setAttribute('href', 'signal-clash/');
+}());
 (function(){
   var xcEl = document.getElementById('hub-xc');
   if (xcEl && window.XenaWallet) {
