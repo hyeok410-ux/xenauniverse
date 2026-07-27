@@ -10,6 +10,10 @@
       "functions/**",
       "_deploy_xenauniverse_20260718/**"
     ],
-    "cleanUrls": true
+    "cleanUrls": true,
+    "headers": [
+      { "source": "**/*.html", "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }] },
+      { "source": "**/*.js", "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }] }
+    ]
   }
 }

@@ -260,6 +260,15 @@
     '.xprof-admin-row input{flex:1;min-width:0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:6px 8px;color:#fff;font-family:inherit;font-size:10px;}'+
     '.xprof-admin-row button{font-family:inherit;font-size:9.5px;font-weight:700;padding:6px 10px;border-radius:6px;border:none;background:#ff6b8a;color:#2a0410;cursor:pointer;white-space:nowrap;}'+
     '.xprof-admin-out{font-size:9px;color:#c4c1da;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow:auto;margin-top:6px;}'+
+    '#xprof-feedback-modal{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:18px;}'+
+    '#xprof-feedback-modal.on{display:flex;}'+
+    '#xprof-feedback-card{width:min(760px,100%);max-height:min(82vh,760px);overflow:auto;background:#0d0d18;border:1px solid rgba(63,224,255,.48);border-radius:16px;padding:18px;box-shadow:0 18px 70px rgba(0,0,0,.6);}'+
+    '#xprof-feedback-card header{display:flex;justify-content:space-between;align-items:center;color:#3fe0ff;letter-spacing:.08em;font-size:13px;margin-bottom:12px;}'+
+    '#xprof-feedback-close{border:0;background:transparent;color:#fff;font-size:22px;cursor:pointer;}'+
+    '.xprof-feedback-item{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;margin:8px 0;}'+
+    '.xprof-feedback-item pre{white-space:pre-wrap;word-break:break-word;color:#e8e6f2;font:12px/1.55 ui-monospace,monospace;margin:0 0 9px;}'+
+    '.xprof-feedback-meta{font-size:10px;color:#8d8aa5;margin-bottom:8px;}'+
+    '.xprof-feedback-item button{border:0;border-radius:7px;padding:6px 10px;background:#ff6b8a;color:#270510;font:700 10px ui-monospace,monospace;cursor:pointer;}'+
     '#xprof-toast{position:fixed;top:56px;right:12px;z-index:600;background:linear-gradient(135deg,#a06bff,#3fe0ff);color:#0a0912;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;padding:10px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;transform:translateY(-8px);transition:.35s ease;pointer-events:none;}'+
     '#xprof-toast.on{opacity:1;transform:translateY(0);}';
   document.head.appendChild(style);
@@ -308,6 +317,11 @@
       '<button class="xprof-signout" id="xprof-signout">'+tt({ko:'로그아웃',en:'Sign out'})+'</button>'+
     '</div>';
   document.body.appendChild(overlay);
+
+  var feedbackModal = document.createElement('div');
+  feedbackModal.id = 'xprof-feedback-modal';
+  feedbackModal.innerHTML = '<section id="xprof-feedback-card"><header><span>FEEDBACK INBOX</span><button id="xprof-feedback-close" aria-label="Close">×</button></header><div id="xprof-feedback-list"></div></section>';
+  document.body.appendChild(feedbackModal);
 
   var toast = document.createElement('div');
   toast.id = 'xprof-toast';
@@ -383,6 +397,24 @@
   });
 
   var feedbackItems = [];
+  var feedbackListEl = document.getElementById('xprof-feedback-list');
+  function renderFeedbackInbox(){
+    if (!feedbackListEl) return;
+    if (!feedbackItems.length){ feedbackListEl.innerHTML = '<p style="color:#9a97b5;font:12px ui-monospace,monospace">No feedback.</p>'; return; }
+    feedbackListEl.innerHTML = feedbackItems.map(function(x, i){
+      var text = String(x.text || '').replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; });
+      var meta = String(x.uid || '') + (x.createdAt ? ' · ' + String(x.createdAt) : '');
+      return '<article class="xprof-feedback-item"><pre>'+text+'</pre><div class="xprof-feedback-meta">'+meta+'</div><button data-feedback-delete="'+i+'">DELETE</button></article>';
+    }).join('');
+  }
+  if (feedbackModal) feedbackModal.addEventListener('click', function(e){
+    if (e.target === feedbackModal || (e.target && e.target.id === 'xprof-feedback-close')) feedbackModal.classList.remove('on');
+    var del = e.target && e.target.getAttribute && e.target.getAttribute('data-feedback-delete');
+    if (del === null || del === undefined) return;
+    var item = feedbackItems[Number(del)]; if (!item) return;
+    e.target.disabled = true;
+    callFn('adminDeleteFeedback', {id:item.id}).then(function(){ feedbackItems.splice(Number(del), 1); renderFeedbackInbox(); adminLog('Deleted.'); }).catch(function(err){ e.target.disabled=false; adminLog('Error: '+(err.message||err)); });
+  });
   var xaFeedbackList = document.getElementById('xa-feedback-list');
   var xaFeedbackDelete = document.getElementById('xa-feedback-delete');
   if (xaFeedbackList) xaFeedbackList.addEventListener('click', function(){
@@ -396,6 +428,17 @@
     var idx = window.prompt('Enter the feedback number to delete:');
     if (idx === null || !feedbackItems[Number(idx)]) return;
     callFn('adminDeleteFeedback', {id: feedbackItems[Number(idx)].id}).then(function(){ adminLog('Deleted. Click FEEDBACK to refresh.'); }).catch(function(e){ adminLog('Error: '+(e.message||e)); });
+  });
+
+  /* Rebind the feedback action with a full-screen inbox. The legacy compact
+     output remains as a fallback, while this listener provides per-item delete. */
+  if (xaFeedbackList) xaFeedbackList.addEventListener('click', function(){
+    callFn('adminListFeedback', {}).then(function(r){
+      feedbackItems = (r && r.items) || [];
+      renderFeedbackInbox();
+      if (feedbackModal) feedbackModal.classList.add('on');
+      adminLog(feedbackItems.length + ' feedback item(s) loaded.');
+    }).catch(function(e){ adminLog('Error: '+(e.message||e)); });
   });
 
   function renderClaimBox(){
@@ -480,6 +523,14 @@
   }, 10000);
 
   init();
+  (function retryIdentityHandshake(){
+    var tries = 0;
+    var timer = setInterval(function(){
+      tries++;
+      if (window.XenaCloudSync){ clearInterval(timer); init(); }
+      if (tries > 30) clearInterval(timer);
+    }, 250);
+  })();
   renderButton();
 
   /* 주간기록 옆 프로필칩 렌더용 API + 로그인 게이트(shared-gate.js)에서 쓰는 API */
