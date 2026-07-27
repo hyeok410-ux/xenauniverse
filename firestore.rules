@@ -39,6 +39,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Action-energy pools are written only by consumeEnergy on the server.
+    // The owner needs read access so the six gem slots update immediately.
+    match /energyPools/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
     // Payment records are created and finalized only by the Stripe webhook.
     // A player may read their own receipt status, but never change balances.
     match /purchases/{purchaseId} {

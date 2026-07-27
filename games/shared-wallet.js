@@ -115,7 +115,15 @@
     return callFn('spendCredits', {amount: amount, reason: reason||'', idempotencyKey: key});
   }
   function consumeEnergy(game){
-    return callFn('consumeEnergy', {game: game}).catch(function(error){
+    return callFn('consumeEnergy', {game: game}).then(function(result){
+      /* Do not wait for Firestore's snapshot round-trip before showing the
+         spent gem. The server transaction remains the source of truth. */
+      if (result && typeof result.energy === 'number') {
+        energyPools[game] = { energy:result.energy, energyUpdatedAt:Date.now() };
+        notify();
+      }
+      return result;
+    }).catch(function(error){
       /* Guest play still gets a real per-game six-ticket pool. Signed-in users
          remain server-authoritative; only connection/auth bootstrap failures
          use this device pool so a game never starts without consuming a gem. */
@@ -127,7 +135,7 @@
     if(!game) return;
     if (!document.getElementById('xena-energy-style')) {
       var energyStyle = document.createElement('style'); energyStyle.id = 'xena-energy-style';
-      energyStyle.textContent = '#xena-global-economy{gap:16px!important;padding:10px 16px!important;border:1px solid rgba(94,239,255,.45)!important;border-radius:18px!important;background:linear-gradient(135deg,rgba(10,18,35,.96),rgba(20,10,38,.94))!important;box-shadow:0 8px 34px rgba(0,0,0,.42),0 0 24px rgba(63,224,255,.16)!important}#xena-global-economy .xena-xc{font:800 16px/1.1 ui-monospace,monospace;color:#f4d77b;white-space:nowrap}#xena-global-economy .xena-gems{display:flex;gap:3px;align-items:center;color:#5eefff}#xena-global-economy .xena-gem{display:grid;place-items:center;width:27px;height:30px;filter:drop-shadow(0 0 5px currentColor)}#xena-global-economy .xena-gem.empty{color:#6f7790;opacity:.35;filter:none}#xena-global-economy .xena-gem.filled{color:#5eefff}#xena-global-economy .xena-refill{font:700 11px/1.2 ui-monospace,monospace;color:#b9ff3c;min-width:42px;text-align:right}@media(max-width:600px){#xena-global-economy{top:8px!important;gap:8px!important;padding:8px 10px!important}#xena-global-economy .xena-xc{font-size:12px}#xena-global-economy .xena-gem{width:21px;height:24px}#xena-global-economy .xena-refill{font-size:9px;min-width:30px}}';
+      energyStyle.textContent = '#xena-global-economy{gap:8px!important;padding:7px!important;border:1px solid rgba(94,239,255,.48)!important;border-radius:16px!important;background:linear-gradient(135deg,rgba(8,13,29,.95),rgba(27,10,43,.94))!important;box-shadow:0 10px 36px rgba(0,0,0,.48),0 0 28px rgba(63,224,255,.18)!important;font-family:Orbitron,"Rajdhani",ui-monospace,monospace!important}.xena-currency-panel,.xena-energy-panel{display:flex;align-items:center;min-height:42px;border:1px solid rgba(255,255,255,.14);border-radius:11px;padding:0 10px;background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.018));box-shadow:inset 0 0 16px rgba(255,255,255,.025)}#xena-global-economy .xena-xc{font:800 16px/1.1 ui-monospace,monospace;color:#f4d77b;white-space:nowrap}#xena-global-economy .xena-xc:before{content:"XC ";font-size:9px;letter-spacing:.13em;color:#fff3bb;margin-right:4px}.xena-energy-panel:before{content:"ENERGY";font:700 8px/1 ui-monospace,monospace;letter-spacing:.12em;color:#93efff;margin-right:7px}.xena-energy-panel{gap:6px;border-color:rgba(94,239,255,.32)}#xena-global-economy .xena-gems{display:flex;gap:3px;align-items:center;color:#5eefff}#xena-global-economy .xena-gem{display:grid;place-items:center;width:27px;height:30px;filter:drop-shadow(0 0 5px currentColor)}#xena-global-economy .xena-gem.empty{color:#6f7790;opacity:.35;filter:none}#xena-global-economy .xena-gem.filled{color:#5eefff}#xena-global-economy .xena-refill{font:700 10px/1.2 ui-monospace,monospace;color:#b9ff3c;min-width:39px;text-align:right}@media(max-width:600px){#xena-global-economy{top:8px!important;gap:4px!important;padding:5px!important}.xena-currency-panel,.xena-energy-panel{min-height:33px;padding:0 6px}.xena-energy-panel:before{display:none}#xena-global-economy .xena-xc{font-size:12px}#xena-global-economy .xena-gem{width:21px;height:24px}#xena-global-economy .xena-refill{font-size:8px;min-width:27px}}';
       document.head.appendChild(energyStyle);
     }
     var el = document.getElementById('xena-global-economy');
@@ -145,7 +153,7 @@
       var slots = Array.from({length:6}, function(_,i){ return i < n ? '◆' : '◇'; }).join('');
       var gemSvg = '<svg viewBox="0 0 32 36" width="26" height="29" aria-hidden="true"><path d="M16 1 30 12 24 31 16 35 8 31 2 12Z" fill="currentColor" opacity=".22"/><path d="M16 1 30 12 16 16 2 12Z" fill="currentColor" opacity=".95"/><path d="M2 12 16 16 16 35 8 31Z" fill="currentColor" opacity=".62"/><path d="M30 12 16 16 16 35 24 31Z" fill="currentColor" opacity=".8"/></svg>';
       var gems = Array.from({length:6}, function(_,i){ return '<span class="xena-gem '+(i < n ? 'filled' : 'empty')+'">'+gemSvg+'</span>'; }).join('');
-      el.innerHTML = '<span class="xena-xc">'+(balance === null ? '--' : String(balance))+' XC</span><span class="xena-gems">'+gems+'</span><small class="xena-refill">'+(wait || 'FULL')+'</small>';
+      el.innerHTML = '<div class="xena-currency-panel"><span class="xena-xc">'+(balance === null ? '--' : String(balance))+'</span></div><div class="xena-energy-panel"><span class="xena-gems">'+gems+'</span><small class="xena-refill">'+(wait || 'FULL')+'</small></div>';
     }
     render(); if(energyUiTimer) clearInterval(energyUiTimer); energyUiTimer = setInterval(render, 1000);
     if (window.XenaWallet && typeof window.XenaWallet.subscribe === 'function') window.XenaWallet.subscribe(function(){ render(); });
@@ -156,7 +164,7 @@
       var gems = Array.from({length:6}, function(_,i){ return '<span class="xena-gem '+(i < current ? 'filled' : 'empty')+'">'+svg+'</span>'; }).join('');
       var xc = hud.querySelector('.xena-xc'); if (!xc) { var first = hud.firstElementChild; if (first) first.className = 'xena-xc'; }
       var balanceText = hud.querySelector('.xena-xc');
-      hud.innerHTML = '<span class="xena-xc">'+(balance === null ? '--' : String(balance))+' XC</span><span class="xena-gems">'+gems+'</span><small class="xena-refill">'+(current >= 6 ? 'FULL' : 'REFILL')+'</small>';
+      hud.innerHTML = '<div class="xena-currency-panel"><span class="xena-xc">'+(balance === null ? '--' : String(balance))+'</span></div><div class="xena-energy-panel"><span class="xena-gems">'+gems+'</span><small class="xena-refill">'+(current >= 6 ? 'FULL' : 'REFILL')+'</small></div>';
     }, 0);
   }
 
