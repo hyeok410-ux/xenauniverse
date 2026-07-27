@@ -419,6 +419,9 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var OVERFLOW_GRACE_SECONDS = 5;
   var aimX = null;
   var dropCooldown = 0;
+  /* A start action owns exactly one energy transaction.  This blocks a fast
+     double tap and keeps a late promise resolution from starting a second run. */
+  var startRequestInFlight = false;
 
   /* ── 테트리스 식 서서히 차오르는 바닥 ──
      floorY 가 게임 시작 시 H(바닥)에서 시작해서 아주 천천히 위로("차올라") 줄어든다.
@@ -825,18 +828,30 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     resetGame();
   });
 
-  $('btn-start').addEventListener('click', function(){
-    var begin = function(){ $('ov-start').classList.remove('on'); resetGame(); running = true; };
+  function beginRun(source){
+    if(running || startRequestInFlight) return;
+    startRequestInFlight = true;
+    var button = source === 'retry' ? $('btn-retry') : $('btn-start');
+    if(button) button.disabled = true;
+    var finishStart = function(){
+      if(source === 'retry') $('ov-over').classList.remove('on');
+      else $('ov-start').classList.remove('on');
+      resetGame();
+      running = true;
+      startRequestInFlight = false;
+      if(button) button.disabled = false;
+    };
+    var failStart = function(){
+      startRequestInFlight = false;
+      if(button) button.disabled = false;
+      toast(t('No energy. Recharges every 10 minutes.', '행동력이 없습니다. 10분마다 충전됩니다.'));
+    };
     if(window.XenaWallet && window.XenaWallet.consumeEnergy){
-      window.XenaWallet.consumeEnergy('xena_merge').then(begin).catch(function(){ toast(t('No energy. Recharges every 10 minutes.', '행동력이 없습니다. 10분마다 충전됩니다.')); });
-    } else begin();
-  });
-  $('btn-retry').addEventListener('click', function(){
-    var begin = function(){ $('ov-over').classList.remove('on'); resetGame(); running = true; };
-    if(window.XenaWallet && window.XenaWallet.consumeEnergy){
-      window.XenaWallet.consumeEnergy('xena_merge').then(begin).catch(function(){ toast(t('No energy. Recharges every 10 minutes.', '행동력이 없습니다. 10분마다 충전됩니다.')); });
-    } else begin();
-  });
+      window.XenaWallet.consumeEnergy('xena_merge').then(finishStart).catch(failStart);
+    } else finishStart();
+  }
+  $('btn-start').addEventListener('click', function(){ beginRun('start'); });
+  $('btn-retry').addEventListener('click', function(){ beginRun('retry'); });
 
   document.querySelectorAll('.lang-toggle button').forEach(function(b){
     b.addEventListener('click', function(){

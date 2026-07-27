@@ -103,7 +103,10 @@
   init();
 
   function claimWelcomeBonus(){ return callFn('claimWelcomeBonus', {}); }
-  function claimGachaDust(grade, count){ return callFn('claimGachaDust', {grade: grade, count: count}); }
+  function claimGachaDust(grade, count, cardId, idempotencyKey){
+    var key = String(idempotencyKey || (window.crypto && crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '-' + String(Math.random()).slice(2))));
+    return callFn('claimGachaDust', {grade: grade, count: count, cardId: cardId, idempotencyKey: key});
+  }
   function getStreak(){ return callFn('getWallet', {}).then(function(r){ return r.streak || 0; }); }
   function claimDailySignal(){ return callFn('claimDailySignal', {}); }
   function claimQuestBonus(questId){ return callFn('claimQuestBonus', {questId: questId}); }
@@ -144,10 +147,15 @@
       el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9998;display:flex;align-items:center;gap:14px;padding:12px 20px;border:1px solid rgba(183,255,60,.55);border-radius:18px;background:rgba(4,6,12,.92);box-shadow:0 0 26px rgba(50,230,239,.22);font:800 18px/1 monospace;color:#f5f7ff;backdrop-filter:blur(12px)';
       document.body.appendChild(el);
     }
+    function refillClock(remainingMs){
+      var seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+      var minutes = Math.floor(seconds / 60);
+      return String(minutes).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
+    }
     function render(){
       var n = energyFor(game), pool = energyPools[game] || {};
       var updated = pool.energyUpdatedAt && typeof pool.energyUpdatedAt.toMillis === 'function' ? pool.energyUpdatedAt.toMillis() : Date.now();
-      var wait = n >= 6 ? '' : ' '+Math.ceil(Math.max(0, 600000 - ((Date.now() - updated) % 600000))/1000)+'s';
+      var wait = n >= 6 ? '' : refillClock(600000 - ((Date.now() - updated) % 600000));
       el.innerHTML = '<span style="color:#e8c468">'+(balance === null ? '…' : balance.toLocaleString())+' XC</span><span style="color:#b9ff3c;letter-spacing:2px">'+Array.from({length:6}, function(_,i){ return i<n ? '💎' : '◇'; }).join('')+'</span><small style="color:#b9ff3c;font-size:13px">'+(wait || 'FULL')+'</small>';
       var xcText = balance === null ? '—' : Number(balance).toLocaleString();
       var slots = Array.from({length:6}, function(_,i){ return i < n ? '◆' : '◇'; }).join('');
