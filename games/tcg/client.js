@@ -12,7 +12,7 @@
     draw: 'assets/audio/sfx_card_draw.mp3', summon: 'assets/audio/sfx_card_summon.mp3',
     hit: 'assets/audio/sfx_attack_impact.mp3', shatter: 'assets/audio/sfx_card_shatter.mp3'
   };
-  var state = { difficulty: 'normal', selected: new Set(), game: null, handIndex: null, attacker: null, walletOff: null };
+  var state = { difficulty: 'normal', selected: [], game: null, handIndex: null, attacker: null, walletOff: null };
   var $ = function (s) { return document.querySelector(s); };
 
   function play(path) {
@@ -33,11 +33,13 @@
   function normalize(c) {
     var stat = (window.XenaCards && window.XenaCards.GRADE_STATS && window.XenaCards.GRADE_STATS[c.grade]) || {};
     var power = Number(c.power || c.atk || stat.power || 3);
-    return { id: String(c.id), name: c.name || c.id || 'XENA CARD', grade: c.grade || 'N', cost: Number(c.cost || stat.cost || 1), atk: power, hp: Number(c.hp || power + 3), image: c.image || c.img || '../../game/assets/backgrounds/xena-hero-bg.jpg' };
+    return { id: String(c.id), name: c.name || c.id || 'XENA CARD', grade: c.grade || 'N', cost: Number(c.cost || stat.cost || 1), atk: power, hp: Number(c.hp || power + 3), count: Math.max(1, Number(c.count) || 1), image: c.image || c.img || '../../game/assets/backgrounds/xena-hero-bg.jpg' };
   }
   function shuffle(list) { var a = list.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function deckForBattle() {
-    var all = cards(), wanted = Array.from(state.selected), chosen = all.filter(function (c) { return wanted.indexOf(c.id) >= 0; });
+    var all = cards(), byId = {}, chosen = [];
+    all.forEach(function (c) { byId[c.id] = c; });
+    state.selected.forEach(function (id) { if (byId[id]) chosen.push(Object.assign({}, byId[id])); });
     if (chosen.length < 15) { all.forEach(function (c) { if (chosen.length < 15 && chosen.indexOf(c) < 0) chosen.push(c); }); }
     while (chosen.length < 15) chosen.push(Object.assign({}, chosen[chosen.length % Math.max(1, chosen.length)] || all[0], { id: 'clone-' + chosen.length }));
     return shuffle(chosen.slice(0, 15));
@@ -52,11 +54,20 @@
   function renderCollection() {
     var list = $('#card-list'); list.innerHTML = '';
     cards().forEach(function (c) {
-      var el = document.createElement('button'); el.type = 'button'; el.className = 'collection-card' + (state.selected.has(c.id) ? ' selected' : ''); el.innerHTML = cardHtml(c);
-      el.onclick = function () { if (state.selected.has(c.id)) state.selected.delete(c.id); else if (state.selected.size < 15) state.selected.add(c.id); renderCollection(); };
+      var selectedCount = state.selected.filter(function (id) { return id === c.id; }).length;
+      var maxCopies = Math.min(2, c.count);
+      var el = document.createElement('button'); el.type = 'button'; el.className = 'collection-card' + (selectedCount ? ' selected' : '');
+      el.innerHTML = cardHtml(c) + '<span class="deck-copy-count">DECK ' + selectedCount + '/' + maxCopies + '</span>';
+      el.onclick = function () {
+        var count = state.selected.filter(function (id) { return id === c.id; }).length;
+        if (count < maxCopies && state.selected.length < 15) state.selected.push(c.id);
+        else if (count > 0) state.selected.splice(state.selected.lastIndexOf(c.id), 1);
+        renderCollection();
+      };
       list.appendChild(el);
     });
-    $('#deck-count').textContent = state.selected.size;
+    $('#deck-count').textContent = state.selected.length;
+    $('#save-deck').disabled = state.selected.length !== 15;
   }
   function startTurn(p) {
     p.maxMana = Math.min(10, p.maxMana + 1); p.mana = p.maxMana;
@@ -65,6 +76,12 @@
   }
   async function startBattle() {
     if (state.game) return;
+    if (state.selected.length !== 15) {
+      status('Complete your 15-card deck before selecting START.');
+      show('cards-view');
+      renderCollection();
+      return;
+    }
     var start = $('#start-pve'); start.disabled = true; status('Preparing battle…');
     try {
       if (window.XenaWallet && window.XenaWallet.consumeEnergy) await window.XenaWallet.consumeEnergy('signal_warfare');
@@ -155,12 +172,22 @@
     if (!state.walletOff && window.XenaWallet.subscribe) state.walletOff = window.XenaWallet.subscribe(paint);
   }
   function init() {
-    try { JSON.parse(localStorage.getItem('xena-signal-warfare-deck') || '[]').forEach(function (id) { state.selected.add(id); }); } catch (_) {}
+    try {
+      var savedDeck = JSON.parse(localStorage.getItem('xena-signal-warfare-deck') || '[]');
+      if (Array.isArray(savedDeck)) savedDeck.slice(0, 15).forEach(function (id) {
+        if (state.selected.filter(function (x) { return x === id; }).length < 2) state.selected.push(id);
+      });
+    } catch (_) {}
     $('[data-difficulty="normal"]').classList.add('selected');
     document.querySelectorAll('[data-difficulty]').forEach(function (b) { b.onclick = function () { state.difficulty = b.dataset.difficulty; document.querySelectorAll('[data-difficulty]').forEach(function (x) { x.classList.toggle('selected', x === b); }); }; });
     $('#my-cards-button').onclick = function () { show('cards-view'); renderCollection(); };
     $('#cards-back').onclick = function () { show('lobby'); };
-    $('#save-deck').onclick = function () { localStorage.setItem('xena-signal-warfare-deck', JSON.stringify(Array.from(state.selected))); $('#deck-status').textContent = 'Deck saved (' + state.selected.size + '/15).'; };
+    $('#save-deck').onclick = function () {
+      if (state.selected.length !== 15) return;
+      localStorage.setItem('xena-signal-warfare-deck', JSON.stringify(state.selected));
+      $('#deck-status').textContent = 'Deck saved (15/15). Choose a mode and press START.';
+      show('lobby');
+    };
     $('#start-pve').onclick = startBattle; $('#end-turn').onclick = endTurn; $('#battle-exit').onclick = function () { location.href = '../'; }; $('#refresh-balance').onclick = wireWallet;
     $('#mute-local').onclick = function () { if (window.XenaAudio && window.XenaAudio.toggleMute) window.XenaAudio.toggleMute(); };
     document.querySelectorAll('[data-language]').forEach(function (b) { b.onclick = function () { document.documentElement.lang = b.dataset.language; document.querySelectorAll('[data-language]').forEach(function (x) { x.classList.toggle('active', x === b); }); }; });

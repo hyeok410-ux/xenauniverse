@@ -53,8 +53,8 @@
   </style>
 </head>
 <body>
+  <div id="xena-topcenter"></div>
   <a href="../games/" id="xena-games-back">&larr; XENA GAMES</a>
-  <div id="xena-topcenter"><div id="xena-xc">0 XC</div></div>
   <main id="app"></main>
   <noscript>이 게임을 실행하려면 브라우저에서 JavaScript를 켜주세요.</noscript>
   <script src="./engine.js?v=20260719c"></script>
@@ -85,18 +85,13 @@
   <script src="./app.js?v=20260719c"></script>
   <script src="../games/shared-identity.js?v=20260731"></script>
   <script src="../games/shared-audio.js?v=20260721"></script>
-  <script src="../games/shared-wallet.js?v=20260731"></script>
+  <script src="../games/shared-wallet.js?v=20260801"></script>
   <script>
-    /* XC 잔액 표시 — 이제 미니게임과 완전히 같은 서버 지갑(wallets/{uid}.credits)을 그대로 보여준다.
-       체스 자체 재화(크레딧)와 미니게임 XC가 이 시점부터 진짜로 같은 숫자다. */
+    /* Every playable game uses the same centered XC + per-game energy HUD. */
     (function(){
-      var el = document.getElementById('xena-xc');
-      function render(){
-        var bal = window.XenaWallet ? window.XenaWallet.getBalance() : null;
-        el.textContent = (bal === null ? '…' : bal) + ' XC';
+      if (window.XenaWallet && window.XenaWallet.initEnergyUI) {
+        window.XenaWallet.initEnergyUI('override_grid');
       }
-      render();
-      if (window.XenaWallet) window.XenaWallet.subscribe(render);
 
       /* shared-identity.js 가 body 에 붙인 프로필 버튼을 상단 가운데 줄로 이동 */
       var row = document.getElementById('xena-topcenter');

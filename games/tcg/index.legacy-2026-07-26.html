@@ -665,12 +665,26 @@ function buildDeck(copiesMap, poolMap){
    12장이 아니면 무효로 취급하고 데모덱으로 자동 대체된다. */
 var CUSTOM_DECK_KEY = 'xena_tcg_deck_v1';
 function loadCustomDeck(){
-  try{ var d = JSON.parse(localStorage.getItem(CUSTOM_DECK_KEY)); return (d && d.ids && d.ids.length === 12) ? d : null; }
+  try{
+    var d = JSON.parse(localStorage.getItem(CUSTOM_DECK_KEY));
+    if(!d || !Array.isArray(d.ids) || d.ids.length !== 12) return null;
+    var counts = {};
+    for(var i=0; i<d.ids.length; i++){
+      counts[d.ids[i]] = (counts[d.ids[i]] || 0) + 1;
+      if(counts[d.ids[i]] > 2) return null;
+      if(window.XenaCards && XenaCards.countOf(d.ids[i]) < counts[d.ids[i]]) return null;
+    }
+    d.copiesMap = counts;
+    return d;
+  }
   catch(e){ return null; }
 }
 function saveCustomDeck(ids){
   var copiesMap = {};
-  ids.forEach(function(id){ copiesMap[id] = (copiesMap[id]||0) + 1; });
+  ids.forEach(function(id){
+    copiesMap[id] = (copiesMap[id]||0) + 1;
+    if(copiesMap[id] > 2) throw new Error('MAX_TWO_COPIES_PER_CARD');
+  });
   localStorage.setItem(CUSTOM_DECK_KEY, JSON.stringify({ids:ids, copiesMap:copiesMap, savedAt:Date.now()}));
 }
 function toDeckCard(xc){
@@ -1369,7 +1383,7 @@ function renderDeckBuilder(){
   var warn = $('deck-warn');
   /* 필터가 걸려 있어도 "카드 부족" 경고는 보유 전체 카드 기준으로 판단 — 필터된 목록으로
      판단하면 특정 속성만 봤을 때 오경고가 뜬다. */
-  var totalOwned = XenaCards.owned().reduce(function(s,c){ return s + c.count; }, 0);
+  var totalOwned = XenaCards.owned().reduce(function(s,c){ return s + Math.min(2, c.count); }, 0);
   if(totalOwned < 12){
     warn.style.display = 'block';
     warn.textContent = t(
@@ -1400,7 +1414,7 @@ function renderDeckBuilder(){
   var colHtml = '';
   visible.forEach(function(c){
     var used = counts[c.id] || 0;
-    var remaining = c.count - used;
+    var remaining = Math.max(0, Math.min(2, c.count) - used);
     var exhausted = remaining <= 0;
     colHtml += '<div class="deck-card-wrap">' +
       '<span class="deck-card-count">×'+remaining+'</span>' +
@@ -1430,7 +1444,7 @@ function openCardPreview(id){
   var c = XenaCards.get(id);
   if(!c) return;
   var counts = draftCounts();
-  var remaining = c.count - (counts[c.id] || 0);
+  var remaining = Math.max(0, Math.min(2, c.count) - (counts[c.id] || 0));
   if(remaining <= 0) return;
   previewCard = c;
   $('cp-card').className = 'cp-card card' + (c.isTcg ? ' tcg-pure' : '') + (c.img ? ' has-img' : '');
@@ -1459,6 +1473,7 @@ $('cp-close').addEventListener('click', function(){ $('card-preview-modal').clas
 $('card-preview-modal').addEventListener('click', function(e){ if(e.target === this) this.classList.remove('on', 'view-only'); });
 $('cp-equip').addEventListener('click', function(){
   if(!previewCard) return;
+  if((draftCounts()[previewCard.id] || 0) >= Math.min(2, previewCard.count)) return;
   var emptyIdx = deckDraft.indexOf(null);
   if(emptyIdx < 0) return;
   deckDraft[emptyIdx] = previewCard.id;
@@ -1504,7 +1519,7 @@ for(var i = 0; i < toggles.length; i++){
 <script>window.__xenaAdminOnly = true;</script> <!-- 비공개 베타: 관리자만 플레이 가능 -->
 <script src="../shared-gate.js?v=20260722"></script>
 <script src="../shared-audio.js?v=20260724"></script>
-<script src="../shared-wallet.js?v=20260722"></script>
+<script src="../shared-wallet.js?v=20260801"></script>
 <script src="../gacha/cards.js?v=20260723"></script>
 <script src="../../shared/xena-cards.js?v=20260723"></script>
 <script>

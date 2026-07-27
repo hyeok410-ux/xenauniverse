@@ -1014,10 +1014,13 @@ function openDetail(c){
   var n = st.owned[c.id] || 0;
   $('dt-grade').textContent = GRADE_LABEL[c.grade] + t(' · owned ×'+n, ' · 보유 '+n+'장');
   $('dt-grade').style.color = GRADE_COLOR[c.grade];
-  $('dt-dust').disabled = n < 2;
-  $('dt-dust').textContent = n < 2
+  var keepCount = c.premium ? 2 : 1;
+  var dustCount = Math.max(0, n - keepCount);
+  var dustUnit = DUST[c.grade] * (c.premium ? 2 : 1);
+  $('dt-dust').disabled = dustCount < 1;
+  $('dt-dust').textContent = dustCount < 1
     ? t('Dust (no duplicates)', '분해 (중복 없음)')
-    : t('Dust duplicates +'+DUST[c.grade]*(n-1)+' XC', '중복 분해 +'+DUST[c.grade]*(n-1)+' XC');
+    : t('Dust duplicates +'+dustUnit*dustCount+' XC', '중복 분해 +'+dustUnit*dustCount+' XC');
   $('detail').classList.add('on');
 }
 $('dt-close').addEventListener('click', function(){ $('detail').classList.remove('on'); });
@@ -1025,14 +1028,23 @@ $('detail').addEventListener('click', function(e){ if(e.target === this) this.cl
 $('dt-dust').addEventListener('click', function(){
   if(!detailCard || !window.XenaWallet) return;
   var n = st.owned[detailCard.id] || 0;
-  if(n < 2) return;
-  var grade = detailCard.grade, dupeCount = n-1;
-  st.owned[detailCard.id] = 1;
+  var keepCount = detailCard.premium ? 2 : 1;
+  if(n <= keepCount) return;
+  var grade = detailCard.grade, dupeCount = n-keepCount;
+  var previousCount = n;
+  var dustRequestKey = 'dust-'+detailCard.id+'-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+  $('dt-dust').disabled = true;
+  st.owned[detailCard.id] = keepCount;
   save(SAVE_KEY, st);
-  window.XenaWallet.claimGachaDust(grade, dupeCount).then(function(r){
+  window.XenaWallet.claimGachaDust(grade, dupeCount, detailCard.id, dustRequestKey).then(function(r){
     if (window.XenaAudio){ window.XenaAudio.sfx('card_dismantle'); window.XenaAudio.sfx('xc_gain'); }
     toast(t('Dusted '+dupeCount+' duplicate(s) → +'+r.granted+' XC', '중복 '+dupeCount+'장 분해 → +'+r.granted+' XC'));
-  }).catch(function(){ toast(t('Could not dust — try again', '분해에 실패했습니다 — 다시 시도해주세요')); });
+  }).catch(function(){
+    st.owned[detailCard.id] = previousCount;
+    save(SAVE_KEY, st);
+    renderAll();
+    toast(t('Could not dust — try again', '분해에 실패했습니다 — 다시 시도해주세요'));
+  });
   $('detail').classList.remove('on');
   renderAll();
 });
@@ -1176,7 +1188,7 @@ renderAll();
 <script src="../../game/cloud-sync.js?v=20260721"></script>
 <script src="../shared-identity.js?v=20260731"></script>
 <script src="../shared-audio.js?v=20260721"></script>
-<script src="../shared-wallet.js?v=20260731"></script>
+<script src="../shared-wallet.js?v=20260801"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('gacha');
 if (window.__wireGachaWallet) window.__wireGachaWallet();
