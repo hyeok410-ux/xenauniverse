@@ -69,7 +69,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
 .skill-btn .sk-cost{font-size:.56rem;color:var(--gold);}
 .skill-btn:not(:disabled):hover{background:rgba(255,47,176,.18);box-shadow:0 0 16px rgba(255,47,176,.3);}
 .skill-btn:disabled{opacity:.32;cursor:not-allowed;}
-.forfeit-btn{margin-left:auto;flex:0 0 auto;font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.08em;color:#ffd2df;border:1px solid rgba(255,107,138,.5);background:rgba(255,107,138,.1);border-radius:14px;padding:10px 14px;}
+.forfeit-btn{margin-left:10px;flex:0 0 auto;font-family:var(--font-mono);font-size:.66rem;font-weight:700;letter-spacing:.08em;color:#ffd2df;border:1px solid rgba(255,107,138,.5);background:rgba(255,107,138,.1);border-radius:14px;padding:10px 14px;}
 .forfeit-btn:hover{background:rgba(255,107,138,.22);box-shadow:0 0 16px rgba(255,107,138,.25);}
 .skill-info-btn{background:none;border:none;color:var(--text-dim);font-size:.85rem;line-height:1;vertical-align:middle;
   padding:0;margin-left:2px;cursor:pointer;transition:.2s;}
@@ -188,12 +188,12 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
       <span class="sk-name"><span lang="en">PUSH BACK FLOOR</span><span lang="ko">바닥 밀어내기</span></span>
       <span class="sk-cost">×2</span>
     </button>
-    <button class="forfeit-btn" id="btn-forfeit" type="button"><span lang="en">FORFEIT</span><span lang="ko">포기하기</span></button>
     <button class="skill-btn" id="skill-b" disabled
       title="Remove up to 4 OVERRIDE-tier orbs from the jar and score bonus points. Costs 3 OVERRIDE charge.">
       <span class="sk-name"><span lang="en">CLEAR OVERRIDE ×4</span><span lang="ko">오버라이드 정리 ×4</span></span>
       <span class="sk-cost">×3</span>
     </button>
+    <button class="forfeit-btn" id="btn-forfeit" type="button"><span lang="en">FORFEIT</span><span lang="ko">포기하기</span></button>
   </div>
 
   <!-- 기술 설명 모달 -->
@@ -300,10 +300,16 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
     '../../game/assets/skins/skin_xena_white_ethereal_v1.webp',
     '../../game/assets/skins/skin_xena_ethereal_crystal_v1.png',
     '../../game/assets/skins/skin_xena_ethereal_prism_dress_v1.png',
-    '../../game/assets/portraits/xena_override_v1.webp'
+    /* Use the supplied high-resolution PNG for the final XENA/OVERRIDE tier.
+       This deliberately avoids the old, incorrectly mapped WebP portrait. */
+    '../../game/assets/portraits/xena_override_v1.png'
   ];
   var tierPortraits = tierPortraitPaths.map(function(src){
-    var img = new Image(); img.decoding = 'async'; img.src = src; return img;
+    var img = new Image();
+    img.decoding = 'sync';
+    img.fetchPriority = 'high';
+    img.src = src;
+    return img;
   });
   var mascotImg = new Image();
   var mascotReady = false;

@@ -143,6 +143,7 @@ h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;lin
 .result h2.lose{color:var(--text-dim);}
 .result p{color:var(--text-dim);font-size:.92rem;line-height:1.8;margin-bottom:26px;}
 .result p b{color:var(--gold);font-weight:700;}
+.xc-reward-pending{display:inline-block;margin-top:10px;padding:7px 12px;border:1px solid rgba(232,196,104,.48);border-radius:999px;background:rgba(232,196,104,.09);color:#f7df92;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.02em;box-shadow:0 0 18px rgba(232,196,104,.12);}
 .r-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 .r-btn{font-family:var(--font-mono);font-size:.72rem;font-weight:500;letter-spacing:.1em;padding:13px 26px;border-radius:26px;border:1px solid var(--hair);background:rgba(255,255,255,.05);color:var(--silver);transition:.3s ease;}
 .r-btn:hover{color:var(--cyan);border-color:rgba(63,224,255,.5);}
@@ -831,6 +832,15 @@ function finish(win, reason){
     if(!st.best[idx+1] || timeUsed < st.best[idx+1]) st.best[idx+1] = timeUsed;
     if(!st.weekly.best[idx+1] || timeUsed < st.weekly.best[idx+1]) st.weekly.best[idx+1] = timeUsed;
     save(SAVE_KEY, st);
+    /* Render the reward state before leaderboard/network work begins.  This
+       prevents a completed puzzle from feeling stalled on a slow connection. */
+    var rewardLine = null;
+    if(firstClearToday){
+      var expectedReward = Math.min(50, (idx + 1) * 5);
+      rewardLine = document.createElement('div');
+      rewardLine.className = 'xc-reward-pending';
+      rewardLine.innerHTML = t('<b>+'+expectedReward+' XC</b> · reward confirmed…', '<b>+'+expectedReward+' XC</b> · 보상 확인 중…');
+    }
     /* 전체 주간 랭킹에 기록 제출 → 성공하면 서버가 "오늘 진짜 클리어했다"는 걸 알게 되고,
        그걸 근거로만 하루 첫클리어 XC 보상을 내준다 */
     if(window.XenaLeaderboard){
@@ -840,9 +850,11 @@ function finish(win, reason){
           window.XenaWallet.claimStageReward(GAME_ID, idx+1).then(function(rw){
             if(rw.granted > 0){
               if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
-              sub.innerHTML += t(' · <b>+'+rw.granted+' XC</b> (first clear today)', ' · <b>+'+rw.granted+' XC</b> (오늘 첫 클리어)');
+              if(rewardLine) rewardLine.innerHTML = t('<b>+'+rw.granted+' XC</b> · added to your balance', '<b>+'+rw.granted+' XC</b> · 재화에 반영됨');
             }
-          }).catch(function(){});
+          }).catch(function(){
+            if(rewardLine) rewardLine.textContent = t('Reward could not be confirmed. Please try again later.', '보상 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+          });
         }
       });
     }
@@ -850,6 +862,7 @@ function finish(win, reason){
       'Stage '+(idx+1)+' clear in '+timeUsed+'s<br>Best: '+st.best[idx+1]+'s',
       '스테이지 '+(idx+1)+' 클리어 · '+timeUsed+'초<br>최고 기록: '+st.best[idx+1]+'초'
     );
+    if(rewardLine) sub.appendChild(rewardLine);
     if(idx+1 < STAGES.length){
       next.hidden = false;
       next.innerHTML = t('NEXT STAGE →', '다음 스테이지 →');
@@ -895,7 +908,7 @@ renderStages();
 <script src="../../game/firebase-config.js?v=20260721"></script>
 <script src="../../game/cloud-sync.js?v=20260721"></script>
 <script src="../shared-leaderboard.js?v=20260721"></script>
-<script src="../shared-identity.js?v=20260721"></script>
+<script src="../shared-identity.js?v=20260731"></script>
 <script src="../shared-audio.js?v=20260721"></script>
 <script src="../shared-wallet.js?v=20260730"></script>
 <script>
