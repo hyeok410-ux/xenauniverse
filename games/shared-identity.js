@@ -425,8 +425,8 @@
     adminLog('Loading flagged wallets…');
     callFn('adminListWallets', {threshold:500}).then(function(result){
       var rows = (result && result.flagged) || [];
-      var html = rows.length ? '<table class="xprof-admin-table"><thead><tr><th>UID</th><th>XC</th><th>Shards</th></tr></thead><tbody>'+
-        rows.map(function(x){ return '<tr><td>'+escapeHtml(x.uid)+'</td><td>'+escapeHtml(x.credits)+'</td><td>'+escapeHtml(x.shards)+'</td></tr>'; }).join('')+
+      var html = rows.length ? '<table class="xprof-admin-table"><thead><tr><th>Google email</th><th>UID</th><th>XC</th><th>Shards</th></tr></thead><tbody>'+
+        rows.map(function(x){ return '<tr><td>'+escapeHtml(x.email || '(not linked)')+'</td><td>'+escapeHtml(x.uid)+'</td><td>'+escapeHtml(x.credits)+'</td><td>'+escapeHtml(x.shards)+'</td></tr>'; }).join('')+
         '</tbody></table>' : '<p style="color:#9a97b5">No wallet reaches the selected threshold.</p>';
       openAdminModal('FLAGGED WALLETS · '+escapeHtml(result && result.threshold || 500)+'+', html);
       adminLog(rows.length + ' flagged wallet(s) / '+String(result && result.totalChecked || 0)+' checked.');
@@ -458,7 +458,7 @@
     if (!feedbackListEl) return;
     if (!feedbackItems.length){ feedbackListEl.innerHTML = '<p style="color:#9a97b5;font:12px ui-monospace,monospace">No feedback has been received.</p>'; return; }
     feedbackListEl.innerHTML = feedbackItems.map(function(x, i){
-      var meta = 'ID: '+escapeHtml(x.id)+' · '+escapeHtml(x.category || 'general')+' · '+escapeHtml(x.language || 'en')+'<br>UID: '+escapeHtml(x.uid)+'<br>'+escapeHtml(x.createdAt || 'time unavailable');
+      var meta = 'ID: '+escapeHtml(x.id)+' · '+escapeHtml(x.category || 'general')+' · '+escapeHtml(x.language || 'en')+'<br>Google email: '+escapeHtml(x.email || '(not linked)')+'<br>UID: '+escapeHtml(x.uid)+'<br>'+escapeHtml(x.createdAt || 'time unavailable');
       return '<article class="xprof-feedback-item"><pre>'+escapeHtml(x.text)+'</pre><div class="xprof-feedback-meta">'+meta+'</div><button data-feedback-delete="'+i+'">DELETE</button></article>';
     }).join('');
   }

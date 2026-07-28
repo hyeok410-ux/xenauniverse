@@ -1046,6 +1046,24 @@ function requireAdmin(request) {
   return uid;
 }
 
+/* Resolve identity server-side so admin tools show a recognizable Google
+   account without trusting an email supplied by the browser. getUsers accepts
+   up to 100 identifiers, matching the limits of the admin list endpoints. */
+async function authEmailMap(uids) {
+  const unique = [...new Set((uids || []).map((uid) => String(uid || "").trim()).filter((uid) => uid && uid.length <= 128))].slice(0, 100);
+  if (!unique.length) return {};
+  try {
+    const result = await admin.auth().getUsers(unique.map((uid) => ({ uid })));
+    return result.users.reduce((map, user) => {
+      map[user.uid] = user.email || "";
+      return map;
+    }, {});
+  } catch (error) {
+    console.error("Unable to bind admin list identities", error);
+    return {};
+  }
+}
+
 exports.adminGrantCredits = onCall(async (request) => {
   requireAdmin(request);
   const targetUid = String(request.data && request.data.targetUid || "");
@@ -1070,9 +1088,11 @@ exports.adminListWallets = onCall(async (request) => {
   snap.forEach((doc) => {
     const v = doc.data();
     if ((v.credits || 0) >= threshold || (v.shards || 0) >= threshold) {
-      flagged.push({ uid: v.uid, credits: v.credits || 0, shards: v.shards || 0 });
+      flagged.push({ uid: v.uid || doc.id, credits: v.credits || 0, shards: v.shards || 0 });
     }
   });
+  const emails = await authEmailMap(flagged.map((item) => item.uid));
+  flagged.forEach((item) => { item.email = emails[item.uid] || ""; });
   return { threshold, flagged, totalChecked: snap.size };
 });
 
@@ -1170,9 +1190,10 @@ exports.adminListFeedback = onCall(async (request) => {
       createdAt: timestampToIso(item.createdAt),
       _sortMs: feedbackCreatedMs(item),
     };
-  }).sort((a, b) => b._sortMs - a._sortMs).map(({ _sortMs, ...item }) => item);
+  }).sort((a, b) => b._sortMs - a._sortMs);
+  const emails = await authEmailMap(items.map((item) => item.uid));
   return {
-    items,
+    items: items.map(({ _sortMs, ...item }) => ({ ...item, email: emails[item.uid] || "" })),
   };
 });
 

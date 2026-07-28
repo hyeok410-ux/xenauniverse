@@ -444,14 +444,14 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <button class="xc-btn" id="btn-archive-xc"><span lang="en">Buy 3 cards · 3000 XC</span><span lang="ko">3장 구매 · 3000 XC</span></button>
       <div class="odds"><span class="oN">N 40%</span> · <span class="oR">R 35%</span> · <span class="oS">S 14%</span> · <span class="oSR">SR 8%</span> · <span class="oSSR">SSR 3%</span></div>
       <p class="archive-note">
-        <span lang="en">55 premium SIGNAL ARCHIVE cards, found only in this pack. Used in LIVE TOUR (world dispatch) and SIGNAL CLASH (card battle).</span>
-        <span lang="ko">이 팩에서만 나오는 SIGNAL ARCHIVE 프리미엄 카드 55종. LIVE TOUR(월드 투어)와 SIGNAL CLASH(카드 배틀)에서 사용됩니다.</span>
+        <span lang="en">90 premium SIGNAL ARCHIVE cards, found only in this pack. Used in LIVE TOUR (world dispatch) and both XENA TCG games.</span>
+        <span lang="ko">이 팩에서만 나오는 SIGNAL ARCHIVE 프리미엄 카드 90종. LIVE TOUR와 두 XENA TCG 게임에서 사용할 수 있습니다.</span>
       </p>
     </div>
   </div>
   <p class="note-line">
-    <span lang="en">Earn XC from Daily Signal quests (World Cup · OVERRIDE GRID · this gacha) and dusting duplicates<br>Collection is saved in this browser · Odds always public · 1st Edition</span>
-    <span lang="ko">XC는 데일리 시그널 퀘스트(월드컵·오버라이드 그리드·이 가챠)와 중복 카드 분해로 모을 수 있습니다<br>컬렉션은 이 브라우저에 저장됩니다 · 확률 상시 공개 · 1st Edition</span>
+    <span lang="en">XC can be earned through various content.<br>Collection is saved in this browser · Odds always public · 1st Edition</span>
+    <span lang="ko">XC는 각종 콘텐츠를 통해 모을 수 있습니다<br>컬렉션은 이 브라우저에 저장됩니다 · 확률 상시 공개 · 1st Edition</span>
   </p>
 
   <div class="col-head">
@@ -521,7 +521,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 
 <div class="toast" id="toast"></div>
 
-<script src="cards.js"></script>
+<script src="cards.js?v=20260728b"></script>
 <script>
 (function(){
 'use strict';
@@ -600,7 +600,8 @@ var CARDS = (window.ZENA_CARD_DEFS||[]).map(function(d){
 function refreshCardImages(){
   CARDS.forEach(function(c){
     if(!c.premium) return;
-    c.img = (lang === 'ko') ? ('cards/' + c.id + '-kr.jpg') : c.imgEn;
+    var ext = /\.png(?:\?|$)/i.test(c.imgEn) ? 'png' : 'jpg';
+    c.img = (lang === 'ko') ? ('cards/' + c.id + '-kr.' + ext) : c.imgEn;
   });
 }
 refreshCardImages();

@@ -257,6 +257,7 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .element-burst[data-element="FIRE"]{--fx:#ff7048;}
 .element-burst[data-element="WATER"]{--fx:#4c91ff;}
 .element-burst[data-element="EARTH"]{--fx:#72d47f;}
+.element-burst[data-element="ANOMALY"]{--fx:#b7ff3c;}
 .power-callout{position:absolute;left:50%;top:50%;z-index:15;pointer-events:none;transform:translate(-50%,-50%);
   font-family:var(--font-mono);font-size:clamp(.8rem,2vw,1.15rem);font-weight:900;letter-spacing:.2em;
   color:#b9fff7;text-shadow:0 0 8px #20d7ca,0 0 22px #20d7ca;white-space:nowrap;
@@ -369,6 +370,17 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
   .card.mini{width:90px;height:122px;}
   .cardback{width:100px;height:136px;}
 }
+@media (max-width:920px) and (orientation:landscape){
+  html,body{width:100%;height:100%;overflow:hidden}
+  main{height:100dvh;max-width:none;padding:48px 8px 6px;overflow:hidden}
+  #screen-play{height:calc(100dvh - 54px);overflow:hidden}
+  .board{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .zone{min-width:0;padding:5px 3px;overflow:hidden}
+  .zone-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}
+  .zone .card{width:100%;max-width:62px;height:auto;aspect-ratio:5/7;margin:auto}
+  .hand .card{width:min(12vw,104px);height:auto;aspect-ratio:5/7}
+  .status{margin-bottom:4px}.actions{margin-top:5px}
+}
 </style>
 </head>
 <body>
@@ -402,19 +414,19 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
     <div class="diff-picker" id="diff-picker">
       <button class="diff-btn" data-diff="easy">
         <span class="d-name"><span lang="en">EASY</span><span lang="ko">쉬움</span></span>
-        <span class="d-reward">+8 XC</span>
+        <span class="d-reward">50 XC</span>
       </button>
       <button class="diff-btn on" data-diff="normal">
         <span class="d-name"><span lang="en">NORMAL</span><span lang="ko">보통</span></span>
-        <span class="d-reward">+15 XC</span>
+        <span class="d-reward">100 XC</span>
       </button>
       <button class="diff-btn" data-diff="hard">
         <span class="d-name"><span lang="en">HARD</span><span lang="ko">어려움</span></span>
-        <span class="d-reward">+30 XC</span>
+        <span class="d-reward">150 XC</span>
       </button>
       <button class="diff-btn" data-diff="veryhard">
         <span class="d-name"><span lang="en">VERY HARD</span><span lang="ko">매우 어려움</span></span>
-        <span class="d-reward">+50 XC</span>
+        <span class="d-reward">200 XC</span>
       </button>
     </div>
     <div class="actions intro-actions">
@@ -436,6 +448,10 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
     <p class="deck-progress"><span lang="en">DECK</span><span lang="ko">덱</span> <b id="deck-count">0</b> / 12</p>
     <div class="deck-slots" id="deck-slots"></div>
 
+    <div class="deck-actions">
+      <button class="btn" id="btn-deck-confirm" disabled><span lang="en">DECK COMPLETE</span><span lang="ko">구성 완료</span></button>
+      <button class="btn ghost" id="btn-deck-back"><span lang="en">LOBBY</span><span lang="ko">로비로</span></button>
+    </div>
     <div class="deck-collection-title"><span lang="en">CARD LIST</span><span lang="ko">카드 목록</span></div>
     <div class="deck-elem-filter" id="deck-elem-filter"></div>
     <div class="deck-collection" id="deck-collection"></div>
@@ -443,10 +459,6 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
       <button class="deck-more-btn" id="deck-more-btn"></button>
     </div>
 
-    <div class="deck-actions">
-      <button class="btn" id="btn-deck-confirm" disabled><span lang="en">DECK COMPLETE</span><span lang="ko">구성 완료</span></button>
-      <button class="btn ghost" id="btn-deck-back"><span lang="en">← BACK</span><span lang="ko">← 뒤로</span></button>
-    </div>
   </section>
 
   <!-- ══ 카드 미리보기 + 장착 ══ -->
@@ -584,19 +596,24 @@ var AI_GRADE_COUNTS = {
   veryhard: { N:1, R:2, S:3, SR:4, SSR:2 }         /* SSR 포함, 진짜 위협적으로 */
 };
 function buildAiDeck(difficulty){
-  var counts = AI_GRADE_COUNTS[difficulty] || AI_GRADE_COUNTS.normal;
-  var pool = {}; /* grade -> XenaCards 배열(한 번만 조회) */
-  var d = [];
-  for(var grade in counts){
-    if(!counts.hasOwnProperty(grade)) continue;
-    if(!pool[grade]) pool[grade] = (window.XenaCards ? XenaCards.byGrade(grade) : []);
-    var list = pool[grade];
-    var n = counts[grade];
-    for(var i = 0; i < n; i++){
-      if(!list.length) continue;
-      var xc = list[Math.floor(Math.random() * list.length)];
-      d.push(toDeckCard(xc));
-    }
+  var all = window.XenaCards && XenaCards.all ? XenaCards.all() : [];
+  var tcg = window.XenaCards && XenaCards.tcg ? XenaCards.tcg() : all.filter(function(c){ return /^PC-\d+$/i.test(c.id || ''); });
+  var basic = all.filter(function(c){ return !c.isTcg && !/^PC-\d+$/i.test(c.id || '') && c.available !== false; });
+  if(!basic.length) basic = all.filter(function(c){ return !/^PC-\d+$/i.test(c.id || ''); });
+  if(!tcg.length) tcg = basic;
+  if(!basic.length) basic = tcg;
+  function take(pool){ return toDeckCard(pool[Math.floor(Math.random() * pool.length)]); }
+  var d = [], i;
+  if(difficulty === 'easy'){
+    var two = tcg.slice().sort(function(){ return Math.random() - .5; }).slice(0, 2);
+    two.forEach(function(c){ d.push(toDeckCard(c)); });
+    while(d.length < 12) d.push(take(basic));
+  } else if(difficulty === 'veryhard'){
+    var strong = tcg.slice().sort(function(a,b){ return (b.power - b.cost) - (a.power - a.cost); }).slice(0, Math.max(30, Math.ceil(tcg.length * .55)));
+    while(d.length < 12) d.push(take(strong.length ? strong : tcg));
+  } else {
+    var chance = difficulty === 'hard' ? .7 : .4;
+    for(i = 0; i < 12; i++) d.push(take(Math.random() < chance ? tcg : basic));
   }
   /* Fisher-Yates */
   for(var j = d.length - 1; j > 0; j--){
@@ -695,7 +712,7 @@ function getPlayerDeckPlan(){
     custom.ids.forEach(function(id){
       if(poolMap[id]) return;
       var xc = XenaCards.get(id);
-      if(xc) poolMap[id] = toDeckCard(xc); else allFound = false;
+      if(xc && xc.isTcg) poolMap[id] = toDeckCard(xc); else allFound = false;
     });
     if(allFound) return { copiesMap:custom.copiesMap, poolMap:poolMap, isCustom:true };
   }
@@ -1353,7 +1370,7 @@ $('deck-elem-filter').addEventListener('click', function(e){
   renderDeckBuilder();
 });
 function renderDeckBuilder(){
-  var owned = XenaCards.owned();
+  var owned = XenaCards.owned().filter(function(c){ return c.isTcg; });
   if(deckElemFilter !== 'ALL'){
     owned = owned.filter(function(c){ return c.element === deckElemFilter; });
   }
@@ -1370,7 +1387,7 @@ function renderDeckBuilder(){
   var warn = $('deck-warn');
   /* 필터가 걸려 있어도 "카드 부족" 경고는 보유 전체 카드 기준으로 판단 — 필터된 목록으로
      판단하면 특정 속성만 봤을 때 오경고가 뜬다. */
-  var totalOwned = XenaCards.owned().reduce(function(s,c){ return s + c.count; }, 0);
+  var totalOwned = XenaCards.owned().filter(function(c){ return c.isTcg; }).reduce(function(s,c){ return s + c.count; }, 0);
   if(totalOwned < 12){
     warn.style.display = 'block';
     warn.textContent = t(
@@ -1505,8 +1522,8 @@ for(var i = 0; i < toggles.length; i++){
 <script src="../shared-audio.js?v=20260724"></script>
 <script src="../shared-wallet.js?v=20260802"></script>
 <script src="../shared-records.js?v=20260802"></script>
-<script src="../gacha/cards.js?v=20260723"></script>
-<script src="../../shared/xena-cards.js?v=20260723"></script>
+<script src="../gacha/cards.js?v=20260728b"></script>
+<script src="../../shared/xena-cards.js?v=20260728b"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('tcg');
 if (window.XenaWallet) window.XenaWallet.subscribe(paintXC);
@@ -1520,9 +1537,21 @@ document.querySelectorAll('button').forEach(function(el){
    registered after the legacy handlers so the ticket transaction completes
    before a new match state can be created. */
 (function () {
+  function enterMobileBattleView() {
+    if (!window.matchMedia('(max-width: 920px)').matches) return;
+    var root = document.documentElement;
+    var request = root.requestFullscreen || root.webkitRequestFullscreen;
+    try {
+      var pending = request ? request.call(root) : Promise.resolve();
+      Promise.resolve(pending).then(function () {
+        if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape');
+      }).catch(function () {});
+    } catch (_) {}
+  }
   function beginMatch(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
+    enterMobileBattleView();
     var launch = function () {
       if (!newGame()) {
         hint('Build a 12-card deck in MY CARDS before starting.');
