@@ -176,7 +176,7 @@
     ai: { label: "AI 대전", note: "난이도를 골라 연습" },
     local: { label: "2인 대전", note: "같은 화면에서 교대" },
     online: { label: "온라인 대전", note: "서버 연결 준비 중" },
-    event: { label: "일일 이벤트", note: "하루 3단계 변칙 파편" },
+    event: { label: "일일 이벤트", note: "하루 3단계 XC + 변칙 파편" },
   };
   const DIFFICULTIES = {
     easy: { label: "쉬움", credits: 50, loss: 0, description: "기본 수 읽기" },
