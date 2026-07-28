@@ -53,6 +53,11 @@ const clash = fs.readFileSync(path.join(root, "games/signal-clash/index.html"), 
 assert.ok(warfare.includes("source && source.tcg ? source.tcg()"), "SIGNAL WARFARE is not wired to the canonical pool");
 assert.ok(clash.includes("XenaCards.tcg ? XenaCards.tcg()"), "SIGNAL CLASH AI is not wired to the canonical pool");
 assert.ok(clash.includes("XenaCards.owned().filter(function(c){ return c.isTcg; })"), "SIGNAL CLASH deck builder is not TCG-only");
+const effectKinds = [...new Set(tcg.map((card) => card.effect && card.effect.kind).filter(Boolean))];
+for (const kind of effectKinds) {
+  assert.ok(warfare.includes(`case '${kind}'`), `SIGNAL WARFARE does not implement ${kind}`);
+  assert.ok(clash.includes(`case '${kind}'`), `SIGNAL CLASH does not implement ${kind}`);
+}
 
 console.log(JSON.stringify({
   definitions: defs.length,
@@ -60,6 +65,7 @@ console.log(JSON.stringify({
   tcgCards: tcg.length,
   ownedTcgCards: context.XenaCards.owned().filter((card) => card.isTcg).length,
   assetsChecked: tcg.length * 2,
+  effectKindsChecked: effectKinds.length,
   first: actualIds[0],
   last: actualIds[actualIds.length - 1],
 }, null, 2));

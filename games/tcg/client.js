@@ -175,6 +175,9 @@
       case 'buff_self_if_outnumbered': if (enemies.length > allies.length) addPower(card, Number(e.amt) || 0); break;
       case 'buff_self_if_no_element': if (!others.some(function (x) { return x.element === e.el; })) addPower(card, Number(e.amt) || 0); break;
       case 'buff_self_if_lowerother': if (others.some(function (x) { return x.atk < card.atk; })) addPower(card, Number(e.amt) || 0); break;
+      case 'buff_self_if_losing':
+        if (allies.reduce(function (sum, x) { return sum + x.atk; }, 0) < enemies.reduce(function (sum, x) { return sum + x.atk; }, 0)) addPower(card, Number(e.amt) || 0);
+        break;
       case 'buff_element': allies.forEach(function (x) { if (x !== card && x.element === e.el) addPower(x, Number(e.amt) || 0); }); break;
       case 'buff_person': allies.forEach(function (x) { if (x.person === e.person) addPower(x, Number(e.amt) || 0); }); break;
       case 'buff_all_own': allies.forEach(function (x) { addPower(x, Number(e.amt) || 0); }); break;
