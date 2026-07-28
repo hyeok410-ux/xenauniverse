@@ -702,7 +702,7 @@ const REWARD_PER_POWER = 15;
 
 /* ── SIGNAL CLASH: AI 난이도별 승/패 보상. 하루 총 5판(난이도 무관 합산)까지만 지급.
    승수는 하루 제한과 별개로 wallets/{uid}.tcgWins 에 영구 누적 — LIVE TOUR 4번째 슬롯 게이트가 이 값을 본다. */
-const TCG_REWARDS = Object.freeze({ easy: 50, normal: 100, hard: 150, veryhard: 150 });
+const TCG_REWARDS = Object.freeze({ easy: 50, normal: 100, hard: 150, veryhard: 200 });
 const TCG_LOSS_REWARD = 5;
 const TCG_FIRST_WIN_BONUS = 0;
 const TCG_DAILY_LIMIT = 5;
