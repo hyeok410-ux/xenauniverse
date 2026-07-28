@@ -21,10 +21,10 @@
   };
   const I18N = {
     ko: {
-      store: "상점", play: "게임으로", owned: "보유 팩", locked: "잠김 팩", mode: "대전 모드", ai: ["AI 대전", "난이도를 골라 연습"], local: ["2인 대전", "같은 화면에서 교대"], online: ["온라인 대전", "초대 코드 체험판"], event: ["일일 이벤트", "하루 3단계 변칙 파편"], difficulty: "AI 난이도", victory: "승리", dailyClaimed: "오늘의 접속 보상 수령 완료", dailyReward: "접속 보상 · 시그널 크레딧 200", dailyReset: "뉴욕 자정 기준으로 갱신됩니다.", claim: "받기", claimed: "수령 완료", timePreview: "랭크별 제한시간 미리보기", rankReady: "온라인 랭크 준비 상태", rankNote: "초대 대전은 체험판이며 랭크와 재화 보상은 서버 검증 후 열립니다.", start: "시작", starterStart: "무료 스타터 확정 후 시작", buy: "구매", reset: "테스트 데이터 초기화", eventTitle: "오늘의 변칙 이벤트", complete: "완료", inProgress: "진행 중", rewardsClaimed: "보상 수령", selectUnit: "캐릭터를 선택하세요", opponentUnit: "상대 유닛을 확인 중입니다.", captured: "포획된 아군", none: "없음", firstMove: "첫 수를 선택하세요.", player: "플레이어", opponent: "AI 상대", playerOne: "플레이어 1", playerTwo: "플레이어 2", turn: "차례", move: "수", thinking: "동기화 중", cinematic: "전투 연출 실행 중", exit: "팩 선택으로", replay: "리플레이", previous: "이전", next: "다음", leave: "나가기", draw: "무승부", win: "승리", defeat: "패배", onlineLobby: "온라인 링크", onlineTitle: "온라인 초대 대전", onlineNote: "Google 로그인 후 8자리 초대 코드를 만들거나 입력해 다른 기기의 상대와 대전합니다.", quickMatch: "일반 매칭", createRoom: "초대 방 만들기", joinRoom: "초대 코드 입장", serverOffline: "서버 연결 대기", storeTitle: "오버라이드 상점", cosmetics: "코스메틱", shardStore: "변칙 파편", equip: "장착", equipped: "장착 중", purchase: "구매", checkoutReady: "결제 준비", noPower: "모든 스킨과 보드는 전투 능력치에 영향을 주지 않습니다.", paymentNotice: "결제 완료 재화 지급은 결제 웹훅과 서버 장부로 1회 검증되어야 합니다. 클라이언트만으로 지급하지 않습니다.", connection: "온라인 연결", language: "EN"
+      store: "상점", play: "게임으로", owned: "보유 팩", locked: "잠김 팩", mode: "대전 모드", ai: ["AI 대전", "난이도를 골라 연습"], local: ["2인 대전", "같은 화면에서 교대"], online: ["온라인 대전", "초대 코드 체험판"], event: ["일일 이벤트", "하루 3단계 XC + 변칙 파편"], difficulty: "AI 난이도", victory: "승리", dailyClaimed: "오늘의 접속 보상 수령 완료", dailyReward: "접속 보상 · XC 200", dailyReset: "뉴욕 자정 기준으로 갱신됩니다.", claim: "받기", claimed: "수령 완료", timePreview: "랭크별 제한시간 미리보기", rankReady: "온라인 랭크 준비 상태", rankNote: "초대 대전은 체험판이며 랭크와 재화 보상은 서버 검증 후 열립니다.", start: "시작", starterStart: "무료 스타터 확정 후 시작", buy: "구매", reset: "테스트 데이터 초기화", eventTitle: "오늘의 변칙 이벤트", complete: "완료", inProgress: "진행 중", rewardsClaimed: "보상 수령", selectUnit: "캐릭터를 선택하세요", opponentUnit: "상대 유닛을 확인 중입니다.", captured: "포획된 아군", none: "없음", firstMove: "첫 수를 선택하세요.", player: "플레이어", opponent: "AI 상대", playerOne: "플레이어 1", playerTwo: "플레이어 2", turn: "차례", move: "수", thinking: "동기화 중", cinematic: "전투 연출 실행 중", exit: "로비로", replay: "리플레이", previous: "이전", next: "다음", leave: "나가기", draw: "무승부", win: "승리", defeat: "패배", onlineLobby: "온라인 링크", onlineTitle: "온라인 초대 대전", onlineNote: "Google 로그인 후 8자리 초대 코드를 만들거나 입력해 다른 기기의 상대와 대전합니다.", quickMatch: "일반 매칭", createRoom: "초대 방 만들기", joinRoom: "초대 코드 입장", serverOffline: "서버 연결 대기", storeTitle: "오버라이드 상점", cosmetics: "코스메틱", shardStore: "변칙 파편", equip: "장착", equipped: "장착 중", purchase: "구매", checkoutReady: "결제 준비", noPower: "모든 스킨과 보드는 전투 능력치에 영향을 주지 않습니다.", paymentNotice: "결제 완료 재화 지급은 결제 웹훅과 서버 장부로 1회 검증되어야 합니다. 클라이언트만으로 지급하지 않습니다.", connection: "온라인 연결", language: "EN"
     },
     en: {
-      store: "Store", play: "Play", owned: "Owned pack", locked: "Locked pack", mode: "Match mode", ai: ["AI Match", "Practice with a chosen difficulty"], local: ["Local Match", "Pass the screen between players"], online: ["Online Match", "Invite-code pilot"], event: ["Daily Event", "Three anomaly trials each day"], difficulty: "AI difficulty", victory: "Victory", dailyClaimed: "Daily login reward already claimed", dailyReward: "Daily login reward · 200 Signal Credits", dailyReset: "Resets at New York midnight.", claim: "Claim", claimed: "Claimed", timePreview: "Rank time controls", rankReady: "Online rank readiness", rankNote: "Invite matches are a pilot. Ranked rewards open after server validation is ready.", start: "Start", starterStart: "Confirm free starter and play", buy: "Buy", reset: "Reset test data", eventTitle: "Today's Anomaly Event", complete: "Complete", inProgress: "In progress", rewardsClaimed: "Reward claimed", selectUnit: "Select a character.", opponentUnit: "Viewing an opponent unit.", captured: "Captured allies", none: "None", firstMove: "Choose your first move.", player: "PLAYER", opponent: "AI OPPONENT", playerOne: "PLAYER 1", playerTwo: "PLAYER 2", turn: "turn", move: "move", thinking: "Synchronizing", cinematic: "Combat sequence in progress", exit: "Pack Select", replay: "Replay", previous: "Previous", next: "Next", leave: "Leave", draw: "Draw", win: "Victory", defeat: "Defeat", onlineLobby: "ONLINE LINK", onlineTitle: "Online Invite Match", onlineNote: "Sign in with Google, then create or enter an 8-character code to play an opponent on another device.", quickMatch: "Casual Match", createRoom: "Create Invite Room", joinRoom: "Join by Code", serverOffline: "Waiting for server connection", storeTitle: "Override Store", cosmetics: "Cosmetics", shardStore: "Anomaly Shards", equip: "Equip", equipped: "Equipped", purchase: "Purchase", checkoutReady: "Checkout Setup", noPower: "Every skin and board is purely cosmetic and never changes combat power.", paymentNotice: "Purchased currency must be granted once through a payment webhook and server ledger. The client never grants it.", connection: "Online Connection", language: "KO"
+      store: "Store", play: "Play", owned: "Owned pack", locked: "Locked pack", mode: "Match mode", ai: ["AI Match", "Practice with a chosen difficulty"], local: ["Local Match", "Pass the screen between players"], online: ["Online Match", "Invite-code pilot"], event: ["Daily Event", "Three XC + shard trials each day"], difficulty: "AI difficulty", victory: "Victory", dailyClaimed: "Daily login reward already claimed", dailyReward: "Daily login reward · 200 XC", dailyReset: "Resets at New York midnight.", claim: "Claim", claimed: "Claimed", timePreview: "Rank time controls", rankReady: "Online rank readiness", rankNote: "Invite matches are a pilot. Ranked rewards open after server validation is ready.", start: "Start", starterStart: "Confirm free starter and play", buy: "Buy", reset: "Reset test data", eventTitle: "Today's Anomaly Event", complete: "Complete", inProgress: "In progress", rewardsClaimed: "Reward claimed", selectUnit: "Select a character.", opponentUnit: "Viewing an opponent unit.", captured: "Captured allies", none: "None", firstMove: "Choose your first move.", player: "PLAYER", opponent: "AI OPPONENT", playerOne: "PLAYER 1", playerTwo: "PLAYER 2", turn: "turn", move: "move", thinking: "Synchronizing", cinematic: "Combat sequence in progress", exit: "Lobby", replay: "Replay", previous: "Previous", next: "Next", leave: "Leave", draw: "Draw", win: "Victory", defeat: "Defeat", onlineLobby: "ONLINE LINK", onlineTitle: "Online Invite Match", onlineNote: "Sign in with Google, then create or enter an 8-character code to play an opponent on another device.", quickMatch: "Casual Match", createRoom: "Create Invite Room", joinRoom: "Join by Code", serverOffline: "Waiting for server connection", storeTitle: "Override Store", cosmetics: "Cosmetics", shardStore: "Anomaly Shards", equip: "Equip", equipped: "Equipped", purchase: "Purchase", checkoutReady: "Checkout Setup", noPower: "Every skin and board is purely cosmetic and never changes combat power.", paymentNotice: "Purchased currency must be granted once through a payment webhook and server ledger. The client never grants it.", connection: "Online Connection", language: "KO"
     }
   };
   const ASSET_ROOTS = {
@@ -184,9 +184,9 @@
     hard: { label: "어려움", credits: 150, loss: 0, description: "3수 탐색" },
   };
   const EVENT_REWARDS = {
-    easy: { credits: 50, shards: 0 },
-    normal: { credits: 100, shards: 0 },
-    hard: { credits: 150, shards: 0 },
+    easy: { credits: 25, shards: 2 },
+    normal: { credits: 50, shards: 4 },
+    hard: { credits: 75, shards: 6 },
   };
   const CODEX_CARDS = [
     { id: "unit-xena", character: "XENA", name: "제나", pack: "xena", faction: "REBEL MEMORY", role: "leader", rarity: "HERO", art: CARD_ART.XENA, credit: 2400 },
@@ -483,6 +483,7 @@
   let state = null;
   let selected = null;
   let selectedSkill = null;
+  let pendingPackPurchase = "";
   let legal = [];
   let playerColor = "white";
   let thinking = false;
@@ -1048,10 +1049,12 @@
       const isStarterAllowed = STARTER_PACKS.has(id);
       const cover = PACK_COVERS[id];
       const packLetter = id === "xena" ? "X" : id === "sovran" ? "S" : "C";
+      const packTitle = id === "crystal" ? "XENA ETHEREAL" : pack.leaderName;
+      const packSubtitle = id === "crystal" ? "STAYBRIGHT" : pack.name;
       return `<button class="pack ${id} ${chosen === id ? "selected" : ""}" data-pack="${id}">
-        <small>${isOwned ? t("owned") : (!committedStarter && isStarterAllowed ? "FREE STARTER" : t("locked"))}</small><span class="pack-portrait"><img src="${cover ? assetSrc("ui", cover) : characterArtSrc(pack.back.leader)}" alt="${pack.leaderName}"><i>${packLetter}</i></span>
-        <span class="pack-copy"><h2>${pack.leaderName}</h2><p>${pack.name}</p></span>
-        ${isOwned ? "" : `<span class="lock">${!committedStarter && isStarterAllowed ? (language === "en" ? "First starter is free" : "첫 스타터 무료") : `${packPrice(id).toLocaleString()} ${language === "en" ? "Signal Credits" : "시그널 크레딧"}`}</span>`}
+        <small>${isOwned ? t("owned") : (!committedStarter && isStarterAllowed ? "FREE STARTER" : t("locked"))}</small><span class="pack-portrait"><img src="${cover ? assetSrc("ui", cover) : characterArtSrc(pack.back.leader)}" alt="${packTitle}"><i>${packLetter}</i></span>
+        <span class="pack-copy"><h2>${packTitle}</h2><p>${packSubtitle}</p></span>
+        ${isOwned ? "" : `<span class="lock">${!committedStarter && isStarterAllowed ? (language === "en" ? "First starter is free" : "첫 스타터 무료") : `${packPrice(id).toLocaleString()} XC`}</span>`}
       </button>`;
     };
     const packIds = Object.keys(G.PACKS);
@@ -1061,6 +1064,9 @@
       return `<button class="mode-option ${aiOpponentPack === id ? "active" : ""}" data-ai-opponent="${id}"><b>${pack.leaderName}</b><span>${pack.name}</span></button>`;
     }).join("");
     const canStartSelected = owned.includes(chosen) || (!committedStarter && STARTER_PACKS.has(chosen));
+    const pendingPack = pendingPackPurchase && G.PACKS[pendingPackPurchase];
+    const pendingPackTitle = pendingPackPurchase === "crystal" ? "XENA ETHEREAL · STAYBRIGHT" : pendingPack && `${pendingPack.leaderName} · ${pendingPack.name}`;
+    const purchaseConfirm = pendingPack ? `<div class="pack-purchase-overlay" role="dialog" aria-modal="true" aria-labelledby="pack-purchase-title"><div class="pack-purchase-modal"><small>PACK UNLOCK</small><h2 id="pack-purchase-title">${pendingPackTitle}</h2><p>${ui(`Unlock this pack for ${packPrice(pendingPackPurchase).toLocaleString()} XC?`, `이 팩을 ${packPrice(pendingPackPurchase).toLocaleString()} XC로 구매하시겠습니까?`)}</p><div class="actions"><button class="secondary" data-cancel-pack-purchase>${ui("CANCEL", "취소")}</button><button class="primary" data-confirm-pack-purchase="${pendingPackPurchase}">${ui("PURCHASE", "구매")}</button></div></div></div>` : "";
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
       <section class="setup"><div class="demo-banner"><b>${language === "en" ? "FREE WEB PROTOTYPE" : "무료 웹 체험판"}</b><span>${language === "en" ? "AI, local and invite-code online matches are open. Payments remain disabled." : "AI·로컬·초대 코드 온라인 대전을 이용할 수 있습니다. 결제는 비활성화 상태입니다."}</span></div><h1>CHOOSE YOUR <span>FIRST SIGNAL</span></h1>
       <p class="lead">${language === "en" ? "Choose one starter pack. Every piece follows the same chess rules; each leader changes the skills and combat presentation." : "스타터 팩 하나를 선택하세요. 모든 말은 같은 체스 규칙을 따르며 리더의 기술과 전장 연출만 달라집니다."}</p>
@@ -1072,9 +1078,14 @@
       <div class="time-control"><small>${t("timePreview")}</small><div class="time-options">${Object.entries(TIME_RULES).map(([id, rule]) => `<button class="time-option ${timeRule === id ? "active" : ""}" data-time-rule="${id}"><b>${language === "en" ? rule.note.replace("초보", "Beginner").replace("표준", "Standard").replace("상위", "Advanced").replace("최상위", "Elite").replace("분", " min") : rule.note}</b><span>${rule.label}</span></button>`).join("")}</div></div>
       <div class="rank-status"><small>${t("rankReady")}</small><b>${rankLabel()} · ${gridRating} GR</b><span>${t("rankNote")}</span></div>
       <div class="actions"><button class="primary" id="start" ${canStartSelected ? "" : "disabled"}>${committedStarter ? `${modeText(gameMode, 0)} ${t("start")}` : t("starterStart")}</button>
-      ${committedStarter && !owned.includes(chosen) ? `<button class="secondary" id="buy">${packPrice(chosen).toLocaleString()} ${language === "en" ? "Credits" : "크레딧"} ${t("buy")}</button>` : ""}
-      ${new URLSearchParams(window.location.search).get("debug") === "1" ? `<button class="secondary" id="reset">${t("reset")}</button>` : ""}</div></section></div>`;
-    app.querySelectorAll("[data-pack]").forEach((button) => button.addEventListener("click", () => { chosen = button.dataset.pack; renderSetup(); }));
+      ${committedStarter && !owned.includes(chosen) ? `<button class="secondary" id="buy">${packPrice(chosen).toLocaleString()} XC ${t("buy")}</button>` : ""}
+      ${new URLSearchParams(window.location.search).get("debug") === "1" ? `<button class="secondary" id="reset">${t("reset")}</button>` : ""}</div></section>${purchaseConfirm}</div>`;
+    app.querySelectorAll("[data-pack]").forEach((button) => button.addEventListener("click", () => {
+      const id = button.dataset.pack;
+      chosen = id;
+      pendingPackPurchase = committedStarter && !owned.includes(id) ? id : "";
+      renderSetup();
+    }));
     app.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => { gameMode = button.dataset.mode; saveMeta(); renderSetup(); }));
     app.querySelectorAll("[data-difficulty]").forEach((button) => button.addEventListener("click", () => { aiDifficulty = button.dataset.difficulty; saveMeta(); renderSetup(); }));
     app.querySelectorAll("[data-ai-opponent]").forEach((button) => button.addEventListener("click", () => { aiOpponentPack = button.dataset.aiOpponent; saveMeta(); renderSetup(); }));
@@ -1085,12 +1096,18 @@
     if (dailyButton) dailyButton.addEventListener("click", () => { claimDailyLogin(); renderSetup(); });
     document.getElementById("start").addEventListener("click", startGame);
     const buy = document.getElementById("buy");
-    if (buy) buy.addEventListener("click", () => {
-      const price = packPrice(chosen);
-      if (credits < price) return alert(ui(`You need ${price - credits} more Credits.`, `크레딧이 ${price - credits} 부족합니다.`));
-      const pack = G.PACKS[chosen];
-      if (!confirm(ui(`Purchase the ${pack.leaderName} pack for ${price.toLocaleString()} Signal Credits?\n\nOK: Purchase   Cancel: Go back`, `${pack.leaderName} 팩을 ${price.toLocaleString()} 시그널 크레딧에 구매하시겠습니까?\n\n확인: 구매   취소: 돌아가기`))) return;
-      credits -= price; owned.push(chosen); unitLineups = normalizedLineups(unitLineups); playSfx("purchase", 0.52); saveMeta(); renderSetup();
+    if (buy) buy.addEventListener("click", () => { pendingPackPurchase = chosen; renderSetup(); });
+    const cancelPackPurchase = app.querySelector("[data-cancel-pack-purchase]");
+    if (cancelPackPurchase) cancelPackPurchase.addEventListener("click", () => { pendingPackPurchase = ""; renderSetup(); });
+    const confirmPackPurchase = app.querySelector("[data-confirm-pack-purchase]");
+    if (confirmPackPurchase) confirmPackPurchase.addEventListener("click", () => {
+      const id = confirmPackPurchase.dataset.confirmPackPurchase;
+      const price = packPrice(id);
+      if (credits < price) return alert(ui(`You need ${(price - credits).toLocaleString()} more XC.`, `XC가 ${(price - credits).toLocaleString()} 부족합니다.`));
+      credits -= price;
+      if (!owned.includes(id)) owned.push(id);
+      chosen = id; pendingPackPurchase = ""; unitLineups = normalizedLineups(unitLineups);
+      playSfx("purchase", 0.52); saveMeta(); renderSetup();
     });
     const reset = document.getElementById("reset");
     if (reset) reset.addEventListener("click", () => {
@@ -1103,7 +1120,7 @@
   function eventMarkup() {
     const claimed = dailyEvent();
     const complete = claimed.easy && claimed.normal && claimed.hard;
-    return `<div class="event-control"><div><small>${t("eventTitle")}</small><b>${language === "en" ? "Choose an anomaly trial" : "변칙 난이도를 선택하세요"}</b></div><div class="event-options">${Object.entries(EVENT_REWARDS).map(([id, reward]) => `<button class="event-option ${eventDifficulty === id ? "active" : ""}" data-event-difficulty="${id}"><b>${language === "en" ? ({ easy: "Easy", normal: "Normal", hard: "Hard" })[id] : DIFFICULTIES[id].label}</b><span>${claimed[id] ? t("rewardsClaimed") : `${reward.credits} XC`}</span></button>`).join("")}</div></div>`;
+    return `<div class="event-control"><div><small>${t("eventTitle")}</small><b>${language === "en" ? "Choose an anomaly trial" : "변칙 난이도를 선택하세요"}</b></div><div class="event-options">${Object.entries(EVENT_REWARDS).map(([id, reward]) => `<button class="event-option ${eventDifficulty === id ? "active" : ""}" data-event-difficulty="${id}"><b>${language === "en" ? ({ easy: "Easy", normal: "Normal", hard: "Hard" })[id] : DIFFICULTIES[id].label}</b><span>${claimed[id] ? t("rewardsClaimed") : `${reward.credits} XC + ${reward.shards} ${ui("Shards", "변칙 파편")}`}</span></button>`).join("")}</div></div>`;
   }
 
   function cosmeticPrice(item) {
@@ -2114,12 +2131,16 @@
 
     const rewardEligible = gameMode === "ai" || gameMode === "event";
     const difficulty = gameMode === "event" ? eventDifficulty : aiDifficulty;
+    if (rewardEligible && window.XenaRecords) {
+      window.XenaRecords.record("override_grid", difficulty, draw ? "draw" : win ? "win" : "loss");
+    }
     const cloud = window.XenaCloudSync;
     const cloudUser = cloud && cloud.snapshot().user;
     const rewardKey = rewardKeyFor(gameMode, difficulty, win);
     const serverReward = Boolean(rewardEligible && rewardKey && cloudUser && cloud.awardMatchReward);
     if (rewardEligible) {
       creditReward = win ? (gameMode === "event" ? EVENT_REWARDS[difficulty].credits : DIFFICULTIES[difficulty].credits) : 0;
+      shardReward = gameMode === "event" && win ? EVENT_REWARDS[difficulty].shards : 0;
       if (gameMode === "event" && win) {
         const claims = { ...dailyEvent() };
         if (!claims[difficulty]) {
@@ -2442,6 +2463,13 @@
         }
       });
       return;
+    }
+    if (state && !result && !online) {
+      const confirmed = confirm(ui(
+        "Return to the lobby? The gem spent for this match will not be restored.",
+        "로비로 나가시겠습니까? 이번 대전에 사용한 보석은 복구되지 않습니다."
+      ));
+      if (!confirmed) return;
     }
     if (activityStartedAt) { recordActivity(gameMode === "online" ? "override-grid-online" : gameMode === "event" ? "override-grid-event" : "override-grid-ai", activityStartedAt); activityStartedAt = 0; }
     clearInterval(timer);

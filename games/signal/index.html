@@ -116,6 +116,9 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 .quests{margin-top:8px;}
 .quests h2{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:14px;}
 .q-list{display:flex;flex-direction:column;gap:10px;}
+.quest-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 12px;padding:5px;border:1px solid var(--hair);border-radius:13px;background:rgba(255,255,255,.025);}
+.quest-tab{border:1px solid transparent;border-radius:9px;padding:9px 7px;background:transparent;color:var(--text-dim);font:700 .66rem/1 var(--font-mono);letter-spacing:.08em;}
+.quest-tab.active{color:#fff;border-color:rgba(255,47,176,.55);background:rgba(255,47,176,.13);box-shadow:0 0 18px rgba(255,47,176,.16);}
 .q{display:flex;align-items:center;gap:14px;background:linear-gradient(165deg, rgba(255,255,255,.04), rgba(255,255,255,.012));border:1px solid var(--hair);border-radius:14px;padding:14px 16px;backdrop-filter:blur(12px);}
 .q .qi{font-size:1.2rem;width:30px;text-align:center;}
 .q .qt{flex:1;min-width:0;}
@@ -131,6 +134,8 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
   color:#1a1206;font-weight:800;font-size:.68rem;letter-spacing:.1em;padding:9px 18px;
   box-shadow:0 0 16px rgba(232,196,104,.45);animation:claimPulse 1.8s ease-in-out infinite;}
 .q button.golink.claimable:hover{background:linear-gradient(120deg,#ffd97a,var(--gold));box-shadow:0 0 24px rgba(232,196,104,.7);}
+.quest-alert{display:inline-grid;place-items:center;width:18px;height:18px;margin-right:6px;border-radius:50%;color:#fff;background:#ff2fb0;box-shadow:0 0 8px #ff2fb0,0 0 18px rgba(255,47,176,.8);font-size:.7rem;animation:questAlert 1s ease-in-out infinite alternate;}
+@keyframes questAlert{to{transform:scale(1.12);box-shadow:0 0 13px #ff2fb0,0 0 26px rgba(255,47,176,.95)}}
 @keyframes claimPulse{50%{box-shadow:0 0 26px rgba(232,196,104,.75);}}
 .q-note{margin-top:14px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.1em;color:var(--text-dim);opacity:.7;line-height:1.9;}
 
@@ -216,6 +221,11 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 
   <div class="quests">
     <h2><span lang="en">Today's Quests — earn XC across all games</span><span lang="ko">오늘의 퀘스트 — 모든 게임에서 XC 모으기</span></h2>
+    <div class="quest-tabs" role="tablist" aria-label="Quest categories">
+      <button class="quest-tab active" data-quest-category="main" type="button"><span lang="en">MAIN</span><span lang="ko">메인</span></button>
+      <button class="quest-tab" data-quest-category="mini" type="button"><span lang="en">MINI</span><span lang="ko">미니</span></button>
+      <button class="quest-tab" data-quest-category="other" type="button"><span lang="en">OTHER</span><span lang="ko">기타</span></button>
+    </div>
     <div class="q-list" id="q-list"></div>
     <div class="all-bonus" id="all-bonus" hidden></div>
     <p class="q-note">
@@ -442,7 +452,8 @@ $('btn-share').addEventListener('click', function(){
 
 /* ── 퀘스트 (모든 게임 통합) ── */
 var CHESS_PER_MATCH = 8, CHESS_MAX = 3, CHESS_BONUS = 10;
-var WC_BONUS = 10, GACHA_BONUS = 8, MEMORY_BONUS = 8, SHISEN_BONUS = 8, TCG_BONUS = 10, TOUR_BONUS = 10, MERGE_BONUS = 10, ALL_BONUS = 25;
+var WC_BONUS = 10, GACHA_BONUS = 8, MEMORY_BONUS = 8, SHISEN_BONUS = 8, TCG_BONUS = 10, WARFARE_BONUS = 10, TOUR_BONUS = 10, MERGE_BONUS = 10, ALL_BONUS = 25;
+var questCategory = 'main';
 
 function chessSnapshot(){
   var keys = ['og_credits','og_shards','og_grid_rating','og_daily_login'];
@@ -492,6 +503,10 @@ function tcgPlayedToday(){
   var d = load('xena_tcg_daily_v1', {});
   return d.date === today();
 }
+function warfarePlayedToday(){
+  var d = load('xena_warfare_daily_v1', {});
+  return d.date === today();
+}
 function tourClaimedToday(){
   var d = load('xena_tour_daily_v1', {});
   return d.date === today();
@@ -506,7 +521,8 @@ function setClaimedFlag(key){ st[key] = today(); save(SAVE_KEY, st); }
 function allQuestsDone(wc){
   return claimed && claimedFlag('wcBonusClaim') && claimedFlag('gachaBonusClaim')
     && st.chessBonusClaimed && claimedFlag('memBonusClaim') && claimedFlag('shBonusClaim')
-    && claimedFlag('tcgBonusClaim') && claimedFlag('tourBonusClaim') && claimedFlag('mergeBonusClaim');
+    && claimedFlag('tcgBonusClaim') && claimedFlag('warfareBonusClaim')
+    && claimedFlag('tourBonusClaim') && claimedFlag('mergeBonusClaim');
 }
 
 function renderQuests(){
@@ -517,22 +533,23 @@ function renderQuests(){
   var shBonusDone = claimedFlag('shBonusClaim');
   var chessBonusDone = !!st.chessBonusClaimed;
   var tcgBonusDone = claimedFlag('tcgBonusClaim');
+  var warfareBonusDone = claimedFlag('warfareBonusClaim');
   var tourBonusDone = claimedFlag('tourBonusClaim');
   var mergeBonusDone = claimedFlag('mergeBonusClaim');
 
   var quests = [
-    {icon:'🔮', done: claimed,
+    {category:'other', icon:'🔮', done: claimed,
       title: t('Receive today\'s signal', '오늘의 시그널 받기'),
       sub: t('Flip the card above', '위 카드를 뒤집고 수령'),
       reward: '+5 XC', act:null, link:null},
-    {icon:'♟️', done: chessBonusDone,
+    {category:'main', icon:'♟️', done: chessBonusDone,
       title: t('Play OVERRIDE GRID (up to 3 matches)', 'OVERRIDE GRID 플레이 (최대 3판)'),
       sub: chessBonusDone ? t('Completion bonus claimed', '완주 보너스 수령 완료')
          : t(st.chessMatches+'/'+CHESS_MAX+' matches · +'+CHESS_PER_MATCH+' XC each, auto-credited', st.chessMatches+'/'+CHESS_MAX+'판 · 판마다 +'+CHESS_PER_MATCH+' XC 자동 지급'),
       reward: '+'+CHESS_BONUS+' XC',
       act: (st.chessMatches >= CHESS_MAX && !chessBonusDone) ? 'chess' : null,
       link: st.chessMatches < CHESS_MAX ? '../../game/' : null},
-    {icon:'🃏', done: gachaBonusDone,
+    {category:'other', icon:'🃏', done: gachaBonusDone,
       title: t('Open a free XENA CARDS pack', 'XENA CARDS 무료팩 뽑기'),
       sub: gachaBonusDone ? t('Bonus claimed', '보너스 수령 완료')
          : gachaFreeDrawnToday() ? t('Free pack detected — claim your bonus!', '무료팩 감지됨 — 보너스를 받으세요!')
@@ -540,14 +557,14 @@ function renderQuests(){
       reward: '+'+GACHA_BONUS+' XC',
       act: (gachaFreeDrawnToday() && !gachaBonusDone) ? 'gacha' : null,
       link: !gachaFreeDrawnToday() ? '../gacha/' : null},
-    {icon:'🏆', done: wcBonusDone,
+    {category:'other', icon:'🏆', done: wcBonusDone,
       title: t('Finish the Photo World Cup', '이상형 월드컵 완주'),
       sub: wcBonusDone ? t('Bonus claimed', '보너스 수령 완료')
          : t(wc+'/3 today · +5 XC each, auto-credited', '오늘 '+wc+'/3회 · 회마다 +5 XC 자동 지급'),
       reward: '+'+WC_BONUS+' XC',
       act: (wc >= 3 && !wcBonusDone) ? 'worldcup' : null,
       link: wc < 3 ? '../world-cup/' : null},
-    {icon:'🧠', done: memBonusDone,
+    {category:'mini', icon:'🧠', done: memBonusDone,
       title: t('Clear a Memory Grid stage', '메모리 그리드 스테이지 클리어'),
       sub: memBonusDone ? t('Bonus claimed', '보너스 수령 완료')
          : memoryStageToday() ? t('Clear detected — claim your bonus!', '클리어 감지됨 — 보너스를 받으세요!')
@@ -555,7 +572,7 @@ function renderQuests(){
       reward: '+'+MEMORY_BONUS+' XC',
       act: (memoryStageToday() && !memBonusDone) ? 'memory' : null,
       link: !memoryStageToday() ? '../memory/' : null},
-    {icon:'🔗', done: shBonusDone,
+    {category:'mini', icon:'🔗', done: shBonusDone,
       title: t('Clear a Signal Link stage', '시그널 링크 스테이지 클리어'),
       sub: shBonusDone ? t('Bonus claimed', '보너스 수령 완료')
          : shisenStageToday() ? t('Clear detected — claim your bonus!', '클리어 감지됨 — 보너스를 받으세요!')
@@ -563,15 +580,23 @@ function renderQuests(){
       reward: '+'+SHISEN_BONUS+' XC',
       act: (shisenStageToday() && !shBonusDone) ? 'shisen' : null,
       link: !shisenStageToday() ? '../shisen/' : null},
-    {icon:'🃏', done: tcgBonusDone,
+    {category:'main', icon:'🃏', done: tcgBonusDone,
       title: t('Play a SIGNAL CLASH match', 'SIGNAL CLASH 대전 플레이'),
       sub: tcgBonusDone ? t('Bonus claimed', '보너스 수령 완료')
          : tcgPlayedToday() ? t('Match detected — claim your bonus!', '대전 감지됨 — 보너스를 받으세요!')
          : t('Any result, once a day', '결과 무관 하루 1회'),
       reward: '+'+TCG_BONUS+' XC',
       act: (tcgPlayedToday() && !tcgBonusDone) ? 'tcg' : null,
-      link: !tcgPlayedToday() ? '../tcg/' : null},
-    {icon:'✈️', done: tourBonusDone,
+      link: !tcgPlayedToday() ? '../signal-clash/' : null},
+    {category:'main', icon:'⚔️', done: warfareBonusDone,
+      title: t('Play a SIGNAL WARFARE match', 'SIGNAL WARFARE 대전 플레이'),
+      sub: warfareBonusDone ? t('Bonus claimed', '보너스 수령 완료')
+         : warfarePlayedToday() ? t('Match detected — claim your bonus!', '대전 감지 완료 — 보너스를 받으세요!')
+         : t('Any result, once a day', '결과 무관 하루 1회'),
+      reward: '+'+WARFARE_BONUS+' XC',
+      act: (warfarePlayedToday() && !warfareBonusDone) ? 'warfare' : null,
+      link: !warfarePlayedToday() ? '../tcg/' : null},
+    {category:'other', icon:'✈️', done: tourBonusDone,
       title: t('Collect a LIVE TOUR reward', 'LIVE TOUR 보상 수령'),
       sub: tourBonusDone ? t('Bonus claimed', '보너스 수령 완료')
          : tourClaimedToday() ? t('Claim detected — claim your bonus!', '수령 감지됨 — 보너스를 받으세요!')
@@ -579,7 +604,7 @@ function renderQuests(){
       reward: '+'+TOUR_BONUS+' XC',
       act: (tourClaimedToday() && !tourBonusDone) ? 'idle' : null,
       link: !tourClaimedToday() ? '../idle/' : null},
-    {icon:'🫧', done: mergeBonusDone,
+    {category:'mini', icon:'🫧', done: mergeBonusDone,
       title: t('Play an XENA MERGE run', 'XENA MERGE 플레이'),
       sub: mergeBonusDone ? t('Bonus claimed', '보너스 수령 완료')
          : mergePlayedToday() ? t('Run detected — claim your bonus!', '플레이 감지됨 — 보너스를 받으세요!')
@@ -590,12 +615,12 @@ function renderQuests(){
   ];
   var list = $('q-list');
   list.innerHTML = '';
-  quests.forEach(function(q){
+  quests.filter(function(q){ return q.category === questCategory; }).forEach(function(q){
     var el = document.createElement('div');
     el.className = 'q' + (q.done ? ' done' : '');
     var action = '';
     if(!q.done && q.act){
-      action = '<button class="golink claimable" data-act="'+q.act+'">'+t('CLAIM','받기')+'</button>';
+      action = '<button class="golink claimable" data-act="'+q.act+'"><span class="quest-alert">!</span>'+t('CLAIM','받기')+'</button>';
     } else if(!q.done && q.link){
       /* 같은 창에서 이동 — 새 창이면 BGM 이 두 개 겹쳐서 재생됨 */
       action = '<a class="golink" href="'+q.link+'">'+t('GO','이동')+'</a>';
@@ -609,7 +634,7 @@ function renderQuests(){
   var allBanner = $('all-bonus');
   if(allDone && !claimedFlag('allBonusClaim')){
     allBanner.hidden = false;
-    allBanner.innerHTML = '<span>'+t('All quests complete!', '모든 퀘스트 완료!')+'</span><button class="golink claimable" data-act="allbonus">'+t('CLAIM +'+ALL_BONUS+' XC','+'+ALL_BONUS+' XC 받기')+'</button>';
+    allBanner.innerHTML = '<span>'+t('All quests complete!', '모든 퀘스트 완료!')+'</span><button class="golink claimable" data-act="allbonus"><span class="quest-alert">!</span>'+t('CLAIM +'+ALL_BONUS+' XC','+'+ALL_BONUS+' XC 받기')+'</button>';
   } else if(claimedFlag('allBonusClaim')){
     allBanner.hidden = false;
     allBanner.innerHTML = '<span>✓ '+t('All quests bonus claimed today', '오늘의 전체 완료 보너스 수령 완료')+'</span>';
@@ -651,6 +676,7 @@ function bindQuestActions(){
     memory: function(){ claimQuest('memory', 'memBonusClaim', MEMORY_BONUS, 'Memory Grid quest complete!', '메모리 그리드 퀘스트 완료!'); },
     shisen: function(){ claimQuest('shisen', 'shBonusClaim', SHISEN_BONUS, 'Signal Link quest complete!', '시그널 링크 퀘스트 완료!'); },
     tcg: function(){ claimQuest('tcg', 'tcgBonusClaim', TCG_BONUS, 'SIGNAL CLASH quest complete!', 'SIGNAL CLASH 퀘스트 완료!'); },
+    warfare: function(){ claimQuest('warfare', 'warfareBonusClaim', WARFARE_BONUS, 'SIGNAL WARFARE quest complete!', 'SIGNAL WARFARE 퀘스트 완료!'); },
     idle: function(){ claimQuest('idle', 'tourBonusClaim', TOUR_BONUS, 'LIVE TOUR quest complete!', 'LIVE TOUR 퀘스트 완료!'); },
     merge: function(){ claimQuest('merge', 'mergeBonusClaim', MERGE_BONUS, 'XENA MERGE quest complete!', 'XENA MERGE 퀘스트 완료!'); },
     allbonus: function(){ claimQuest('allbonus', 'allBonusClaim', ALL_BONUS, 'all quests bonus!', '전체 완료 보너스!', true); }
@@ -677,6 +703,14 @@ document.querySelectorAll('.lang-toggle button').forEach(function(b){
       renderClaimBtn();
     }
     renderStreak();
+    renderQuests();
+  });
+});
+
+document.querySelectorAll('[data-quest-category]').forEach(function(button){
+  button.addEventListener('click', function(){
+    questCategory = button.getAttribute('data-quest-category') || 'main';
+    document.querySelectorAll('[data-quest-category]').forEach(function(tab){ tab.classList.toggle('active', tab === button); });
     renderQuests();
   });
 });

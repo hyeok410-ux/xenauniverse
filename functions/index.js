@@ -60,9 +60,9 @@ const MATCH_REWARDS = Object.freeze({
   ai_easy_win: { credits: 50, shards: 0 },
   ai_normal_win: { credits: 100, shards: 0 },
   ai_hard_win: { credits: 150, shards: 0 },
-  event_easy_win: { credits: 50, shards: 0 },
-  event_normal_win: { credits: 100, shards: 0 },
-  event_hard_win: { credits: 150, shards: 0 },
+  event_easy_win: { credits: 25, shards: 2 },
+  event_normal_win: { credits: 50, shards: 4 },
+  event_hard_win: { credits: 75, shards: 6 },
 });
 
 const DAILY_AI_LIMITS = Object.freeze({
@@ -517,7 +517,7 @@ exports.claimDailySignal = onCall(async (request) => {
    "하루에 여러 번 받기"(localStorage 조작으로 무한 반복 수령) 하나이며, 이것만으로도
    기존의 완전 무제한 조작보다는 크게 개선된다. */
 const QUEST_BONUS = Object.freeze({
-  chess: 10, gacha: 8, worldcup: 10, memory: 8, shisen: 8, tcg: 10, idle: 10, merge: 10, allbonus: 25,
+  chess: 10, gacha: 8, worldcup: 10, memory: 8, shisen: 8, tcg: 10, warfare: 10, idle: 10, merge: 10, allbonus: 25,
 });
 exports.claimQuestBonus = onCall(async (request) => {
   const uid = requireAuth(request);

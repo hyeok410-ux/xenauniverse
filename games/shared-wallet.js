@@ -47,11 +47,22 @@
     });
   }
 
+  /* Firestore snapshots expose Timestamp, while an optimistic consume writes a
+     millisecond number immediately.  Normalize both so the same refill clock
+     keeps moving without jumping back to 10:00. */
+  function timestampMillis(value, fallback){
+    if (typeof value === 'number' && isFinite(value)) return value;
+    if (value && typeof value.toMillis === 'function') return value.toMillis();
+    if (value && typeof value.seconds === 'number') return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1000000);
+    if (value && typeof value._seconds === 'number') return value._seconds * 1000 + Math.floor((value._nanoseconds || 0) / 1000000);
+    return fallback;
+  }
+
   function energyFor(game){
     var pool = energyPools[game] || {};
     var guest = guestEnergy(game);
     var stored = typeof pool.energy === 'number' ? pool.energy : guest.energy;
-    var updated = pool.energyUpdatedAt && typeof pool.energyUpdatedAt.toMillis === 'function' ? pool.energyUpdatedAt.toMillis() : guest.updatedAt;
+    var updated = timestampMillis(pool.energyUpdatedAt, guest.updatedAt);
     return Math.min(6, stored + Math.floor(Math.max(0, Date.now() - updated) / 600000));
   }
 
@@ -154,7 +165,7 @@
     }
     function render(){
       var n = energyFor(game), pool = energyPools[game] || {};
-      var updated = pool.energyUpdatedAt && typeof pool.energyUpdatedAt.toMillis === 'function' ? pool.energyUpdatedAt.toMillis() : Date.now();
+      var updated = timestampMillis(pool.energyUpdatedAt, guestEnergy(game).updatedAt);
       var wait = n >= 6 ? '' : refillClock(600000 - ((Date.now() - updated) % 600000));
       el.innerHTML = '<span style="color:#e8c468">'+(balance === null ? '…' : balance.toLocaleString())+' XC</span><span style="color:#b9ff3c;letter-spacing:2px">'+Array.from({length:6}, function(_,i){ return i<n ? '💎' : '◇'; }).join('')+'</span><small style="color:#b9ff3c;font-size:13px">'+(wait || 'FULL')+'</small>';
       var xcText = balance === null ? '—' : Number(balance).toLocaleString();

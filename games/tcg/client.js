@@ -160,6 +160,10 @@
   }
   async function finish(won) {
     var g = state.game; if (!g) return; var msg = won ? 'VICTORY · ' + DIFFICULTY[g.difficulty].reward + ' XC' : 'DEFEAT';
+    if (g.finished) return;
+    g.finished = true;
+    try { localStorage.setItem('xena_warfare_daily_v1', JSON.stringify({ date:new Date().toISOString().slice(0,10) })); } catch (_) {}
+    if (window.XenaRecords) window.XenaRecords.record('signal_warfare', g.difficulty, won ? 'win' : 'loss');
     if (won && window.XenaWallet && window.XenaWallet.claimTcgMatch) { try { var r = await window.XenaWallet.claimTcgMatch(g.difficulty, 'win'); msg = 'VICTORY · ' + (r.granted || DIFFICULTY[g.difficulty].reward) + ' XC'; } catch (_) { msg += ' · reward sync pending'; } }
     var overlay = document.createElement('section'); overlay.className = 'coin-overlay'; overlay.innerHTML = '<div class="lobby-panel" style="max-width:390px;text-align:center"><h2>' + msg + '</h2><p>Battle complete.</p><button class="button button-primary">RETURN TO LOBBY</button></div>';
     overlay.querySelector('button').onclick = function () { overlay.remove(); state.game = null; show('lobby'); $('#start-pve').disabled = false; };
