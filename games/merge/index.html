@@ -334,8 +334,10 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var wrap = $('jar-wrap');
   var W = 0, H = 0, DPR = Math.min(3, window.devicePixelRatio || 1);
   function resize(){
-    var rect = wrap.getBoundingClientRect();
-    W = rect.width; H = rect.height;
+    /* CSS zoom transforms change getBoundingClientRect(), but not the jar's
+       internal coordinate system.  Keep the canvas/floor at layout size so a
+       zoomed bottle still fills its frame and the rising floor stays aligned. */
+    W = wrap.clientWidth; H = wrap.clientHeight;
     canvas.width = W * DPR; canvas.height = H * DPR;
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -357,7 +359,7 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
   var jarArea = document.querySelector('.jar-area');
   function applyJarZoom(){
     wrap.style.transform = 'scale(' + jarZoom.toFixed(2) + ')';
-    var extra = wrap.getBoundingClientRect().height * (jarZoom - 1);
+    var extra = wrap.clientHeight * (jarZoom - 1);
     jarArea.style.marginBottom = (extra > 0 ? extra : 0) + 'px';
   }
   applyJarZoom();
@@ -616,8 +618,16 @@ h1{font-size:clamp(1.7rem,7vw,2.4rem);font-weight:800;letter-spacing:.04em;line-
        위에서 떨어지는 중인 공(스폰 위치 자체가 overLine보다 위)까지 전부 오버플로우로
        잡혀서 시작하자마자 게임오버가 떴다. "정착한(거의 멈춘) 공"만 판정 대상으로
        되돌리되, 유예 타이머는 없앤 채로 유지 — 정착하는 순간 바로 종료된다. */
-    var overflow = balls.some(function(b){ return !b.merging && b.y - b.r < overLine && Math.abs(b.vy) < 40; });
-    overTimer = overflow ? overTimer + dt : 0;
+    /* A passing / newly dropped orb must not consume the game-over grace.
+       Track the same settled orb continuously above the line; a global timer
+       could otherwise be inherited by a different orb and fire incorrectly. */
+    var longestOverflow = 0;
+    balls.forEach(function(b){
+      var settledAboveLine = !b.merging && b.y - b.r < overLine && Math.abs(b.vy) < 70;
+      b.overflowTime = settledAboveLine ? (b.overflowTime || 0) + dt : 0;
+      if(b.overflowTime > longestOverflow) longestOverflow = b.overflowTime;
+    });
+    overTimer = longestOverflow;
     if (overTimer >= OVERFLOW_GRACE_SECONDS) endGame();
   }
 

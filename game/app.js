@@ -50,6 +50,13 @@
     sovran: "pack_sovran_system_dominion_v1.png",
     crystal: "pack_stay_bright_crystal_rebellion_v1.png",
   };
+  // Catalyst capture awakens a leader. Keep this mapping character-specific so
+  // XENA ETHEREAL always uses the same XENA Override portrait on either side.
+  const OVERRIDE_PORTRAITS = {
+    "XENA": "xena_override_v1.png",
+    "XENA ETHEREAL": "xena_override_v1.png",
+    "SOVRAN": "sovran_override_v1.png",
+  };
   const PACK_PRICES = { xena: 2400, sovran: 2400, crystal: 5200 };
   const STARTER_PACKS = new Set(["xena", "sovran"]);
   const CARD_ART = {
@@ -509,6 +516,7 @@
   let onlineEmoteNonce = 0;
   let timerWarningKey = "";
   let activityStartedAt = 0;
+  let matchStartPending = false;
   let audioEnabled = storage.get("og_audio_enabled") !== "0";
   const audioState = { unlocked: false, bgm: null, bgmKey: "", voice: null, lastSfxAt: 0 };
   const BGM = {
@@ -1750,18 +1758,14 @@
     }
   }
 
-  function startGame() {
-    if (!committedStarter && !STARTER_PACKS.has(chosen)) return;
-    if (!committedStarter) {
-      committedStarter = chosen;
-      owned = [chosen];
-      saveMeta();
-    }
-    if (gameMode === "online") return renderOnlineLobby();
-    if (!startGame._energyGranted && window.XenaWallet && window.XenaWallet.consumeEnergy) {
-      window.XenaWallet.consumeEnergy("override_grid").then(() => { startGame._energyGranted = true; startGame(); startGame._energyGranted = false; }).catch(() => alert(language === "en" ? "No energy. Recharges every 10 minutes." : "행동력이 없습니다. 10분마다 충전됩니다."));
-      return;
-    }
+  function setMatchStartBusy(isBusy) {
+    document.querySelectorAll("#start, #again").forEach((button) => {
+      button.disabled = isBusy;
+      button.setAttribute("aria-busy", isBusy ? "true" : "false");
+    });
+  }
+
+  function beginGame() {
     screen = "game"; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = []; timerWarningKey = ""; activityStartedAt = Date.now();
     replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
     const enemy = gameMode === "ai" && G.PACKS[aiOpponentPack] ? aiOpponentPack : chosen === "xena" ? "sovran" : "xena";
@@ -1780,6 +1784,30 @@
     if (new URLSearchParams(window.location.search).get("fx") === "1") {
       setTimeout(() => window.OverrideGridScene && window.OverrideGridScene.playAction({ from: 3, to: 21, color: "white", character: "XENA", capture: true, nonce: 999999 }), 80);
     }
+  }
+
+  function startGame() {
+    if (matchStartPending) return;
+    if (!committedStarter && !STARTER_PACKS.has(chosen)) return;
+    if (!committedStarter) {
+      committedStarter = chosen;
+      owned = [chosen];
+      saveMeta();
+    }
+    if (gameMode === "online") return renderOnlineLobby();
+    if (window.XenaWallet && window.XenaWallet.consumeEnergy) {
+      matchStartPending = true;
+      setMatchStartBusy(true);
+      window.XenaWallet.consumeEnergy("override_grid")
+        .then(beginGame)
+        .catch(() => alert(language === "en" ? "No energy. Recharges every 10 minutes." : "행동력이 없습니다. 10분마다 충전됩니다."))
+        .finally(() => {
+          matchStartPending = false;
+          setMatchStartBusy(false);
+        });
+      return;
+    }
+    beginGame();
   }
 
   function applyLineupToState(targetState, color, packId, forcedLineup = null) {
@@ -1875,7 +1903,8 @@
 
   function artFor(piece) {
     if (piece.type === "leader" && state && state.awakened[piece.color]) {
-      return assetSrc("portrait", String(piece.character).startsWith("XENA") ? "xena_override_v1.png" : "sovran_override_v1.png");
+      const portrait = OVERRIDE_PORTRAITS[piece.character] || (piece.color === "white" ? "xena_override_v1.png" : "sovran_override_v1.png");
+      return assetSrc("portrait", portrait);
     }
     const configured = characterArtSrc(piece.character);
     if (configured) return configured;

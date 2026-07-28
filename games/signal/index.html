@@ -117,7 +117,7 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
 .quests h2{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.3em;color:var(--text-dim);text-transform:uppercase;margin-bottom:14px;}
 .q-list{display:flex;flex-direction:column;gap:10px;}
 .quest-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 12px;padding:5px;border:1px solid var(--hair);border-radius:13px;background:rgba(255,255,255,.025);}
-.quest-tab{border:1px solid transparent;border-radius:9px;padding:9px 7px;background:transparent;color:var(--text-dim);font:700 .66rem/1 var(--font-mono);letter-spacing:.08em;}
+.quest-tab{position:relative;border:1px solid transparent;border-radius:9px;padding:9px 7px;background:transparent;color:var(--text-dim);font:700 .66rem/1 var(--font-mono);letter-spacing:.08em;}
 .quest-tab.active{color:#fff;border-color:rgba(255,47,176,.55);background:rgba(255,47,176,.13);box-shadow:0 0 18px rgba(255,47,176,.16);}
 .q{display:flex;align-items:center;gap:14px;background:linear-gradient(165deg, rgba(255,255,255,.04), rgba(255,255,255,.012));border:1px solid var(--hair);border-radius:14px;padding:14px 16px;backdrop-filter:blur(12px);}
 .q .qi{font-size:1.2rem;width:30px;text-align:center;}
@@ -134,8 +134,9 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
   color:#1a1206;font-weight:800;font-size:.68rem;letter-spacing:.1em;padding:9px 18px;
   box-shadow:0 0 16px rgba(232,196,104,.45);animation:claimPulse 1.8s ease-in-out infinite;}
 .q button.golink.claimable:hover{background:linear-gradient(120deg,#ffd97a,var(--gold));box-shadow:0 0 24px rgba(232,196,104,.7);}
-.quest-alert{display:inline-grid;place-items:center;width:18px;height:18px;margin-right:6px;border-radius:50%;color:#fff;background:#ff2fb0;box-shadow:0 0 8px #ff2fb0,0 0 18px rgba(255,47,176,.8);font-size:.7rem;animation:questAlert 1s ease-in-out infinite alternate;}
-@keyframes questAlert{to{transform:scale(1.12);box-shadow:0 0 13px #ff2fb0,0 0 26px rgba(255,47,176,.95)}}
+.quest-tab-alert{position:absolute;top:-7px;right:-6px;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;color:#fff;background:#ff2fb0;box-shadow:0 0 8px #ff2fb0,0 0 18px rgba(255,47,176,.8);font-size:.7rem;line-height:1;pointer-events:none;animation:questTabAlert 1s ease-in-out infinite alternate;}
+.quest-tab-alert[hidden]{display:none;}
+@keyframes questTabAlert{to{transform:scale(1.12);box-shadow:0 0 13px #ff2fb0,0 0 26px rgba(255,47,176,.95)}}
 @keyframes claimPulse{50%{box-shadow:0 0 26px rgba(232,196,104,.75);}}
 .q-note{margin-top:14px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.1em;color:var(--text-dim);opacity:.7;line-height:1.9;}
 
@@ -222,9 +223,9 @@ h1{font-size:clamp(1.9rem,6vw,3rem);font-weight:800;letter-spacing:.06em;line-he
   <div class="quests">
     <h2><span lang="en">Today's Quests — earn XC across all games</span><span lang="ko">오늘의 퀘스트 — 모든 게임에서 XC 모으기</span></h2>
     <div class="quest-tabs" role="tablist" aria-label="Quest categories">
-      <button class="quest-tab active" data-quest-category="main" type="button"><span lang="en">MAIN</span><span lang="ko">메인</span></button>
-      <button class="quest-tab" data-quest-category="mini" type="button"><span lang="en">MINI</span><span lang="ko">미니</span></button>
-      <button class="quest-tab" data-quest-category="other" type="button"><span lang="en">OTHER</span><span lang="ko">기타</span></button>
+      <button class="quest-tab active" data-quest-category="main" type="button"><span lang="en">MAIN</span><span lang="ko">메인</span><span class="quest-tab-alert" id="quest-tab-alert-main" hidden aria-hidden="true">!</span></button>
+      <button class="quest-tab" data-quest-category="mini" type="button"><span lang="en">MINI</span><span lang="ko">미니</span><span class="quest-tab-alert" id="quest-tab-alert-mini" hidden aria-hidden="true">!</span></button>
+      <button class="quest-tab" data-quest-category="other" type="button"><span lang="en">OTHER</span><span lang="ko">기타</span><span class="quest-tab-alert" id="quest-tab-alert-other" hidden aria-hidden="true">!</span></button>
     </div>
     <div class="q-list" id="q-list"></div>
     <div class="all-bonus" id="all-bonus" hidden></div>
@@ -525,6 +526,14 @@ function allQuestsDone(wc){
     && claimedFlag('tourBonusClaim') && claimedFlag('mergeBonusClaim');
 }
 
+function renderQuestTabAlerts(quests){
+  ['main','mini','other'].forEach(function(category){
+    var badge = $('quest-tab-alert-'+category);
+    if(!badge) return;
+    badge.hidden = !quests.some(function(q){ return q.category === category && !q.done && !!q.act; });
+  });
+}
+
 function renderQuests(){
   var wc = (wallet.daily && wallet.daily.date === today() && wallet.daily.worldcup) || 0;
   var wcBonusDone = claimedFlag('wcBonusClaim');
@@ -613,6 +622,8 @@ function renderQuests(){
       act: (mergePlayedToday() && !mergeBonusDone) ? 'merge' : null,
       link: !mergePlayedToday() ? '../merge/' : null}
   ];
+  renderQuestTabAlerts(quests);
+
   var list = $('q-list');
   list.innerHTML = '';
   quests.filter(function(q){ return q.category === questCategory; }).forEach(function(q){
@@ -620,7 +631,7 @@ function renderQuests(){
     el.className = 'q' + (q.done ? ' done' : '');
     var action = '';
     if(!q.done && q.act){
-      action = '<button class="golink claimable" data-act="'+q.act+'"><span class="quest-alert">!</span>'+t('CLAIM','받기')+'</button>';
+      action = '<button class="golink claimable" data-act="'+q.act+'">'+t('CLAIM','받기')+'</button>';
     } else if(!q.done && q.link){
       /* 같은 창에서 이동 — 새 창이면 BGM 이 두 개 겹쳐서 재생됨 */
       action = '<a class="golink" href="'+q.link+'">'+t('GO','이동')+'</a>';
@@ -634,7 +645,7 @@ function renderQuests(){
   var allBanner = $('all-bonus');
   if(allDone && !claimedFlag('allBonusClaim')){
     allBanner.hidden = false;
-    allBanner.innerHTML = '<span>'+t('All quests complete!', '모든 퀘스트 완료!')+'</span><button class="golink claimable" data-act="allbonus"><span class="quest-alert">!</span>'+t('CLAIM +'+ALL_BONUS+' XC','+'+ALL_BONUS+' XC 받기')+'</button>';
+    allBanner.innerHTML = '<span>'+t('All quests complete!', '모든 퀘스트 완료!')+'</span><button class="golink claimable" data-act="allbonus">'+t('CLAIM +'+ALL_BONUS+' XC','+'+ALL_BONUS+' XC 받기')+'</button>';
   } else if(claimedFlag('allBonusClaim')){
     allBanner.hidden = false;
     allBanner.innerHTML = '<span>✓ '+t('All quests bonus claimed today', '오늘의 전체 완료 보너스 수령 완료')+'</span>';

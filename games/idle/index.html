@@ -98,7 +98,11 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .city.ready{border-color:var(--gold);box-shadow:0 0 24px -8px var(--gold);}
 .city.locked{opacity:.68;}
 .city.loading{opacity:.5;}
+.city.action-pending{border-color:var(--ca);box-shadow:0 0 22px -8px var(--ca);}
 .c-loading{text-align:center;padding:20px 0;font-family:var(--font-mono);font-size:.68rem;color:var(--text-dim);}
+.c-action-note{display:flex;align-items:center;justify-content:center;gap:7px;min-height:18px;margin-top:8px;font-family:var(--font-mono);font-size:.58rem;letter-spacing:.08em;color:var(--ca);}
+.c-action-note::before{content:'';width:8px;height:8px;border:1px solid currentColor;border-top-color:transparent;border-radius:50%;animation:tour-spin .7s linear infinite;}
+@keyframes tour-spin{to{transform:rotate(360deg)}}
 
 .c-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;margin-bottom:10px;}
 .c-name{font-size:1.84rem;font-weight:700;letter-spacing:-.01em;}
@@ -110,7 +114,7 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .synergy-list{font-size:.72rem;line-height:1.8;color:rgba(230,230,238,.85);padding-left:18px;margin-top:8px;}
 .synergy-list b{color:#5cffc0;}
 
-.c-body{position:relative;min-height:96px;display:flex;flex-direction:column;justify-content:center;}
+.c-body{position:relative;min-height:192px;display:flex;flex-direction:column;justify-content:center;}
 
 /* 잠김 */
 .c-lockrow{text-align:center;padding:10px 0;}
@@ -375,6 +379,9 @@ function loadLocal(){ try{ return JSON.parse(localStorage.getItem(LOCAL_KEY)) ||
 function saveLocal(v){ try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(v)); }catch(e){} }
 var local = loadLocal();
 if(!local.tours) local.tours = {};    /* { seoul: {cards:[id,...]|null, grades:[...], startAt(ms), durationMs} } */
+/* The server is authoritative; this only latches a city while a request is in
+   flight so people receive immediate feedback and cannot double-submit. */
+var tourActionPending = {};
 
 /* ── 서버 상태 캐시 (subscribe/getWalletFull 로 채워짐) ──── */
 var wallet = { credits: null, unlockedCities: ['seoul'], tourCapacity: 3, tcgWins: 0 };
@@ -458,6 +465,30 @@ function fmtTime(ms){
   return h + 'h ' + (m < 10 ? '0' : '') + m + 'm';
 }
 
+function applyTourActionPendingUI(){
+  Object.keys(tourActionPending).forEach(function(cityKey){
+    var action = tourActionPending[cityKey];
+    var body = $('cities').querySelector('.c-body[data-city="' + cityKey + '"]');
+    if(!body) return;
+    var card = body.parentNode;
+    card.classList.add('action-pending');
+    var button = body.querySelector(action === 'claim' ? '[data-claim]' : '[data-send]');
+    if(button){
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+      button.textContent = action === 'claim'
+        ? t('CLAIMING...', '보상 수령 중...')
+        : t('OPENING TOUR...', '투어 여는 중...');
+    }
+    var note = document.createElement('p');
+    note.className = 'c-action-note';
+    note.textContent = action === 'claim'
+      ? t('CONFIRMING REWARD', '보상을 확인 중...')
+      : t('TOUR REQUEST IN PROGRESS', '파견 요청 처리 중...');
+    body.appendChild(note);
+  });
+}
+
 /* ── 렌더 ─────────────────────────────────────────────────── */
 function renderCities(){
   var h = '';
@@ -520,6 +551,7 @@ function renderCities(){
     h += '</div></div>';
   }
   $('cities').innerHTML = h;
+  applyTourActionPendingUI();
 
   var col = XenaCards.collection();
   $('coll-pct').textContent = t('COLLECTION ', '도감 ') + Math.round(col.pct * 100) + '%  (' + col.unique + '/' + col.total + ')';
@@ -557,12 +589,16 @@ function renderAll(){
 
 /* ── 클릭 위임 ────────────────────────────────────────────── */
 $('cities').addEventListener('click', function(e){
-  var el = e.target;
-  if(el.matches('[data-send]')){ openPicker(el.getAttribute('data-send')); return; }
-  if(el.matches('[data-claim]')){ claimTour(el.getAttribute('data-claim')); return; }
-  if(el.matches('[data-cancel]')){ cancelTour(el.getAttribute('data-cancel')); return; }
-  if(el.matches('[data-unlock-city]')){ openCityUnlock(el.getAttribute('data-unlock-city')); return; }
-  if(el.matches('[data-info-city]')){ openCitySynergyInfo(el.getAttribute('data-info-city')); return; }
+  /* City controls are re-rendered every second.  Resolve from the nearest
+     action control, not only the event target, so icon/text descendants and
+     future button markup keep dispatch working. */
+  var el = e.target && e.target.closest ? e.target.closest('[data-send],[data-claim],[data-cancel],[data-unlock-city],[data-info-city]') : null;
+  if(!el || !this.contains(el) || el.disabled) return;
+  if(el.hasAttribute('data-send')){ openPicker(el.getAttribute('data-send')); return; }
+  if(el.hasAttribute('data-claim')){ claimTour(el.getAttribute('data-claim')); return; }
+  if(el.hasAttribute('data-cancel')){ cancelTour(el.getAttribute('data-cancel')); return; }
+  if(el.hasAttribute('data-unlock-city')){ openCityUnlock(el.getAttribute('data-unlock-city')); return; }
+  if(el.hasAttribute('data-info-city')){ openCitySynergyInfo(el.getAttribute('data-info-city')); return; }
 });
 
 function openCitySynergyInfo(cityKey){
@@ -590,9 +626,15 @@ function markTourClaimedToday(){
   try{ localStorage.setItem('xena_tour_daily_v1', JSON.stringify({date:new Date().toISOString().slice(0,10)})); }catch(e){}
 }
 function claimTour(cityKey){
-  if(!tourReady(cityKey) || !window.XenaWallet) return;
+  if(!tourReady(cityKey)) return;
+  if(!window.XenaWallet){ toast(t('Wallet is connecting. Please try again in a moment.', '지갑 연결 중입니다. 잠시 후 다시 시도해 주세요.')); return; }
+  if(tourActionPending[cityKey]) return;
+  tourActionPending[cityKey] = 'claim';
+  renderCities();
+  toast(t('Claiming tour reward...', '투어 보상 수령을 요청했습니다...'));
   var cname = CITIES.filter(function(c){return c.key===cityKey;})[0];
   window.XenaWallet.claimTourReward(cityKey).then(function(r){
+    delete tourActionPending[cityKey];
     delete local.tours[cityKey];
     saveLocal(local);
     markTourClaimedToday();
@@ -601,6 +643,8 @@ function claimTour(cityKey){
     if (window.XenaAudio) window.XenaAudio.sfx('xc_gain');
     renderAll();
   }).catch(function(err){
+    delete tourActionPending[cityKey];
+    renderCities();
     toast(t('Could not claim — try again.', '수령 실패 — 다시 시도해주세요.'));
   });
 }
@@ -625,6 +669,7 @@ function tourHours(cards){
 }
 
 function openPicker(cityKey){
+  if(!window.XenaWallet){ toast(t('Wallet is connecting. Please try again in a moment.', '지갑 연결 중입니다. 잠시 후 다시 시도해 주세요.')); return; }
   if(!XenaCards.ownsAny()){ toast(t('No cards yet — open a pack first.', '보유 카드가 없습니다 — 팩을 먼저 열어주세요.')); return; }
   pickCity = cityKey;
   pickSelected = [];
@@ -752,13 +797,18 @@ $('picker').addEventListener('click', function(e){
 
 $('pick-send').addEventListener('click', function(){
   if(!pickSelected.length || !window.XenaWallet) return;
+  if(tourActionPending[pickCity]) return;
   var cards = pickSelected.map(function(id){ return XenaCards.get(id); });
   var grades = cards.map(function(c){ return c.grade; });
   var elements = cards.map(function(c){ return c.element || null; });
   var btn = $('pick-send');
   btn.disabled = true;
+  tourActionPending[pickCity] = 'send';
+  renderCities();
+  toast(t('Tour request sent...', '투어 파견을 요청했습니다...'));
   btn.textContent = t('Sending…', '전송 중…');
   window.XenaWallet.startTour(pickCity, grades, elements).then(function(r){
+    delete tourActionPending[pickCity];
     local.tours[pickCity] = { cards: pickSelected.slice(), grades: grades, elements: elements, startAt: Date.now(), durationMs: r.durationMs };
     saveLocal(local);
     $('modal-pick').classList.remove('on');
@@ -767,6 +817,8 @@ $('pick-send').addEventListener('click', function(){
     /* Fetch the exact Firestore serverTimestamp used by the reward validator. */
     setTimeout(reconcileTours, 350);
   }).catch(function(err){
+    delete tourActionPending[pickCity];
+    renderCities();
     var code = (err && err.code) || '';
     var msg = code.indexOf('already-exists') >= 0 ? t('A tour is already running here.', '이미 이 도시에 투어가 진행 중입니다.')
             : code.indexOf('failed-precondition') >= 0 ? t('City locked or too many cards for your capacity.', '도시가 잠겨있거나 정원을 초과했습니다.')

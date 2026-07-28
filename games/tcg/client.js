@@ -3,7 +3,7 @@
   'use strict';
 
   var DIFFICULTY = {
-    easy: { core: 20, reward: 50, tcgChance: 0, exactTcg: 2 },
+    easy: { core: 20, reward: 50, tcgChance: .2, exactTcg: 3 },
     normal: { core: 30, reward: 100, tcgChance: .4 },
     hard: { core: 40, reward: 150, tcgChance: .7 },
     veryhard: { core: 50, reward: 200, tcgChance: 1 }
@@ -59,8 +59,15 @@
       picked.forEach(function (c) { out.push(Object.assign({}, c)); });
       while (out.length < 15) out.push(Object.assign({}, choose(gallery)));
     } else if (level === 'veryhard') {
-      var strong = tcg.slice().sort(function (a, b) { return (b.atk + b.hp - b.cost) - (a.atk + a.hp - a.cost); }).slice(0, Math.max(30, Math.ceil(tcg.length * .55)));
-      while (out.length < 15) out.push(Object.assign({}, choose(strong.length ? strong : tcg)));
+      /* Full 90-card TCG pool, deliberately balanced across early / mid / late costs. */
+      var ranked = tcg.slice().sort(function (a, b) { return (b.atk + b.hp - b.cost) - (a.atk + a.hp - a.cost); });
+      var low = ranked.filter(function (c) { return c.cost <= 2; });
+      var mid = ranked.filter(function (c) { return c.cost >= 3 && c.cost <= 4; });
+      var high = ranked.filter(function (c) { return c.cost >= 5; });
+      function pickCost(pool) { return Object.assign({}, choose(pool.length ? pool : ranked)); }
+      for (i = 0; i < 4; i++) out.push(pickCost(low));
+      for (i = 0; i < 6; i++) out.push(pickCost(mid));
+      for (i = 0; i < 5; i++) out.push(pickCost(high));
     } else {
       for (i = 0; i < 15; i++) {
         var pool = Math.random() < conf.tcgChance && tcg.length ? tcg : gallery;
@@ -81,7 +88,8 @@
   function status(msg) { $('#lobby-status').textContent = msg || ''; }
   function esc(v) { return String(v || '').replace(/[&<>'"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]; }); }
   function collectionCardHtml(c) {
-    return '<img class="card-art" src="' + esc(c.image) + '" alt="" loading="lazy"><div class="card-meta"><span class="card-grade">' + esc(c.grade) + '</span><span class="card-hp">HP ' + c.hp + '</span><strong class="card-name">' + esc(c.name) + '</strong><div class="card-stats"><b class="card-cost">C ' + c.cost + '</b><b class="card-atk">ATK ' + c.atk + '</b></div></div>';
+    /* Card artwork already contains its own grade, name, cost and power. */
+    return '<img class="card-art collection-art" src="' + esc(c.image) + '" alt="' + esc(c.name) + '" loading="lazy">';
   }
   function battleCardHtml(c) {
     return '<img class="card-art" src="' + esc(c.image) + '" alt="' + esc(c.name) + '"><span class="battle-hp">HP ' + c.hp + '</span>';
@@ -195,38 +203,69 @@
     p.mana -= c.cost; p.field[slot] = Object.assign({}, c, { attacked: false }); p.hand.splice(state.handIndex, 1); state.handIndex = null;
     applyDeployEffect(p, g.ai, p.field[slot]); play(SFX.summon); renderBattle();
   }
-  function selectAttacker(slot) { var g = state.game, c = g && g.player.field[slot]; if (!g || g.active !== 'player' || !c || c.attacked || g.round === 1) return; state.attacker = state.attacker === slot ? null : slot; state.handIndex = null; renderBattle(); }
+  function affinityTargetSlots(attacker) {
+    var g = state.game; if (!g || !attacker) return [];
+    return g.ai.field.map(function (target, slot) { return { target: target, slot: slot }; }).filter(function (entry) { return entry.target && AFFINITY[attacker.element] === entry.target.element; });
+  }
+  function showAffinityHints(attacker) {
+    affinityTargetSlots(attacker).forEach(function (entry) {
+      var target = document.querySelector('.card-unit[data-side="ai"][data-slot="' + entry.slot + '"]');
+      if (!target) return;
+      var hint = document.createElement('span'); hint.className = 'affinity-pop'; hint.textContent = '+1'; target.appendChild(hint);
+      setTimeout(function () { hint.remove(); }, 900);
+    });
+  }
+  function selectAttacker(slot) {
+    var g = state.game, c = g && g.player.field[slot];
+    if (!g || g.active !== 'player' || !c || c.attacked || g.round === 1) return;
+    state.attacker = state.attacker === slot ? null : slot; state.handIndex = null; renderBattle();
+    if (state.attacker !== null) showAffinityHints(c);
+  }
   function damage(attacker, target) { return attacker.atk + (target && AFFINITY[attacker.element] === target.element ? 1 : 0); }
   async function attackUnit(slot) {
     var g = state.game, a = g && g.player.field[state.attacker], target = g && g.ai.field[slot];
     if (!a || !target) return;
-    var source = state.attacker; state.attacker = null; a.attacked = true; await hit();
-    target.hp -= damage(a, target); if (target.hp <= 0) { g.ai.field[slot] = null; play(SFX.shatter); } renderBattle();
+    var source = state.attacker, amount = damage(a, target); state.attacker = null; a.attacked = true;
+    await hit('player', source, 'ai', slot, amount, amount > a.atk);
+    target.hp -= amount; if (target.hp <= 0) { g.ai.field[slot] = null; play(SFX.shatter); } renderBattle();
   }
   async function attackCore() {
     var g = state.game, a = g && g.player.field[state.attacker]; if (!a || g.ai.field.some(Boolean)) return;
-    a.attacked = true; state.attacker = null; await hit(); g.ai.core = Math.max(0, g.ai.core - a.atk); if (g.ai.core <= 0) finish(true); else renderBattle();
+    var source = state.attacker; a.attacked = true; state.attacker = null;
+    await hit('player', source, 'core', 'ai-core', a.atk, false); g.ai.core = Math.max(0, g.ai.core - a.atk); if (g.ai.core <= 0) finish(true); else renderBattle();
   }
-  function hit() { play(SFX.hit); $('#xena-tcg-container').classList.add('camera-shake'); return new Promise(function (resolve) { setTimeout(function () { $('#xena-tcg-container').classList.remove('camera-shake'); resolve(); }, 260); }); }
+  function hit(side, sourceSlot, targetSide, targetSlot, amount, affinity) {
+    play(SFX.hit); var root = $('#xena-tcg-container'); root.classList.add('camera-shake');
+    var source = document.querySelector('.card-unit[data-side="' + side + '"][data-slot="' + sourceSlot + '"]');
+    var target = targetSide === 'core' ? $('#' + targetSlot) : document.querySelector('.card-unit[data-side="' + targetSide + '"][data-slot="' + targetSlot + '"]');
+    if (source) { source.style.setProperty('--attack-x', side === 'player' ? '28px' : '-28px'); source.classList.add('dash-attack'); }
+    if (target) {
+      target.classList.add('impact-hit');
+      var pop = document.createElement('span'); pop.className = 'damage-pop' + (affinity ? ' affinity-damage' : ''); pop.textContent = (affinity ? '+1  ' : '') + '-' + amount;
+      target.appendChild(pop); setTimeout(function () { pop.remove(); }, 700);
+    }
+    return new Promise(function (resolve) { setTimeout(function () { root.classList.remove('camera-shake'); if (source) source.classList.remove('dash-attack'); if (target) target.classList.remove('impact-hit'); resolve(); }, 420); });
+  }
   function endTurn() { var g = state.game; if (!g || g.active !== 'player') return; state.handIndex = null; state.attacker = null; g.active = 'ai'; startTurn(g.ai); renderBattle(); aiTurn(); }
   async function aiTurn() {
     var g = state.game; if (!g || g.active !== 'ai') return;
-    await wait(450);
+    await wait(720);
     var ai = g.ai, playable = ai.hand.map(function (c, i) { return { c: c, i: i }; }).filter(function (x) { return x.c.cost <= ai.mana; }).sort(function (a, b) { return b.c.atk - a.c.atk; });
     var empty = ai.field.findIndex(function (c) { return !c; });
     if (playable.length && empty >= 0) {
       var picked = playable[0], c = ai.hand.splice(picked.i, 1)[0]; ai.mana -= c.cost; ai.field[empty] = Object.assign({}, c, { attacked: false });
-      applyDeployEffect(ai, g.player, ai.field[empty]); play(SFX.summon); renderBattle(); await wait(420);
+      applyDeployEffect(ai, g.player, ai.field[empty]); play(SFX.summon); renderBattle(); await wait(700);
     }
     if (g.round > 1) {
       for (var i = 0; i < ai.field.length; i++) {
         var a = ai.field[i]; if (!a || a.attacked) continue; a.attacked = true;
         var targets = g.player.field.map(function (x, n) { return { x: x, n: n }; }).filter(function (v) { return v.x; }).sort(function (x, y) { return x.x.hp - y.x.hp; });
-        await hit();
-        if (targets.length) { var t = targets[0]; t.x.hp -= damage(a, t.x); if (t.x.hp <= 0) { g.player.field[t.n] = null; play(SFX.shatter); } }
-        else g.player.core = Math.max(0, g.player.core - a.atk);
+        if (targets.length) {
+          var t = targets[0], amount = damage(a, t.x); await hit('ai', i, 'player', t.n, amount, amount > a.atk);
+          t.x.hp -= amount; if (t.x.hp <= 0) { g.player.field[t.n] = null; play(SFX.shatter); }
+        } else { await hit('ai', i, 'core', 'player-core', a.atk, false); g.player.core = Math.max(0, g.player.core - a.atk); }
         if (g.player.core <= 0) { finish(false); return; }
-        renderBattle(); await wait(180);
+        renderBattle(); await wait(440);
       }
     }
     g.round++; g.active = 'player'; startTurn(g.player); renderBattle();
@@ -237,7 +276,7 @@
     if (won && window.XenaWallet && window.XenaWallet.claimTcgMatch) {
       try { var r = await window.XenaWallet.claimTcgMatch(g.difficulty, 'win'); granted = Number(r.granted) || granted; } catch (_) {}
     }
-    if (window.XenaRecords && window.XenaRecords.record) window.XenaRecords.record('signal_warfare', g.difficulty, won);
+    if (window.XenaRecords && window.XenaRecords.record) window.XenaRecords.record('signal_warfare', g.difficulty, won ? 'win' : 'loss');
     var title = won ? tr('승리', 'VICTORY') : tr('패배', 'DEFEAT');
     var body = won ? tr('보상 ' + granted + ' XC', 'Reward ' + granted + ' XC') : tr('다시 도전해 보세요.', 'Try again.');
     var overlay = document.createElement('section'); overlay.className = 'coin-overlay'; overlay.innerHTML = '<div class="lobby-panel result-panel"><h2>' + title + '</h2><p>' + body + '</p><button class="button button-primary">' + tr('로비로', 'RETURN TO LOBBY') + '</button></div>';
@@ -251,8 +290,11 @@
     if (!state.walletOff && window.XenaWallet.subscribe) state.walletOff = window.XenaWallet.subscribe(paint);
   }
   function setLanguage(lang) {
-    state.language = lang === 'en' ? 'en' : 'ko'; document.documentElement.lang = state.language;
+    state.language = lang === 'en' ? 'en' : 'ko'; document.documentElement.lang = state.language; document.documentElement.dataset.lang = state.language;
+    try { localStorage.setItem('xena-language', state.language); localStorage.setItem('xena-lang', state.language); } catch (_) {}
+    if (window.XenaCards && window.XenaCards.refresh) window.XenaCards.refresh();
     document.querySelectorAll('[data-language]').forEach(function (b) { b.classList.toggle('active', b.dataset.language === state.language); });
+    if (!$('#cards-view').hidden) renderCollection();
     if (state.game) renderBattle();
   }
   function showRecords() {

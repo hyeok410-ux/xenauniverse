@@ -129,7 +129,7 @@ h1{font-size:clamp(2.3rem,7.4vw,3.7rem);font-weight:800;letter-spacing:.05em;lin
     repeating-linear-gradient(45deg, rgba(63,224,255,.05) 0 2px, transparent 2px 12px),
     linear-gradient(160deg,#0a0614,#140a24 50%,#0a0614);
   border:1px solid rgba(160,107,255,.4);}
-.mcard .f.b span{font-weight:800;font-size:1.5rem;color:var(--purple-light);text-shadow:0 0 18px rgba(160,107,255,.8);}
+.mcard .f.b img{width:100%;height:100%;display:block;object-fit:cover;}
 .mcard .f.fr{transform:rotateY(180deg);border:1px solid rgba(63,224,255,.4);}
 .mcard .f.fr img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;display:block;}
 .mcard.matched .f.fr{border-color:rgba(92,255,192,.7);box-shadow:0 0 18px rgba(92,255,192,.3);}
@@ -332,11 +332,12 @@ function weekKey(){
 if(!st.weekly || st.weekly.week !== weekKey()) st.weekly = {week: weekKey(), best: {}};
 var PLAYS_PER_DAY = 5, RESET_COST = 30;
 
-/* Keep this game photo-only.  GA cards are XENA's base/gallery artwork;
-   combat / pack artwork must never enter the mini-game pool. */
+/* Memory is deliberately restricted to ordinary XENA card artwork.  This
+   excludes the TCG Signal Archive (PC-*), other characters and gallery photos. */
 var CARDS = (window.ZENA_CARD_DEFS||[]).filter(function(d){
-  return d[4] === 1 && String(d[0]).indexOf('GA-') === 0;
+  return d[4] === 1 && /^(XA|XB|XC)-/.test(String(d[0])) && String(d[3]).indexOf('cards/') === 0;
 });
+var CARD_BACK_SRC = '../tcg/assets/card-back.jpg';
 
 function renderWallet(){
   var bal = window.XenaWallet ? window.XenaWallet.getBalance() : null;
@@ -583,7 +584,7 @@ function start(idx, energyGranted){
     var el = document.createElement('button');
     el.className = 'mcard';
     el.setAttribute('aria-label', t('Card','카드')+' '+(i+1));
-    el.innerHTML = '<div class="inner"><div class="f b"><span>X</span></div><div class="f fr"><img src="'+card.img+'" alt="" draggable="false"></div></div>';
+    el.innerHTML = '<div class="inner"><div class="f b"><img src="'+CARD_BACK_SRC+'" alt="" draggable="false"></div><div class="f fr"><img src="'+card.img+'" alt="" draggable="false"></div></div>';
     el.addEventListener('click', function(){ flip(el, card); });
     board.appendChild(el);
   });

@@ -431,7 +431,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
       <div class="cool" id="cool-weekly">—</div>
       <div class="pack-art"><b>X</b><small>XENA CARDS</small></div>
       <button class="draw-btn" id="btn-weekly-free">FREE WEEKLY DRAW</button>
-      <button class="xc-btn" id="btn-weekly-pack">OPEN · 1,500 XC</button>
+      <button class="xc-btn" id="btn-weekly-pack"><span lang="en">EXTRA DRAW · 1,500 XC</span><span lang="ko">1500XC로 추가뽑기</span></button>
       <div class="odds"><span class="oN">N 20%</span> · <span class="oR">R 40%</span> · <span class="oS">S 26%</span> · <span class="oSR">SR 11%</span> · <span class="oSSR">SSR 3%</span></div>
     </div>
     <div class="pack archive" data-ptab="premium">
@@ -856,7 +856,7 @@ function tickCooldowns(){
     var canAfford = wallet.xc >= wPrice;
     wBtn.disabled = !canAfford;
     wBtn.textContent = canAfford
-      ? t('OPEN · '+wPrice+' XC', '열기 · '+wPrice+' XC')
+      ? t('EXTRA DRAW · '+wPrice.toLocaleString('en-US')+' XC', wPrice+'XC로 추가뽑기')
       : t('Need '+wPrice+' XC', wPrice+' XC 필요');
     wCool.textContent = t('Once per week · '+wPrice+' XC per open', '주 1회 · 오픈당 '+wPrice+' XC');
     $('ptab-alert-weekly').hidden = !canAfford || st.packs.weeklyFreeClaimed === nyWeekMondayKey();

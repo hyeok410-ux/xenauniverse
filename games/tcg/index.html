@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -33,10 +33,10 @@
           <div class="lobby-actions"><button id="my-cards-button" type="button" class="button button-outline"><span lang="ko">내 카드</span><span lang="en">MY CARDS</span></button></div>
           <div class="difficulty-grid">
             <p><span lang="ko">AI 난이도 선택</span><span lang="en">SELECT AI DIFFICULTY</span></p>
-            <button data-difficulty="easy" type="button" class="difficulty"><b><span lang="ko">쉬움</span><span lang="en">EASY</span></b><small>50 XC · TCG 2</small></button>
+            <button data-difficulty="easy" type="button" class="difficulty"><b><span lang="ko">쉬움</span><span lang="en">EASY</span></b><small>50 XC · TCG 20%</small></button>
             <button data-difficulty="normal" type="button" class="difficulty selected"><b><span lang="ko">보통</span><span lang="en">NORMAL</span></b><small>100 XC · TCG 40%</small></button>
             <button data-difficulty="hard" type="button" class="difficulty"><b><span lang="ko">어려움</span><span lang="en">HARD</span></b><small>150 XC · TCG 70%</small></button>
-            <button data-difficulty="veryhard" type="button" class="difficulty"><b><span lang="ko">매우 어려움</span><span lang="en">VERY HARD</span></b><small>200 XC · TCG 90</small></button>
+            <button data-difficulty="veryhard" type="button" class="difficulty"><b><span lang="ko">매우 어려움</span><span lang="en">VERY HARD</span></b><small>200 XC · TCG 100%</small></button>
           </div>
           <button id="start-pve" type="button" class="button button-primary"><span lang="ko">배틀 시작</span><span lang="en">START BATTLE</span></button>
           <p id="lobby-status" class="status" role="status"></p>
@@ -57,8 +57,8 @@
         <div class="battle-top"><span id="difficulty-label"></span><strong id="phase-label"></strong><span id="battle-status"></span></div>
         <p id="affinity-rule" class="affinity-rule"></p>
         <div class="core-row"><button id="ai-core" type="button" class="core ai"><span>AI CORE</span><b>30</b></button><div class="turn-rule" id="turn-rule"></div><div id="player-core" class="core player"><span>YOUR CORE</span><b>30</b></div></div>
-        <div id="battlefield" aria-label="Battlefield"><div class="field-row enemy-row"><p>ENEMY FIELD</p><div id="ai-field" class="zone"></div></div><div class="field-divider"><span>×</span></div><div class="field-row player-row"><p>YOUR FIELD</p><div id="player-field" class="zone"></div></div></div>
-        <div class="hand-wrap"><p>YOUR HAND</p><div id="hand" class="hand"></div></div>
+        <div id="battlefield" aria-label="Battlefield"><div class="field-row enemy-row"><p><span lang="ko">상대 필드</span><span lang="en">ENEMY FIELD</span></p><div id="ai-field" class="zone"></div></div><div class="field-divider"><span>×</span></div><div class="field-row player-row"><p><span lang="ko">내 필드</span><span lang="en">YOUR FIELD</span></p><div id="player-field" class="zone"></div></div></div>
+        <div class="hand-wrap"><p><span lang="ko">내 손패</span><span lang="en">YOUR HAND</span></p><div id="hand" class="hand"></div></div>
         <div class="phase-controls"><button id="battle-exit" type="button" class="button button-outline"><span lang="ko">로비로</span><span lang="en">LOBBY</span></button><button id="end-turn" type="button" class="button button-primary"><span lang="ko">턴 종료</span><span lang="en">END TURN</span></button></div>
       </section>
     </main>
