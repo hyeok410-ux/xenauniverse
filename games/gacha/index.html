@@ -285,8 +285,8 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .flip-card .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.3,1);}
 .flip-card.flipped .inner{transform:rotateY(180deg);}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;overflow:hidden;border:1px solid transparent;}
-.face.back{background:#090611 url('cards/track1-common-back-gacha.png') center/cover no-repeat;
-  border:1px solid rgba(160,107,255,.6);box-shadow:0 0 34px rgba(110,47,217,.38);}
+.face.back{background:#090611;border:1px solid rgba(160,107,255,.6);box-shadow:0 0 34px rgba(110,47,217,.38);}
+.face.back .gacha-card-back{display:block;width:100%;height:100%;object-fit:cover;}
 .face.front{transform:rotateY(180deg);display:flex;flex-direction:column;background:#060409;border-width:2px;border-style:solid;}
 .face.front img{width:100%;flex:1;object-fit:cover;min-height:0;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
 .face.front .fmeta{padding:8px 8px 10px;text-align:center;background:rgba(0,0,0,.85);}
@@ -474,19 +474,19 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
     <div class="triple-row" id="triple-row">
       <div class="flip-card" data-i="0">
         <div class="inner">
-          <div class="face back" aria-label="XENA card back"></div>
+          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1.png?v=20260729" alt="ZENA CARDS card back"></div>
           <div class="face front"><span class="card-badge" data-badge="0"></span><img data-img="0" src="" alt="card 1"><div class="fmeta"><small data-grade="0"></small><b data-name="0"></b></div></div>
         </div>
       </div>
       <div class="flip-card" data-i="1">
         <div class="inner">
-          <div class="face back" aria-label="XENA card back"></div>
+          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1.png?v=20260729" alt="ZENA CARDS card back"></div>
           <div class="face front"><span class="card-badge" data-badge="1"></span><img data-img="1" src="" alt="card 2"><div class="fmeta"><small data-grade="1"></small><b data-name="1"></b></div></div>
         </div>
       </div>
       <div class="flip-card" data-i="2">
         <div class="inner">
-          <div class="face back" aria-label="XENA card back"></div>
+          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1.png?v=20260729" alt="ZENA CARDS card back"></div>
           <div class="face front"><span class="card-badge" data-badge="2"></span><img data-img="2" src="" alt="card 3"><div class="fmeta"><small data-grade="2"></small><b data-name="2"></b></div></div>
         </div>
       </div>
