@@ -239,7 +239,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .tab.tab-tcg.sel{color:#fffbeb;border-color:rgba(255,247,224,.8);box-shadow:0 0 16px rgba(232,196,104,.4);}
 .celement-badge{position:absolute;top:6px;right:6px;font-family:var(--font-mono);font-size:.45rem;font-weight:700;letter-spacing:.05em;
   padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.65);border:1px solid currentColor;color:#fff;z-index:1;text-shadow:0 0 3px rgba(0,0,0,.8);}
-.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px 12px;}
+.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:16px;}
 /* [2026-07-26] 재구성: TCG 프리미엄 카드는 존재 자체로 정보가 다 그려져 있어서 다른
    배지로 가리지 말자는 요청 — TCG 금색 마크/이름/"TCG 전용" 문구를 전부 제거했다.
    등급 표시는 카드 위에 얹지 않고 아래(카드 밖) 중앙에 통일 표시, 수량(×N)도 카드
@@ -247,6 +247,8 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .ccard-wrap{position:relative;}
 .ccard-wrap.owned{cursor:pointer;}
 .ccard{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:3/4.35;border:1px solid var(--hair);background:rgba(255,255,255,.02);transition:.25s ease;}
+.ccard-wrap.tcg-card{grid-column:span 2;}
+.ccard-wrap.tcg-card .ccard{border-width:2px;box-shadow:0 0 22px rgba(232,196,104,.18);}
 .ccard.owned{cursor:pointer;}
 .ccard.owned:hover{transform:translateY(-3px);}
 .ccard img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
@@ -283,14 +285,8 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .flip-card .inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.3,1);}
 .flip-card.flipped .inner{transform:rotateY(180deg);}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;overflow:hidden;border:1px solid transparent;}
-.face.back{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 30%, rgba(110,47,217,.5), transparent 70%),
-    repeating-linear-gradient(45deg, rgba(63,224,255,.06) 0 2px, transparent 2px 14px),
-    linear-gradient(160deg,#0a0614,#140a24 50%,#0a0614);
-  border:1px solid rgba(160,107,255,.5);box-shadow:0 0 34px rgba(110,47,217,.3);}
-.face.back .logo-x{font-size:2.4rem;font-weight:800;color:var(--purple-light);text-shadow:0 0 26px rgba(160,107,255,.9);}
-.face.back .logo-t{font-family:var(--font-mono);font-size:.5rem;letter-spacing:.4em;color:var(--silver);}
+.face.back{background:#090611 url('cards/track1-common-back-gacha.png') center/cover no-repeat;
+  border:1px solid rgba(160,107,255,.6);box-shadow:0 0 34px rgba(110,47,217,.38);}
 .face.front{transform:rotateY(180deg);display:flex;flex-direction:column;background:#060409;border-width:2px;border-style:solid;}
 .face.front img{width:100%;flex:1;object-fit:cover;min-height:0;-webkit-user-drag:none;user-select:none;-webkit-user-select:none;}
 .face.front .fmeta{padding:8px 8px 10px;text-align:center;background:rgba(0,0,0,.85);}
@@ -326,7 +322,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .detail-inner .drow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 
 @media (max-width:560px){
-  .album{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:9px;}
+  .album{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:11px;}
   .triple-row{gap:8px;}
   .flip-card{width:min(140px,29vw);}
 }
@@ -478,19 +474,19 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
     <div class="triple-row" id="triple-row">
       <div class="flip-card" data-i="0">
         <div class="inner">
-          <div class="face back"><div class="logo-x">X</div><div class="logo-t">XENA CARDS</div></div>
+          <div class="face back" aria-label="XENA card back"></div>
           <div class="face front"><span class="card-badge" data-badge="0"></span><img data-img="0" src="" alt="card 1"><div class="fmeta"><small data-grade="0"></small><b data-name="0"></b></div></div>
         </div>
       </div>
       <div class="flip-card" data-i="1">
         <div class="inner">
-          <div class="face back"><div class="logo-x">X</div><div class="logo-t">XENA CARDS</div></div>
+          <div class="face back" aria-label="XENA card back"></div>
           <div class="face front"><span class="card-badge" data-badge="1"></span><img data-img="1" src="" alt="card 2"><div class="fmeta"><small data-grade="1"></small><b data-name="1"></b></div></div>
         </div>
       </div>
       <div class="flip-card" data-i="2">
         <div class="inner">
-          <div class="face back"><div class="logo-x">X</div><div class="logo-t">XENA CARDS</div></div>
+          <div class="face back" aria-label="XENA card back"></div>
           <div class="face front"><span class="card-badge" data-badge="2"></span><img data-img="2" src="" alt="card 3"><div class="fmeta"><small data-grade="2"></small><b data-name="2"></b></div></div>
         </div>
       </div>
@@ -960,7 +956,8 @@ function renderAlbum(){
     else if(curTab !== 'ALL' && (c.grade !== curTab || c.premium)) return;
     shown++;
     var cell = document.createElement('div');
-    cell.className = 'ccard-wrap'+(n>0?' owned':'');
+    /* TCG 카드는 효과 문구까지 카드 아트에 인쇄되어 있어 두 칸을 차지하게 렌더링한다. */
+    cell.className = 'ccard-wrap'+(n>0?' owned':'')+(c.premium?' tcg-card':'');
     cell.innerHTML =
       (n>1 ? '<span class="dupe-outside">&times;'+n+'</span>' : '')+
       '<div class="ccard '+(n>0?('owned gframe-'+c.grade):'locked')+'">'+

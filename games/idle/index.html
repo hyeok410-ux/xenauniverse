@@ -57,11 +57,11 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
   .page-head h1{font-size:clamp(3rem,5vw,4.6rem);}
   .page-head p{font-size:.85rem;}
   .cities{grid-template-columns:repeat(4,1fr);gap:26px;}
-  .city{padding:34px 30px;border-radius:22px;}
+  .city{min-height:600px;padding:34px 30px;border-radius:22px;}
   .c-name{font-size:1.5rem;}
   .c-flag{font-size:1.7rem;}
   .c-mult{font-size:.9rem;}
-  .c-body{min-height:190px;}
+  .c-body{min-height:310px;}
   .c-thumbs img,.c-grade-pill{width:64px;height:88px;border-radius:9px;}
   .c-timer{font-size:1.7rem;}
   .c-claim,.c-send-btn,.c-unlock-btn{font-size:.9rem;padding:15px;}
@@ -82,7 +82,7 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 
 /* ── 도시 카드 그리드 ── */
 .cities{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;}
-.city{position:relative;border:1px solid var(--hair);border-radius:16px;padding:16px 15px;overflow:hidden;
+.city{position:relative;min-height:430px;border:1px solid var(--hair);border-radius:16px;padding:16px 15px;overflow:hidden;
   background:linear-gradient(165deg,rgba(255,255,255,.045),rgba(255,255,255,.012));background-size:cover;background-position:center;transition:.3s;isolation:isolate;}
 .city::before{content:'';position:absolute;top:-50%;left:-15%;width:130%;height:100%;pointer-events:none;opacity:.14;z-index:-1;
   background:radial-gradient(ellipse,var(--ca),transparent 68%);}
@@ -114,7 +114,7 @@ main{padding:64px 14px 40px;max-width:900px;margin:0 auto;}
 .synergy-list{font-size:.72rem;line-height:1.8;color:rgba(230,230,238,.85);padding-left:18px;margin-top:8px;}
 .synergy-list b{color:#5cffc0;}
 
-.c-body{position:relative;min-height:192px;display:flex;flex-direction:column;justify-content:center;}
+.c-body{position:relative;min-height:280px;display:flex;flex-direction:column;justify-content:center;}
 
 /* 잠김 */
 .c-lockrow{text-align:center;padding:10px 0;}
@@ -382,6 +382,7 @@ if(!local.tours) local.tours = {};    /* { seoul: {cards:[id,...]|null, grades:[
 /* The server is authoritative; this only latches a city while a request is in
    flight so people receive immediate feedback and cannot double-submit. */
 var tourActionPending = {};
+var walletWaitTimer = null;
 
 /* ── 서버 상태 캐시 (subscribe/getWalletFull 로 채워짐) ──── */
 var wallet = { credits: null, unlockedCities: ['seoul'], tourCapacity: 3, tcgWins: 0 };
@@ -669,7 +670,25 @@ function tourHours(cards){
 }
 
 function openPicker(cityKey){
-  if(!window.XenaWallet){ toast(t('Wallet is connecting. Please try again in a moment.', '지갑 연결 중입니다. 잠시 후 다시 시도해 주세요.')); return; }
+  /* shared-wallet.js는 Firebase 초기화 뒤에 로드된다. 그 짧은 구간에 파견을 눌러도
+     아무 일도 없는 것처럼 끝나지 않도록, 지갑 준비를 기다렸다가 한 번 자동으로 연다. */
+  if(!window.XenaWallet){
+    toast(t('Connecting to XENA Wallet…', 'XENA 지갑 연결 중…'));
+    if(walletWaitTimer) clearInterval(walletWaitTimer);
+    var attempts = 0;
+    walletWaitTimer = setInterval(function(){
+      attempts++;
+      if(window.XenaWallet){
+        clearInterval(walletWaitTimer); walletWaitTimer = null;
+        openPicker(cityKey);
+      } else if(attempts >= 25){
+        clearInterval(walletWaitTimer); walletWaitTimer = null;
+        toast(t('Wallet connection failed. Please refresh and try again.', '지갑 연결에 실패했습니다. 새로고침 후 다시 시도해 주세요.'));
+      }
+    }, 200);
+    return;
+  }
+  if(window.XenaCards && XenaCards.refresh) XenaCards.refresh();
   if(!XenaCards.ownsAny()){ toast(t('No cards yet — open a pack first.', '보유 카드가 없습니다 — 팩을 먼저 열어주세요.')); return; }
   pickCity = cityKey;
   pickSelected = [];
@@ -796,9 +815,18 @@ $('picker').addEventListener('click', function(e){
 });
 
 $('pick-send').addEventListener('click', function(){
-  if(!pickSelected.length || !window.XenaWallet) return;
+  if(!pickSelected.length || !window.XenaWallet || typeof window.XenaWallet.startTour !== 'function'){
+    toast(t('Wallet is not ready. Please try again in a moment.', '지갑 준비 중입니다. 잠시 후 다시 시도해 주세요.'));
+    return;
+  }
   if(tourActionPending[pickCity]) return;
-  var cards = pickSelected.map(function(id){ return XenaCards.get(id); });
+  var cards = pickSelected.map(function(id){ return XenaCards.get(id); }).filter(Boolean);
+  if(!cards.length){
+    pickSelected = [];
+    renderPicker();
+    toast(t('Your selected cards changed. Please select them again.', '선택한 카드 정보가 변경되었습니다. 카드를 다시 선택해 주세요.'));
+    return;
+  }
   var grades = cards.map(function(c){ return c.grade; });
   var elements = cards.map(function(c){ return c.element || null; });
   var btn = $('pick-send');
@@ -807,7 +835,9 @@ $('pick-send').addEventListener('click', function(){
   renderCities();
   toast(t('Tour request sent...', '투어 파견을 요청했습니다...'));
   btn.textContent = t('Sending…', '전송 중…');
-  window.XenaWallet.startTour(pickCity, grades, elements).then(function(r){
+  /* Promise 체인으로 감싸 동기 초기화 오류도 catch로 회수한다. 기존에는 이 경로가
+     콘솔 예외로만 끝나서 파견 버튼이 무반응처럼 보일 수 있었다. */
+  Promise.resolve().then(function(){ return window.XenaWallet.startTour(pickCity, grades, elements); }).then(function(r){
     delete tourActionPending[pickCity];
     local.tours[pickCity] = { cards: pickSelected.slice(), grades: grades, elements: elements, startAt: Date.now(), durationMs: r.durationMs };
     saveLocal(local);

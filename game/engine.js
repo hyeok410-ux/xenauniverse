@@ -151,6 +151,9 @@
     const moves = [];
     if (piece.type === TYPES.SIGNAL) {
       const dir = piece.color === "white" ? 1 : -1;
+      // Signals move straight ahead but capture only one square diagonally
+      // forward. Empty diagonals stay unavailable while still counting as
+      // attacked squares for leader-check detection.
       for (const dc of [-1, 1]) {
         const r = row + dir;
         const c = col + dc;
@@ -158,7 +161,7 @@
         const target = pieceAt(state, r, c);
         if (attacksOnly) moves.push({ kind: "attack", from, to: indexOf(r, c) });
         else if (target && target.color !== piece.color && target.type !== TYPES.LEADER) {
-          moves.push({ kind: "move", from, to: indexOf(r, c), capture: target.id });
+          moves.push({ kind: "move", from, to: indexOf(r, c), capture: target.id, captureType: "diagonal" });
         }
       }
       if (!attacksOnly && !piece.waiting) {

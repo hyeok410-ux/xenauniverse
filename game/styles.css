@@ -169,6 +169,11 @@ body[data-arena]:not([data-arena=""]) { background-image: linear-gradient(rgba(3
 .arena-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #858da1; font-size: 10px; }
 .replay-actions { display: flex; gap: 6px; }
 .replay-actions .secondary { padding: 7px 9px; font-size: 10px; }
+.replay-actions .surrender-action { color: #ffd7df; border-color: rgba(255,49,95,.72); background: rgba(112,10,35,.42); box-shadow: inset 0 0 14px rgba(255,49,95,.12); }
+.replay-actions .surrender-action:hover { color: #fff; border-color: #ff315f; background: rgba(167,12,49,.72); box-shadow: 0 0 18px rgba(255,49,95,.3); }
+.surrender-modal { border-color: rgba(255,49,95,.78); box-shadow: 0 0 42px rgba(255,49,95,.16); }
+.surrender-modal small { color: #ff9bb2; letter-spacing: .12em; font-weight: 900; }
+.surrender-confirm { border-color: #ff315f; background: linear-gradient(135deg, #bc173f, #741027); box-shadow: 0 0 18px rgba(255,49,95,.24); }
 .status-strip { height: 42px; border: 1px solid var(--line); background: rgba(10,12,19,.9); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
 .status-strip strong { font-size: 13px; }
 .status-strip span { color: #8f97aa; font-size: 11px; }

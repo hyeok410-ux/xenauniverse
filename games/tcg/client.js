@@ -5,8 +5,8 @@
   var DIFFICULTY = {
     easy: { core: 20, reward: 50, tcgChance: .2, exactTcg: 3 },
     normal: { core: 30, reward: 100, tcgChance: .4 },
-    hard: { core: 40, reward: 150, tcgChance: .7 },
-    veryhard: { core: 50, reward: 200, tcgChance: 1 }
+    hard: { core: 48, reward: 150, tcgChance: .92, manaBonus: 1, statBonus: 1 },
+    veryhard: { core: 70, reward: 200, tcgChance: 1, manaBonus: 2, statBonus: 2 }
   };
   var AFFINITY = { SOUND: 'SOUL', SOUL: 'DARK', DARK: 'LIGHT', LIGHT: 'METAL', METAL: 'BUG', BUG: 'ANOMALY', ANOMALY: 'SOUND' };
   var SFX = { draw: 'assets/audio/sfx_card_draw.mp3', summon: 'assets/audio/sfx_card_summon.mp3', hit: 'assets/audio/sfx_attack_impact.mp3', shatter: 'assets/audio/sfx_card_shatter.mp3' };
@@ -54,23 +54,26 @@
     if (!gallery.length) gallery = cards().filter(function (c) { return !c.isTcg; });
     if (!gallery.length) gallery = tcg;
     var conf = DIFFICULTY[level], out = [], i;
-    if (conf.exactTcg) {
+    if (level === 'veryhard') {
+      /* Full 90-card TCG pool.  The end-game AI receives only the efficient
+         top curve, with enough cheap cards to establish its board immediately. */
+      var ranked = tcg.slice().sort(function (a, b) { return (b.atk + b.hp * .7 - b.cost * .55) - (a.atk + a.hp * .7 - a.cost * .55); });
+      var elite = ranked.slice(0, Math.max(18, Math.ceil(ranked.length * .38)));
+      var low = elite.filter(function (c) { return c.cost <= 2; });
+      var mid = elite.filter(function (c) { return c.cost >= 3 && c.cost <= 4; });
+      var high = elite.filter(function (c) { return c.cost >= 5; });
+      function pickCost(pool) { return Object.assign({}, choose(pool.length ? pool : elite)); }
+      for (i = 0; i < 5; i++) out.push(pickCost(low));
+      for (i = 0; i < 6; i++) out.push(pickCost(mid));
+      for (i = 0; i < 4; i++) out.push(pickCost(high));
+    } else if (conf.exactTcg) {
       var picked = shuffle(tcg).slice(0, conf.exactTcg);
       picked.forEach(function (c) { out.push(Object.assign({}, c)); });
       while (out.length < 15) out.push(Object.assign({}, choose(gallery)));
-    } else if (level === 'veryhard') {
-      /* Full 90-card TCG pool, deliberately balanced across early / mid / late costs. */
-      var ranked = tcg.slice().sort(function (a, b) { return (b.atk + b.hp - b.cost) - (a.atk + a.hp - a.cost); });
-      var low = ranked.filter(function (c) { return c.cost <= 2; });
-      var mid = ranked.filter(function (c) { return c.cost >= 3 && c.cost <= 4; });
-      var high = ranked.filter(function (c) { return c.cost >= 5; });
-      function pickCost(pool) { return Object.assign({}, choose(pool.length ? pool : ranked)); }
-      for (i = 0; i < 4; i++) out.push(pickCost(low));
-      for (i = 0; i < 6; i++) out.push(pickCost(mid));
-      for (i = 0; i < 5; i++) out.push(pickCost(high));
     } else {
+      var hardPool = level === 'hard' && tcg.length ? tcg.slice().sort(function (a, b) { return (b.atk + b.hp - b.cost) - (a.atk + a.hp - a.cost); }).slice(0, Math.max(24, Math.ceil(tcg.length * .55))) : tcg;
       for (i = 0; i < 15; i++) {
-        var pool = Math.random() < conf.tcgChance && tcg.length ? tcg : gallery;
+        var pool = Math.random() < conf.tcgChance && tcg.length ? (level === 'hard' ? hardPool : tcg) : gallery;
         out.push(Object.assign({}, choose(pool)));
       }
     }
@@ -83,7 +86,7 @@
     while (chosen.length < 15 && all.length) chosen.push(Object.assign({}, all[chosen.length % all.length]));
     return shuffle(chosen.slice(0, 15));
   }
-  function player(id, deck, core) { return { id: id, core: core, mana: 0, maxMana: 0, deck: deck.slice(5), hand: deck.slice(0, 5), field: Array(7).fill(null), nextBuff: 0 }; }
+  function player(id, deck, core, advantage) { return { id: id, core: core, mana: 0, maxMana: 0, deck: deck.slice(5), hand: deck.slice(0, 5), field: Array(7).fill(null), nextBuff: 0, advantage: advantage || null }; }
   function show(view) { ['lobby', 'cards-view', 'battle-view'].forEach(function (id) { $('#' + id).hidden = id !== view; }); }
   function status(msg) { $('#lobby-status').textContent = msg || ''; }
   function esc(v) { return String(v || '').replace(/[&<>'"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]; }); }
@@ -115,6 +118,10 @@
   function startTurn(p) {
     p.maxMana = Math.min(10, p.maxMana + 1); p.mana = p.maxMana;
     p.field.forEach(function (u) { if (u) u.attacked = false; });
+    if (p.advantage && p.advantage.manaBonus) {
+      p.maxMana = Math.min(10, p.maxMana + p.advantage.manaBonus);
+      p.mana = p.maxMana;
+    }
     if (p.deck.length) { p.hand.push(p.deck.shift()); if (p.id === 'player') play(SFX.draw); }
   }
   async function startBattle() {
@@ -124,7 +131,7 @@
     try { if (window.XenaWallet && window.XenaWallet.consumeEnergy) await window.XenaWallet.consumeEnergy('signal_warfare'); }
     catch (_) { status(tr('보석이 부족합니다. 충전을 기다려 주세요.', 'No gems available. Wait for recharge.')); start.disabled = false; return; }
     var conf = DIFFICULTY[state.difficulty], first = Math.random() < .5 ? 'player' : 'ai';
-    state.game = { difficulty: state.difficulty, first: first, active: first, round: 1, player: player('player', deckForBattle(), 30), ai: player('ai', aiDeck(state.difficulty), conf.core) };
+    state.game = { difficulty: state.difficulty, first: first, active: first, round: 1, player: player('player', deckForBattle(), 30), ai: player('ai', aiDeck(state.difficulty), conf.core, conf) };
     await coin(first);
     startTurn(state.game[first]); show('battle-view'); renderBattle();
     if (first === 'ai') aiTurn();
@@ -172,6 +179,15 @@
     $('#end-turn').disabled = g.active !== 'player';
   }
   function addPower(card, amount) { if (!card || !amount) return; card.atk = Math.max(0, card.atk + amount); card.hp = Math.max(1, card.hp + amount); card.maxHp = Math.max(card.hp, (card.maxHp || card.hp) + amount); }
+  function showStatChange(side, slot, atkDelta, hpDelta) {
+    if (!atkDelta && !hpDelta) return;
+    var target = document.querySelector('.card-unit[data-side="' + side + '"][data-slot="' + slot + '"]');
+    if (!target) return;
+    var pop = document.createElement('span');
+    pop.className = 'stat-up-pop';
+    pop.textContent = (atkDelta ? 'ATK +' + atkDelta : '') + (atkDelta && hpDelta ? '  ' : '') + (hpDelta ? 'HP +' + hpDelta : '');
+    target.appendChild(pop); setTimeout(function () { pop.remove(); }, 1000);
+  }
   function applyDeployEffect(owner, enemy, card) {
     if (owner.nextBuff) { addPower(card, owner.nextBuff); owner.nextBuff = 0; }
     var e = card.effect || {}, allies = owner.field.filter(Boolean), enemies = enemy.field.filter(Boolean), others = allies.filter(function (x) { return x !== card; });
@@ -201,7 +217,9 @@
     var g = state.game, p = g && g.player, c = p && p.hand[state.handIndex];
     if (!g || g.active !== 'player' || !c || p.field[slot] || p.mana < c.cost) return;
     p.mana -= c.cost; p.field[slot] = Object.assign({}, c, { attacked: false }); p.hand.splice(state.handIndex, 1); state.handIndex = null;
+    var beforeAtk = p.field[slot].atk, beforeHp = p.field[slot].hp;
     applyDeployEffect(p, g.ai, p.field[slot]); play(SFX.summon); renderBattle();
+    showStatChange('player', slot, p.field[slot].atk - beforeAtk, p.field[slot].hp - beforeHp);
   }
   function affinityTargetSlots(attacker) {
     var g = state.game; if (!g || !attacker) return [];
@@ -215,11 +233,31 @@
       setTimeout(function () { hint.remove(); }, 900);
     });
   }
+  function showDamageForecast(attacker) {
+    var g = state.game;
+    if (!g || !attacker) return;
+    g.ai.field.forEach(function (target, slot) {
+      if (!target) return;
+      var node = document.querySelector('.card-unit[data-side="ai"][data-slot="' + slot + '"]');
+      if (!node) return;
+      var forecast = document.createElement('span');
+      var amount = damage(attacker, target);
+      forecast.className = 'damage-forecast' + (amount > attacker.atk ? ' affinity-damage' : '');
+      forecast.textContent = tr('예상 -', 'DMG -') + amount;
+      node.appendChild(forecast);
+    });
+    if (!g.ai.field.some(Boolean)) {
+      var core = $('#ai-core'), coreForecast = document.createElement('span');
+      coreForecast.className = 'damage-forecast core-forecast';
+      coreForecast.textContent = tr('예상 -', 'DMG -') + attacker.atk;
+      core.appendChild(coreForecast);
+    }
+  }
   function selectAttacker(slot) {
     var g = state.game, c = g && g.player.field[slot];
     if (!g || g.active !== 'player' || !c || c.attacked || g.round === 1) return;
     state.attacker = state.attacker === slot ? null : slot; state.handIndex = null; renderBattle();
-    if (state.attacker !== null) showAffinityHints(c);
+    if (state.attacker !== null) { showAffinityHints(c); showDamageForecast(c); }
   }
   function damage(attacker, target) { return attacker.atk + (target && AFFINITY[attacker.element] === target.element ? 1 : 0); }
   async function attackUnit(slot) {
@@ -241,7 +279,7 @@
     if (source) { source.style.setProperty('--attack-x', side === 'player' ? '28px' : '-28px'); source.classList.add('dash-attack'); }
     if (target) {
       target.classList.add('impact-hit');
-      var pop = document.createElement('span'); pop.className = 'damage-pop' + (affinity ? ' affinity-damage' : ''); pop.textContent = (affinity ? '+1  ' : '') + '-' + amount;
+      var pop = document.createElement('span'); pop.className = 'damage-pop' + (targetSide === 'core' ? ' core-damage' : '') + (affinity ? ' affinity-damage' : ''); pop.textContent = (affinity ? '+1  ' : '') + '-' + amount;
       target.appendChild(pop); setTimeout(function () { pop.remove(); }, 700);
     }
     return new Promise(function (resolve) { setTimeout(function () { root.classList.remove('camera-shake'); if (source) source.classList.remove('dash-attack'); if (target) target.classList.remove('impact-hit'); resolve(); }, 420); });
@@ -254,7 +292,10 @@
     var empty = ai.field.findIndex(function (c) { return !c; });
     if (playable.length && empty >= 0) {
       var picked = playable[0], c = ai.hand.splice(picked.i, 1)[0]; ai.mana -= c.cost; ai.field[empty] = Object.assign({}, c, { attacked: false });
-      applyDeployEffect(ai, g.player, ai.field[empty]); play(SFX.summon); renderBattle(); await wait(700);
+      var beforeAtk = ai.field[empty].atk, beforeHp = ai.field[empty].hp;
+      if (ai.advantage && ai.advantage.statBonus) addPower(ai.field[empty], ai.advantage.statBonus);
+      applyDeployEffect(ai, g.player, ai.field[empty]); play(SFX.summon); renderBattle();
+      showStatChange('ai', empty, ai.field[empty].atk - beforeAtk, ai.field[empty].hp - beforeHp); await wait(700);
     }
     if (g.round > 1) {
       for (var i = 0; i < ai.field.length; i++) {

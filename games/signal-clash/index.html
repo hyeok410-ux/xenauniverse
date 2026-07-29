@@ -603,8 +603,8 @@ var PLAYER_COPIES = { 'B-N-01':4, 'B-R-01':3, 'B-S-01':3, 'B-SR-01':2 };   /* 12
 var AI_GRADE_COUNTS = {
   easy:     { N:6, R:4, S:2 },                    /* 평균 파워 낮음 */
   normal:   { N:4, R:3, S:3, SR:2 },               /* 플레이어 기본 12장 덱과 비슷한 밸런스 */
-  hard:     { N:2, R:3, S:4, SR:3 },
-  veryhard: { N:1, R:2, S:3, SR:4, SSR:2 }         /* SSR 포함, 진짜 위협적으로 */
+  hard:     { R:2, S:4, SR:4, SSR:2 },
+  veryhard: { S:3, SR:5, SSR:4 }                    /* 시작부터 최상급 카드 비중 */
 };
 function buildAiDeck(difficulty){
   var all = window.XenaCards && XenaCards.all ? XenaCards.all() : [];
@@ -624,8 +624,17 @@ function buildAiDeck(difficulty){
     var strong = tcg.slice().sort(function(a,b){ return (b.power - b.cost) - (a.power - a.cost); }).slice(0, Math.max(30, Math.ceil(tcg.length * .55)));
     while(d.length < 12) d.push(take(strong.length ? strong : tcg));
   } else {
-    var chance = difficulty === 'hard' ? .7 : .4;
-    for(i = 0; i < 12; i++) d.push(take(Math.random() < chance ? tcg : basic));
+    /* Hard no longer rolls an ordinary gallery card most of the time.
+       It draws only from the upper-efficiency part of the full TCG pool,
+       while keeping a curve that can actually spend its mana each turn. */
+    var rankedHard = tcg.slice().sort(function(a,b){ return (b.power * 1.35 - b.cost) - (a.power * 1.35 - a.cost); }).slice(0, Math.max(30, Math.ceil(tcg.length * .5)));
+    var lowHard = rankedHard.filter(function(c){ return c.cost <= 2; });
+    var midHard = rankedHard.filter(function(c){ return c.cost >= 3 && c.cost <= 4; });
+    var highHard = rankedHard.filter(function(c){ return c.cost >= 5; });
+    function takeHard(pool){ return take(pool.length ? pool : rankedHard); }
+    for(i = 0; i < 4; i++) d.push(takeHard(lowHard));
+    for(i = 0; i < 5; i++) d.push(takeHard(midHard));
+    for(i = 0; i < 3; i++) d.push(takeHard(highHard));
   }
   /* Fisher-Yates */
   for(var j = d.length - 1; j > 0; j--){
@@ -645,15 +654,16 @@ function buildAiDeck(difficulty){
   return d;
 }
 function buildVeryHardAiDeck(tcg){
-  var ranked = tcg.slice().sort(function(a,b){ return (b.power - b.cost) - (a.power - a.cost); }).slice(0, Math.max(36, Math.ceil(tcg.length * .65)));
+  /* End-game: all 12 cards come from the best 35% of the 90-card TCG pool. */
+  var ranked = tcg.slice().sort(function(a,b){ return (b.power * 1.5 - b.cost) - (a.power * 1.5 - a.cost); }).slice(0, Math.max(18, Math.ceil(tcg.length * .35)));
   var low = ranked.filter(function(c){ return c.cost <= 2; });
   var mid = ranked.filter(function(c){ return c.cost >= 3 && c.cost <= 4; });
   var high = ranked.filter(function(c){ return c.cost >= 5; });
   function take(pool){ var list = pool.length ? pool : ranked; return toDeckCard(list[Math.floor(Math.random() * list.length)]); }
   var deck = [], i;
-  for(i = 0; i < 3; i++) deck.push(take(low));
+  for(i = 0; i < 4; i++) deck.push(take(low));
   for(i = 0; i < 5; i++) deck.push(take(mid));
-  for(i = 0; i < 4; i++) deck.push(take(high));
+  for(i = 0; i < 3; i++) deck.push(take(high));
   for(i = deck.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)), tmp = deck[i]; deck[i] = deck[j]; deck[j] = tmp; }
   return deck;
 }
@@ -1160,6 +1170,7 @@ function takeBack(z, slotIdx){
 /* ── AI (뼈대 수준: 탐욕적 소비 + 접전 구역 선호) ─────── */
 function aiTurn(){
   if(G.difficulty === 'veryhard') return aiTurnVeryHard();
+  if(G.difficulty === 'hard') return aiTurnHard();
   var manaLeft = G.mana;
   var placed = [];
   var guard = 0;
@@ -1188,6 +1199,36 @@ function aiTurn(){
     var card = G.aHand.splice(best, 1)[0];
     manaLeft -= card.cost;
     placed.push({ zone: pick, card: card });
+  }
+  return placed;
+}
+
+/* Hard uses the same board-evaluation discipline as Very Hard, but keeps a
+   small amount of uncertainty.  It no longer spends only the most expensive
+   card and accidentally wastes an otherwise winning zone. */
+function aiTurnHard(){
+  var manaLeft = G.mana, placed = [], guard = 0;
+  while(guard++ < 12){
+    var best = null;
+    for(var i = 0; i < G.aHand.length; i++){
+      var card = G.aHand[i];
+      if(card.cost > manaLeft) continue;
+      for(var z = 0; z < 3; z++){
+        if(zoneCount(z, 'a') >= MAX_PER_ZONE) continue;
+        var before = zonePower(z, 'a') - zonePower(z, 'p');
+        var after = before + card.power;
+        var score = card.power * 4.2 - card.cost * .8;
+        if(before < 0 && after >= 0) score += 135;
+        else if(before < 0) score += 56 - Math.abs(after) * 1.4;
+        else score += Math.max(0, 12 - after);
+        score += Math.random() * 2.5;
+        if(!best || score > best.score) best = {i:i, z:z, score:score};
+      }
+    }
+    if(!best) break;
+    var picked = G.aHand.splice(best.i, 1)[0];
+    manaLeft -= picked.cost;
+    placed.push({zone:best.z, card:picked});
   }
   return placed;
 }

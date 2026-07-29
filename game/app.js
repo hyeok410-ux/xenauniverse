@@ -41,7 +41,7 @@
   const CARD_ART_ROOT = ASSET_ROOTS.card;
   const PORTRAIT_ART_ROOT = ASSET_ROOTS.portrait;
   function assetSrc(root, file) {
-    const keepPng = /^(unit_t2_|emote_(xena|sovran)_|pack_|frame_|fx_frequency_pulse_v1|fx_sky_verdict_v1|skin_xena_ethereal_|nayun_mother_v1|space_|battlefield_)/i.test(file || "");
+    const keepPng = /^(unit_t2_|emote_(xena|sovran)_|pack_|frame_|fx_frequency_pulse_v1|fx_sky_verdict_v1|skin_xena_ethereal_|xena_awakened_prism_v2|nayun_mother_v1|space_|battlefield_)/i.test(file || "");
     const optimized = root !== "card" && !keepPng && /\.png$/i.test(file) ? file.replace(/\.png$/i, ".webp") : file;
     return (ASSET_ROOTS[root] || CARD_ART_ROOT) + optimized;
   }
@@ -50,11 +50,11 @@
     sovran: "pack_sovran_system_dominion_v1.png",
     crystal: "pack_stay_bright_crystal_rebellion_v1.png",
   };
-  // Catalyst capture awakens a leader. Keep this mapping character-specific so
-  // XENA ETHEREAL always uses the same XENA Override portrait on either side.
+  // Catalyst capture awakens a leader. The current XENA awakening portrait is
+  // shared by the Rebel Memory and Xena Ethereal leaders.
   const OVERRIDE_PORTRAITS = {
-    "XENA": "xena_override_v1.png",
-    "XENA ETHEREAL": "xena_override_v1.png",
+    "XENA": "xena_awakened_prism_v2.png",
+    "XENA ETHEREAL": "xena_awakened_prism_v2.png",
     "SOVRAN": "sovran_override_v1.png",
   };
   const PACK_PRICES = { xena: 2400, sovran: 2400, crystal: 5200 };
@@ -509,6 +509,7 @@
   let emoteFeed = [];
   let emoteNonce = 0;
   let promotionChoices = [];
+  let surrenderDialog = false;
   let onlineUiUnsubscribe = null;
   let onlineBinding = false;
   let onlineConnecting = false;
@@ -1767,6 +1768,7 @@
 
   function beginGame() {
     screen = "game"; result = null; chestOpened = false; selected = null; selectedSkill = null; thinking = false; promotionChoices = []; timerWarningKey = ""; activityStartedAt = Date.now();
+    surrenderDialog = false;
     replayMode = false; replayIndex = 0; lastVisualMove = null; cinematicAction = null; animating = false;
     const enemy = gameMode === "ai" && G.PACKS[aiOpponentPack] ? aiOpponentPack : chosen === "xena" ? "sovran" : "xena";
     state = G.createInitialState({ whitePack: chosen, blackPack: enemy });
@@ -2020,6 +2022,15 @@
     }).join("")}</div></section></div>`;
   }
 
+  function surrenderMarkup() {
+    if (!surrenderDialog || !state || result) return "";
+    const online = gameMode === "online";
+    const message = online
+      ? ui("Your opponent will be awarded the win. The gem spent for this match is not restored.", "상대에게 승리가 기록되며, 이번 대전에 사용한 보석은 복구되지 않습니다.")
+      : ui("This match will end immediately. The gem spent for this match is not restored.", "대전이 즉시 종료되며, 이번 대전에 사용한 보석은 복구되지 않습니다.");
+    return `<div class="choice-overlay surrender-overlay" role="dialog" aria-modal="true" aria-labelledby="surrender-title"><section class="choice-modal surrender-modal"><small>${online ? "ONLINE MATCH" : "MATCH CONTROL"}</small><h2 id="surrender-title">${ui("Surrender this match?", "이번 대전을 포기할까요?")}</h2><p>${message}</p><div class="actions"><button class="secondary" id="surrender-cancel">${ui("Keep Playing", "계속하기")}</button><button class="primary surrender-confirm" id="surrender-confirm">${ui("Surrender", "포기하기")}</button></div></section></div>`;
+  }
+
   function renderGame() {
     if (screen !== "game") return;
     applyCosmeticTheme();
@@ -2028,8 +2039,8 @@
     const turnPack = turnLeader ? turnLeader.character : G.PACKS[state.packs[state.turn]].leaderName;
     app.innerHTML = `<div class="shell"><header class="topbar">${brandMarkup()}${wallet()}</header>
       <div class="game-layout">${panel("white", gameMode !== "local" && playerColor !== "white")}<section class="arena"><div class="status-strip"><strong>${animating ? t("cinematic") : thinking ? t("thinking") : `${turnPack} ${t("turn")}${status.check ? " · CHECK" : ""}`}</strong><span>${state.ply + 1} ${t("move")}</span></div>
-      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${language === "en" ? TIME_RULES[timeRule].note.replace("초보", "Beginner").replace("표준", "Standard").replace("상위", "Advanced").replace("최상위", "Elite").replace("분", " min") : TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<div class="replay-actions"><button class="secondary threat-toggle ${showOpponentThreats ? "active" : ""}" id="toggle-threats">${language === "en" ? "Threats ON" : "위협 보기"}</button><button class="secondary" id="exit">${t("exit")}</button></div>`}</div></section>${panel("black", gameMode !== "local" && playerColor !== "black")}</div>
-      ${result ? resultMarkup() : ""}${promotionMarkup()}${recoveryMarkup()}</div>`;
+      <div class="board-wrap"><div class="scene3d" id="scene3d"></div><div class="board three-board">${boardMarkup()}</div>${cinematicEffectMarkup()}${emoteMarkup()}</div>${replayMode ? "" : emoteBar()}<div class="arena-actions"><span>${replayMode ? `${t("replay")} ${replayIndex + 1}/${lastReplay.length}` : `${TIME_RULES[timeRule].label} · ${language === "en" ? TIME_RULES[timeRule].note.replace("초보", "Beginner").replace("표준", "Standard").replace("상위", "Advanced").replace("최상위", "Elite").replace("분", " min") : TIME_RULES[timeRule].note}`}</span>${replayMode ? `<div class="replay-actions"><button class="secondary" id="replay-prev" ${replayIndex === 0 ? "disabled" : ""}>${t("previous")}</button><button class="secondary" id="replay-next" ${replayIndex >= lastReplay.length - 1 ? "disabled" : ""}>${t("next")}</button><button class="secondary" id="replay-exit">${t("leave")}</button></div>` : `<div class="replay-actions"><button class="secondary threat-toggle ${showOpponentThreats ? "active" : ""}" id="toggle-threats">${language === "en" ? "Threats ON" : "위협 보기"}</button><button class="secondary surrender-action" id="surrender">${ui("Surrender", "포기하기")}</button><button class="secondary" id="exit">${t("exit")}</button></div>`}</div></section>${panel("black", gameMode !== "local" && playerColor !== "black")}</div>
+      ${result ? resultMarkup() : ""}${promotionMarkup()}${recoveryMarkup()}${surrenderMarkup()}</div>`;
     if (result) {
       const resultActions = app.querySelector(".result-box .actions");
       if (resultActions && !resultActions.querySelector("#return-lobby")) resultActions.insertAdjacentHTML("beforeend", `<button class="secondary" id="return-lobby">${ui("LOBBY", "로비로")}</button>`);
@@ -2054,6 +2065,9 @@
       else renderGame();
     }));
     const exit = document.getElementById("exit"); if (exit) exit.addEventListener("click", exitGame);
+    const surrender = document.getElementById("surrender"); if (surrender) surrender.addEventListener("click", requestSurrender);
+    const surrenderCancel = document.getElementById("surrender-cancel"); if (surrenderCancel) surrenderCancel.addEventListener("click", () => { surrenderDialog = false; renderGame(); });
+    const surrenderConfirm = document.getElementById("surrender-confirm"); if (surrenderConfirm) surrenderConfirm.addEventListener("click", confirmSurrender);
     const threatToggle = document.getElementById("toggle-threats"); if (threatToggle) threatToggle.addEventListener("click", () => { showOpponentThreats = !showOpponentThreats; saveMeta(); renderGame(); });
     bindStoreButton();
     const replayPrev = document.getElementById("replay-prev"); if (replayPrev) replayPrev.addEventListener("click", () => stepReplay(-1));
@@ -2084,7 +2098,7 @@
   }
 
   function clickSquare(index) {
-    if (thinking || animating || result || replayMode || currentRecoveries().length || promotionChoices.length || !canControl(state.turn)) return;
+    if (thinking || animating || result || replayMode || surrenderDialog || currentRecoveries().length || promotionChoices.length || !canControl(state.turn)) return;
     const matching = legal.filter((move) => move.to === index && (!selectedSkill || move.skill === selectedSkill));
     if (matching.length) {
       let move = matching[0];
@@ -2102,6 +2116,35 @@
       playSfx("select", 0.32);
     } else { selected = null; selectedSkill = null; legal = []; }
     renderGame();
+  }
+
+  function requestSurrender() {
+    if (!state || result || replayMode || thinking || animating) return;
+    surrenderDialog = true;
+    renderGame();
+  }
+
+  function confirmSurrender() {
+    if (!state || result || !surrenderDialog) return;
+    surrenderDialog = false;
+    if (gameMode === "online" && window.OverrideGridOnline) {
+      thinking = true;
+      renderGame();
+      window.OverrideGridOnline.resign().then((submitted) => {
+        if (!submitted) {
+          thinking = false;
+          alert(ui("The surrender could not be synchronized.", "포기 처리를 동기화하지 못했습니다."));
+          renderGame();
+        }
+      }).catch(() => {
+        thinking = false;
+        alert(ui("The surrender could not be synchronized.", "포기 처리를 동기화하지 못했습니다."));
+        renderGame();
+      });
+      return;
+    }
+    const resigningColor = gameMode === "local" ? state.turn : playerColor;
+    finish(G.other(resigningColor), ui("You surrendered the match.", "대전을 포기했습니다."));
   }
 
   function afterMove() {
@@ -2478,6 +2521,7 @@
   }
 
   function exitGame() {
+    surrenderDialog = false;
     const online = gameMode === "online" && window.OverrideGridOnline ? window.OverrideGridOnline.snapshot() : null;
     if (online && online.room && online.room.status === "active" && !result) {
       const confirmed = confirm(language === "en" ? "Resign and leave this online match?" : "온라인 대전에서 기권하고 나갈까요?");
