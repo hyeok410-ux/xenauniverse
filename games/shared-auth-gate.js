@@ -14,7 +14,14 @@
   var listeners = [];
   var savedBodyOverflow = null;
 
-  function isEnglish() { return document.documentElement.lang === 'en'; }
+  var regionLanguage = null;
+  function fallbackLanguage() {
+    var zone = '';
+    try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (_) {}
+    var browserLanguage = String(navigator.language || '').toLowerCase();
+    return (browserLanguage.indexOf('ko') === 0 || zone === 'Asia/Seoul') ? 'ko' : 'en';
+  }
+  function isEnglish() { return (regionLanguage || fallbackLanguage()) === 'en'; }
   function copy(ko, en) { return isEnglish() ? en : ko; }
   function emit() {
     listeners.slice().forEach(function (listener) {
@@ -58,6 +65,32 @@
   var message = document.getElementById('xena-auth-gate-message');
   var button = document.getElementById('xena-auth-gate-login');
   var status = document.getElementById('xena-auth-gate-status');
+
+  /* The login gate follows the visitor's country rather than the language
+     selected in the hub. Korea receives Korean; the United States and every
+     other country receive English. A timezone/browser-language fallback keeps
+     the screen usable when the short country lookup is unavailable. */
+  (function resolveCountryLanguage(){
+    var cacheKey = 'xena_gate_country_v1';
+    var fallback = fallbackLanguage();
+    try {
+      var saved = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+      if (saved && saved.code && saved.expiresAt > Date.now()) {
+        regionLanguage = String(saved.code).toUpperCase() === 'KR' ? 'ko' : 'en';
+        return;
+      }
+    } catch (_) {}
+    var timeout = new Promise(function(resolve){ setTimeout(function(){ resolve(null); }, 1800); });
+    Promise.race([
+      fetch('https://api.country.is/', { cache: 'no-store' }).then(function(response){ return response.ok ? response.json() : null; }).catch(function(){ return null; }),
+      timeout
+    ]).then(function(data){
+      var code = String(data && data.country || '').toUpperCase();
+      regionLanguage = code ? (code === 'KR' ? 'ko' : 'en') : fallback;
+      if (code) try { sessionStorage.setItem(cacheKey, JSON.stringify({ code: code, expiresAt: Date.now() + 86400000 })); } catch (_) {}
+      if (!unlocked) renderLocked('ready');
+    });
+  })();
 
   function renderLocked(kind) {
     title.textContent = copy('로그인 후 플레이할 수 있습니다', 'Sign in to play');

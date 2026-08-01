@@ -86,36 +86,21 @@
     return snapshot();
   }
 
-  function clearBrowserGameState() {
+  function archiveBrowserGameState(uid) {
     if (window.XenaGameSession && typeof window.XenaGameSession.clearLocalState === "function") {
-      return window.XenaGameSession.clearLocalState("sign-out");
+      return window.XenaGameSession.clearLocalState("sign-out", uid);
     }
-    /* xena-auth.js can also be used without the games identity module. Keep a
-       small defensive fallback so an account's local card/deck/wallet cache is
-       never left behind after Firebase Auth signs out. */
-    const keep = new Set(["xena-lang", "xena-language", "xena_audio_v1", "og_language", "og_audio_enabled"]);
-    const prefixes = ["xena_", "zena_", "og_", "tcg_", "signal_", "merge_", "memory_", "shisen_", "worldcup_"];
-    const exact = new Set(["xena-signal-warfare-deck", "og_online_room", "xena_profile_v1", "xena_local_v1"]);
-    const clear = (storage) => {
-      const keys = [];
-      try {
-        for (let i = 0; i < storage.length; i += 1) {
-          const key = storage.key(i);
-          if (key && !keep.has(key) && (exact.has(key) || prefixes.some((prefix) => key.startsWith(prefix)))) keys.push(key);
-        }
-        keys.forEach((key) => storage.removeItem(key));
-      } catch (_) { /* storage may be unavailable in private mode */ }
-      return keys.length;
-    };
-    const removed = clear(window.localStorage) + clear(window.sessionStorage);
-    try { window.dispatchEvent(new CustomEvent("xena:session-cleared", { detail: { reason: "sign-out", removed } })); } catch (_) { /* no-op */ }
-    return removed;
+    /* This legacy module can run without the Games identity layer. In that
+       case do not delete collection data: Firebase Auth already hides the
+       app, and deleting local-only inventory makes a later sign-in unrecoverable. */
+    return 0;
   }
 
   async function signOut() {
     await connect();
+    const uid = auth && auth.currentUser && auth.currentUser.uid;
+    archiveBrowserGameState(uid);
     await authApi.signOut(auth);
-    clearBrowserGameState();
     setState({ phase: "signed-out", user: null, profile: null, wallet: null, error: "" });
   }
 

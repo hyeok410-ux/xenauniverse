@@ -54,6 +54,7 @@
    * in again.
    */
   var KEEP_LOCAL_KEYS = { 'xena-lang': true, 'xena-language': true, 'xena_audio_v1': true, 'og_language': true, 'og_audio_enabled': true };
+  var ACCOUNT_CACHE_PREFIX = 'xena_account_cache_v2:';
   var GAME_KEY_PREFIXES = ['xena_', 'zena_', 'og_', 'tcg_', 'signal_', 'merge_', 'memory_', 'shisen_', 'worldcup_'];
   var GAME_KEY_EXACT = {
     'xena-signal-warfare-deck': true,
@@ -64,6 +65,7 @@
 
   function isGameRecordKey(key){
     if (!key || KEEP_LOCAL_KEYS[key]) return false;
+    if (key.indexOf(ACCOUNT_CACHE_PREFIX) === 0) return false;
     if (GAME_KEY_EXACT[key]) return true;
     return GAME_KEY_PREFIXES.some(function(prefix){ return key.indexOf(prefix) === 0; });
   }
@@ -81,7 +83,43 @@
     return remove.length;
   }
 
-  function clearGameLocalState(reason){
+  function snapshotAccountLocalState(uid){
+    if (!uid) return 0;
+    var records = {};
+    try{
+      for (var i = 0; i < localStorage.length; i++){
+        var key = localStorage.key(i);
+        if (isGameRecordKey(key)) records[key] = localStorage.getItem(key);
+      }
+      /* A second logout observer can run after the first one has already
+         cleared the active view. Never replace a good account snapshot with
+         that empty post-logout state. */
+      if (!Object.keys(records).length){
+        var existing = JSON.parse(localStorage.getItem(ACCOUNT_CACHE_PREFIX + uid) || 'null');
+        if (existing && existing.records && Object.keys(existing.records).length) return Object.keys(existing.records).length;
+      }
+      localStorage.setItem(ACCOUNT_CACHE_PREFIX + uid, JSON.stringify({ schemaVersion: 2, savedAt: Date.now(), records: records }));
+    }catch(e){}
+    return Object.keys(records).length;
+  }
+
+  function restoreAccountLocalState(uid){
+    if (!uid) return 0;
+    var snapshot = null;
+    try{ snapshot = JSON.parse(localStorage.getItem(ACCOUNT_CACHE_PREFIX + uid) || 'null'); }catch(e){}
+    if (!snapshot || !snapshot.records || typeof snapshot.records !== 'object') return 0;
+    clearStorageRecords(window.localStorage);
+    Object.keys(snapshot.records).forEach(function(key){
+      try { localStorage.setItem(key, snapshot.records[key]); } catch(e){}
+    });
+    L = loadLocal();
+    return Object.keys(snapshot.records).length;
+  }
+
+  function clearGameLocalState(reason, uid){
+    /* Never destroy an account's legacy local saves at logout. Snapshot first,
+       then clear only the active browser view so the next account cannot see it. */
+    if (uid) snapshotAccountLocalState(uid);
     var removed = clearStorageRecords(window.localStorage) + clearStorageRecords(window.sessionStorage);
     /* Reset in-memory profile data too: otherwise the profile button can keep
        rendering the previous nickname/avatar until the next page load. */
@@ -96,6 +134,8 @@
   /* Shared by every game page and by xena-auth.js. */
   window.XenaGameSession = {
     clearLocalState: clearGameLocalState,
+    snapshotAccountLocalState: snapshotAccountLocalState,
+    restoreAccountLocalState: restoreAccountLocalState,
     isGameRecordKey: isGameRecordKey
   };
 
@@ -172,47 +212,92 @@
     }).catch(function(){ return null; });
   }
 
+  function hydrateAuthenticatedUser(expectedUid){
+    return ctx().then(function(c){
+      var nativeUser = c && c.auth && c.auth.currentUser;
+      if (!nativeUser || nativeUser.uid !== expectedUid || !authUser || authUser.uid !== expectedUid) return null;
+      /* CloudSync intentionally exposes a safe plain user object to UI
+         subscribers. Claims must be read from Firebase's native User, never
+         from that plain snapshot. This also runs again after every re-login. */
+      return nativeUser.getIdTokenResult(true).then(function(token){
+        if (!authUser || authUser.uid !== expectedUid) return null;
+        if (token.claims && token.claims.admin) return token;
+        /* The owner account receives its Custom Claim from a secret-protected
+           callable. Other accounts are rejected server-side and remain users. */
+        return callFn('bootstrapAdminClaim', {}).then(function(){
+          return nativeUser.getIdTokenResult(true);
+        }).catch(function(){ return token; });
+      }).then(function(token){
+        if (!authUser || authUser.uid !== expectedUid) return null;
+        adminClaim = !!(token && token.claims && token.claims.admin);
+        notify(); renderButton(); renderAdminBox();
+        return nativeUser;
+      });
+    }).then(function(nativeUser){
+      if (!nativeUser || !authUser || authUser.uid !== expectedUid) return;
+      nickname = null; nicknameChecked = false;
+      fetchOrCreateNickname(expectedUid);
+      recordVisitorSession(nativeUser);
+      hydrateGachaInventory(expectedUid);
+      pollWallet();
+      evalBadges();
+    }).catch(function(){
+      /* The UI stays safely non-admin on a transient token failure. A later
+         Firebase auth notification retries this hydration. */
+      adminClaim = false; notify(); renderAdminBox();
+    });
+  }
+
+  function gachaOwnedCount(inventory){
+    var owned = inventory && inventory.owned;
+    return owned && typeof owned === 'object' ? Object.keys(owned).filter(function(id){ return Number(owned[id]) > 0; }).length : 0;
+  }
+  function saveGachaInventory(inventory){
+    if (!authUser || !inventory || typeof inventory !== 'object') return Promise.resolve(null);
+    return callFn('saveGachaInventory', { inventory: inventory }).catch(function(){ return null; });
+  }
+  function hydrateGachaInventory(expectedUid){
+    if (!authUser || authUser.uid !== expectedUid) return;
+    var localInventory = getJSON('zena_gacha_v1', {});
+    callFn('getGachaInventory', {}).then(function(result){
+      if (!authUser || authUser.uid !== expectedUid) return;
+      var remoteInventory = result && result.inventory;
+      if (gachaOwnedCount(remoteInventory)){
+        localStorage.setItem('zena_gacha_v1', JSON.stringify(remoteInventory));
+        window.dispatchEvent(new CustomEvent('xena:gacha-inventory-restored'));
+      } else if (gachaOwnedCount(localInventory)){
+        return saveGachaInventory(localInventory);
+      }
+    }).catch(function(){});
+  }
+  window.XenaGachaInventory = { save: saveGachaInventory, hydrate: hydrateGachaInventory };
+
   function init(){
     if (!window.XenaCloudSync) return;
     window.XenaCloudSync.subscribe(function(snap){
       var was = authUser;
-      authUser = snap.user;
+      var next = snap.user;
+      if (was && (!next || was.uid !== next.uid)) clearGameLocalState('auth-state-change', was.uid);
+      authUser = next;
       if (authUser && (!was || was.uid !== authUser.uid)){
+        restoreAccountLocalState(authUser.uid);
         adminClaim = false;
-        authUser.getIdTokenResult(true).then(function(token){ adminClaim = !!(token.claims && token.claims.admin); notify(); renderButton(); renderAdminBox(); }).catch(function(){});
-        nickname = null; nicknameChecked = false;
-        fetchOrCreateNickname(authUser.uid);
-        recordVisitorSession(authUser);
-        pollWallet();
-        evalBadges();
+        hydrateAuthenticatedUser(authUser.uid);
       } else if (!authUser){
-        /* Covers sign-out initiated by another Firebase client/module too. */
-        if (was) clearGameLocalState('auth-state-change');
         nickname = null; nicknameChecked = false; adminClaim = false;
       }
-      notify();
-      renderButton();
+      notify(); renderButton();
     });
     window.XenaCloudSync.connect().then(function(){
       return ctx();
     }).then(function(c){
-      /* onAuthStateChanged may have fired before this module subscribed;
-         read the authoritative Firebase user once more so admin/profile UI
-         cannot remain stuck in the guest or nickname-pending state. */
       var u = c && c.auth && c.auth.currentUser;
       if (!u) return;
       var changed = !authUser || authUser.uid !== u.uid;
-      authUser = u;
-      if (changed || !nicknameChecked){
-        adminClaim = false;
-        u.getIdTokenResult(true).then(function(token){
-          adminClaim = !!(token.claims && token.claims.admin);
-          notify(); renderButton(); renderAdminBox();
-        }).catch(function(){});
-        nickname = null; nicknameChecked = false;
-        fetchOrCreateNickname(u.uid);
-        recordVisitorSession(u);
-      }
+      if (authUser && changed) clearGameLocalState('account-change', authUser.uid);
+      authUser = { uid: u.uid, displayName: u.displayName || '', email: u.email || '', photoURL: u.photoURL || '' };
+      if (changed) restoreAccountLocalState(u.uid);
+      hydrateAuthenticatedUser(u.uid);
       notify(); renderButton();
     }).catch(function(){});
   }
@@ -223,10 +308,9 @@
   }
   function signOut(){
     if (!window.XenaCloudSync) return Promise.resolve();
-    return window.XenaCloudSync.signOut().then(function(){
-      clearGameLocalState('sign-out');
-      return state();
-    });
+    /* The auth observer archives the current account before it clears the
+       visible browser session. Do not run a second destructive cleanup here. */
+    return window.XenaCloudSync.signOut().then(function(){ return state(); });
   }
   function recordVisitorSession(user){
     if (!user || !user.uid) return;

@@ -12,6 +12,9 @@ const db = admin.firestore();
 const FieldValue = admin.firestore.FieldValue;
 const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
 const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
+/* One-time bootstrap is deliberately secret-backed. Runtime authorization is
+   still the Firebase Auth custom claim checked by requireAdmin below. */
+const ADMIN_BOOTSTRAP_EMAIL = defineSecret("ADMIN_BOOTSTRAP_EMAIL");
 
 const PAID_PRODUCTS = Object.freeze({
   // 오버라이드 그리드용 프리미엄 재화 (Anomaly Shards) — 기존
@@ -567,6 +570,46 @@ exports.claimWelcomeBonus = onCall(async (request) => {
    표로 고정하고 "몇 장을 분해했는지"만 클라이언트 값을 받아 상한을 두고 계산한다.
    완전한 검증은 아니지만 최소한 "등급 단가 조작"은 막는다. */
 const DUST_VALUE = Object.freeze({ N: 10, R: 30, S: 100, SR: 300, SSR: 1000 });
+/* XENA Card inventory is account data. Older builds kept it only in
+   localStorage, which made an ordinary logout look like a permanent wipe.
+   These callables provide a versioned account backup while the draw engine is
+   progressively moved server-side. */
+function sanitizeGachaInventory(value) {
+  const source = value && typeof value === "object" ? value : {};
+  const owned = {};
+  const rawOwned = source.owned && typeof source.owned === "object" ? source.owned : {};
+  Object.keys(rawOwned).slice(0, 500).forEach((id) => {
+    const count = Number(rawOwned[id]);
+    if (/^(?:PC-\d{2}|[A-Z]{2}-[A-Z]{1,3}-\d{2})$/i.test(id) && Number.isInteger(count) && count > 0 && count <= 999) owned[id] = count;
+  });
+  const packs = {};
+  const rawPacks = source.packs && typeof source.packs === "object" ? source.packs : {};
+  ["signal", "sov", "elite", "weeklyClaimed", "weeklyFreeClaimed", "archiveClaimed"].forEach((key) => {
+    const item = rawPacks[key];
+    if (typeof item === "number" && Number.isFinite(item) && item >= 0 && item <= Date.now() + 86400000) packs[key] = Math.floor(item);
+    if (typeof item === "string" && item.length <= 32 && /^[0-9-]+$/.test(item)) packs[key] = item;
+  });
+  return { owned, packs, welcomed: !!source.welcomed };
+}
+
+exports.getGachaInventory = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const snap = await db.doc(`gachaInventories/${uid}`).get();
+  return { inventory: snap.exists ? sanitizeGachaInventory(snap.data()) : null };
+});
+
+exports.saveGachaInventory = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const inventory = sanitizeGachaInventory(request.data && request.data.inventory);
+  await db.doc(`gachaInventories/${uid}`).set({
+    uid,
+    ...inventory,
+    schemaVersion: 1,
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  return { inventory };
+});
+
 exports.claimGachaDust = onCall(async (request) => {
   const uid = requireAuth(request);
   const grade = String(request.data && request.data.grade || "");
@@ -1030,6 +1073,20 @@ function requireAdmin(request) {
   if (!request.auth.token || request.auth.token.admin !== true) throw new HttpsError("permission-denied", "Admin only.");
   return uid;
 }
+
+/* Grants the owner account its Custom Claim once, using a deployment secret
+   rather than a UID or email embedded in browser code. Every privileged
+   endpoint continues to use requireAdmin() above afterwards. */
+exports.bootstrapAdminClaim = onCall({ secrets: [ADMIN_BOOTSTRAP_EMAIL] }, async (request) => {
+  const uid = requireAuth(request);
+  const expected = String(ADMIN_BOOTSTRAP_EMAIL.value() || "").trim().toLowerCase();
+  const email = String(request.auth.token && request.auth.token.email || "").trim().toLowerCase();
+  if (!expected || !email || email !== expected) throw new HttpsError("permission-denied", "Admin bootstrap is not authorized for this account.");
+  const user = await admin.auth().getUser(uid);
+  const claims = { ...(user.customClaims || {}), admin: true };
+  await admin.auth().setCustomUserClaims(uid, claims);
+  return { ok: true, admin: true };
+});
 
 /* Resolve identity server-side so admin tools show a recognizable Google
    account without trusting an email supplied by the browser. getUsers accepts

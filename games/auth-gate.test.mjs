@@ -23,13 +23,33 @@ test('XENA Games hub and every playable game load the mandatory auth gate', () =
   }
 });
 
-test('logout clears gameplay records but preserves device preferences', () => {
+test('logout hides gameplay records without destroying the account snapshot', () => {
   const identity = source('games/shared-identity.js');
   assert.match(identity, /clearGameLocalState\(/);
+  assert.match(identity, /snapshotAccountLocalState\(/);
+  assert.match(identity, /restoreAccountLocalState\(/);
+  assert.match(identity, /ACCOUNT_CACHE_PREFIX/);
   assert.match(identity, /'zena_', 'og_'/);
   assert.match(identity, /'xena-lang': true/);
   assert.match(identity, /'xena_audio_v1': true/);
   assert.match(identity, /xena:session-cleared/);
+});
+
+test('login gate chooses Korean in Korea and English elsewhere', () => {
+  const gate = source('games/shared-auth-gate.js');
+  assert.match(gate, /api\.country\.is/);
+  assert.match(gate, /code === 'KR' \? 'ko' : 'en'/);
+});
+
+test('gacha inventory is synchronized to the signed-in account', () => {
+  const identity = source('games/shared-identity.js');
+  const gacha = source('games/gacha/index.html');
+  const functions = source('functions/index.js');
+  assert.match(identity, /getGachaInventory/);
+  assert.match(identity, /saveGachaInventory/);
+  assert.match(gacha, /XenaGachaInventory\.save/);
+  assert.match(functions, /exports\.getGachaInventory/);
+  assert.match(functions, /exports\.saveGachaInventory/);
 });
 
 test('guest energy cannot bypass account authentication', () => {

@@ -647,11 +647,24 @@ AVAIL.forEach(function(c){
 /* 저장 */
 var SAVE_KEY = 'zena_gacha_v1', WALLET_KEY = 'xena_wallet_v1';
 function load(key, def){ try{ return JSON.parse(localStorage.getItem(key)) || def; }catch(e){ return def; } }
-function save(key, v){ try{ localStorage.setItem(key, JSON.stringify(v)); }catch(e){} }
+function save(key, v){
+  try{ localStorage.setItem(key, JSON.stringify(v)); }catch(e){}
+  if(key === SAVE_KEY && window.XenaGachaInventory && typeof window.XenaGachaInventory.save === 'function'){
+    window.XenaGachaInventory.save(v);
+  }
+}
 var st = load(SAVE_KEY, {});
 if(!st.owned) st.owned = {};
 if(!st.packs) st.packs = {};
 ['signal','sov','elite'].forEach(function(p){ if(typeof st.packs[p] !== 'number') st.packs[p] = 0; });
+window.addEventListener('xena:gacha-inventory-restored', function(){
+  /* Identity loads after this legacy page script. Reload once so the restored
+     account inventory becomes the page's source of truth, not the empty
+     in-memory `st` created before sign-in completed. */
+  if (window.__xenaGachaInventoryReloaded) return;
+  window.__xenaGachaInventoryReloaded = true;
+  window.location.reload();
+});
 var wallet = { xc: 0 };
 window.__wireGachaWallet = function(){
   window.XenaWallet.subscribe(function(bal){
