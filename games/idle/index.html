@@ -22,7 +22,7 @@
 :root{
   --black:#000000; --purple:#6e2fd9; --purple-light:#a06bff; --silver:#e6e6ee;
   --cyan:#3fe0ff; --magenta:#ff2fb0; --gold:#e8c468;
-  --sound:#5cffc0; --soul:#a06bff; --dark:#ff2fb0; --light:#7fb8ff; --metal:#e8c468; --bug:#3fe0ff;
+  --sound:#5cffc0; --soul:#a06bff; --dark:#ff2fb0; --light:#7fb8ff; --metal:#e8c468; --bug:#3fe0ff; --anomaly:#ff6b3d;
   --hair:rgba(255,255,255,.09); --text-dim:rgba(230,230,238,.55);
   --font-sans:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
   --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
@@ -365,7 +365,11 @@ function synergyPreview(cards, cityElement){
   return {total:total, reasons:reasons};
 }
 var ELEMENT_LABEL = { SOUND:{en:'SOUND',ko:'사운드'}, SOUL:{en:'SOUL',ko:'소울'}, DARK:{en:'DARK',ko:'다크'},
-  LIGHT:{en:'LIGHT',ko:'라이트'}, METAL:{en:'METAL',ko:'메탈'}, BUG:{en:'BUG',ko:'버그'} };
+  LIGHT:{en:'LIGHT',ko:'라이트'}, METAL:{en:'METAL',ko:'메탈'}, BUG:{en:'BUG',ko:'버그'},
+  ANOMALY:{en:'ANOMALY',ko:'이상'} };
+function elementLabel(key){
+  return ELEMENT_LABEL[key] || {en:String(key || 'UNKNOWN'), ko:String(key || '기타')};
+}
 var CITIES = [
   { key:'seoul', en:'SEOUL',     ko:'서울',   flag:'🇰🇷', mult:1.00, cost:0,     a:'#3fe0ff', b:'#6e2fd9', element:'SOUND' },
   { key:'tokyo', en:'TOKYO',     ko:'도쿄',   flag:'🇯🇵', mult:1.25, cost:1200,  a:'#ff2fb0', b:'#ff6b3d', element:'SOUL'  },
@@ -744,7 +748,8 @@ function renderPickElemFilter(){
   var els = ['ALL'].concat(window.XenaCards ? XenaCards.ELEMENTS : []);
   var html = '';
   els.forEach(function(el){
-    var label = el === 'ALL' ? t('ALL', '전체') : t(ELEMENT_LABEL[el].en, ELEMENT_LABEL[el].ko);
+    var labels = elementLabel(el);
+    var label = el === 'ALL' ? t('ALL', '전체') : t(labels.en, labels.ko);
     html += '<button class="' + (pickElemFilter === el ? 'on' : '') + '" data-el="' + el + '">' + label + '</button>';
   });
   $('pick-elem-filter').innerHTML = html;
@@ -778,7 +783,7 @@ function renderPicker(){
            '<span class="p-grade" style="color:' + c.color + '">' + c.grade + '</span>' +
            '<span class="p-cost">' + c.cost + 'h</span>' +
            '<span class="p-pow">⚡' + c.power + '</span>' +
-           (c.element ? '<span class="p-element" style="background:var(--' + c.element.toLowerCase() + ')">' + t(ELEMENT_LABEL[c.element].en, ELEMENT_LABEL[c.element].ko) + '</span>' : '') +
+            (c.element ? '<span class="p-element" style="background:var(--' + c.element.toLowerCase() + ')">' + t(elementLabel(c.element).en, elementLabel(c.element).ko) + '</span>' : '') +
          '</button>';
   }
   $('picker').innerHTML = h;

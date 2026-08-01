@@ -66,6 +66,7 @@
   var duckTimer = null;
   var currentSetKey = null;
   var sfxCache = {};
+  var lastSfxName = '', lastSfxAt = 0;
   var suspended = false;      /* 화면잠금/탭전환으로 정지된 상태 */
   var wasPlaying = false;
 
@@ -144,6 +145,11 @@
 
   function sfx(name){
     if (state.muted || suspended || document.hidden) return;
+    var nowMs = (window.performance && performance.now) ? performance.now() : Date.now();
+    /* Several legacy pages already attach button sounds.  The global handler
+       below may see the same click, so collapse identical calls in one frame. */
+    if (name === lastSfxName && nowMs - lastSfxAt < 90) return;
+    lastSfxName = name; lastSfxAt = nowMs;
     var a = sfxCache[name];
     if (!a){
       a = new Audio(ASSET_BASE + 'sfx/' + name + '.mp3?v=20260724');
@@ -276,9 +282,20 @@
     document.addEventListener('touchstart', handler);
   }
 
+  var interactionSfxReady = false;
+  function injectGlobalInteractionSfx(){
+    if (interactionSfxReady) return; interactionSfxReady = true;
+    document.addEventListener('click', function(event){
+      var target = event.target && event.target.closest ? event.target.closest('button,[role="button"],a.btn,a.button,input[type="button"],input[type="submit"]') : null;
+      if (!target || target.disabled || target.getAttribute('aria-disabled') === 'true' || target.id === 'xaud-mute') return;
+      sfx('btn_click');
+    }, true);
+  }
+
   window.XenaAudio = {
     init: function(setKey){
       injectMuteToggle();
+      injectGlobalInteractionSfx();
       setBackground(setKey);
       playBgm(setKey);
       unlockOnFirstGesture();

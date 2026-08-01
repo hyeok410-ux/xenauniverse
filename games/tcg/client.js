@@ -5,8 +5,8 @@
   var DIFFICULTY = {
     easy: { core: 20, reward: 50, tcgChance: .2, exactTcg: 3 },
     normal: { core: 30, reward: 100, tcgChance: .4 },
-    hard: { core: 48, reward: 150, tcgChance: .92, manaBonus: 1, statBonus: 1 },
-    veryhard: { core: 70, reward: 200, tcgChance: 1, manaBonus: 2, statBonus: 2 }
+    hard: { core: 48, reward: 150, tcgChance: .92 },
+    veryhard: { core: 70, reward: 200, tcgChance: 1 }
   };
   var AFFINITY = { SOUND: 'SOUL', SOUL: 'DARK', DARK: 'LIGHT', LIGHT: 'METAL', METAL: 'BUG', BUG: 'ANOMALY', ANOMALY: 'SOUND' };
   var SFX = { draw: 'assets/audio/sfx_card_draw.mp3', summon: 'assets/audio/sfx_card_summon.mp3', hit: 'assets/audio/sfx_attack_impact.mp3', shatter: 'assets/audio/sfx_card_shatter.mp3' };
@@ -18,6 +18,9 @@
   function play(path) {
     if (window.XenaAudio && window.XenaAudio.playSfx) return window.XenaAudio.playSfx(path);
     try { var a = new Audio(path); a.volume = .65; a.play().catch(function () {}); } catch (_) {}
+  }
+  function playVfx(target, kind, options) {
+    return window.XenaVfx ? window.XenaVfx.play(target, kind, options) : Promise.resolve(false);
   }
   function normalize(c) {
     var stat = (window.XenaCards && window.XenaCards.GRADE_STATS && window.XenaCards.GRADE_STATS[c.grade]) || {};
@@ -102,17 +105,35 @@
   function battleCardHtml(c) {
     return '<img class="card-art" src="' + esc(c.image) + '" alt="' + esc(c.name) + '"><span class="battle-hp">HP ' + c.hp + '</span>';
   }
+  function renderDeckSlots(list) {
+    var slots = $('#deck-slots'); slots.innerHTML = '';
+    for (var i = 0; i < 15; i++) {
+      var c = list[i] || null, slot;
+      if (c) {
+        slot = document.createElement('button'); slot.type = 'button'; slot.className = 'deck-slot filled';
+        slot.dataset.slot = i; slot.setAttribute('aria-label', tr('덱에서 ' + c.name + ' 제거', 'Remove ' + c.name + ' from deck'));
+        slot.innerHTML = '<img src="' + esc(c.image) + '" alt=""><span class="deck-slot-number">' + (i + 1) + '</span>';
+      } else {
+        slot = document.createElement('span'); slot.className = 'deck-slot empty';
+        slot.innerHTML = '<span>' + (i + 1) + '</span>';
+      }
+      slots.appendChild(slot);
+    }
+  }
   function renderCollection() {
-    var list = $('#card-list'); list.innerHTML = '';
-    cards().forEach(function (c) {
+    var list = $('#card-list'), ownedCards = cards(), byId = {}; list.innerHTML = '';
+    ownedCards.forEach(function (c) { byId[c.id] = c; });
+    renderDeckSlots(state.selected.map(function (id) { return byId[id] || null; }));
+    ownedCards.forEach(function (c) {
       var selectedCount = state.selected.filter(function (id) { return id === c.id; }).length;
       var maxCopies = Math.min(2, c.count);
       var el = document.createElement('button'); el.type = 'button'; el.className = 'collection-card' + (selectedCount ? ' selected' : '');
       el.innerHTML = collectionCardHtml(c) + '<span class="deck-copy-count">DECK ' + selectedCount + '/' + maxCopies + '</span>';
       el.onclick = function () {
         var count = state.selected.filter(function (id) { return id === c.id; }).length;
-        if (count < maxCopies && state.selected.length < 15) state.selected.push(c.id);
-        else if (count > 0) state.selected.splice(state.selected.lastIndexOf(c.id), 1);
+        if (count >= maxCopies) $('#deck-status').textContent = tr('이 카드는 더 장착할 수 없습니다.', 'No more copies of this card are available.');
+        else if (state.selected.length >= 15) $('#deck-status').textContent = tr('덱 슬롯 15칸이 모두 찼습니다.', 'All 15 deck slots are full.');
+        else { state.selected.push(c.id); $('#deck-status').textContent = ''; }
         renderCollection();
       };
       list.appendChild(el);
@@ -123,11 +144,17 @@
   function startTurn(p) {
     p.maxMana = Math.min(10, p.maxMana + 1); p.mana = p.maxMana;
     p.field.forEach(function (u) { if (u) u.attacked = false; });
-    if (p.advantage && p.advantage.manaBonus) {
-      p.maxMana = Math.min(10, p.maxMana + p.advantage.manaBonus);
-      p.mana = p.maxMana;
-    }
     if (p.deck.length) { p.hand.push(p.deck.shift()); if (p.id === 'player') play(SFX.draw); }
+  }
+  function canPayMana(actor, card) {
+    var mana = Number(actor && actor.mana), cost = Number(card && card.cost);
+    return Number.isFinite(mana) && Number.isFinite(cost) && cost >= 0 && cost <= mana;
+  }
+  function spendMana(actor, card) {
+    if (!canPayMana(actor, card)) return false;
+    actor.mana -= Number(card.cost);
+    if (actor.mana < 0) throw new Error('Mana invariant violated');
+    return true;
   }
   async function startBattle() {
     if (state.game) return;
@@ -213,7 +240,7 @@
     $('#turn-rule').textContent = g.round === 1 ? tr('첫 턴 공격 불가', 'FIRST TURN · NO ATTACK') : '';
     $('#affinity-rule').textContent = tr('상성 우위 공격 +1: SOUND > SOUL > DARK > LIGHT > METAL > BUG > ANOMALY > SOUND', 'Affinity advantage +1 ATK: SOUND > SOUL > DARK > LIGHT > METAL > BUG > ANOMALY > SOUND');
     $('#player-core').innerHTML = '<span>YOUR CORE · MANA ' + p.mana + '/' + p.maxMana + '</span><b>' + p.core + '</b>';
-    $('#ai-core').innerHTML = '<span>AI CORE</span><b>' + ai.core + '</b>';
+    $('#ai-core').innerHTML = '<span>AI CORE · MANA ' + ai.mana + '/' + ai.maxMana + '</span><b>' + ai.core + '</b>';
     $('#ai-core').onclick = function () { if (!ai.field.some(Boolean)) attackCore(); };
     $('#ai-core').classList.toggle('target-ready', state.attacker !== null && !ai.field.some(Boolean));
     renderZone($('#player-field'), p.field, 'player'); renderZone($('#ai-field'), ai.field, 'ai');
@@ -232,6 +259,7 @@
     pop.className = 'stat-up-pop';
     pop.textContent = (atkDelta ? 'ATK +' + atkDelta : '') + (atkDelta && hpDelta ? '  ' : '') + (hpDelta ? 'HP +' + hpDelta : '');
     target.appendChild(pop); setTimeout(function () { pop.remove(); }, 1000);
+    playVfx(target, atkDelta < 0 || hpDelta < 0 ? 'debuff' : 'buff', { duration: 720, inset: '-34%' });
   }
   function applyDeployEffect(owner, enemy, card) {
     if (owner.nextDebuff) { addPower(card, -owner.nextDebuff); owner.nextDebuff = 0; }
@@ -267,10 +295,12 @@
   }
   function deploy(slot) {
     var g = state.game, p = g && g.player, c = p && p.hand[state.handIndex];
-    if (!g || g.active !== 'player' || !c || p.field[slot] || p.mana < c.cost) return;
-    p.mana -= c.cost; p.field[slot] = Object.assign({}, c, { attacked: false }); p.hand.splice(state.handIndex, 1); state.handIndex = null;
+    if (!g || g.active !== 'player' || !c || p.field[slot] || !canPayMana(p, c)) return;
+    if (!spendMana(p, c)) return;
+    p.field[slot] = Object.assign({}, c, { attacked: false }); p.hand.splice(state.handIndex, 1); state.handIndex = null;
     var beforeAtk = p.field[slot].atk, beforeHp = p.field[slot].hp;
     applyDeployEffect(p, g.ai, p.field[slot]); play(SFX.summon); renderBattle();
+    playVfx(document.querySelector('.card-unit[data-side="player"][data-slot="' + slot + '"]'), 'summon', { duration: 760, inset: '-30%' });
     showStatChange('player', slot, p.field[slot].atk - beforeAtk, p.field[slot].hp - beforeHp);
   }
   function affinityTargetSlots(attacker) {
@@ -317,7 +347,14 @@
     if (!a || !target) return;
     var source = state.attacker, amount = damage(a, target); state.attacker = null; a.attacked = true;
     await hit('player', source, 'ai', slot, amount, amount > a.atk);
-    target.hp -= amount; if (target.hp <= 0) { g.ai.field[slot] = null; play(SFX.shatter); } renderBattle();
+    target.hp -= amount;
+    if (target.hp <= 0) {
+      play(SFX.shatter);
+      playVfx(document.querySelector('.card-unit[data-side="ai"][data-slot="' + slot + '"]'), 'shatter', { duration: 720, inset: '-38%' });
+      await wait(520);
+      g.ai.field[slot] = null;
+    }
+    renderBattle();
   }
   async function attackCore() {
     var g = state.game, a = g && g.player.field[state.attacker]; if (!a || g.ai.field.some(Boolean)) return;
@@ -331,6 +368,7 @@
     if (source) { source.style.setProperty('--attack-x', side === 'player' ? '28px' : '-28px'); source.classList.add('dash-attack'); }
     if (target) {
       target.classList.add('impact-hit');
+      playVfx(target, targetSide === 'core' ? 'core' : (affinity ? 'affinity' : 'impact'), { duration: targetSide === 'core' ? 980 : 620, inset: targetSide === 'core' ? '-45%' : '-32%' });
       var pop = document.createElement('span'); pop.className = 'damage-pop' + (targetSide === 'core' ? ' core-damage' : '') + (affinity ? ' affinity-damage' : ''); pop.textContent = (affinity ? '+1  ' : '') + '-' + amount;
       target.appendChild(pop); setTimeout(function () { pop.remove(); }, 700);
     }
@@ -345,7 +383,7 @@
       var empty = ai.field.findIndex(function (c) { return !c; });
       if (empty < 0) break;
       var playable = ai.hand.map(function (c, i) {
-        if (c.cost > ai.mana) return null;
+        if (!canPayMana(ai, c)) return null;
         var owner = cloneFighter(ai), enemy = cloneFighter(g.player), before = totals(owner), enemyBefore = totals(enemy);
         owner.field[empty] = Object.assign({}, c, { attacked:false }); applyDeployEffect(owner, enemy, owner.field[empty]);
         var after = totals(owner), enemyAfter = totals(enemy);
@@ -353,10 +391,15 @@
         return { c:c, i:i, score:tactical };
       }).filter(Boolean).sort(function (a, b) { return b.score - a.score; });
       if (!playable.length) break;
-      var picked = playable[0], c = ai.hand.splice(picked.i, 1)[0]; ai.mana -= c.cost; ai.field[empty] = Object.assign({}, c, { attacked: false });
+      var picked = playable[0], c = ai.hand[picked.i];
+      /* Final invariant at the mutation boundary: difficulty configuration,
+         scoring and future bonuses can never turn an unaffordable card into a
+         legal placement. */
+      if (!canPayMana(ai, c) || !spendMana(ai, c)) break;
+      ai.hand.splice(picked.i, 1); ai.field[empty] = Object.assign({}, c, { attacked: false });
       var beforeAtk = ai.field[empty].atk, beforeHp = ai.field[empty].hp;
-      if (ai.advantage && ai.advantage.statBonus) addPower(ai.field[empty], ai.advantage.statBonus);
       applyDeployEffect(ai, g.player, ai.field[empty]); play(SFX.summon); renderBattle();
+      playVfx(document.querySelector('.card-unit[data-side="ai"][data-slot="' + empty + '"]'), 'summon', { duration: 760, inset: '-30%' });
       showStatChange('ai', empty, ai.field[empty].atk - beforeAtk, ai.field[empty].hp - beforeHp); await wait(520);
     }
     if (g.round > 1) {
@@ -368,7 +411,13 @@
         });
         if (targets.length) {
           var t = targets[0], amount = damage(a, t.x); await hit('ai', i, 'player', t.n, amount, amount > a.atk);
-          t.x.hp -= amount; if (t.x.hp <= 0) { g.player.field[t.n] = null; play(SFX.shatter); }
+          t.x.hp -= amount;
+          if (t.x.hp <= 0) {
+            play(SFX.shatter);
+            playVfx(document.querySelector('.card-unit[data-side="player"][data-slot="' + t.n + '"]'), 'shatter', { duration: 720, inset: '-38%' });
+            await wait(520);
+            g.player.field[t.n] = null;
+          }
         } else { await hit('ai', i, 'core', 'player-core', a.atk, false); g.player.core = Math.max(0, g.player.core - a.atk); }
         if (g.player.core <= 0) { finish(false); return; }
         renderBattle(); await wait(440);
@@ -416,6 +465,13 @@
     } catch (_) {}
     document.querySelectorAll('[data-difficulty]').forEach(function (b) { b.onclick = function () { state.difficulty = b.dataset.difficulty; document.querySelectorAll('[data-difficulty]').forEach(function (x) { x.classList.toggle('selected', x === b); }); }; });
     $('#my-cards-button').onclick = function () { show('cards-view'); renderCollection(); };
+    $('#deck-slots').onclick = function (event) {
+      var slot = event.target.closest('button.deck-slot[data-slot]');
+      if (!slot) return;
+      var index = Number(slot.dataset.slot);
+      if (!Number.isInteger(index) || index < 0 || index >= state.selected.length) return;
+      state.selected.splice(index, 1); $('#deck-status').textContent = ''; renderCollection();
+    };
     $('#cards-back').onclick = function () { show('lobby'); };
     $('#save-deck').onclick = function () { if (state.selected.length !== 15) return; localStorage.setItem('xena-signal-warfare-deck', JSON.stringify(state.selected)); $('#deck-status').textContent = tr('덱이 저장되었습니다.', 'Deck saved.'); show('lobby'); };
     $('#start-pve').onclick = startBattle; $('#end-turn').onclick = endTurn;

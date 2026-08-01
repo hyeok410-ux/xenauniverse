@@ -6,7 +6,7 @@
   <title>XENA: SIGNAL WARFARE</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="assets.css">
-  <link rel="stylesheet" href="hotfix.css?v=20260801portrait1">
+  <link rel="stylesheet" href="hotfix.css?v=20260801tap2">
 </head>
 <body>
   <div id="xena-tcg-container">
@@ -46,8 +46,10 @@
       <section id="cards-view" class="screen" hidden>
         <div class="collection-panel">
           <div class="panel-head"><div><p class="eyebrow"><span lang="ko">내 카드</span><span lang="en">MY CARDS</span></p><h2><span lang="ko">덱 구성</span><span lang="en">BUILD DECK</span></h2><p><span lang="ko">같은 카드는 최대 2장, 총 15장을 선택하세요.</span><span lang="en">Choose 15 cards, up to two copies each.</span></p></div><strong class="deck-count"><span id="deck-count">0</span> / 15</strong></div>
+          <h3 class="deck-section-heading"><span lang="ko">장착 덱 · 슬롯을 누르면 제거</span><span lang="en">ACTIVE DECK · TAP A SLOT TO REMOVE</span></h3>
+          <div id="deck-slots" class="deck-slots" aria-live="polite"></div>
           <div class="panel-actions deck-top-actions"><button id="save-deck" type="button" class="button button-primary"><span lang="ko">구성 완료</span><span lang="en">DECK COMPLETE</span></button><button id="cards-back" type="button" class="button button-outline"><span lang="ko">로비로</span><span lang="en">LOBBY</span></button></div>
-          <h3 class="card-list-heading"><span lang="ko">카드 목록</span><span lang="en">CARD LIST</span></h3>
+          <h3 class="card-list-heading"><span lang="ko">카드 목록 · 누르면 빈 슬롯에 장착</span><span lang="en">CARD LIST · TAP TO EQUIP</span></h3>
           <div id="card-list" class="card-grid"></div>
           <p id="deck-status" class="status" role="status"></p>
         </div>
@@ -75,12 +77,13 @@
   <script src="../shared-identity.js?v=20260731"></script>
   <script src="../../shared/xena-auth.js?v=20260726"></script>
   <script src="../shared-audio.js?v=20260727"></script>
+  <script src="../shared-vfx.js?v=20260801"></script>
   <script src="../shared-wallet.js?v=20260728"></script>
   <script src="../shared-records.js?v=20260728"></script>
-  <script src="../shared-battle-view.js?v=20260801"></script>
+  <script src="../shared-battle-view.js?v=20260801tap2"></script>
   <script src="../gacha/cards.js?v=20260728b"></script>
   <script src="../../shared/xena-cards.js?v=20260728b"></script>
-  <script src="client.js?v=20260801portrait1"></script>
+  <script src="client.js?v=20260801tap2"></script>
   <script>if(window.XenaAudio)window.XenaAudio.init('tcg');if(window.XenaWallet)window.XenaWallet.initEnergyUI('signal_warfare');</script>
 </body>
 </html>

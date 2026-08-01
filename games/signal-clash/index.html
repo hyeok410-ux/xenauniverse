@@ -990,6 +990,7 @@ function tcgSfx(name){
 function triggerElementBurst(z, card, opponent){
   var zone = $('board').querySelector('.zone[data-z="' + z + '"]');
   if(!zone) return;
+  if(window.XenaVfx) window.XenaVfx.play(zone, 'summon', {duration:760, inset:'-12%'});
   var fx = document.createElement('div');
   fx.className = 'element-burst';
   fx.setAttribute('data-element', String(card.element || 'NEUTRAL').toUpperCase());
@@ -1044,6 +1045,7 @@ function animatePowerChanges(z, before){
     });
   });
   if(gained || lost){
+    if(window.XenaVfx) window.XenaVfx.play(zone, gained ? 'buff' : 'debuff', {duration:760, inset:'-10%'});
     var callout = document.createElement('div');
     callout.className = 'power-callout' + (!gained && lost ? ' down' : '');
     callout.textContent = gained ? t('POWER UP', '파워 업') : t('POWER DOWN', '파워 다운');
@@ -1678,9 +1680,10 @@ for(var i = 0; i < toggles.length; i++){
 <script src="../../game/cloud-sync.js?v=20260722"></script>
 <script src="../shared-identity.js?v=20260731"></script>
 <script src="../shared-audio.js?v=20260724"></script>
+<script src="../shared-vfx.js?v=20260801"></script>
 <script src="../shared-wallet.js?v=20260802"></script>
 <script src="../shared-records.js?v=20260802"></script>
-<script src="../shared-battle-view.js?v=20260801"></script>
+<script src="../shared-battle-view.js?v=20260801tap2"></script>
 <script src="../gacha/cards.js?v=20260728b"></script>
 <script src="../../shared/xena-cards.js?v=20260728b"></script>
 <script>

@@ -243,11 +243,15 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .tab{font-family:var(--font-mono);font-size:.66rem;font-weight:500;letter-spacing:.1em;padding:8px 16px;border-radius:20px;border:1px solid var(--hair);background:rgba(255,255,255,.03);color:var(--text-dim);transition:.25s ease;}
 .tab-count{font-size:.6rem;opacity:.75;}
 .tab.sel{color:var(--cyan);border-color:rgba(63,224,255,.5);box-shadow:0 0 14px rgba(63,224,255,.18);}
-.tab.tab-tcg{color:#fff7e0;border-color:rgba(232,196,104,.4);background:linear-gradient(120deg, rgba(255,247,224,.06), rgba(232,196,104,.04));}
-.tab.tab-tcg.sel{color:#fffbeb;border-color:rgba(255,247,224,.8);box-shadow:0 0 16px rgba(232,196,104,.4);}
 .celement-badge{position:absolute;top:6px;right:6px;font-family:var(--font-mono);font-size:.45rem;font-weight:700;letter-spacing:.05em;
   padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.65);border:1px solid currentColor;color:#fff;z-index:1;text-shadow:0 0 3px rgba(0,0,0,.8);}
-.album{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:16px;}
+.collection-section{margin-top:22px;}
+.collection-title{font-family:var(--font-mono);font-size:1rem;font-weight:800;letter-spacing:.24em;margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid currentColor;}
+.collection-title.standard{color:var(--cyan);text-shadow:0 0 8px rgba(63,224,255,.9),0 0 24px rgba(63,224,255,.5);}
+.collection-title.tcg{color:#fff7e0;text-shadow:0 0 8px rgba(255,247,224,.95),0 0 26px rgba(232,196,104,.65);}
+.album{display:grid;gap:14px;align-items:start;}
+.album-standard{grid-template-columns:repeat(8,minmax(0,1fr));}
+.album-tcg{grid-template-columns:repeat(5,minmax(0,1fr));}
 /* [2026-07-26] 재구성: TCG 프리미엄 카드는 존재 자체로 정보가 다 그려져 있어서 다른
    배지로 가리지 말자는 요청 — TCG 금색 마크/이름/"TCG 전용" 문구를 전부 제거했다.
    등급 표시는 카드 위에 얹지 않고 아래(카드 밖) 중앙에 통일 표시, 수량(×N)도 카드
@@ -255,7 +259,7 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .ccard-wrap{position:relative;}
 .ccard-wrap.owned{cursor:pointer;}
 .ccard{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:3/4.35;border:1px solid var(--hair);background:rgba(255,255,255,.02);transition:.25s ease;}
-.ccard-wrap.tcg-card{grid-column:span 2;}
+.ccard-wrap.tcg-card{grid-column:auto;}
 .ccard-wrap.tcg-card .ccard{border-width:2px;box-shadow:0 0 22px rgba(232,196,104,.18);}
 .ccard.owned{cursor:pointer;}
 .ccard.owned:hover{transform:translateY(-3px);}
@@ -329,11 +333,17 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .detail-inner .dgrade{font-family:var(--font-mono);font-size:.64rem;letter-spacing:.2em;margin-bottom:14px;}
 .detail-inner .drow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
 
+@media (max-width:1200px){.album-standard{grid-template-columns:repeat(6,minmax(0,1fr));}.album-tcg{grid-template-columns:repeat(4,minmax(0,1fr));}}
+@media (max-width:900px){.album-standard{grid-template-columns:repeat(4,minmax(0,1fr));}.album-tcg{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media (max-width:560px){
-  .album{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:11px;}
+  .album{gap:10px;}
+  .album-standard{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .album-tcg{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .collection-title{font-size:.82rem;letter-spacing:.18em;}
   .triple-row{gap:8px;}
   .flip-card{width:min(140px,29vw);}
 }
+@media (max-width:380px){.album-standard{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}}
 </style>
 </head>
@@ -470,9 +480,15 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
     <button class="tab" data-g="S">S <span class="tab-count" id="tc-S"></span></button>
     <button class="tab" data-g="SR">SR <span class="tab-count" id="tc-SR"></span></button>
     <button class="tab" data-g="SSR">SSR <span class="tab-count" id="tc-SSR"></span></button>
-    <button class="tab tab-tcg" data-g="TCG"><span lang="en">TCG EXCLUSIVE</span><span lang="ko">TCG 전용</span> <span class="tab-count" id="tc-TCG"></span></button>
   </div>
-  <div class="album" id="album"></div>
+  <section class="collection-section" aria-labelledby="xena-card-title">
+    <h3 class="collection-title standard" id="xena-card-title">XENA CARD</h3>
+    <div class="album album-standard" id="album"></div>
+  </section>
+  <section class="collection-section" aria-labelledby="xena-tcg-card-title">
+    <h3 class="collection-title tcg" id="xena-tcg-card-title">XENA TCG CARD</h3>
+    <div class="album album-tcg" id="album-tcg"></div>
+  </section>
 </div>
 
 <!-- 뽑기 연출 (3장) -->
@@ -693,6 +709,38 @@ function pickCard(grade, premium){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 var lastDrawn = null; /* [{card, isNew}, ...] xN */
+var weeklyPurchasePending = false;
+/* Keep the same key after an ambiguous network failure. If the server already
+   charged the wallet, retrying returns the same spend result instead of
+   charging twice. A successful next purchase receives a fresh key. */
+var weeklyPurchaseRetryKey = null;
+function newPurchaseKey(prefix){
+  var suffix = window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now()+'-'+Math.random().toString(36).slice(2);
+  return prefix+'-'+suffix;
+}
+function buyWeeklyExtra(){
+  var pack = 'weekly';
+  if(weeklyPurchasePending) return Promise.resolve({ok:false, reason:'pending'});
+  if(wallet.xc < PACKS[pack].price || !window.XenaWallet){
+    toast(t('Not enough XC — save '+PACKS[pack].price+' XC to open the weekly pack', 'XC 부족 — 위클리 팩은 '+PACKS[pack].price+' XC 가 필요합니다'));
+    return Promise.resolve({ok:false, reason:'balance'});
+  }
+  weeklyPurchasePending = true;
+  weeklyPurchaseRetryKey = weeklyPurchaseRetryKey || newPurchaseKey('gacha-weekly-extra');
+  tickCooldowns();
+  return window.XenaWallet.spend(PACKS[pack].price, 'gacha_weekly_extra', weeklyPurchaseRetryKey).then(function(r){
+    weeklyPurchasePending = false;
+    weeklyPurchaseRetryKey = null;
+    if(r && typeof r.credits === 'number') wallet.xc = r.credits;
+    doPull(pack);
+    return {ok:true, result:r};
+  }).catch(function(){
+    weeklyPurchasePending = false;
+    tickCooldowns();
+    toast(t('Purchase was not completed — tap again to safely retry', '구매가 완료되지 않았습니다 — 다시 누르면 안전하게 재시도합니다'));
+    return {ok:false, reason:'request'};
+  });
+}
 function doPull(pack, count){
   var premium = !!PACKS[pack].premium;
   var n = count || DRAW_COUNT;
@@ -715,15 +763,10 @@ function draw(pack, useXC){
   if (window.XenaAudio) window.XenaAudio.sfx('pack_tap');
   var now = Date.now();
   if(PACKS[pack].weekly){
-    /* WEEKLY PACK: 주 1회 한도 + XC 결제 (프리미엄 슬롯) */
-    var wk = nyWeekMondayKey();
-    if(st.packs.weeklyClaimed === wk){ toast(t('Weekly pack already opened this week', '이번 주 위클리 팩은 이미 열었습니다')); return; }
-    if(wallet.xc < PACKS[pack].price || !window.XenaWallet){ toast(t('Not enough XC — save '+PACKS[pack].price+' XC to open the weekly pack', 'XC 부족 — 위클리 팩은 '+PACKS[pack].price+' XC 가 필요합니다')); return; }
-    window.XenaWallet.spend(PACKS[pack].price, 'gacha_weekly').then(function(){
-      st.packs.weeklyClaimed = wk;
-      save(SAVE_KEY, st);
-      doPull(pack);
-    }).catch(function(){ toast(t('Not enough XC', 'XC가 부족합니다')); });
+    /* Paid weekly draws are independent from the once-a-week free claim and
+       may be purchased repeatedly. Only one request can be in flight. */
+    if(useXC) return buyWeeklyExtra();
+    return;
   } else if(PACKS[pack].premium){
     /* ARCHIVE PACK: 하루 1회 무료 1장, 또는 언제든 3000 XC로 3장 (등급 확률은 동일) */
     if(useXC){
@@ -852,30 +895,23 @@ function tickCooldowns(){
     xcBtn.disabled = wallet.xc < PACKS[p].price;
   });
   $('ptab-alert-daily').hidden = !dailyFree;
-  /* 위클리 팩: 뉴욕시간 월요일 자정 리셋 + XC 결제 (프리미엄 슬롯) */
+  /* 위클리 무료 1회와 1,500 XC 반복 구매는 서로 독립이다. */
   var wBtn = $('btn-weekly-pack'), wCool = $('cool-weekly');
-  var claimed = st.packs.weeklyClaimed === nyWeekMondayKey();
   var wPrice = PACKS.weekly.price;
-  if(!claimed){
-    var canAfford = wallet.xc >= wPrice;
-    wBtn.disabled = !canAfford;
-    wBtn.textContent = canAfford
-      ? t('EXTRA DRAW · '+wPrice.toLocaleString('en-US')+' XC', wPrice+'XC로 추가뽑기')
-      : t('Need '+wPrice+' XC', wPrice+' XC 필요');
-    wCool.textContent = t('Once per week · '+wPrice+' XC per open', '주 1회 · 오픈당 '+wPrice+' XC');
-    $('ptab-alert-weekly').hidden = !canAfford || st.packs.weeklyFreeClaimed === nyWeekMondayKey();
-  } else {
-    var leftW = nyNextMondayMs() - Date.now();
-    wBtn.disabled = true;
-    wBtn.textContent = t('Opened this week', '이번 주 오픈 완료');
-    wCool.textContent = t('Next reset in '+fmtLeftLong(leftW)+' · '+wPrice+' XC per open', '다음 초기화까지 '+fmtLeftLong(leftW)+' · 오픈당 '+wPrice+' XC');
-    $('ptab-alert-weekly').hidden = true;
-  }
+  var canAfford = wallet.xc >= wPrice;
+  wBtn.disabled = weeklyPurchasePending || !canAfford;
+  wBtn.textContent = weeklyPurchasePending
+    ? t('OPENING…', '오픈 중…')
+    : (canAfford ? t('EXTRA DRAW · '+wPrice.toLocaleString('en-US')+' XC', wPrice+'XC로 추가뽑기') : t('Need '+wPrice+' XC', wPrice+' XC 필요'));
   var freeWeeklyBtn = $('btn-weekly-free');
   if (freeWeeklyBtn) {
     var weeklyFreeClaimed = st.packs.weeklyFreeClaimed === nyWeekMondayKey();
     freeWeeklyBtn.disabled = weeklyFreeClaimed;
     freeWeeklyBtn.textContent = weeklyFreeClaimed ? t('FREE DRAW CLAIMED', '무료 수령 완료') : t('FREE WEEKLY DRAW', '주간 무료 수령');
+    wCool.textContent = weeklyFreeClaimed
+      ? t('Free draw claimed · Extra draws stay available for '+wPrice.toLocaleString('en-US')+' XC', '무료 수령 완료 · 추가 뽑기는 '+wPrice+'XC로 계속 이용 가능')
+      : t('One free draw this week · Extra draws '+wPrice.toLocaleString('en-US')+' XC each', '이번 주 무료 1회 · 추가 뽑기 1회당 '+wPrice+'XC');
+    $('ptab-alert-weekly').hidden = weeklyFreeClaimed;
   }
   /* 아카이브 팩: 하루 1회 무료 1장(뉴욕 자정 리셋) + 언제든 3000 XC로 3장 */
   var aBtn = $('btn-archive'), aCool = $('cool-archive'), aXcBtn = $('btn-archive-xc');
@@ -948,9 +984,10 @@ document.querySelectorAll('.tab').forEach(function(b){
   });
 });
 function renderAlbum(){
-  var grid = $('album');
-  grid.innerHTML = '';
-  var shown = 0;
+  var standardGrid = $('album'), tcgGrid = $('album-tcg');
+  standardGrid.innerHTML = '';
+  tcgGrid.innerHTML = '';
+  var standardShown = 0, tcgShown = 0;
   var sorted = AVAIL.slice().sort(function(a, b){
     var na = st.owned[a.id] || 0, nb = st.owned[b.id] || 0;
     if (na > 0 && nb === 0) return -1;
@@ -959,12 +996,10 @@ function renderAlbum(){
   });
   sorted.forEach(function(c){
     var n = st.owned[c.id] || 0;
-    if(curTab === 'MINE'){ if(n <= 0) return; }
-    else if(curTab === 'TCG'){ if(!c.premium) return; }
-    else if(curTab !== 'ALL' && (c.grade !== curTab || c.premium)) return;
-    shown++;
+    if(curTab === 'MINE' && n <= 0) return;
+    if(!c.premium && curTab !== 'ALL' && curTab !== 'MINE' && c.grade !== curTab) return;
+    if(c.premium) tcgShown++; else standardShown++;
     var cell = document.createElement('div');
-    /* TCG 카드는 효과 문구까지 카드 아트에 인쇄되어 있어 두 칸을 차지하게 렌더링한다. */
     cell.className = 'ccard-wrap'+(n>0?' owned':'')+(c.premium?' tcg-card':'');
     cell.innerHTML =
       (n>1 ? '<span class="dupe-outside">&times;'+n+'</span>' : '')+
@@ -975,13 +1010,23 @@ function renderAlbum(){
       '</div>'+
       '<div class="ccard-grade-below '+c.grade+'">'+c.grade+'</div>';
     if(n>0){ cell.addEventListener('click', function(){ openDetail(c); }); }
-    grid.appendChild(cell);
+    (c.premium ? tcgGrid : standardGrid).appendChild(cell);
   });
-  if(curTab === 'MINE' && shown === 0){
+  function appendEmpty(grid, text){
     var empty = document.createElement('div');
     empty.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px 10px;color:var(--text-dim);font-family:var(--font-mono);font-size:.72rem;letter-spacing:.08em;line-height:1.9;';
-    empty.textContent = t('No cards yet — open a pack above to start your collection!', '아직 카드가 없습니다 — 위에서 팩을 열어 컬렉션을 시작하세요!');
+    empty.textContent = text;
     grid.appendChild(empty);
+  }
+  if(standardShown === 0){
+    appendEmpty(standardGrid, curTab === 'MINE'
+      ? t('No XENA CARDS owned yet — open a pack above!', '보유한 XENA CARD가 없습니다 — 위에서 팩을 열어보세요!')
+      : t('No cards in this grade.', '이 등급의 카드가 없습니다.'));
+  }
+  if(tcgShown === 0){
+    appendEmpty(tcgGrid, curTab === 'MINE'
+      ? t('No XENA TCG CARDS owned yet.', '보유한 XENA TCG CARD가 없습니다.')
+      : t('TCG cards are being prepared.', 'TCG 카드를 준비 중입니다.'));
   }
 }
 function renderRate(){

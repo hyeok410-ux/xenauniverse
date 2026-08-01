@@ -422,6 +422,7 @@ $('btn-claim').addEventListener('click', function(){
      only after success so leaving mid-request cannot create a false claim. */
   st.lastClaim = today();
   renderClaimBtn(); renderQuests();
+  if (window.XenaVfx) window.XenaVfx.play($('flip-zone'), 'daily', {duration:900, inset:'-28%'});
   window.XenaWallet.claimDailySignal().then(function(r){
     st.streak = r.streak;
     save(SAVE_KEY, st);
@@ -760,6 +761,7 @@ if(revealed){ reveal(); }
 <script src="../../game/cloud-sync.js?v=20260721"></script>
 <script src="../shared-identity.js?v=20260731"></script>
 <script src="../shared-audio.js?v=20260721"></script>
+<script src="../shared-vfx.js?v=20260801"></script>
 <script src="../shared-wallet.js?v=20260801-signal-fast-claim"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('signal');
