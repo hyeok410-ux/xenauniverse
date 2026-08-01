@@ -252,6 +252,15 @@
     var owned = inventory && inventory.owned;
     return owned && typeof owned === 'object' ? Object.keys(owned).filter(function(id){ return Number(owned[id]) > 0; }).length : 0;
   }
+  function gachaInventorySignature(inventory){
+    var safe = inventory && typeof inventory === 'object' ? inventory : {};
+    var owned = safe.owned && typeof safe.owned === 'object' ? safe.owned : {};
+    var packs = safe.packs && typeof safe.packs === 'object' ? safe.packs : {};
+    var normalized = { owned: {}, packs: {}, welcomed: !!safe.welcomed };
+    Object.keys(owned).sort().forEach(function(key){ normalized.owned[key] = owned[key]; });
+    Object.keys(packs).sort().forEach(function(key){ normalized.packs[key] = packs[key]; });
+    return JSON.stringify(normalized);
+  }
   function saveGachaInventory(inventory){
     if (!authUser || !inventory || typeof inventory !== 'object') return Promise.resolve(null);
     return callFn('saveGachaInventory', { inventory: inventory }).catch(function(){ return null; });
@@ -263,8 +272,10 @@
       if (!authUser || authUser.uid !== expectedUid) return;
       var remoteInventory = result && result.inventory;
       if (gachaOwnedCount(remoteInventory)){
-        localStorage.setItem('zena_gacha_v1', JSON.stringify(remoteInventory));
-        window.dispatchEvent(new CustomEvent('xena:gacha-inventory-restored'));
+        if (gachaInventorySignature(remoteInventory) !== gachaInventorySignature(localInventory)){
+          localStorage.setItem('zena_gacha_v1', JSON.stringify(remoteInventory));
+          window.dispatchEvent(new CustomEvent('xena:gacha-inventory-restored'));
+        }
       } else if (adminClaim){
         return callFn('restoreOwnerLegacyGacha', {}).then(function(recovery){
           if (!authUser || authUser.uid !== expectedUid || !recovery || !gachaOwnedCount(recovery.inventory)) return;
