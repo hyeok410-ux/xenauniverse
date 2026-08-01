@@ -265,6 +265,12 @@
       if (gachaOwnedCount(remoteInventory)){
         localStorage.setItem('zena_gacha_v1', JSON.stringify(remoteInventory));
         window.dispatchEvent(new CustomEvent('xena:gacha-inventory-restored'));
+      } else if (adminClaim){
+        return callFn('restoreOwnerLegacyGacha', {}).then(function(recovery){
+          if (!authUser || authUser.uid !== expectedUid || !recovery || !gachaOwnedCount(recovery.inventory)) return;
+          localStorage.setItem('zena_gacha_v1', JSON.stringify(recovery.inventory));
+          window.dispatchEvent(new CustomEvent('xena:gacha-inventory-restored'));
+        });
       } else if (gachaOwnedCount(localInventory)){
         return saveGachaInventory(localInventory);
       }

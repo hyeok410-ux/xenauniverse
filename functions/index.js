@@ -28,6 +28,14 @@ const PAID_PRODUCTS = Object.freeze({
   XC_15000: { name: "XC 15,000 (25% bonus)", credits: 15000, amountKrw: 15000 },
 });
 
+/* Read-only recovery payload extracted from the owner's Chrome LevelDB backup
+   after the accidental logout wipe on 2026-08-01. It is never sent to the
+   browser except to the authenticated owner matched by the deployment secret. */
+const OWNER_LEGACY_GACHA = Object.freeze(JSON.parse(Buffer.from(
+  "eyJvd25lZCI6eyJHQS1BTi0wMiI6MiwiR0EtRFAtMDUiOjEsIk5YLU4tMDYiOjMsIk5YLU4tMDMiOjIsIk5YLU4tMDIiOjMsIldTLU4tMDEiOjUsIldTLU4tMDMiOjMsIlhCLVMtMDMiOjEsIldTLVItMDQiOjMsIldTLVItMDMiOjIsIlhCLVNSLTAyIjoxLCJYQy1TLTAxIjoxLCJMWS1SLTAyIjo1LCJOWC1SLTAxIjoxLCJUQS1SLTAxIjo2LCJXUy1SLTAxIjozLCJMWS1SLTAxIjoxLCJYQS1SLTA5IjozLCJYQS1SLTA4IjoyLCJOWC1SLTAzIjoyLCJHQS1BTi0wNyI6MSwiR0EtQU4tMDQiOjQsIkdBLURQLTAxIjo1LCJOVi1SLTAxIjo0LCJYQS1OLTA5Ijo1LCJYQS1OLTA2IjoyLCJYQS1TLTA4IjoyLCJHQS1CUi0wOCI6MSwiR0EtQU4tMDYiOjEsIkxZLU4tMDIiOjcsIlhBLVItMTEiOjIsIk5YLVItMDIiOjQsIlhBLVItMTMiOjMsIk5WLVItMDIiOjIsIk5YLVMtMDIiOjEsIkdBLURQLTEwIjoyLCJYQS1OLTA3IjozLCJFQy1SLTAyIjoxLCJYQy1SLTAzIjozLCJYQy1TLTAyIjoyLCJXUy1OLTA2IjoxLCJFQy1OLTAyIjoxLCJYQS1SLTEyIjozLCJHQS1CUi0wNCI6MywiWEEtTi0wMyI6MywiWEMtTi0wNCI6MywiV1MtU1ItMDEiOjEsIldTLU4tMDQiOjMsIkdBLURQLTA4IjozLCJYQS1OLTA1IjoxLCJFQy1SLTAxIjo0LCJQQy0yNCI6NiwiUEMtNDUiOjIsIlBDLTMzIjoyLCJQQy0yMyI6MiwiUEMtMTMiOjcsIlBDLTA5Ijo0LCJQQy0xOSI6OCwiUEMtMzciOjUsIlhCLVItMDIiOjMsIlhBLVNSLTAzIjoxLCJQQy0wMiI6MiwiUEMtNTQiOjEsIlBDLTA4Ijo0LCJQQy0zNCI6MSwiUEMtMTciOjMsIlBDLTQxIjoxLCJXUy1OLTA1Ijo0LCJYQS1SLTA3IjoyLCJQQy0yNyI6MSwiWEEtTi0xMCI6MywiRUMtTi0wMSI6MiwiR0EtQlItMDciOjMsIldTLVItMDIiOjEsIlhBLVMtMDQiOjEsIkdBLUFOLTA1IjoyLCJYQS1SLTAzIjoyLCJYQS1SLTAxIjozLCJOWC1SLTA0IjoxLCJHQS1CUi0wMyI6NCwiUEMtMjIiOjEsIkdBLUFOLTAzIjozLCJHQS1CUi0wOSI6MSwiWEEtUy0wMyI6MiwiWEItUi0wMSI6MSwiWEEtUi0xMCI6MSwiUEMtMjkiOjEsIlBDLTIwIjoxLCJYQS1SLTA1IjoxLCJYQS1TLTAyIjoxLCJHQS1CUi0wNSI6MiwiUEMtNzkiOjEsIldTLU4tMDIiOjMsIlRBLVNSLTAyIjoxLCJOWC1OLTA1IjoxLCJHQS1BTi0wOSI6MSwiWEEtUi0wNCI6MSwiR0EtRFAtMDMiOjEsIk5YLU4tMDQiOjIsIlBDLTYxIjoyLCJQQy0xMiI6MSwiUEMtODQiOjEsIk5WLVMtMDEiOjEsIlBDLTcwIjoxLCJXUy1TLTAyIjoxLCJHQS1CUi0wMiI6MSwiVEEtU1ItMDEiOjEsIk5WLVMtMDIiOjEsIlhBLVItMDYiOjF9LCJwYWNrcyI6eyJzaWduYWwiOjE3ODU1ODczOTc5NTAsInNvdiI6MTc4NTU4NzQwNDk5OSwiZWxpdGUiOjE3ODU1ODc0MDkxNDcsIndlZWtseUNsYWltZWQiOiIyMDI2LTA3LTI3IiwiYXJjaGl2ZUNsYWltZWQiOiIyMDI2LTA4LTAxIiwid2Vla2x5RnJlZUNsYWltZWQiOiIyMDI2LTA3LTI3In0sIndlbGNvbWVkIjp0cnVlfQ==",
+  "base64"
+).toString("utf8")));
+
 function stripeRequest(path, params, idempotencyKey) {
   const key = STRIPE_SECRET_KEY.value();
   if (!key) throw new Error("STRIPE_SECRET_KEY is not configured.");
@@ -608,6 +616,20 @@ exports.saveGachaInventory = onCall(async (request) => {
     updatedAt: FieldValue.serverTimestamp(),
   }, { merge: true });
   return { inventory };
+});
+
+exports.restoreOwnerLegacyGacha = onCall({ secrets: [ADMIN_BOOTSTRAP_EMAIL] }, async (request) => {
+  const uid = requireAuth(request);
+  const expected = String(ADMIN_BOOTSTRAP_EMAIL.value() || "").trim().toLowerCase();
+  const email = String(request.auth.token && request.auth.token.email || "").trim().toLowerCase();
+  if (!expected || !email || email !== expected) throw new HttpsError("permission-denied", "Owner recovery only.");
+  const ref = db.doc(`gachaInventories/${uid}`);
+  const snap = await ref.get();
+  const existing = snap.exists ? sanitizeGachaInventory(snap.data()) : null;
+  if (existing && Object.keys(existing.owned).length) return { restored: false, inventory: existing };
+  const inventory = sanitizeGachaInventory(OWNER_LEGACY_GACHA);
+  await ref.set({ uid, ...inventory, schemaVersion: 1, legacyRecoveredAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  return { restored: true, inventory };
 });
 
 exports.claimGachaDust = onCall(async (request) => {
