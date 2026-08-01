@@ -23,7 +23,7 @@
     .back { color:#b9fbff; text-decoration:none; opacity:.8; } .back:hover { opacity:1; color:var(--cyan); }
     .edition { color:#ffb3dc; text-align:right; }
     .game-frame { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; border:2px solid var(--line); border-radius:18px; background:#050510; box-shadow:0 0 20px rgba(0,242,255,.25),0 0 75px rgba(255,0,127,.13); }
-    canvas { display:block; width:100%; height:100%; touch-action:none; image-rendering:auto; }
+    canvas { display:block; width:100%; height:100%; touch-action:none; image-rendering:pixelated; }
     .scanlines { position:absolute; inset:0; pointer-events:none; z-index:3; opacity:.13; background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.15) 4px); mix-blend-mode:overlay; }
     .panel { position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center; background:linear-gradient(130deg,rgba(3,5,15,.86),rgba(9,0,18,.66)); }
     .panel[hidden] { display:none; }
@@ -75,8 +75,11 @@ const ASSETS = Object.freeze({
   SFX_SLIDE: './assets/sfx_slide.mp3',
   SFX_CRASH: './assets/sfx_crash.mp3',
   SFX_SCORE: './assets/sfx_score.mp3',
-  IMG_PLAYER: './assets/xena_sprite.png',
-  IMG_BG: './assets/neon_city_bg.png',
+  // Mode-specific art keeps the two play styles visually distinct.
+  IMG_HOVER_PLAYER: './assets/hover_player_v2.png',
+  IMG_DASH_PLAYER: './assets/dash_sprite_v2.png',
+  IMG_HOVER_BG: './assets/bg_hover_sky_v2.png',
+  IMG_DASH_BG: './assets/bg_dash_alley_v2.png',
   IMG_OBS_WALL: './assets/neon_pillar.png',
   IMG_OBS_DRONE: './assets/drone_enemy.png'
 });
@@ -84,7 +87,9 @@ const ASSETS = Object.freeze({
 const W = 800, H = 450;
 const HITBOX = Object.freeze({
   // Tuned for the visible silhouettes, intentionally kinder than the painted bounds.
-  player: { x: 38, y: 15, w: 45, h: 69 },
+  dashPlayer: { x: 38, y: 15, w: 45, h: 69 },
+  // The hoverboard, hair and sword are deliberately outside the collision core.
+  hoverPlayer: { x: 48, y: 39, w: 68, h: 63 },
   playerSlide: { x: 37, y: 49, w: 48, h: 33 },
   wall: { x: 22, y: 7, w: 48, h: 0 },
   drone: { x: 17, y: 12, w: 49, h: 31 }
@@ -92,6 +97,7 @@ const HITBOX = Object.freeze({
 
 const canvas = document.querySelector('#game');
 const ctx = canvas.getContext('2d', { alpha:false });
+ctx.imageSmoothingEnabled = false;
 const screens = { loading:document.querySelector('#loading'), lobby:document.querySelector('#lobby'), over:document.querySelector('#gameover') };
 const progress = document.querySelector('#progress'), loadDetail = document.querySelector('#load-detail'), finalScore = document.querySelector('#final-score');
 const images = Object.create(null), sounds = Object.create(null);
@@ -145,7 +151,7 @@ function softenDroneBackdrop(source) {
   for (let i = 0; i < p.length; i += 4) { const max = Math.max(p[i], p[i + 1], p[i + 2]), min = Math.min(p[i], p[i + 1], p[i + 2]), saturation = max - min; if (max < 68 && saturation < 19) p[i + 3] = Math.round(clamp((max - 14) * 2.4, 0, 105)); }
   cctx.putImageData(frame, 0, 0); return c;
 }
-function prepareArtwork() { images.IMG_PLAYER = stripWhiteEdge(images.IMG_PLAYER); images.IMG_OBS_WALL = stripWhiteEdge(images.IMG_OBS_WALL); images.IMG_OBS_DRONE = softenDroneBackdrop(images.IMG_OBS_DRONE); }
+function prepareArtwork() { images.IMG_OBS_WALL = stripWhiteEdge(images.IMG_OBS_WALL); images.IMG_OBS_DRONE = softenDroneBackdrop(images.IMG_OBS_DRONE); }
 function sound(key) { const source = sounds[key]; if (!source) return; const instance = source.cloneNode(); instance.volume = key === 'BGM' ? .46 : .64; instance.play().catch(() => {}); }
 function startBgm() { const bgm = sounds.BGM; if (!bgm) return; bgm.volume = .46; bgm.currentTime = 0; bgm.play().catch(() => {}); }
 function stopBgm() { if (sounds.BGM) sounds.BGM.pause(); }
@@ -153,11 +159,11 @@ function stopBgm() { if (sounds.BGM) sounds.BGM.pause(); }
 function newGame(nextMode) {
   cancelAnimationFrame(raf); mode = nextMode; held = { jump:false, slide:false };
   const hover = mode === 'HOVER';
-  game = { mode, player:{ x:72, y:hover ? 180 : 330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], score:0, elapsed:0, speed:hover ? 218 : 294, bgX:0, spawn:0, lastSlideSound:0 };
+  game = { mode, player:hover ? { x:48, y:156, w:166, h:142, vy:0, sliding:false, frame:0 } : { x:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], score:0, elapsed:0, speed:hover ? 218 : 294, bgX:0, spawn:0, lastSlideSound:0 };
   state = 'PLAYING'; show('none'); startBgm(); last = performance.now(); raf = requestAnimationFrame(loop);
 }
 function gameSpeed(g) { const base = g.mode === 'HOVER' ? 218 : 294; return base + Math.min(g.score * 8.1, 162); }
-function playerRect(p) { const h = p.sliding ? HITBOX.playerSlide : HITBOX.player; return { x:p.x + h.x, y:p.y + h.y, w:h.w, h:h.h }; }
+function playerRect(p) { const h = game.mode === 'HOVER' ? HITBOX.hoverPlayer : (p.sliding ? HITBOX.playerSlide : HITBOX.dashPlayer); return { x:p.x + h.x, y:p.y + h.y, w:h.w, h:h.h }; }
 function obstacleRect(o) { const h = o.kind === 'WALL' ? HITBOX.wall : HITBOX.drone; return { x:o.x + h.x, y:o.y + h.y, w:h.w, h:o.kind === 'WALL' ? Math.max(0, o.h - h.y * 2) : h.h }; }
 function overlaps(a,b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
 function action(type, active) {
@@ -179,11 +185,24 @@ function update(g, dt) {
   const rate = Math.max(g.mode === 'HOVER' ? 1.54 : 1.34, 2.08 - g.score * .018); g.spawn += dt; if (g.spawn > rate) { g.spawn = 0; spawnObstacle(g); }
   for (let i = g.obstacles.length - 1; i >= 0; i--) { const o = g.obstacles[i]; o.x -= g.speed * dt; if (!o.scored && o.x + o.w < p.x + 25) { o.scored = true; g.score++; sound('SFX_SCORE'); } if (overlaps(playerRect(p), obstacleRect(o))) { endGame(); return; } if (o.x + o.w < -30) g.obstacles.splice(i,1); }
 }
-function drawBackground(g) { const bg = images.IMG_BG; ctx.fillStyle = '#050510'; ctx.fillRect(0,0,W,H); if (bg) { const x = g ? g.bgX : 0; ctx.drawImage(bg, x,0,W,H); ctx.drawImage(bg, x + W,0,W,H); if (x > 0) ctx.drawImage(bg, x - W,0,W,H); } }
-function drawPlayer(p) { const img = images.IMG_PLAYER; if (!img) return; const columns = 6, rows = 2, fw = img.width / columns, fh = img.height / rows, frame = Math.floor(p.frame) % (columns * rows), sx = (frame % columns) * fw, sy = Math.floor(frame / columns) * fh; const drawH = p.sliding ? 68 : p.h, drawY = p.sliding ? p.y + 32 : p.y; ctx.drawImage(img, sx, sy, fw, fh, p.x, drawY, p.w, drawH); }
+function drawBackground(g) { const bg = images[g?.mode === 'HOVER' ? 'IMG_HOVER_BG' : 'IMG_DASH_BG']; ctx.fillStyle = '#050510'; ctx.fillRect(0,0,W,H); if (bg) { const x = g ? g.bgX : 0; ctx.drawImage(bg, x,0,W,H); ctx.drawImage(bg, x + W,0,W,H); if (x > 0) ctx.drawImage(bg, x - W,0,W,H); } }
+function drawPlayer(p, activeMode) {
+  if (activeMode === 'HOVER') {
+    const img = images.IMG_HOVER_PLAYER; if (!img) return;
+    const bob = Math.sin(p.frame * .55) * 3;
+    ctx.save(); ctx.translate(p.x + p.w / 2, p.y + p.h / 2 + bob); ctx.rotate(clamp(p.vy * .00055, -.11, .13));
+    ctx.drawImage(img, -p.w / 2, -p.h / 2, p.w, p.h); ctx.restore(); return;
+  }
+  const img = images.IMG_DASH_PLAYER; if (!img) return;
+  const columns = 6, rows = 2, fw = img.width / columns, fh = img.height / rows, frame = Math.floor(p.frame) % (columns * rows);
+  // The generated sheet includes a clean four-pixel safety border, avoiding its guide lines.
+  const inset = 4, sx = (frame % columns) * fw + inset, sy = Math.floor(frame / columns) * fh + inset, sw = fw - inset * 2, sh = fh - inset * 2;
+  const drawH = p.sliding ? 68 : p.h, drawY = p.sliding ? p.y + 32 : p.y;
+  ctx.drawImage(img, sx, sy, sw, sh, p.x, drawY, p.w, drawH);
+}
 function drawObstacle(o) { const img = o.kind === 'WALL' ? images.IMG_OBS_WALL : images.IMG_OBS_DRONE; if (!img) return; if (o.kind === 'WALL') { ctx.drawImage(img,0,0,img.width,img.height,o.x,o.y,o.w,o.h); } else { ctx.drawImage(img,390,170,930,600,o.x,o.y,o.w,o.h); } }
 function drawHud(g) { ctx.save(); ctx.fillStyle = '#e9fdff'; ctx.shadowColor = '#00f2ff'; ctx.shadowBlur = 12; ctx.font = '800 22px "JetBrains Mono", monospace'; ctx.fillText(`SIGNAL SCORE: ${g.score}`, 19, 34); ctx.shadowBlur = 0; ctx.fillStyle = '#9cfaff'; ctx.font = '600 12px "JetBrains Mono", monospace'; const ratio = g.speed / (g.mode === 'HOVER' ? 218 : 294); ctx.fillText(`${g.mode} // SPEED x${ratio.toFixed(1)}`, 20, 54); ctx.restore(); }
-function draw(g) { drawBackground(g); if (!g) return; g.obstacles.forEach(drawObstacle); drawPlayer(g.player); drawHud(g); }
+function draw(g) { ctx.imageSmoothingEnabled = false; drawBackground(g); if (!g) return; g.obstacles.forEach(drawObstacle); drawPlayer(g.player, g.mode); drawHud(g); }
 function renderLobby() { drawBackground(null); }
 function loop(now) { if (state !== 'PLAYING') return; const dt = Math.min((now - last) / 1000, .035); last = now; update(game,dt); if (state === 'PLAYING') { draw(game); raf = requestAnimationFrame(loop); } }
 function endGame() { if (state !== 'PLAYING') return; state = 'OVER'; cancelAnimationFrame(raf); stopBgm(); sound('SFX_CRASH'); finalScore.textContent = game.score; show('over'); }
