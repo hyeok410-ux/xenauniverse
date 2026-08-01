@@ -44,6 +44,61 @@
   function saveLocal(p){ localStorage.setItem(PKEY, JSON.stringify(p)); }
   var L = loadLocal();
 
+  /*
+   * Account data must never bleed into the next person using this browser.
+   * Game pages still contain a few legacy localStorage saves, so Firebase
+   * sign-out alone is not enough: clear every game/account record here while
+   * preserving only harmless device preferences (language and audio).
+   * Cloud records are intentionally NOT deleted; they remain bound to the
+   * signed-in Firebase account and can only be read after that account signs
+   * in again.
+   */
+  var KEEP_LOCAL_KEYS = { 'xena-lang': true, 'xena-language': true, 'xena_audio_v1': true, 'og_language': true, 'og_audio_enabled': true };
+  var GAME_KEY_PREFIXES = ['xena_', 'zena_', 'og_', 'tcg_', 'signal_', 'merge_', 'memory_', 'shisen_', 'worldcup_'];
+  var GAME_KEY_EXACT = {
+    'xena-signal-warfare-deck': true,
+    'og_online_room': true,
+    'xena_profile_v1': true,
+    'xena_local_v1': true
+  };
+
+  function isGameRecordKey(key){
+    if (!key || KEEP_LOCAL_KEYS[key]) return false;
+    if (GAME_KEY_EXACT[key]) return true;
+    return GAME_KEY_PREFIXES.some(function(prefix){ return key.indexOf(prefix) === 0; });
+  }
+
+  function clearStorageRecords(storage){
+    if (!storage) return 0;
+    var remove = [];
+    try{
+      for (var i = 0; i < storage.length; i++){
+        var key = storage.key(i);
+        if (isGameRecordKey(key)) remove.push(key);
+      }
+      remove.forEach(function(key){ storage.removeItem(key); });
+    }catch(e){}
+    return remove.length;
+  }
+
+  function clearGameLocalState(reason){
+    var removed = clearStorageRecords(window.localStorage) + clearStorageRecords(window.sessionStorage);
+    /* Reset in-memory profile data too: otherwise the profile button can keep
+       rendering the previous nickname/avatar until the next page load. */
+    L = { __migrated: true, avatar: DEFAULT_AVATAR, lifetimeEarned: 0, lastSeenXC: -1, playtimeMin: 0, badges: {} };
+    nickname = null;
+    nicknameChecked = false;
+    adminClaim = false;
+    try{ window.dispatchEvent(new CustomEvent('xena:session-cleared', { detail: { reason: reason || 'sign-out', removed: removed } })); }catch(e){}
+    return removed;
+  }
+
+  /* Shared by every game page and by xena-auth.js. */
+  window.XenaGameSession = {
+    clearLocalState: clearGameLocalState,
+    isGameRecordKey: isGameRecordKey
+  };
+
   function getJSON(key, fallback){
     try{ var v = JSON.parse(localStorage.getItem(key)); return (v && typeof v==='object') ? v : fallback; }
     catch(e){ return fallback; }
@@ -128,7 +183,11 @@
         nickname = null; nicknameChecked = false;
         fetchOrCreateNickname(authUser.uid);
         recordVisitorSession(authUser);
+        pollWallet();
+        evalBadges();
       } else if (!authUser){
+        /* Covers sign-out initiated by another Firebase client/module too. */
+        if (was) clearGameLocalState('auth-state-change');
         nickname = null; nicknameChecked = false; adminClaim = false;
       }
       notify();
@@ -164,7 +223,10 @@
   }
   function signOut(){
     if (!window.XenaCloudSync) return Promise.resolve();
-    return window.XenaCloudSync.signOut();
+    return window.XenaCloudSync.signOut().then(function(){
+      clearGameLocalState('sign-out');
+      return state();
+    });
   }
   function recordVisitorSession(user){
     if (!user || !user.uid) return;
@@ -175,6 +237,7 @@
 
   /* ── XC 누적 / 플레이타임 (로컬 통계 — 뱃지용) ── */
   function pollWallet(){
+    if (!authUser) return;
     var w = getJSON('xena_wallet_v1', {xc:0});
     var xc = num(w.xc);
     if (L.lastSeenXC < 0) L.lastSeenXC = xc;
@@ -186,7 +249,7 @@
   setInterval(pollWallet, 4000);
   window.addEventListener('storage', function(e){ if (e.key === 'xena_wallet_v1') pollWallet(); });
   setInterval(function(){
-    if (document.visibilityState === 'visible'){ L.playtimeMin += 0.5; saveLocal(L); }
+    if (authUser && document.visibilityState === 'visible'){ L.playtimeMin += 0.5; saveLocal(L); }
   }, 30000);
 
   /* ── 뱃지 ── */
@@ -238,7 +301,7 @@
       var got = !!b.need(s);
       if (got && !L.badges[b.id]){ L.badges[b.id] = Date.now(); newlyUnlocked.push(b); }
     });
-    saveLocal(L);
+    if (authUser) saveLocal(L);
   }
   evalBadges();
 

@@ -28,7 +28,6 @@
   var subs = [];
   var balance = null; /* null = 아직 모름(로딩중) */
   var energyPools = {};
-  var GUEST_ENERGY_KEY = 'xena_guest_energy_v2';
   var ctxReady = null;
   var unsub = null, energyUnsub = null, energyUiTimer = null;
 
@@ -58,32 +57,21 @@
     return fallback;
   }
 
-  function energyFor(game){
-    var pool = energyPools[game] || {};
-    var guest = guestEnergy(game);
-    var stored = typeof pool.energy === 'number' ? pool.energy : guest.energy;
-    var updated = timestampMillis(pool.energyUpdatedAt, guest.updatedAt);
-    return Math.min(6, stored + Math.floor(Math.max(0, Date.now() - updated) / 600000));
+  function isSignedIn(){
+    try{
+      var snap = window.XenaCloudSync && window.XenaCloudSync.snapshot && window.XenaCloudSync.snapshot();
+      return !!(snap && snap.user);
+    }catch(e){ return false; }
   }
 
-  function readGuestEnergy(){
-    try { return JSON.parse(localStorage.getItem(GUEST_ENERGY_KEY) || '{}') || {}; }
-    catch(e) { return {}; }
-  }
-  function guestEnergy(game){
-    var all = readGuestEnergy(), raw = all[game] || {};
-    return { energy: typeof raw.energy === 'number' ? raw.energy : 6, updatedAt: Number(raw.updatedAt) || Date.now() };
-  }
-  function consumeGuestEnergy(game){
-    var current = guestEnergy(game);
-    var available = Math.min(6, current.energy + Math.floor(Math.max(0, Date.now() - current.updatedAt) / 600000));
-    if (available < 1) return Promise.reject(new Error('NO_ENERGY'));
-    var all = readGuestEnergy();
-    all[game] = { energy: available - 1, updatedAt: Date.now() };
-    try { localStorage.setItem(GUEST_ENERGY_KEY, JSON.stringify(all)); } catch(e) {}
-    energyPools[game] = all[game];
-    notify();
-    return Promise.resolve({ game:game, energy:available - 1, maxEnergy:6, refillMs:600000, guest:true });
+  function energyFor(game){
+    /* XENA Games no longer has a guest energy pool.  A signed-in Firebase
+       account is the only authority for play tickets and game entry. */
+    if (!isSignedIn()) return 0;
+    var pool = energyPools[game] || {};
+    var stored = typeof pool.energy === 'number' ? pool.energy : 6;
+    var updated = timestampMillis(pool.energyUpdatedAt, Date.now());
+    return Math.min(6, stored + Math.floor(Math.max(0, Date.now() - updated) / 600000));
   }
 
   function startListening(uid){
@@ -139,6 +127,7 @@
     return callFn('spendCredits', {amount: amount, reason: reason||'', idempotencyKey: key});
   }
   function consumeEnergy(game){
+    if (!isSignedIn()) return Promise.reject(new Error('AUTH_REQUIRED'));
     return callFn('consumeEnergy', {game: game}).then(function(result){
       /* Do not wait for Firestore's snapshot round-trip before showing the
          spent gem. The server transaction remains the source of truth. */
@@ -147,12 +136,6 @@
         notify();
       }
       return result;
-    }).catch(function(error){
-      /* Guest play still gets a real per-game six-ticket pool. Signed-in users
-         remain server-authoritative; only connection/auth bootstrap failures
-         use this device pool so a game never starts without consuming a gem. */
-      if (error && (error.code === 'resource-exhausted' || /No energy/i.test(error.message || ''))) throw error;
-      return consumeGuestEnergy(game);
     });
   }
   function initEnergyUI(game){
@@ -175,7 +158,7 @@
     }
     function render(){
       var n = energyFor(game), pool = energyPools[game] || {};
-      var updated = timestampMillis(pool.energyUpdatedAt, guestEnergy(game).updatedAt);
+      var updated = timestampMillis(pool.energyUpdatedAt, Date.now());
       var wait = n >= 6 ? '' : refillClock(600000 - ((Date.now() - updated) % 600000));
       el.innerHTML = '<span style="color:#e8c468">'+(balance === null ? '…' : balance.toLocaleString())+' XC</span><span style="color:#b9ff3c;letter-spacing:2px">'+Array.from({length:6}, function(_,i){ return i<n ? '💎' : '◇'; }).join('')+'</span><small style="color:#b9ff3c;font-size:13px">'+(wait || 'FULL')+'</small>';
       var xcText = balance === null ? '—' : Number(balance).toLocaleString();
