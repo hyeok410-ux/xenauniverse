@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050510">
+  <meta name="description" content="XENA: NEON RUSH — Staybright Edition. Dodge, dash and keep the signal alive.">
+  <meta property="og:title" content="XENA: NEON RUSH">
+  <meta property="og:description" content="A neon run through the XENA universe. Play free in your browser.">
+  <meta property="og:image" content="https://xenauniverse.com/games/neon-rush/assets/neon_city_bg.png">
+  <meta property="og:url" content="https://xenauniverse.com/games/neon-rush/">
+  <title>XENA: NEON RUSH | XENA Games</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Manrope:wght@400;600;700;800&display=swap');
+    :root { --cyan:#00f2ff; --pink:#ff007f; --ink:#050510; --line:rgba(0,242,255,.55); }
+    * { box-sizing:border-box; }
+    html,body { margin:0; min-height:100%; background:var(--ink); color:#fff; font-family:Manrope,Arial,sans-serif; }
+    body { min-height:100vh; display:grid; place-items:center; overflow-x:hidden; }
+    button { font:inherit; }
+    .ambient { position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at 22% 8%,rgba(0,242,255,.17),transparent 34%),radial-gradient(circle at 80% 85%,rgba(255,0,127,.19),transparent 32%),linear-gradient(#050510,#090318); }
+    .shell { position:relative; z-index:1; width:min(100%,1000px); padding:calc(14px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+    .topbar { min-height:38px; display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:12px; font:700 11px/1 'JetBrains Mono',monospace; letter-spacing:.13em; }
+    .back { color:#b9fbff; text-decoration:none; opacity:.8; } .back:hover { opacity:1; color:var(--cyan); }
+    .edition { color:#ffb3dc; text-align:right; }
+    .game-frame { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; border:2px solid var(--line); border-radius:18px; background:#050510; box-shadow:0 0 20px rgba(0,242,255,.25),0 0 75px rgba(255,0,127,.13); }
+    canvas { display:block; width:100%; height:100%; touch-action:none; image-rendering:auto; }
+    .scanlines { position:absolute; inset:0; pointer-events:none; z-index:3; opacity:.13; background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.15) 4px); mix-blend-mode:overlay; }
+    .panel { position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center; background:linear-gradient(130deg,rgba(3,5,15,.86),rgba(9,0,18,.66)); }
+    .panel[hidden] { display:none; }
+    .eyebrow { color:var(--cyan); font:700 clamp(10px,1.6vw,14px)/1 'JetBrains Mono',monospace; letter-spacing:.28em; text-shadow:0 0 14px var(--cyan); }
+    h1,h2,p { margin:0; }
+    h1 { margin-top:14px; font:800 clamp(29px,6vw,58px)/.95 'JetBrains Mono',monospace; letter-spacing:-.06em; text-shadow:0 0 28px rgba(255,0,127,.7); }
+    h1 span { color:var(--pink); }
+    h2 { margin-top:12px; color:var(--pink); font:800 clamp(28px,5vw,48px)/1 'JetBrains Mono',monospace; letter-spacing:.04em; text-shadow:0 0 18px var(--pink); }
+    .copy { max-width:580px; margin-top:14px; color:rgba(255,255,255,.78); font-size:clamp(12px,1.8vw,16px); line-height:1.65; }
+    .modes { display:flex; gap:13px; flex-wrap:wrap; justify-content:center; margin-top:28px; }
+    .button { min-width:190px; padding:14px 18px; border:1px solid var(--cyan); border-radius:7px; background:rgba(0,242,255,.09); color:var(--cyan); cursor:pointer; font:800 clamp(12px,1.6vw,15px)/1 'JetBrains Mono',monospace; letter-spacing:.08em; box-shadow:inset 0 0 18px rgba(0,242,255,.08),0 0 16px rgba(0,242,255,.12); transition:.18s ease; }
+    .button:hover,.button:focus-visible { transform:translateY(-2px); background:var(--cyan); color:#041014; outline:none; box-shadow:0 0 24px rgba(0,242,255,.7); }
+    .button.pink { border-color:var(--pink); background:rgba(255,0,127,.1); color:#ff8bc9; box-shadow:inset 0 0 18px rgba(255,0,127,.1),0 0 16px rgba(255,0,127,.13); }
+    .button.pink:hover,.button.pink:focus-visible { background:var(--pink); color:#fff; box-shadow:0 0 24px rgba(255,0,127,.65); }
+    .controls { margin-top:19px; color:rgba(255,255,255,.52); font:500 10px/1.6 'JetBrains Mono',monospace; letter-spacing:.05em; }
+    .loader-title { color:var(--cyan); font:700 clamp(13px,2vw,18px)/1 'JetBrains Mono',monospace; letter-spacing:.2em; text-shadow:0 0 16px var(--cyan); }
+    .progress { width:min(310px,80vw); height:5px; margin-top:21px; overflow:hidden; background:rgba(255,255,255,.14); border-radius:10px; }
+    .progress > i { display:block; width:0%; height:100%; background:linear-gradient(90deg,var(--cyan),var(--pink)); box-shadow:0 0 14px var(--cyan); transition:width .18s ease; }
+    .loader-detail { min-height:18px; margin-top:12px; color:rgba(255,255,255,.58); font:500 10px/1.4 'JetBrains Mono',monospace; letter-spacing:.08em; }
+    .score { color:white; font:800 clamp(29px,5vw,48px)/1 'JetBrains Mono',monospace; text-shadow:0 0 18px var(--cyan); }
+    .small { margin-top:9px; color:rgba(255,255,255,.7); font:600 12px/1.4 'JetBrains Mono',monospace; }
+    @media (max-width:520px) { .shell { padding-left:8px; padding-right:8px; } .topbar { padding:0 4px; font-size:9px; } .game-frame { border-radius:11px; } .panel { padding:12px; } .modes { gap:9px; margin-top:17px; } .button { min-width:140px; padding:11px 10px; } .controls { margin-top:12px; font-size:8px; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; } }
+  </style>
+</head>
+<body>
+  <div class="ambient"></div>
+  <main class="shell">
+    <header class="topbar"><a class="back" href="../">← XENA GAMES</a><span class="edition">STAYBRIGHT EDITION // 01</span></header>
+    <section class="game-frame" aria-label="XENA Neon Rush game">
+      <canvas id="game" width="800" height="450" aria-label="Game canvas"></canvas><div class="scanlines"></div>
+      <section id="loading" class="panel" aria-live="polite"><div class="loader-title">CONNECTING TO SIGNAL…</div><div class="progress"><i id="progress"></i></div><div id="load-detail" class="loader-detail">INITIALIZING ASSET LINK</div></section>
+      <section id="lobby" class="panel" hidden><div class="eyebrow">XENA ARCADE // LIVE SIGNAL</div><h1>XENA: <span>NEON RUSH</span></h1><p class="copy">Outrun the noise. Thread the neon corridor in HOVER, or jump and slide through the city in DASH.</p><div class="modes"><button class="button" data-mode="HOVER">HOVER MODE</button><button class="button pink" data-mode="DASH">DASH MODE</button></div><p class="controls">DESKTOP: SPACE / ↑ / W TO JUMP · ↓ / S TO SLIDE<br>MOBILE: HOLD LEFT TO SLIDE · TAP RIGHT TO JUMP</p></section>
+      <section id="gameover" class="panel" hidden><div class="eyebrow">SIGNAL INTERRUPTED</div><h2>SIGNAL LOST</h2><p class="small">FINAL SCORE</p><p id="final-score" class="score">0</p><div class="modes"><button id="retry" class="button">REBOOT RUN</button><button id="return-lobby" class="button pink">CHANGE MODE</button></div></section>
+    </section>
+  </main>
+<script>
+'use strict';
+
+// Final production asset map: every URL is local to this deployed game package.
+const ASSETS = Object.freeze({
+  BGM: './assets/staybright_bgm.mp3',
+  SFX_JUMP: './assets/sfx_jump.mp3',
+  SFX_SLIDE: './assets/sfx_slide.mp3',
+  SFX_CRASH: './assets/sfx_crash.mp3',
+  SFX_SCORE: './assets/sfx_score.mp3',
+  IMG_PLAYER: './assets/xena_sprite.png',
+  IMG_BG: './assets/neon_city_bg.png',
+  IMG_OBS_WALL: './assets/neon_pillar.png',
+  IMG_OBS_DRONE: './assets/drone_enemy.png'
+});
+
+const W = 800, H = 450;
+const HITBOX = Object.freeze({
+  // Tuned for the visible silhouettes, intentionally kinder than the painted bounds.
+  player: { x: 38, y: 15, w: 45, h: 69 },
+  playerSlide: { x: 37, y: 49, w: 48, h: 33 },
+  wall: { x: 22, y: 7, w: 48, h: 0 },
+  drone: { x: 17, y: 12, w: 49, h: 31 }
+});
+
+const canvas = document.querySelector('#game');
+const ctx = canvas.getContext('2d', { alpha:false });
+const screens = { loading:document.querySelector('#loading'), lobby:document.querySelector('#lobby'), over:document.querySelector('#gameover') };
+const progress = document.querySelector('#progress'), loadDetail = document.querySelector('#load-detail'), finalScore = document.querySelector('#final-score');
+const images = Object.create(null), sounds = Object.create(null);
+let state = 'LOADING', mode = 'LOBBY', raf = 0, last = 0, game = null, held = { jump:false, slide:false };
+
+function show(name) { Object.entries(screens).forEach(([key, el]) => el.hidden = key !== name); }
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+function loadImage(key, url) {
+  return new Promise((resolve, reject) => { const image = new Image(); image.decoding = 'async'; image.onload = () => { images[key] = image; resolve(); }; image.onerror = () => reject(new Error(key)); image.src = url; });
+}
+function loadAudio(key, url) {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(); audio.preload = 'auto'; audio.src = url; audio.loop = key === 'BGM';
+    const done = () => { cleanup(); sounds[key] = audio; resolve(); };
+    const fail = () => { cleanup(); reject(new Error(key)); };
+    const cleanup = () => { audio.removeEventListener('loadedmetadata', done); audio.removeEventListener('error', fail); };
+    audio.addEventListener('loadedmetadata', done, { once:true }); audio.addEventListener('error', fail, { once:true }); audio.load();
+  });
+}
+async function preload() {
+  const all = [
+    ...Object.entries(ASSETS).filter(([key]) => key.startsWith('IMG_')).map(([key, url]) => () => loadImage(key, url)),
+    ...Object.entries(ASSETS).filter(([key]) => key === 'BGM' || key.startsWith('SFX_')).map(([key, url]) => () => loadAudio(key, url))
+  ];
+  let complete = 0, failed = [];
+  await Promise.all(all.map(task => task().catch(error => failed.push(error.message)).finally(() => { complete++; progress.style.width = `${complete / all.length * 100}%`; loadDetail.textContent = `LOADING ${complete}/${all.length}`; })));
+  if (failed.length) { loadDetail.textContent = `ASSET LINK FAILED: ${failed.join(', ')}`; return; }
+  prepareArtwork();
+  loadDetail.textContent = 'SIGNAL LINK ESTABLISHED';
+  setTimeout(() => { state = 'LOBBY'; show('lobby'); renderLobby(); }, 420);
+}
+
+// The supplied character/pillar exports have a solid white edge background. Remove only
+// connected near-white edge pixels, retaining the white hair/highlights within the silhouette.
+function stripWhiteEdge(source) {
+  const c = document.createElement('canvas'), cctx = c.getContext('2d'); c.width = source.width; c.height = source.height;
+  cctx.drawImage(source, 0, 0); const frame = cctx.getImageData(0, 0, c.width, c.height), p = frame.data, visited = new Uint8Array(c.width * c.height), queue = [];
+  const whiteAt = i => p[i] > 244 && p[i + 1] > 244 && p[i + 2] > 244;
+  const add = (x, y) => { const n = y * c.width + x; if (!visited[n] && whiteAt(n * 4)) { visited[n] = 1; queue.push(n); } };
+  for (let x = 0; x < c.width; x++) { add(x, 0); add(x, c.height - 1); }
+  for (let y = 0; y < c.height; y++) { add(0, y); add(c.width - 1, y); }
+  for (let head = 0; head < queue.length; head++) { const n = queue[head], x = n % c.width, y = (n / c.width) | 0; if (x) add(x - 1, y); if (x + 1 < c.width) add(x + 1, y); if (y) add(x, y - 1); if (y + 1 < c.height) add(x, y + 1); }
+  queue.forEach(n => { p[n * 4 + 3] = 0; }); cctx.putImageData(frame, 0, 0); return c;
+}
+// The drone export uses a dark studio backdrop. Its low-saturation dark backdrop is made
+// transparent in-memory; luminous details retain full opacity. The source asset remains untouched.
+function softenDroneBackdrop(source) {
+  const c = document.createElement('canvas'), cctx = c.getContext('2d'); c.width = source.width; c.height = source.height; cctx.drawImage(source, 0, 0);
+  const frame = cctx.getImageData(0, 0, c.width, c.height), p = frame.data;
+  for (let i = 0; i < p.length; i += 4) { const max = Math.max(p[i], p[i + 1], p[i + 2]), min = Math.min(p[i], p[i + 1], p[i + 2]), saturation = max - min; if (max < 68 && saturation < 19) p[i + 3] = Math.round(clamp((max - 14) * 2.4, 0, 105)); }
+  cctx.putImageData(frame, 0, 0); return c;
+}
+function prepareArtwork() { images.IMG_PLAYER = stripWhiteEdge(images.IMG_PLAYER); images.IMG_OBS_WALL = stripWhiteEdge(images.IMG_OBS_WALL); images.IMG_OBS_DRONE = softenDroneBackdrop(images.IMG_OBS_DRONE); }
+function sound(key) { const source = sounds[key]; if (!source) return; const instance = source.cloneNode(); instance.volume = key === 'BGM' ? .46 : .64; instance.play().catch(() => {}); }
+function startBgm() { const bgm = sounds.BGM; if (!bgm) return; bgm.volume = .46; bgm.currentTime = 0; bgm.play().catch(() => {}); }
+function stopBgm() { if (sounds.BGM) sounds.BGM.pause(); }
+
+function newGame(nextMode) {
+  cancelAnimationFrame(raf); mode = nextMode; held = { jump:false, slide:false };
+  const hover = mode === 'HOVER';
+  game = { mode, player:{ x:72, y:hover ? 180 : 330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], score:0, elapsed:0, speed:hover ? 218 : 294, bgX:0, spawn:0, lastSlideSound:0 };
+  state = 'PLAYING'; show('none'); startBgm(); last = performance.now(); raf = requestAnimationFrame(loop);
+}
+function gameSpeed(g) { const base = g.mode === 'HOVER' ? 218 : 294; return base + Math.min(g.score * 8.1, 162); }
+function playerRect(p) { const h = p.sliding ? HITBOX.playerSlide : HITBOX.player; return { x:p.x + h.x, y:p.y + h.y, w:h.w, h:h.h }; }
+function obstacleRect(o) { const h = o.kind === 'WALL' ? HITBOX.wall : HITBOX.drone; return { x:o.x + h.x, y:o.y + h.y, w:h.w, h:o.kind === 'WALL' ? Math.max(0, o.h - h.y * 2) : h.h }; }
+function overlaps(a,b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+function action(type, active) {
+  if (state !== 'PLAYING' || !game) return; const p = game.player;
+  if (type === 'JUMP' && active) {
+    if (game.mode === 'HOVER') { p.vy = -295; sound('SFX_JUMP'); }
+    else if (p.y >= 329) { p.vy = -500; sound('SFX_JUMP'); }
+  }
+  if (game.mode === 'DASH' && type === 'SLIDE') { p.sliding = active; if (active && performance.now() - game.lastSlideSound > 170) { game.lastSlideSound = performance.now(); sound('SFX_SLIDE'); } }
+}
+function spawnObstacle(g) {
+  if (g.mode === 'HOVER') { const gap = clamp(165 - Math.floor(g.score * 1.1), 132, 165), top = 42 + Math.random() * (H - gap - 118); g.obstacles.push({ kind:'WALL', x:W + 22, y:0, w:92, h:top, scored:false }); g.obstacles.push({ kind:'WALL', x:W + 22, y:top + gap, w:92, h:H - top - gap, scored:true }); }
+  else { const air = Math.random() > .66; g.obstacles.push({ kind:'DRONE', x:W + 20, y:air ? 265 : 350, w:82, h:55, air, scored:false }); }
+}
+function update(g, dt) {
+  const p = g.player; g.elapsed += dt; g.speed = gameSpeed(g); g.bgX = (g.bgX - g.speed * .42 * dt) % W; p.frame += dt * 9;
+  if (g.mode === 'HOVER') { p.vy += 660 * dt; p.y += p.vy * dt; if (p.y < -10 || p.y + p.h > H + 7) endGame(); }
+  else { p.vy += 1320 * dt; p.y += p.vy * dt; if (p.y >= 330) { p.y = 330; p.vy = 0; } }
+  const rate = Math.max(g.mode === 'HOVER' ? 1.54 : 1.34, 2.08 - g.score * .018); g.spawn += dt; if (g.spawn > rate) { g.spawn = 0; spawnObstacle(g); }
+  for (let i = g.obstacles.length - 1; i >= 0; i--) { const o = g.obstacles[i]; o.x -= g.speed * dt; if (!o.scored && o.x + o.w < p.x + 25) { o.scored = true; g.score++; sound('SFX_SCORE'); } if (overlaps(playerRect(p), obstacleRect(o))) { endGame(); return; } if (o.x + o.w < -30) g.obstacles.splice(i,1); }
+}
+function drawBackground(g) { const bg = images.IMG_BG; ctx.fillStyle = '#050510'; ctx.fillRect(0,0,W,H); if (bg) { const x = g ? g.bgX : 0; ctx.drawImage(bg, x,0,W,H); ctx.drawImage(bg, x + W,0,W,H); if (x > 0) ctx.drawImage(bg, x - W,0,W,H); } }
+function drawPlayer(p) { const img = images.IMG_PLAYER; if (!img) return; const columns = 6, rows = 2, fw = img.width / columns, fh = img.height / rows, frame = Math.floor(p.frame) % (columns * rows), sx = (frame % columns) * fw, sy = Math.floor(frame / columns) * fh; const drawH = p.sliding ? 68 : p.h, drawY = p.sliding ? p.y + 32 : p.y; ctx.drawImage(img, sx, sy, fw, fh, p.x, drawY, p.w, drawH); }
+function drawObstacle(o) { const img = o.kind === 'WALL' ? images.IMG_OBS_WALL : images.IMG_OBS_DRONE; if (!img) return; if (o.kind === 'WALL') { ctx.drawImage(img,0,0,img.width,img.height,o.x,o.y,o.w,o.h); } else { ctx.drawImage(img,390,170,930,600,o.x,o.y,o.w,o.h); } }
+function drawHud(g) { ctx.save(); ctx.fillStyle = '#e9fdff'; ctx.shadowColor = '#00f2ff'; ctx.shadowBlur = 12; ctx.font = '800 22px "JetBrains Mono", monospace'; ctx.fillText(`SIGNAL SCORE: ${g.score}`, 19, 34); ctx.shadowBlur = 0; ctx.fillStyle = '#9cfaff'; ctx.font = '600 12px "JetBrains Mono", monospace'; const ratio = g.speed / (g.mode === 'HOVER' ? 218 : 294); ctx.fillText(`${g.mode} // SPEED x${ratio.toFixed(1)}`, 20, 54); ctx.restore(); }
+function draw(g) { drawBackground(g); if (!g) return; g.obstacles.forEach(drawObstacle); drawPlayer(g.player); drawHud(g); }
+function renderLobby() { drawBackground(null); }
+function loop(now) { if (state !== 'PLAYING') return; const dt = Math.min((now - last) / 1000, .035); last = now; update(game,dt); if (state === 'PLAYING') { draw(game); raf = requestAnimationFrame(loop); } }
+function endGame() { if (state !== 'PLAYING') return; state = 'OVER'; cancelAnimationFrame(raf); stopBgm(); sound('SFX_CRASH'); finalScore.textContent = game.score; show('over'); }
+
+document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => newGame(button.dataset.mode)));
+document.querySelector('#retry').addEventListener('click', () => newGame(mode));
+document.querySelector('#return-lobby').addEventListener('click', () => { stopBgm(); state = 'LOBBY'; mode = 'LOBBY'; show('lobby'); renderLobby(); });
+window.addEventListener('keydown', event => { if (['Space','ArrowUp','KeyW','ArrowDown','KeyS'].includes(event.code)) event.preventDefault(); if (event.repeat) return; if (['Space','ArrowUp','KeyW'].includes(event.code)) { held.jump = true; action('JUMP',true); } if (['ArrowDown','KeyS'].includes(event.code)) { held.slide = true; action('SLIDE',true); } });
+window.addEventListener('keyup', event => { if (['Space','ArrowUp','KeyW'].includes(event.code)) held.jump = false; if (['ArrowDown','KeyS'].includes(event.code)) { held.slide = false; action('SLIDE',false); } });
+canvas.addEventListener('pointerdown', event => { if (state !== 'PLAYING') return; event.preventDefault(); canvas.setPointerCapture?.(event.pointerId); const x = (event.clientX - canvas.getBoundingClientRect().left) / canvas.getBoundingClientRect().width * W; if (x < W * .5) action('SLIDE',true); else action('JUMP',true); });
+canvas.addEventListener('pointerup', () => action('SLIDE',false)); canvas.addEventListener('pointercancel', () => action('SLIDE',false));
+window.addEventListener('blur', () => { if (game) { game.player.sliding = false; } });
+preload();
+</script>
+</body>
+</html>
