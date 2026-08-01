@@ -75,7 +75,11 @@
       savedBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
     }
-    if ('inert' in document.body) document.body.inert = true;
+    /* Set both the reflected property and the attribute.  Some embedded
+       mobile WebViews expose the attribute before exposing HTMLElement.inert;
+       either way, focus must not escape to the locked game behind the modal. */
+    document.body.inert = true;
+    document.body.setAttribute('inert', '');
     if (changed) emit();
   }
 
@@ -89,7 +93,8 @@
       document.body.style.overflow = savedBodyOverflow;
       savedBodyOverflow = null;
     }
-    if ('inert' in document.body) document.body.inert = false;
+    document.body.inert = false;
+    document.body.removeAttribute('inert');
   }
 
   function evaluate(identity) {
