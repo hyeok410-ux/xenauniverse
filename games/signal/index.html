@@ -415,10 +415,14 @@ document.addEventListener('contextmenu', function(e){
 });
 $('btn-claim').addEventListener('click', function(){
   if(claimed || !window.XenaWallet) return;
+  var previousClaimDay = st.lastClaim;
   claimed = true;
+  /* Optimistic in-memory state: the button and quest row complete on the same
+     frame as the tap instead of waiting for a cold Cloud Function. Persist
+     only after success so leaving mid-request cannot create a false claim. */
+  st.lastClaim = today();
   renderClaimBtn(); renderQuests();
   window.XenaWallet.claimDailySignal().then(function(r){
-    st.lastClaim = today();
     st.streak = r.streak;
     save(SAVE_KEY, st);
     if (window.XenaAudio){ window.XenaAudio.sfx('quest_claim'); window.XenaAudio.sfx('xc_gain'); }
@@ -433,6 +437,9 @@ $('btn-claim').addEventListener('click', function(){
        퀘스트 목록의 "오늘의 시그널 받기" 항목은 낙관적 업데이트(done) 상태로 굳어
        서로 다른 상태를 보여주는 불일치가 있었다. 두 렌더를 항상 같이 호출한다. */
     if (e && e.code === 'already-exists'){ st.lastClaim = today(); save(SAVE_KEY, st); renderClaimBtn(); renderQuests(); return; }
+    claimed = false;
+    if(typeof previousClaimDay === 'undefined') delete st.lastClaim; else st.lastClaim = previousClaimDay;
+    save(SAVE_KEY, st);
     renderClaimBtn(); renderQuests();
     toast(t('Could not claim — try again in a moment', '수령에 실패했습니다 — 잠시 후 다시 시도해주세요'));
   });
@@ -642,8 +649,9 @@ function renderQuests(){
 
   /* 전체 완료 보너스 배너 */
   var allDone = quests.every(function(q){ return q.done; });
+  var hasPendingClaims = typeof questClaimPending !== 'undefined' && Object.keys(questClaimPending).length > 0;
   var allBanner = $('all-bonus');
-  if(allDone && !claimedFlag('allBonusClaim')){
+  if(allDone && !hasPendingClaims && !claimedFlag('allBonusClaim')){
     allBanner.hidden = false;
     allBanner.innerHTML = '<span>'+t('All quests complete!', '모든 퀘스트 완료!')+'</span><button class="golink claimable" data-act="allbonus">'+t('CLAIM +'+ALL_BONUS+' XC','+'+ALL_BONUS+' XC 받기')+'</button>';
   } else if(claimedFlag('allBonusClaim')){
@@ -655,11 +663,20 @@ function renderQuests(){
 
   bindQuestActions();
 }
+var questClaimPending = {};
 function bindQuestActions(){
   function questSfx(){ if (window.XenaAudio){ window.XenaAudio.sfx('quest_claim'); window.XenaAudio.sfx('xc_gain'); } }
   function claimQuest(questId, flagKey, amountForMsg, msgEn, msgKo, allSfx){
-    if (!window.XenaWallet) return;
+    if (!window.XenaWallet || questClaimPending[questId]) return;
+    var hadPrevious = Object.prototype.hasOwnProperty.call(st, flagKey);
+    var previousValue = st[flagKey];
+    questClaimPending[questId] = true;
+    /* Mark locally before the request so perceived latency is zero. The server
+       transaction remains authoritative and any real failure rolls this back. */
+    if (flagKey === 'chessBonusClaimed') st.chessBonusClaimed = true; else st[flagKey] = today();
+    renderQuests();
     window.XenaWallet.claimQuestBonus(questId).then(function(r){
+      delete questClaimPending[questId];
       if (flagKey === 'chessBonusClaimed') st.chessBonusClaimed = true; else setClaimedFlag(flagKey);
       save(SAVE_KEY, st);
       if (allSfx && window.XenaAudio) window.XenaAudio.sfx('quest_all_complete'); else questSfx();
@@ -668,10 +685,14 @@ function bindQuestActions(){
     }).catch(function(e){
       var code = e && e.code || '';
       if (code === 'already-exists'){
+        delete questClaimPending[questId];
         if (flagKey === 'chessBonusClaimed') st.chessBonusClaimed = true; else setClaimedFlag(flagKey);
         save(SAVE_KEY, st); renderQuests();
         return;
       }
+      delete questClaimPending[questId];
+      if(hadPrevious) st[flagKey] = previousValue; else delete st[flagKey];
+      save(SAVE_KEY, st);
       /* [2026-07-24] 버그 수정: already-exists 이외의 실패(네트워크/precondition 등)는
          지금까지 아무 처리 없이 조용히 삼켜졌다 — 버튼이 disabled=true 상태로 굳어버려
          "눌러도 반응 없음"으로 보였고, 보상도 지급되지 않은 채 아무 안내도 없었다.
@@ -739,7 +760,7 @@ if(revealed){ reveal(); }
 <script src="../../game/cloud-sync.js?v=20260721"></script>
 <script src="../shared-identity.js?v=20260731"></script>
 <script src="../shared-audio.js?v=20260721"></script>
-<script src="../shared-wallet.js?v=20260727"></script>
+<script src="../shared-wallet.js?v=20260801-signal-fast-claim"></script>
 <script>
 if (window.XenaAudio) window.XenaAudio.init('signal');
 if (window.__wireSignalWallet) window.__wireSignalWallet();

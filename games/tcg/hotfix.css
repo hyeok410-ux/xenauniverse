@@ -15,3 +15,27 @@
 @media(min-width:900px){#xena-tcg-container{width:min(1380px,100vw)}.battle-screen{padding-left:28px;padding-right:28px}#battlefield{width:min(1320px,100%);min-height:540px;padding:28px}.slot,.card-unit{width:clamp(108px,12.2vw,168px);height:clamp(154px,17.2vw,236px)}.hand{min-height:246px}}
 .card-unit.dash-attack{animation:dashAttack .42s ease-out both}.card-unit.impact-hit{animation:impactHit .42s ease-out both}.damage-pop,.affinity-pop,.damage-forecast,.stat-up-pop{position:absolute;z-index:9;left:50%;top:20%;transform:translateX(-50%);pointer-events:none;font:900 2rem/1 'Barlow Condensed',sans-serif;color:#ffb6d6;text-shadow:0 0 16px #ff2fab;animation:damagePop .82s ease-out both}.affinity-pop{color:#80f7ff;font-size:2.15rem;text-shadow:0 0 16px #38e8ff}.affinity-damage{color:#8cf9ff}.damage-forecast{top:auto;bottom:7px;white-space:nowrap;padding:5px 7px;border:1px solid rgba(255,255,255,.48);border-radius:8px;background:rgba(4,7,18,.88);color:#fff0a5;font-size:1rem;animation:none}.core-forecast{left:50%;bottom:-27px;z-index:20}.stat-up-pop{color:#a7ffe1;font-size:1.6rem;text-shadow:0 0 16px #4dffd4}.core-damage{font-size:2.65rem;color:#ffe79a;text-shadow:0 0 22px #ff2fab}
 @keyframes dashAttack{0%{transform:translateX(0) scale(1)}46%{transform:translateX(var(--attack-x,24px)) scale(1.07)}100%{transform:translateX(0) scale(1)}}@keyframes impactHit{0%,100%{filter:brightness(1)}40%{filter:brightness(2.3) saturate(1.8)}}@keyframes damagePop{0%{opacity:0;transform:translate(-50%,8px) scale(.7)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-38px) scale(1.15)}}
+
+/* Portrait-first battlefield navigation: no forced fullscreen/orientation. */
+.battle-view-shell{position:relative;width:100%;}
+.battle-pan-viewport{position:relative;overflow:visible;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(63,224,255,.65) rgba(255,255,255,.04)}
+.battle-pan-stage{position:relative;min-width:100%;min-height:1px}
+.battle-pan-stage>#battlefield{transform-origin:top left;margin:0}
+.battle-zoom-controls{display:none;align-items:center;justify-content:center;gap:9px;margin:7px 0 4px;color:var(--cyan);font:800 .62rem 'JetBrains Mono',monospace}
+.battle-zoom-controls button{width:38px;height:31px;border:1px solid rgba(63,224,255,.5);border-radius:9px;background:rgba(5,12,26,.94);color:#caffff;font-size:1rem;box-shadow:0 0 13px rgba(63,224,255,.15)}
+.deploy-forecast{position:absolute;inset:5px;z-index:12;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding:7px;border:2px solid rgba(63,224,255,.8);border-radius:12px;background:linear-gradient(180deg,rgba(5,23,38,.06),rgba(5,23,38,.72));box-shadow:inset 0 0 22px rgba(63,224,255,.18),0 0 16px rgba(63,224,255,.17)}
+.deploy-forecast span{padding:5px 7px;border:1px solid rgba(63,224,255,.45);border-radius:8px;background:rgba(2,7,18,.9);color:#aefff0;white-space:nowrap;font:900 .68rem 'JetBrains Mono',monospace;text-shadow:0 0 8px #35e8d1}
+@media(max-width:899px) and (orientation:portrait){
+  #xena-tcg-container{width:100%;overflow-x:hidden}
+  .battle-screen{padding-left:7px!important;padding-right:7px!important;overflow:visible!important}
+  .battle-pan-viewport{width:100%;height:min(58dvh,570px);overflow:auto;touch-action:none;border:1px solid rgba(63,224,255,.32);border-radius:17px;background:radial-gradient(circle at 50% 45%,rgba(63,224,255,.08),rgba(3,5,15,.96) 72%);box-shadow:inset 0 0 28px rgba(0,0,0,.62)}
+  .battle-pan-stage{min-width:920px;min-height:650px}
+  .battle-pan-stage>#battlefield{width:920px!important;min-height:650px!important;padding:20px!important}
+  .battle-zoom-controls{display:flex;position:absolute;right:9px;top:9px;z-index:32;margin:0;padding:4px 6px;border:1px solid rgba(63,224,255,.3);border-radius:12px;background:rgba(2,7,18,.88);backdrop-filter:blur(6px)}
+  #battlefield .slot,#battlefield .card-unit{width:116px!important;height:164px!important;flex:0 0 auto}
+  #battlefield .zone{flex-wrap:nowrap!important;gap:9px!important}
+  .core-row{position:sticky;top:57px;z-index:35;background:rgba(4,7,18,.9);backdrop-filter:blur(7px);border-radius:12px;padding:4px}
+  .hand{overflow-x:auto!important;flex-wrap:nowrap!important;justify-content:flex-start!important;padding:8px 5px 15px}
+  .hand .card-unit{width:132px!important;height:188px!important;flex:0 0 auto}
+  .phase-controls{position:sticky;bottom:5px;z-index:40;padding:7px;border:1px solid rgba(63,224,255,.24);border-radius:13px;background:rgba(4,7,18,.92);backdrop-filter:blur(8px)}
+}

@@ -6,7 +6,7 @@
   <title>XENA: SIGNAL WARFARE</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="assets.css">
-  <link rel="stylesheet" href="hotfix.css?v=20260728ux1">
+  <link rel="stylesheet" href="hotfix.css?v=20260801portrait1">
 </head>
 <body>
   <div id="xena-tcg-container">
@@ -57,7 +57,12 @@
         <div class="battle-top"><span id="difficulty-label"></span><strong id="phase-label"></strong><span id="battle-status"></span></div>
         <p id="affinity-rule" class="affinity-rule"></p>
         <div class="core-row"><button id="ai-core" type="button" class="core ai"><span>AI CORE</span><b>30</b></button><div class="turn-rule" id="turn-rule"></div><div id="player-core" class="core player"><span>YOUR CORE</span><b>30</b></div></div>
-        <div id="battlefield" aria-label="Battlefield"><div class="field-row enemy-row"><p><span lang="ko">상대 필드</span><span lang="en">ENEMY FIELD</span></p><div id="ai-field" class="zone"></div></div><div class="field-divider"><span>×</span></div><div class="field-row player-row"><p><span lang="ko">내 필드</span><span lang="en">YOUR FIELD</span></p><div id="player-field" class="zone"></div></div></div>
+        <div class="battle-view-shell">
+          <div id="warfare-battle-viewport" class="battle-pan-viewport" aria-label="Scrollable and zoomable battlefield">
+            <div id="warfare-battle-stage" class="battle-pan-stage"><div id="battlefield" aria-label="Battlefield"><div class="field-row enemy-row"><p><span lang="ko">상대 필드</span><span lang="en">ENEMY FIELD</span></p><div id="ai-field" class="zone"></div></div><div class="field-divider"><span>×</span></div><div class="field-row player-row"><p><span lang="ko">내 필드</span><span lang="en">YOUR FIELD</span></p><div id="player-field" class="zone"></div></div></div></div>
+          </div>
+          <div class="battle-zoom-controls" data-battle-zoom-controls><button type="button" data-zoom-step="-0.1" aria-label="Zoom out">−</button><b data-zoom-label>82%</b><button type="button" data-zoom-step="0.1" aria-label="Zoom in">＋</button></div>
+        </div>
         <div class="hand-wrap"><p><span lang="ko">내 손패</span><span lang="en">YOUR HAND</span></p><div id="hand" class="hand"></div></div>
         <div class="phase-controls"><button id="battle-exit" type="button" class="button button-outline"><span lang="ko">로비로</span><span lang="en">LOBBY</span></button><button id="end-turn" type="button" class="button button-primary"><span lang="ko">턴 종료</span><span lang="en">END TURN</span></button></div>
       </section>
@@ -72,9 +77,10 @@
   <script src="../shared-audio.js?v=20260727"></script>
   <script src="../shared-wallet.js?v=20260728"></script>
   <script src="../shared-records.js?v=20260728"></script>
+  <script src="../shared-battle-view.js?v=20260801"></script>
   <script src="../gacha/cards.js?v=20260728b"></script>
   <script src="../../shared/xena-cards.js?v=20260728b"></script>
-  <script src="client.js?v=20260728ux1"></script>
+  <script src="client.js?v=20260801portrait1"></script>
   <script>if(window.XenaAudio)window.XenaAudio.init('tcg');if(window.XenaWallet)window.XenaWallet.initEnergyUI('signal_warfare');</script>
 </body>
 </html>

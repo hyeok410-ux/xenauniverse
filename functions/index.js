@@ -488,11 +488,10 @@ exports.claimDailySignal = onCall(async (request) => {
   const walletRef = db.doc(`wallets/${uid}`);
 
   const result = await db.runTransaction(async (tx) => {
-    const claim = await tx.get(claimRef);
+    const [claim, streakDoc, walletDoc] = await Promise.all([tx.get(claimRef), tx.get(streakRef), tx.get(walletRef)]);
     if (claim.exists && claim.get("signalClaimed")) {
       throw new HttpsError("already-exists", "Already claimed today.");
     }
-    const streakDoc = await tx.get(streakRef);
     const prevDay = streakDoc.exists ? streakDoc.get("lastDayKey") : null;
     const prevStreak = (streakDoc.exists && streakDoc.get("streak")) || 0;
     const yesterday = newYorkDateKey(new Date(Date.now() - 86400000));
@@ -505,10 +504,9 @@ exports.claimDailySignal = onCall(async (request) => {
     tx.set(claimRef, { uid, dayKey, signalClaimed: true, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     tx.set(streakRef, { uid, streak, lastDayKey: dayKey, updatedAt: FieldValue.serverTimestamp() });
     tx.set(walletRef, { uid, credits: FieldValue.increment(total), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    return { granted: total, streak: resetAfterYear ? 365 : streak, bonus };
+    return { granted: total, streak: resetAfterYear ? 365 : streak, bonus, credits: ((walletDoc.exists && walletDoc.get("credits")) || 0) + total };
   });
-  const wallet = await walletRef.get();
-  return { ...result, credits: wallet.get("credits") || 0 };
+  return result;
 });
 
 /* ── 데일리 시그널 페이지의 5개 퀘스트 보너스 + 전체완료 보너스 ──
@@ -529,27 +527,14 @@ exports.claimQuestBonus = onCall(async (request) => {
   const walletRef = db.doc(`wallets/${uid}`);
 
   const result = await db.runTransaction(async (tx) => {
-    const claim = await tx.get(claimRef);
+    const [claim, walletDoc] = await Promise.all([tx.get(claimRef), tx.get(walletRef)]);
     const quests = (claim.exists && claim.get("quests")) || {};
     if (quests[questId]) throw new HttpsError("already-exists", "Already claimed today.");
     tx.set(claimRef, { uid, dayKey, quests: { ...quests, [questId]: true }, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     tx.set(walletRef, { uid, credits: FieldValue.increment(amount), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    return { granted: amount };
+    return { granted: amount, credits: ((walletDoc.exists && walletDoc.get("credits")) || 0) + amount };
   });
-  /* 주간 최고 점수 업데이트 (non-critical — 실패해도 XC 지급에는 영향 없음) */
-  try {
-    const week = weekKeyUTC();
-    const weeklyRef = db.doc(`merge_weekly/${week}/entries/${uid}`);
-    const weeklySnap = await weeklyRef.get();
-    const prevBest = (weeklySnap.exists && weeklySnap.get("score")) || 0;
-    if (score > prevBest) {
-      const userDoc = await db.doc(`users/${uid}`).get();
-      const nickname = (userDoc.exists && userDoc.get("nickname")) || "Anonymous";
-      await weeklyRef.set({ uid, score, nickname, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-    }
-  } catch (e) { /* silent */ }
-  const wallet = await walletRef.get();
-  return { ...result, credits: wallet.get("credits") || 0 };
+  return result;
 });
 
 /* ── XENA MERGE 주간 랭킹 TOP 3 조회 ── */

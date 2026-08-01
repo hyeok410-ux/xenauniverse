@@ -394,11 +394,16 @@ var walletMetaReady = false;
 function refreshWalletMeta(){
   if(!window.XenaWallet || !window.XenaWallet.getWalletFull) return;
   window.XenaWallet.getWalletFull().then(function(r){
-    wallet.unlockedCities = r.unlockedCities || ['seoul'];
-    wallet.tourCapacity = r.tourCapacity || 3;
-    wallet.tcgWins = r.tcgWins || 0;
+    var nextCities = r.unlockedCities || ['seoul'];
+    var nextCapacity = r.tourCapacity || 3;
+    var nextWins = r.tcgWins || 0;
+    var changed = !walletMetaReady || JSON.stringify(wallet.unlockedCities) !== JSON.stringify(nextCities)
+      || wallet.tourCapacity !== nextCapacity || wallet.tcgWins !== nextWins;
+    wallet.unlockedCities = nextCities;
+    wallet.tourCapacity = nextCapacity;
+    wallet.tcgWins = nextWins;
     walletMetaReady = true;
-    renderAll();
+    if(changed) renderAll();
   }).catch(function(){});
 }
 
@@ -411,8 +416,17 @@ function reconcileTours(){
       /* The server timestamp is also what claimTourReward validates. Always
          refresh it here rather than retaining a client-side approximation. */
       var previous = local.tours[city] || {};
-      local.tours[city] = { cards: previous.cards || null, grades: serverTours[city].grades, elements: serverTours[city].elements || [], startAt: serverTours[city].startAt, durationMs: serverTours[city].durationMs };
-      changed = true;
+      var incoming = serverTours[city];
+      var incomingElements = incoming.elements || [];
+      var differs = !local.tours[city]
+        || previous.startAt !== incoming.startAt
+        || previous.durationMs !== incoming.durationMs
+        || JSON.stringify(previous.grades || []) !== JSON.stringify(incoming.grades || [])
+        || JSON.stringify(previous.elements || []) !== JSON.stringify(incomingElements);
+      if(differs){
+        local.tours[city] = { cards: previous.cards || null, grades: incoming.grades, elements: incomingElements, startAt: incoming.startAt, durationMs: incoming.durationMs };
+        changed = true;
+      }
     }
     for(var c2 in local.tours){
       if(!serverTours[c2]){ delete local.tours[c2]; changed = true; }   /* 서버에 없으면 이미 클레임/취소된 것 */
@@ -539,8 +553,8 @@ function renderCities(){
           : '<span class="c-grade-pill" style="border-color:' + (cards[j].color||'#888') + '">' + cards[j].grade + '</span>';
       }
       h += '</div>';
-      h += '<div class="c-timer' + (ready ? ' done' : '') + '">' + (ready ? t('READY', '도착 완료') : fmtTime(remain)) + '</div>';
-      h += '<div class="c-bar"><span style="width:' + pct + '%"></span></div>';
+      h += '<div class="c-timer' + (ready ? ' done' : '') + '" data-tour-timer="' + c.key + '">' + (ready ? t('READY', '도착 완료') : fmtTime(remain)) + '</div>';
+      h += '<div class="c-bar"><span data-tour-progress="' + c.key + '" style="width:' + pct + '%"></span></div>';
       if(ready){
         h += '<p class="c-reward-preview">+' + tourReward(c.key).toLocaleString() + ' XC</p>' +
              '<button class="c-claim" data-claim="' + c.key + '">' + t('CLAIM', '수령하기') + '</button>';
@@ -566,6 +580,26 @@ function renderCities(){
   } else {
     $('empty-zone').innerHTML = '';
   }
+}
+
+/* Update only the countdown nodes. Rebuilding #cities every second detached a
+   pressed mobile button between touchstart and click, which made SEND CARDS
+   intermittently do nothing. A full render now happens only at state changes. */
+function tickTourTimers(){
+  var needsRender = false;
+  Object.keys(local.tours).forEach(function(cityKey){
+    var tour = local.tours[cityKey];
+    var remain = tourRemainMs(cityKey);
+    var timer = $('cities').querySelector('[data-tour-timer="' + cityKey + '"]');
+    var progress = $('cities').querySelector('[data-tour-progress="' + cityKey + '"]');
+    if(remain <= 0){
+      if(!$('cities').querySelector('[data-claim="' + cityKey + '"]')) needsRender = true;
+      return;
+    }
+    if(timer) timer.textContent = fmtTime(remain);
+    if(progress) progress.style.width = Math.min(100, (1 - remain / tour.durationMs) * 100) + '%';
+  });
+  if(needsRender) renderCities();
 }
 
 function renderCapacity(){
@@ -819,8 +853,10 @@ $('pick-send').addEventListener('click', function(){
     toast(t('Wallet is not ready. Please try again in a moment.', '지갑 준비 중입니다. 잠시 후 다시 시도해 주세요.'));
     return;
   }
-  if(tourActionPending[pickCity]) return;
-  var cards = pickSelected.map(function(id){ return XenaCards.get(id); }).filter(Boolean);
+  var requestCity = pickCity;
+  var selectedIds = pickSelected.slice();
+  if(tourActionPending[requestCity]) return;
+  var cards = selectedIds.map(function(id){ return XenaCards.get(id); }).filter(Boolean);
   if(!cards.length){
     pickSelected = [];
     renderPicker();
@@ -831,23 +867,23 @@ $('pick-send').addEventListener('click', function(){
   var elements = cards.map(function(c){ return c.element || null; });
   var btn = $('pick-send');
   btn.disabled = true;
-  tourActionPending[pickCity] = 'send';
+  tourActionPending[requestCity] = 'send';
   renderCities();
   toast(t('Tour request sent...', '투어 파견을 요청했습니다...'));
   btn.textContent = t('Sending…', '전송 중…');
   /* Promise 체인으로 감싸 동기 초기화 오류도 catch로 회수한다. 기존에는 이 경로가
      콘솔 예외로만 끝나서 파견 버튼이 무반응처럼 보일 수 있었다. */
-  Promise.resolve().then(function(){ return window.XenaWallet.startTour(pickCity, grades, elements); }).then(function(r){
-    delete tourActionPending[pickCity];
-    local.tours[pickCity] = { cards: pickSelected.slice(), grades: grades, elements: elements, startAt: Date.now(), durationMs: r.durationMs };
+  Promise.resolve().then(function(){ return window.XenaWallet.startTour(requestCity, grades, elements); }).then(function(r){
+    delete tourActionPending[requestCity];
+    local.tours[requestCity] = { cards: selectedIds, grades: grades, elements: elements, startAt: Date.now(), durationMs: r.durationMs };
     saveLocal(local);
-    $('modal-pick').classList.remove('on');
+    if(pickCity === requestCity) $('modal-pick').classList.remove('on');
     toast(t('Cards dispatched!', '카드가 파견되었습니다!'));
     renderAll();
     /* Fetch the exact Firestore serverTimestamp used by the reward validator. */
     setTimeout(reconcileTours, 350);
   }).catch(function(err){
-    delete tourActionPending[pickCity];
+    delete tourActionPending[requestCity];
     renderCities();
     var code = (err && err.code) || '';
     var msg = code.indexOf('already-exists') >= 0 ? t('A tour is already running here.', '이미 이 도시에 투어가 진행 중입니다.')
@@ -956,7 +992,7 @@ for(var i = 0; i < tg.length; i++){
 
 /* ── 라이브 틱 ────────────────────────────────────────────── */
 renderAll();
-setInterval(renderCities, 1000);
+setInterval(tickTourTimers, 1000);
 /* refreshWalletMeta는 1회성 호출이라 실패/지연되면 unlockedCities가 계속 stale할 수 있었다
    (도쿄 잠김 깜빡임, 도착표시 지연, 파견버튼 먹통의 공통 원인) — 주기적으로 재동기화해 자가치유 */
 setInterval(function(){ refreshWalletMeta(); reconcileTours(); }, 8000);

@@ -119,8 +119,18 @@
     return callFn('claimGachaDust', {grade: grade, count: count, cardId: cardId, idempotencyKey: key});
   }
   function getStreak(){ return callFn('getWallet', {}).then(function(r){ return r.streak || 0; }); }
-  function claimDailySignal(){ return callFn('claimDailySignal', {}); }
-  function claimQuestBonus(questId){ return callFn('claimQuestBonus', {questId: questId}); }
+  function acceptServerCredits(result){
+    /* Callable results already contain the transaction's committed balance.
+       Publish it immediately instead of waiting for the Firestore listener's
+       next network round trip; the snapshot will still reconcile afterward. */
+    if(result && typeof result.credits === 'number'){
+      balance = result.credits;
+      notify();
+    }
+    return result;
+  }
+  function claimDailySignal(){ return callFn('claimDailySignal', {}).then(acceptServerCredits); }
+  function claimQuestBonus(questId){ return callFn('claimQuestBonus', {questId: questId}).then(acceptServerCredits); }
   function claimStageReward(game, stage){ return callFn('claimStageReward', {game: game, stage: Number(stage)}); }
   function claimWorldcupFinish(){ return callFn('claimWorldcupFinish', {}); }
   function claimChessMatch(){ return callFn('claimChessMatch', {}); }

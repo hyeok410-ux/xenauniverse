@@ -1,0 +1,26 @@
+{
+  "date": "2026-08-01",
+  "cards": 90,
+  "effectKinds": 17,
+  "kinds": [
+    "buff_all_own",
+    "buff_element",
+    "buff_element_count",
+    "buff_lowest",
+    "buff_next_only",
+    "buff_others",
+    "buff_person",
+    "buff_self_flat",
+    "buff_self_if_element",
+    "buff_self_if_losing",
+    "buff_self_if_lowerother",
+    "buff_self_if_no_element",
+    "buff_self_if_only",
+    "buff_self_if_outnumbered",
+    "buff_self_if_person",
+    "debuff_enemy_all",
+    "debuff_enemy_one"
+  ],
+  "failures": [],
+  "status": "PASS"
+}

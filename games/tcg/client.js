@@ -10,6 +10,7 @@
   };
   var AFFINITY = { SOUND: 'SOUL', SOUL: 'DARK', DARK: 'LIGHT', LIGHT: 'METAL', METAL: 'BUG', BUG: 'ANOMALY', ANOMALY: 'SOUND' };
   var SFX = { draw: 'assets/audio/sfx_card_draw.mp3', summon: 'assets/audio/sfx_card_summon.mp3', hit: 'assets/audio/sfx_attack_impact.mp3', shatter: 'assets/audio/sfx_card_shatter.mp3' };
+  var WARFARE_META_DECK = ['PC-02','PC-08','PC-56','PC-72','PC-74','PC-29','PC-03','PC-19','PC-45','PC-32','PC-37','PC-51','PC-01','PC-10','PC-50'];
   var state = { language: 'ko', difficulty: 'normal', selected: [], game: null, handIndex: null, attacker: null, walletOff: null };
   var $ = function (s) { return document.querySelector(s); };
   var tr = function (ko, en) { return state.language === 'ko' ? ko : en; };
@@ -55,8 +56,11 @@
     if (!gallery.length) gallery = tcg;
     var conf = DIFFICULTY[level], out = [], i;
     if (level === 'veryhard') {
-      /* Full 90-card TCG pool.  The end-game AI receives only the efficient
-         top curve, with enough cheap cards to establish its board immediately. */
+      /* Deterministic 54,600-match search winner; every card still comes from
+         the canonical 90-card pool and obeys the normal one-copy list here. */
+      var byId = {}; tcg.forEach(function (c) { byId[c.id] = c; });
+      var meta = WARFARE_META_DECK.map(function (id) { return byId[id]; }).filter(Boolean);
+      if (meta.length === 15) return shuffle(meta.map(function (c) { return Object.assign({}, c); }));
       var ranked = tcg.slice().sort(function (a, b) { return (b.atk + b.hp * .7 - b.cost * .55) - (a.atk + a.hp * .7 - a.cost * .55); });
       var elite = ranked.slice(0, Math.max(18, Math.ceil(ranked.length * .38)));
       var low = elite.filter(function (c) { return c.cost <= 2; });
@@ -71,7 +75,8 @@
       picked.forEach(function (c) { out.push(Object.assign({}, c)); });
       while (out.length < 15) out.push(Object.assign({}, choose(gallery)));
     } else {
-      var hardPool = level === 'hard' && tcg.length ? tcg.slice().sort(function (a, b) { return (b.atk + b.hp - b.cost) - (a.atk + a.hp - a.cost); }).slice(0, Math.max(24, Math.ceil(tcg.length * .55))) : tcg;
+      var hardMap = {}; tcg.forEach(function (c) { hardMap[c.id] = c; });
+      var hardPool = level === 'hard' && tcg.length ? WARFARE_META_DECK.map(function (id) { return hardMap[id]; }).filter(Boolean).concat(tcg.slice().sort(function (a, b) { return (b.atk + b.hp - b.cost) - (a.atk + a.hp - a.cost); }).slice(0, 24)) : tcg;
       for (i = 0; i < 15; i++) {
         var pool = Math.random() < conf.tcgChance && tcg.length ? (level === 'hard' ? hardPool : tcg) : gallery;
         out.push(Object.assign({}, choose(pool)));
@@ -86,7 +91,7 @@
     while (chosen.length < 15 && all.length) chosen.push(Object.assign({}, all[chosen.length % all.length]));
     return shuffle(chosen.slice(0, 15));
   }
-  function player(id, deck, core, advantage) { return { id: id, core: core, mana: 0, maxMana: 0, deck: deck.slice(5), hand: deck.slice(0, 5), field: Array(7).fill(null), nextBuff: 0, advantage: advantage || null }; }
+  function player(id, deck, core, advantage) { return { id: id, core: core, mana: 0, maxMana: 0, deck: deck.slice(5), hand: deck.slice(0, 5), field: Array(7).fill(null), nextBuff: null, nextDebuff: 0, advantage: advantage || null }; }
   function show(view) { ['lobby', 'cards-view', 'battle-view'].forEach(function (id) { $('#' + id).hidden = id !== view; }); }
   function status(msg) { $('#lobby-status').textContent = msg || ''; }
   function esc(v) { return String(v || '').replace(/[&<>'"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]; }); }
@@ -158,9 +163,47 @@
       var slot = document.createElement('div'); slot.className = 'slot';
       if (side === 'player' && state.handIndex !== null && !c) slot.classList.add('can-drop');
       if (c) slot.appendChild(unit(c, side, i));
+      if (side === 'player' && state.handIndex !== null && !c) {
+        var forecast = previewDeploy(i);
+        if (forecast) {
+          var preview = document.createElement('div'); preview.className = 'deploy-forecast';
+          preview.innerHTML = '<span>ATK ' + signed(forecast.atk) + ' · HP ' + signed(forecast.hp) +
+            (forecast.enemyAtk ? ' · ENEMY ATK ' + signed(forecast.enemyAtk) : '') + '</span>';
+          slot.appendChild(preview);
+        }
+      }
       if (side === 'player') slot.onclick = function () { deploy(i); };
       node.appendChild(slot);
     });
+  }
+
+  function signed(value) { return (value >= 0 ? '+' : '') + value; }
+  function cloneFighter(fighter) {
+    return {
+      field:fighter.field.map(function (c) { return c ? Object.assign({}, c) : null; }),
+      nextBuff:fighter.nextBuff ? Object.assign({}, fighter.nextBuff) : null,
+      nextDebuff:Number(fighter.nextDebuff) || 0
+    };
+  }
+  function totals(fighter) {
+    return fighter.field.filter(Boolean).reduce(function (sum, c) {
+      sum.atk += Number(c.atk) || 0; sum.hp += Number(c.hp) || 0; return sum;
+    }, { atk:0, hp:0 });
+  }
+  function previewDeploy(slot) {
+    var g = state.game, source = g && g.player.hand[state.handIndex];
+    if (!g || !source || g.player.field[slot]) return null;
+    var owner = cloneFighter(g.player), enemy = cloneFighter(g.ai);
+    var beforeOwner = totals(owner), beforeEnemy = totals(enemy);
+    owner.field[slot] = Object.assign({}, source, { attacked:false });
+    applyDeployEffect(owner, enemy, owner.field[slot]);
+    var afterOwner = totals(owner), afterEnemy = totals(enemy);
+    return {
+      atk:afterOwner.atk - beforeOwner.atk,
+      hp:afterOwner.hp - beforeOwner.hp,
+      enemyAtk:afterEnemy.atk - beforeEnemy.atk,
+      enemyHp:afterEnemy.hp - beforeEnemy.hp
+    };
   }
   function renderBattle() {
     var g = state.game; if (!g) return;
@@ -178,7 +221,9 @@
     p.hand.forEach(function (c, i) { var el = unit(c, 'hand', i); el.classList.toggle('selected', state.handIndex === i); el.onclick = function () { if (g.active === 'player') { state.handIndex = i; state.attacker = null; renderBattle(); } }; hand.appendChild(el); });
     $('#end-turn').disabled = g.active !== 'player';
   }
-  function addPower(card, amount) { if (!card || !amount) return; card.atk = Math.max(0, card.atk + amount); card.hp = Math.max(1, card.hp + amount); card.maxHp = Math.max(card.hp, (card.maxHp || card.hp) + amount); }
+  /* PWR means attack power.  It must not silently increase HP as well; doing
+     both doubled every printed buff and contradicted all 90 card texts. */
+  function addPower(card, amount) { if (!card || !amount) return; card.atk = Math.max(0, card.atk + amount); }
   function showStatChange(side, slot, atkDelta, hpDelta) {
     if (!atkDelta && !hpDelta) return;
     var target = document.querySelector('.card-unit[data-side="' + side + '"][data-slot="' + slot + '"]');
@@ -189,12 +234,13 @@
     target.appendChild(pop); setTimeout(function () { pop.remove(); }, 1000);
   }
   function applyDeployEffect(owner, enemy, card) {
-    if (owner.nextBuff) { addPower(card, owner.nextBuff); owner.nextBuff = 0; }
+    if (owner.nextDebuff) { addPower(card, -owner.nextDebuff); owner.nextDebuff = 0; }
+    if (owner.nextBuff && (!owner.nextBuff.el || owner.nextBuff.el === card.element)) { addPower(card, owner.nextBuff.amt); owner.nextBuff = null; }
     var e = card.effect || {}, allies = owner.field.filter(Boolean), enemies = enemy.field.filter(Boolean), others = allies.filter(function (x) { return x !== card; });
     switch (e.kind) {
       case 'buff_self_flat': addPower(card, Number(e.amt) || 0); break;
       case 'buff_self_if_element': if (others.some(function (x) { return x.element === e.el; })) addPower(card, Number(e.amt) || 0); break;
-      case 'buff_self_if_person': if (allies.some(function (x) { return x.person === e.person; })) addPower(card, Number(e.amt) || 0); break;
+      case 'buff_self_if_person': if (others.some(function (x) { return x.person === e.person; })) addPower(card, Number(e.amt) || 0); break;
       case 'buff_self_if_only': if (!others.length) addPower(card, Number(e.amt) || 0); break;
       case 'buff_self_if_outnumbered': if (enemies.length > allies.length) addPower(card, Number(e.amt) || 0); break;
       case 'buff_self_if_no_element': if (!others.some(function (x) { return x.element === e.el; })) addPower(card, Number(e.amt) || 0); break;
@@ -205,12 +251,18 @@
       case 'buff_element': allies.forEach(function (x) { if (x !== card && x.element === e.el) addPower(x, Number(e.amt) || 0); }); break;
       case 'buff_person': allies.forEach(function (x) { if (x.person === e.person) addPower(x, Number(e.amt) || 0); }); break;
       case 'buff_all_own': allies.forEach(function (x) { addPower(x, Number(e.amt) || 0); }); break;
-      case 'buff_others': others.forEach(function (x) { addPower(x, Number(e.amt) || 0); }); break;
+      case 'buff_others': if (others.length) addPower(others.slice().sort(function (a, b) { return a.atk - b.atk; })[0], Number(e.amt) || 0); break;
       case 'buff_lowest': if (allies.length) addPower(allies.slice().sort(function (a, b) { return a.atk - b.atk; })[0], Number(e.amt) || 0); break;
       case 'buff_element_count': addPower(card, new Set(allies.map(function (x) { return x.element; }).filter(Boolean)).size * (Number(e.amt) || 1)); break;
-      case 'buff_next_only': owner.nextBuff = Number(e.amt) || 0; break;
-      case 'debuff_enemy_one': if (enemies.length) addPower(enemies[0], -(Number(e.amt) || 0)); break;
-      case 'debuff_enemy_all': enemies.forEach(function (x) { addPower(x, -(Number(e.amt) || 0)); }); break;
+      case 'buff_next_only': owner.nextBuff = { amt:Number(e.amt) || 0, el:e.el || null }; break;
+      case 'debuff_enemy_one':
+        if (card.id === 'PC-21' && !enemies.length) enemy.nextDebuff = Number(e.amt) || 0;
+        else if (enemies.length) addPower(enemies.slice().sort(function (a, b) { return b.atk - a.atk; })[0], -(Number(e.amt) || 0));
+        break;
+      case 'debuff_enemy_all':
+        if (card.id === 'PC-41') enemy.nextDebuff = Number(e.amt) || 0;
+        else enemies.forEach(function (x) { addPower(x, -(Number(e.amt) || 0)); });
+        break;
     }
   }
   function deploy(slot) {
@@ -288,19 +340,32 @@
   async function aiTurn() {
     var g = state.game; if (!g || g.active !== 'ai') return;
     await wait(720);
-    var ai = g.ai, playable = ai.hand.map(function (c, i) { return { c: c, i: i }; }).filter(function (x) { return x.c.cost <= ai.mana; }).sort(function (a, b) { return b.c.atk - a.c.atk; });
-    var empty = ai.field.findIndex(function (c) { return !c; });
-    if (playable.length && empty >= 0) {
+    var ai = g.ai, deployGuard = 0;
+    while (deployGuard++ < 7) {
+      var empty = ai.field.findIndex(function (c) { return !c; });
+      if (empty < 0) break;
+      var playable = ai.hand.map(function (c, i) {
+        if (c.cost > ai.mana) return null;
+        var owner = cloneFighter(ai), enemy = cloneFighter(g.player), before = totals(owner), enemyBefore = totals(enemy);
+        owner.field[empty] = Object.assign({}, c, { attacked:false }); applyDeployEffect(owner, enemy, owner.field[empty]);
+        var after = totals(owner), enemyAfter = totals(enemy);
+        var tactical = (after.atk-before.atk)*1.4 + (after.hp-before.hp)*.38 - (enemyAfter.atk-enemyBefore.atk)*1.2 - c.cost*.18;
+        return { c:c, i:i, score:tactical };
+      }).filter(Boolean).sort(function (a, b) { return b.score - a.score; });
+      if (!playable.length) break;
       var picked = playable[0], c = ai.hand.splice(picked.i, 1)[0]; ai.mana -= c.cost; ai.field[empty] = Object.assign({}, c, { attacked: false });
       var beforeAtk = ai.field[empty].atk, beforeHp = ai.field[empty].hp;
       if (ai.advantage && ai.advantage.statBonus) addPower(ai.field[empty], ai.advantage.statBonus);
       applyDeployEffect(ai, g.player, ai.field[empty]); play(SFX.summon); renderBattle();
-      showStatChange('ai', empty, ai.field[empty].atk - beforeAtk, ai.field[empty].hp - beforeHp); await wait(700);
+      showStatChange('ai', empty, ai.field[empty].atk - beforeAtk, ai.field[empty].hp - beforeHp); await wait(520);
     }
     if (g.round > 1) {
       for (var i = 0; i < ai.field.length; i++) {
         var a = ai.field[i]; if (!a || a.attacked) continue; a.attacked = true;
-        var targets = g.player.field.map(function (x, n) { return { x: x, n: n }; }).filter(function (v) { return v.x; }).sort(function (x, y) { return x.x.hp - y.x.hp; });
+        var targets = g.player.field.map(function (x, n) { return { x: x, n: n }; }).filter(function (v) { return v.x; }).sort(function (x, y) {
+          function targetScore(v) { var dealt = damage(a, v.x); return (dealt >= v.x.hp ? 100 : 0) + (dealt > a.atk ? 18 : 0) + v.x.atk*.8 - v.x.hp*.12; }
+          return targetScore(y) - targetScore(x);
+        });
         if (targets.length) {
           var t = targets[0], amount = damage(a, t.x); await hit('ai', i, 'player', t.n, amount, amount > a.atk);
           t.x.hp -= amount; if (t.x.hp <= 0) { g.player.field[t.n] = null; play(SFX.shatter); }
@@ -359,6 +424,10 @@
     document.querySelectorAll('[data-language]').forEach(function (b) { b.onclick = function () { setLanguage(b.dataset.language); }; });
     $('#record-button').onclick = showRecords; $('#record-close').onclick = function () { $('#record-modal').hidden = true; };
     setLanguage(localStorage.getItem('xena-language') || document.documentElement.lang || 'ko'); wireWallet();
+    if (window.XenaBattleView) state.battleView = window.XenaBattleView.attach({
+      viewport:'#warfare-battle-viewport', stage:'#warfare-battle-stage', target:'#battlefield', min:.58, max:1.3,
+      initial:window.matchMedia('(max-width: 899px) and (orientation: portrait)').matches ? .78 : 1
+    });
   }
   document.addEventListener('DOMContentLoaded', init);
 }());

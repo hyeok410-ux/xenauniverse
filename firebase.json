@@ -6,8 +6,13 @@
     "ignore": [
       "firebase.json",
       "**/.*",
+      ".git/**",
+      ".firebase/**",
+      "firebase-debug.log*",
       "**/node_modules/**",
       "functions/**",
+      "scripts/**",
+      "qa-output/**",
       "_deploy_xenauniverse_20260718/**"
     ],
     "cleanUrls": true,

@@ -1,0 +1,104 @@
+{
+  "seed": "0x58454e41",
+  "cardCount": 90,
+  "matches": 54600,
+  "signalClash": {
+    "wins": 267,
+    "games": 300,
+    "rate": 0.89,
+    "deck": [
+      "PC-74",
+      "PC-08",
+      "PC-25",
+      "PC-09",
+      "PC-29",
+      "PC-51",
+      "PC-84",
+      "PC-56",
+      "PC-29",
+      "PC-29",
+      "PC-35",
+      "PC-89"
+    ]
+  },
+  "warfare": {
+    "double": {
+      "games": 5000,
+      "firstWinRate": 0.9418,
+      "averageTurns": 14,
+      "drawRate": 0.0104,
+      "averageScoreMargin": 23.2478,
+      "averageSurvivingHp": 62.1276,
+      "averageSurvivingAtk": 47.0538,
+      "deck": [
+        "PC-02",
+        "PC-08",
+        "PC-13",
+        "PC-24",
+        "PC-64",
+        "PC-03",
+        "PC-19",
+        "PC-45",
+        "PC-52",
+        "PC-32",
+        "PC-37",
+        "PC-51",
+        "PC-01",
+        "PC-10",
+        "PC-50"
+      ]
+    },
+    "hp": {
+      "games": 5000,
+      "firstWinRate": 0.9548,
+      "averageTurns": 14,
+      "drawRate": 0.01,
+      "averageScoreMargin": 28.2108,
+      "averageSurvivingHp": 71.1224,
+      "averageSurvivingAtk": 48.658,
+      "deck": [
+        "PC-02",
+        "PC-08",
+        "PC-56",
+        "PC-72",
+        "PC-74",
+        "PC-29",
+        "PC-03",
+        "PC-19",
+        "PC-45",
+        "PC-32",
+        "PC-37",
+        "PC-51",
+        "PC-01",
+        "PC-10",
+        "PC-50"
+      ]
+    },
+    "power": {
+      "games": 5000,
+      "firstWinRate": 0.6838,
+      "averageTurns": 14,
+      "drawRate": 0.2402,
+      "averageScoreMargin": 6.6404,
+      "averageSurvivingHp": 41.9396,
+      "averageSurvivingAtk": 39.3504,
+      "deck": [
+        "PC-02",
+        "PC-08",
+        "PC-56",
+        "PC-72",
+        "PC-74",
+        "PC-29",
+        "PC-03",
+        "PC-19",
+        "PC-45",
+        "PC-32",
+        "PC-37",
+        "PC-51",
+        "PC-01",
+        "PC-10",
+        "PC-50"
+      ]
+    }
+  }
+}

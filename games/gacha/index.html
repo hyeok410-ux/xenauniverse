@@ -140,7 +140,15 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
 .packs[data-count="2"]{grid-template-columns:repeat(2,minmax(0,360px));}
 .packs[data-count="3"]{grid-template-columns:repeat(3,minmax(0,340px));}
 @media(max-width:1200px){ .packs{grid-template-columns:repeat(3,minmax(0,1fr));} }
-@media(max-width:760px){ .packs{grid-template-columns:1fr;} .packs[data-count="1"]{max-width:420px;} }
+/* data-count 규칙이 .packs 단독 규칙보다 우선순위가 높으므로 모바일에서도
+   3열이 남아 카드가 겹쳤다. 모든 표시 개수를 명시적으로 1열로 덮어쓴다. */
+@media(max-width:760px){
+  .packs,
+  .packs[data-count="1"],
+  .packs[data-count="2"],
+  .packs[data-count="3"]{grid-template-columns:minmax(0,1fr);width:100%;max-width:420px;}
+  .pack{min-width:0;}
+}
 .pack{position:relative;border-radius:20px;border:1px solid var(--hair);padding:26px 18px 24px;text-align:center;
   background:linear-gradient(165deg, rgba(255,255,255,.045), rgba(255,255,255,.012));backdrop-filter:blur(16px);transition:.3s ease;}
 /* [2026-07-24] 프리미엄팩(아카이브=화이트+골드)과 색이 겹친다는 피드백으로 재배정:
@@ -474,19 +482,19 @@ h1{font-size:clamp(2.1rem,6.8vw,3.4rem);font-weight:800;letter-spacing:.05em;lin
     <div class="triple-row" id="triple-row">
       <div class="flip-card" data-i="0">
         <div class="inner">
-          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1.png?v=20260729" alt="ZENA CARDS card back"></div>
+          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1-faadaec5.png" alt="ZENA CARDS card back"></div>
           <div class="face front"><span class="card-badge" data-badge="0"></span><img data-img="0" src="" alt="card 1"><div class="fmeta"><small data-grade="0"></small><b data-name="0"></b></div></div>
         </div>
       </div>
       <div class="flip-card" data-i="1">
         <div class="inner">
-          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1.png?v=20260729" alt="ZENA CARDS card back"></div>
+          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1-faadaec5.png" alt="ZENA CARDS card back"></div>
           <div class="face front"><span class="card-badge" data-badge="1"></span><img data-img="1" src="" alt="card 2"><div class="fmeta"><small data-grade="1"></small><b data-name="1"></b></div></div>
         </div>
       </div>
       <div class="flip-card" data-i="2">
         <div class="inner">
-          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1.png?v=20260729" alt="ZENA CARDS card back"></div>
+          <div class="face back" aria-label="XENA card back"><img class="gacha-card-back" src="cards/Track1_common_back_gacha_v1-faadaec5.png" alt="ZENA CARDS card back"></div>
           <div class="face front"><span class="card-badge" data-badge="2"></span><img data-img="2" src="" alt="card 3"><div class="fmeta"><small data-grade="2"></small><b data-name="2"></b></div></div>
         </div>
       </div>
