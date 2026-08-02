@@ -103,7 +103,16 @@
     return '<img class="card-art collection-art" src="' + esc(c.image) + '" alt="' + esc(c.name) + '" loading="lazy">';
   }
   function battleCardHtml(c) {
-    return '<img class="card-art" src="' + esc(c.image) + '" alt="' + esc(c.name) + '"><span class="battle-hp">HP ' + c.hp + '</span>';
+    /* The artwork contains the printed power in its top-right corner.  When a
+       card is buffed/debuffed, cover that printed value with the live value
+       at the exact same HUD position instead of leaving two conflicting stats. */
+    var changedPower = Number(c.atk) !== Number(c.baseAtk);
+    var power = '';
+    if (changedPower) {
+      var direction = Number(c.atk) > Number(c.baseAtk) ? ' is-up' : ' is-down';
+      power = '<span class="battle-power' + direction + '" aria-label="Power ' + c.atk + '">' + c.atk + '</span>';
+    }
+    return '<img class="card-art" src="' + esc(c.image) + '" alt="' + esc(c.name) + '">' + power + '<span class="battle-hp">HP ' + c.hp + '</span>';
   }
   function renderDeckSlots(list) {
     var slots = $('#deck-slots'); slots.innerHTML = '';
@@ -256,8 +265,8 @@
     var target = document.querySelector('.card-unit[data-side="' + side + '"][data-slot="' + slot + '"]');
     if (!target) return;
     var pop = document.createElement('span');
-    pop.className = 'stat-up-pop';
-    pop.textContent = (atkDelta ? 'ATK +' + atkDelta : '') + (atkDelta && hpDelta ? '  ' : '') + (hpDelta ? 'HP +' + hpDelta : '');
+    pop.className = 'stat-up-pop' + (atkDelta < 0 || hpDelta < 0 ? ' is-down' : '');
+    pop.textContent = (atkDelta ? 'ATK ' + signed(atkDelta) : '') + (atkDelta && hpDelta ? '  ' : '') + (hpDelta ? 'HP ' + signed(hpDelta) : '');
     target.appendChild(pop); setTimeout(function () { pop.remove(); }, 1000);
     playVfx(target, atkDelta < 0 || hpDelta < 0 ? 'debuff' : 'buff', { duration: 720, inset: '-34%' });
   }
