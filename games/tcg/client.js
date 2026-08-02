@@ -11,7 +11,7 @@
   var AFFINITY = { SOUND: 'SOUL', SOUL: 'DARK', DARK: 'LIGHT', LIGHT: 'METAL', METAL: 'BUG', BUG: 'ANOMALY', ANOMALY: 'SOUND' };
   var SFX = { draw: 'assets/audio/sfx_card_draw.mp3', summon: 'assets/audio/sfx_card_summon.mp3', hit: 'assets/audio/sfx_attack_impact.mp3', shatter: 'assets/audio/sfx_card_shatter.mp3' };
   var WARFARE_META_DECK = ['PC-02','PC-08','PC-56','PC-72','PC-74','PC-29','PC-03','PC-19','PC-45','PC-32','PC-37','PC-51','PC-01','PC-10','PC-50'];
-  var state = { language: 'ko', difficulty: 'normal', selected: [], game: null, handIndex: null, attacker: null, walletOff: null };
+  var state = { language: 'ko', difficulty: 'normal', selected: [], game: null, handIndex: null, attacker: null, focused: null, walletOff: null };
   var $ = function (s) { return document.querySelector(s); };
   var tr = function (ko, en) { return state.language === 'ko' ? ko : en; };
 
@@ -189,8 +189,12 @@
   function unit(c, side, slot) {
     var el = document.createElement('article'); el.className = 'card-unit'; el.dataset.side = side; el.dataset.slot = slot; el.innerHTML = battleCardHtml(c);
     if (side === 'player') el.onclick = function (e) { e.stopPropagation(); selectAttacker(slot); };
-    else if (state.attacker !== null) { el.classList.add('target-ready'); el.onclick = function (e) { e.stopPropagation(); attackUnit(slot); }; }
+    else {
+      if (state.attacker !== null) el.classList.add('target-ready');
+      el.onclick = function (e) { e.stopPropagation(); if (state.attacker !== null) attackUnit(slot); else toggleCardFocus('ai', slot); };
+    }
     if (side === 'player' && state.attacker === slot) el.classList.add('attacker-selected');
+    if (state.focused && state.focused.side === side && state.focused.slot === slot) el.classList.add('card-focused');
     return el;
   }
   function renderZone(node, list, side) {
@@ -260,6 +264,13 @@
   /* PWR means attack power.  It must not silently increase HP as well; doing
      both doubled every printed buff and contradicted all 90 card texts. */
   function addPower(card, amount) { if (!card || !amount) return; card.atk = Math.max(0, card.atk + amount); }
+  function drawEffectCards(owner, count) {
+    if (!owner || !Array.isArray(owner.deck) || !Array.isArray(owner.hand)) return 0;
+    var drawn = 0;
+    while (drawn < count && owner.deck.length) { owner.hand.push(owner.deck.shift()); drawn++; }
+    if (drawn && owner.id === 'player') play(SFX.draw);
+    return drawn;
+  }
   function showStatChange(side, slot, atkDelta, hpDelta) {
     if (!atkDelta && !hpDelta) return;
     var target = document.querySelector('.card-unit[data-side="' + side + '"][data-slot="' + slot + '"]');
@@ -292,6 +303,12 @@
       case 'buff_lowest': if (allies.length) addPower(allies.slice().sort(function (a, b) { return a.atk - b.atk; })[0], Number(e.amt) || 0); break;
       case 'buff_element_count': addPower(card, new Set(allies.map(function (x) { return x.element; }).filter(Boolean)).size * (Number(e.amt) || 1)); break;
       case 'buff_next_only': owner.nextBuff = { amt:Number(e.amt) || 0, el:e.el || null }; break;
+      /* PC-20: draw first, then arm a future-card buff. The card that creates
+         this effect cannot be a target of its own next-card bonus. */
+      case 'draw_and_buff_next':
+        drawEffectCards(owner, Math.max(0, Number(e.draw) || 1));
+        owner.nextBuff = { amt:Number(e.amt) || 0, el:e.el || null };
+        break;
       case 'debuff_enemy_one':
         if (card.id === 'PC-21' && !enemies.length) enemy.nextDebuff = Number(e.amt) || 0;
         else if (enemies.length) addPower(enemies.slice().sort(function (a, b) { return b.atk - a.atk; })[0], -(Number(e.amt) || 0));
@@ -344,10 +361,17 @@
       core.appendChild(coreForecast);
     }
   }
+  function toggleCardFocus(side, slot) {
+    var current = state.focused;
+    state.focused = current && current.side === side && current.slot === slot ? null : { side:side, slot:slot };
+    renderBattle();
+  }
   function selectAttacker(slot) {
     var g = state.game, c = g && g.player.field[slot];
-    if (!g || g.active !== 'player' || !c || c.attacked || g.round === 1) return;
-    state.attacker = state.attacker === slot ? null : slot; state.handIndex = null; renderBattle();
+    if (!g || g.active !== 'player' || !c || c.attacked || g.round === 1) { toggleCardFocus('player', slot); return; }
+    state.attacker = state.attacker === slot ? null : slot;
+    state.focused = state.attacker === null ? null : { side:'player', slot:slot };
+    state.handIndex = null; renderBattle();
     if (state.attacker !== null) { showAffinityHints(c); showDamageForecast(c); }
   }
   function damage(attacker, target) { return attacker.atk + (target && AFFINITY[attacker.element] === target.element ? 1 : 0); }

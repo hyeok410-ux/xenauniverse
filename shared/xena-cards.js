@@ -81,7 +81,7 @@ var TCG_STATS = {
   'PC-17':{cost:2,power:3,element:'SOUL',                 ability:{en:'LINK: If another SOUL card is here, +1 PWR.',ko:'LINK: 이 구역에 다른 SOUL 카드가 있으면 +1 PWR.'},   effect:{kind:'buff_self_if_element',el:'SOUL',amt:1}},
   'PC-18':{cost:6,power:9,element:'LIGHT',                ability:{en:'DROP: -2 PWR to each enemy card here.',ko:'DROP: 이 구역의 적 카드 전체 -2 PWR.'},                    effect:{kind:'debuff_enemy_all',amt:2}},
   'PC-19':{cost:2,power:3,element:'LIGHT',                ability:{en:'LINK: If another LIGHT card is here, +2 PWR.',ko:'LINK: 이 구역에 다른 LIGHT 카드가 있으면 +2 PWR.'}, effect:{kind:'buff_self_if_element',el:'LIGHT',amt:2}},
-  'PC-20':{cost:2,power:0,element:'SOUL',                 ability:{en:'DROP: The next card you play here gets +2 PWR.',ko:'DROP: 이 카드 다음으로 이 구역에 내는 카드 +2 PWR.'},  effect:{kind:'buff_next_only',amt:2}},
+  'PC-20':{cost:2,power:0,element:'SOUL',                 ability:{en:'DROP: Draw 1 card. The next card you play here gets +2 PWR.',ko:'DROP: 카드 1장을 뽑고, 다음으로 이 구역에 내는 카드 +2 PWR.'},  effect:{kind:'draw_and_buff_next',draw:1,amt:2}},
   'PC-21':{cost:3,power:0,element:'DARK',                 ability:{en:'DROP: The next enemy card here gets -3 PWR.',ko:'DROP: 이 구역의 적 카드 -3 PWR.'},                  effect:{kind:'debuff_enemy_one',amt:3}},
   'PC-22':{cost:5,power:7,element:'LIGHT',                ability:{en:'DROP: -2 PWR to one enemy card here.',ko:'DROP: 이 구역의 적 카드 -2 PWR.'},                          effect:{kind:'debuff_enemy_one',amt:2}},
   'PC-23':{cost:2,power:3,element:'SOUL',                 ability:{en:'LINK: If another SOUL card is here, +1 PWR.',ko:'LINK: 이 구역에 다른 SOUL 카드가 있으면 +1 PWR.'},   effect:{kind:'buff_self_if_element',el:'SOUL',amt:1}},
