@@ -1224,6 +1224,20 @@ function takeBack(z, slotIdx){
 }
 
 /* ── AI (뼈대 수준: 탐욕적 소비 + 접전 구역 선호) ─────── */
+/*
+  AI decisions are calculated before their cards are revealed one by one.
+  `G.zones` therefore does not yet contain cards already selected for this
+  turn. Reserve those planned slots as well as the live board slots; without
+  this, Hard/Very Hard could select more than MAX_PER_ZONE cards for a zone.
+*/
+function aiZoneHasSpace(zone, planned){
+  var reserved = 0;
+  for(var i = 0; i < planned.length; i++){
+    if(planned[i].zone === zone) reserved++;
+  }
+  return zoneCount(zone, 'a') + reserved < MAX_PER_ZONE;
+}
+
 function aiTurn(){
   if(G.difficulty === 'veryhard') return aiTurnVeryHard();
   if(G.difficulty === 'hard') return aiTurnHard();
@@ -1242,7 +1256,7 @@ function aiTurn(){
     /* 구역 선택: 안 찬 구역 중 "지고 있지만 뒤집을 수 있는" 곳 우선 */
     var pick = -1, bestScore = -Infinity;
     for(var z = 0; z < 3; z++){
-      if(zoneCount(z, 'a') >= MAX_PER_ZONE) continue;
+      if(!aiZoneHasSpace(z, placed)) continue;
       var diff = zonePower(z, 'p') - zonePower(z, 'a');   /* 양수면 AI가 지는 중 */
       var score;
       if(diff > 0) score = 100 - Math.abs(diff - G.aHand[best].power);  /* 역전 가능할수록 高 */
@@ -1270,7 +1284,7 @@ function aiTurnHard(){
       var card = G.aHand[i];
       if(card.cost > manaLeft) continue;
       for(var z = 0; z < 3; z++){
-        if(zoneCount(z, 'a') >= MAX_PER_ZONE) continue;
+        if(!aiZoneHasSpace(z, placed)) continue;
         var before = zonePower(z, 'a') - zonePower(z, 'p');
         var previewCard = Object.assign({}, card, {_playedAt:(G.playSeq || 0) + placed.length + 1});
         G.zones[z].a.push(previewCard);
@@ -1302,7 +1316,7 @@ function aiTurnVeryHard(){
       var card = G.aHand[i];
       if(card.cost > manaLeft) continue;
       for(var z = 0; z < 3; z++){
-        if(zoneCount(z, 'a') >= MAX_PER_ZONE) continue;
+        if(!aiZoneHasSpace(z, placed)) continue;
         var before = zonePower(z, 'a') - zonePower(z, 'p');
         var previewCard = Object.assign({}, card, {_playedAt:(G.playSeq || 0) + placed.length + 1});
         G.zones[z].a.push(previewCard);
@@ -1337,6 +1351,12 @@ $('btn-end').addEventListener('click', function(){
   (function revealNext(){
     if(i >= aiPlays.length){ setTimeout(endOfTurn, 340); return; }
     var pl = aiPlays[i++];
+    /* Defensive runtime guard: an unexpected or stale plan may never exceed
+       the same four-card limit enforced for the player. */
+    if(zoneCount(pl.zone, 'a') >= MAX_PER_ZONE){
+      setTimeout(revealNext, 0);
+      return;
+    }
     var beforePower = zonePowerSnapshot(pl.zone);
     pl.card._playedAt = ++G.playSeq;
     G.zones[pl.zone].a.push(pl.card);
