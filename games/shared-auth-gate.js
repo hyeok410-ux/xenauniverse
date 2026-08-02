@@ -13,6 +13,7 @@
   var unlocked = false;
   var listeners = [];
   var savedBodyOverflow = null;
+  var checkingTimer = null;
 
   var regionLanguage = null;
   function fallbackLanguage() {
@@ -97,13 +98,24 @@
     message.textContent = copy('XENA Games의 모든 플레이 기록과 카드 컬렉션은 Google 계정에 안전하게 연결됩니다.', 'Your XENA Games records and card collection are securely linked to your Google account.');
     button.textContent = copy('Google로 로그인', 'Continue with Google');
     status.innerHTML = kind === 'checking' ? '<span class="xena-auth-spinner"></span>' + copy('로그인 상태를 확인하고 있습니다', 'Checking your sign-in…') : '';
-    gate.hidden = false;
+    /* A signed-in Firebase session needs a short asynchronous restore. Keep
+       the lock active but visually silent during that check so authenticated
+       players do not see a login screen flash on every game transition. */
+    gate.hidden = kind === 'checking';
   }
 
   function setLocked(kind) {
     var changed = unlocked;
     unlocked = false;
-    renderLocked(kind || 'ready');
+    var mode = kind || 'ready';
+    if (checkingTimer) { clearTimeout(checkingTimer); checkingTimer = null; }
+    renderLocked(mode);
+    if (mode === 'checking') {
+      checkingTimer = setTimeout(function(){
+        checkingTimer = null;
+        if (!unlocked) renderLocked('ready');
+      }, 420);
+    }
     if (savedBodyOverflow === null) {
       savedBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
@@ -117,6 +129,7 @@
   }
 
   function setUnlocked() {
+    if (checkingTimer) { clearTimeout(checkingTimer); checkingTimer = null; }
     if (!unlocked) {
       unlocked = true;
       emit();
@@ -130,9 +143,13 @@
     document.body.removeAttribute('inert');
   }
 
+  function isAuthResolving() {
+    var snapshot = window.XenaCloudSync && window.XenaCloudSync.snapshot && window.XenaCloudSync.snapshot();
+    return !!(snapshot && (snapshot.phase === 'idle' || snapshot.phase === 'connecting' || snapshot.phase === 'signing-in'));
+  }
   function evaluate(identity) {
     if (identity && identity.signedIn) setUnlocked();
-    else setLocked('ready');
+    else setLocked(isAuthResolving() ? 'checking' : 'ready');
   }
 
   function eventShouldBeBlocked(event) {
