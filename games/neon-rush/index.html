@@ -57,7 +57,7 @@
     <section class="game-frame" aria-label="XENA Neon Rush game">
       <canvas id="game" width="1600" height="900" aria-label="Game canvas"></canvas><div class="scanlines"></div>
       <section id="loading" class="panel" aria-live="polite"><div class="loader-title">CONNECTING TO SIGNAL…</div><div class="progress"><i id="progress"></i></div><div id="load-detail" class="loader-detail">INITIALIZING ASSET LINK</div></section>
-      <section id="lobby" class="panel" hidden><div class="eyebrow">XENA ARCADE // LIVE SIGNAL</div><h1>XENA: <span>NEON RUSH</span></h1><p class="copy">Stage 1 is an easy warm-up. Survive 2 minutes to breach Stage 2, collect XC, pull it with MAGNET, then smash through the System with OVERRIDE DASH.</p><div class="modes"><button class="button" data-mode="HOVER">HOVER MODE</button><button class="button pink" data-mode="DASH">DASH MODE</button></div><p class="controls">DESKTOP: SPACE / ↑ / W TO JUMP · ↓ / S TO SLIDE<br>MOBILE: HOLD LEFT TO SLIDE · TAP RIGHT TO JUMP<br>STAGE 2 AFTER 2 MIN: MAGNET PULLS XC · OVERRIDE DASH IS INVINCIBLE</p></section>
+      <section id="lobby" class="panel" hidden><div class="eyebrow">XENA ARCADE // LIVE SIGNAL</div><h1>XENA: <span>NEON RUSH</span></h1><p class="copy">Stage 1 is an easy warm-up. Survive 2 minutes to breach Stage 2, collect Neon Cores, pull them with MAGNET, then smash through the System with OVERRIDE DASH.</p><div class="modes"><button class="button" data-mode="HOVER">HOVER MODE</button><button class="button pink" data-mode="DASH">DASH MODE</button></div><p class="controls">DESKTOP: SPACE / ↑ / W TO JUMP · ↓ / S TO SLIDE<br>MOBILE: HOLD LEFT TO SLIDE · TAP RIGHT TO JUMP<br>STAGE 2 AFTER 2 MIN: MAGNET PULLS NEON CORES · OVERRIDE DASH IS INVINCIBLE</p></section>
       <section id="gameover" class="panel" hidden><div class="eyebrow">SIGNAL INTERRUPTED</div><h2>SIGNAL LOST</h2><p class="small">FINAL SCORE</p><p id="final-score" class="score">0</p><div class="modes"><button id="retry" class="button">REBOOT RUN</button><button id="return-lobby" class="button pink">CHANGE MODE</button></div></section>
     </section>
   </main>
@@ -96,7 +96,7 @@ const HITBOX = Object.freeze({
   // Tuned for the visible silhouettes, intentionally kinder than the painted bounds.
   dashPlayer: { x: 38, y: 15, w: 45, h: 69 },
   // The hoverboard, hair and sword are deliberately outside the collision core.
-  hoverPlayer: { x: 31, y: 27, w: 48, h: 43 },
+  hoverPlayer: { x: 29, y: 24, w: 44, h: 39 },
   playerSlide: { x: 37, y: 49, w: 48, h: 33 },
   wall: { x: 22, y: 7, w: 48, h: 0 },
   drone: { x: 17, y: 12, w: 49, h: 31 },
@@ -177,10 +177,10 @@ function isDashActive(g) { return g.dashUntil > g.elapsed; }
 function newGame(nextMode) {
   cancelAnimationFrame(raf); mode = nextMode; held = { jump:false, slide:false };
   const hover = mode === 'HOVER';
-  game = { mode, stage:1, player:hover ? { x:70, y:178, w:112, h:96, vy:0, sliding:false, frame:0 } : { x:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], items:[], score:0, coins:0, elapsed:0, speed:hover ? STAGES[1].hoverSpeed : STAGES[1].dashSpeed, bgX:0, spawn:0, itemSpawn:0, magnetUntil:0, dashUntil:0, messageUntil:0, lastSlideSound:0 };
+  game = { mode, stage:1, player:hover ? { x:75, y:181, w:104, h:89, vy:0, sliding:false, frame:0 } : { x:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], items:[], score:0, cores:0, elapsed:0, speed:hover ? STAGES[1].hoverSpeed : STAGES[1].dashSpeed, bgX:0, spawn:0, itemSpawn:0, magnetUntil:0, dashUntil:0, messageUntil:0, lastSlideSound:0 };
   state = 'PLAYING'; show('none'); startBgm(); last = performance.now(); raf = requestAnimationFrame(loop);
 }
-function gameSpeed(g) { const s = stageConfig(g), base = g.mode === 'HOVER' ? s.hoverSpeed : s.dashSpeed, stageTime = Math.max(0, g.elapsed - (g.stage === 2 ? STAGE_TWO_AFTER : 0)), ramp = g.stage === 1 ? Math.min(g.elapsed * .16, 16) : Math.min(stageTime * .65, 92); return base + ramp + (isDashActive(g) ? 225 : 0); }
+function gameSpeed(g) { const s = stageConfig(g), base = g.mode === 'HOVER' ? s.hoverSpeed : s.dashSpeed, stageTime = Math.max(0, g.elapsed - (g.stage === 2 ? STAGE_TWO_AFTER : 0)), ramp = g.stage === 1 ? Math.min(g.elapsed * .16, 16) : Math.min(stageTime * .65, 92), hoverStepMultiplier = g.mode === 'HOVER' ? 1 + Math.floor(g.elapsed / 30) * .1 : 1; return (base + ramp) * hoverStepMultiplier + (isDashActive(g) ? 225 : 0); }
 function playerRect(p) { const h = game.mode === 'HOVER' ? HITBOX.hoverPlayer : (p.sliding ? HITBOX.playerSlide : HITBOX.dashPlayer); return { x:p.x + h.x, y:p.y + h.y, w:h.w, h:h.h }; }
 function obstacleRect(o) { const h = o.kind === 'WALL' ? HITBOX.wall : (o.kind === 'SENTRY' ? HITBOX.sentry : HITBOX.drone); return { x:o.x + h.x, y:o.y + h.y, w:h.w, h:o.kind === 'WALL' ? Math.max(0, o.h - h.y * 2) : h.h }; }
 function itemRect(item) { return { x:item.x + 8, y:item.y + 8, w:item.w - 16, h:item.h - 16 }; }
@@ -189,7 +189,7 @@ function action(type, active) {
   if (state !== 'PLAYING' || !game) return; const p = game.player;
   if (type === 'JUMP' && active) {
     if (game.mode === 'HOVER') { p.vy = -295; sound('SFX_JUMP'); }
-    else if (p.y >= 329) { p.vy = -500; sound('SFX_JUMP'); }
+    else if (p.y >= 329) { p.vy = -660; sound('SFX_JUMP'); }
   }
   if (game.mode === 'DASH' && type === 'SLIDE') { p.sliding = active; if (active && performance.now() - game.lastSlideSound > 170) { game.lastSlideSound = performance.now(); sound('SFX_SLIDE'); } }
 }
@@ -212,12 +212,12 @@ function spawnItem(g) {
   const y = g.mode === 'HOVER' ? 88 + Math.random() * 238 : (kind === 'COIN' ? 330 : 282 + Math.random() * 40);
   g.items.push({ kind, x:W + 38, y, w:kind === 'COIN' ? 43 : 58, h:kind === 'COIN' ? 43 : 58, phase:Math.random() * Math.PI * 2 });
 }
-function awardCoin(g) {
-  g.coins++;
-  window.dispatchEvent(new CustomEvent('xena:xc-earned', { detail:{ amount:1, total:g.coins, stage:g.stage, mode:g.mode } }));
+function awardNeonCore(g) {
+  g.cores++;
+  window.dispatchEvent(new CustomEvent('xena:neon-core-earned', { detail:{ amount:1, total:g.cores, stage:g.stage, mode:g.mode } }));
 }
 function collectItem(g, item) {
-  if (item.kind === 'COIN') { awardCoin(g); sound('SFX_SCORE'); return; }
+  if (item.kind === 'COIN') { awardNeonCore(g); sound('SFX_SCORE'); return; }
   if (item.kind === 'MAGNET') { g.magnetUntil = Math.max(g.magnetUntil, g.elapsed) + 5; g.messageUntil = g.elapsed + 1.25; g.message = 'MAGNET // 5 SEC'; sound('SFX_SCORE'); return; }
   g.dashUntil = Math.max(g.dashUntil, g.elapsed) + 5; g.messageUntil = g.elapsed + 1.25; g.message = 'OVERRIDE DASH // 5 SEC'; sound('SFX_SCORE');
 }
@@ -277,7 +277,7 @@ function drawItem(item, g) {
 }
 function drawHud(g) {
   ctx.save(); ctx.fillStyle = '#e9fdff'; ctx.shadowColor = '#00f2ff'; ctx.shadowBlur = 12; ctx.font = '800 22px "JetBrains Mono", monospace'; ctx.fillText(`STAGE ${g.stage} // SCORE ${g.score}`, 19, 34);
-  ctx.shadowBlur = 0; ctx.fillStyle = '#9cfaff'; ctx.font = '700 13px "JetBrains Mono", monospace'; ctx.fillText(`XC ${g.coins}`, 20, 56); const ratio = g.speed / (g.mode === 'HOVER' ? stageConfig(g).hoverSpeed : stageConfig(g).dashSpeed), countdown = Math.max(0, Math.ceil(STAGE_TWO_AFTER - g.elapsed)); ctx.fillText(`${g.mode} // SPEED x${ratio.toFixed(1)}`, 20, 76); if (g.stage === 1) ctx.fillText(`STAGE 2 IN ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2,'0')}`, W - 182, 56);
+  ctx.shadowBlur = 0; ctx.fillStyle = '#9cfaff'; ctx.font = '700 13px "JetBrains Mono", monospace'; ctx.fillText(`NEON CORE ${g.cores}`, 20, 56); const ratio = g.speed / (g.mode === 'HOVER' ? stageConfig(g).hoverSpeed : stageConfig(g).dashSpeed), countdown = Math.max(0, Math.ceil(STAGE_TWO_AFTER - g.elapsed)); ctx.fillText(`${g.mode} // SPEED x${ratio.toFixed(1)}`, 20, 76); if (g.stage === 1) ctx.fillText(`STAGE 2 IN ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2,'0')}`, W - 182, 56);
   if (isMagnetActive(g) || isDashActive(g)) { const label = isDashActive(g) ? `DASH ${Math.ceil(g.dashUntil - g.elapsed)}s` : `MAGNET ${Math.ceil(g.magnetUntil - g.elapsed)}s`; ctx.fillStyle = isDashActive(g) ? '#ff8bdb' : '#b6fbff'; ctx.fillText(label, W - 155, 34); }
   ctx.restore();
 }
@@ -285,7 +285,7 @@ function drawStageMessage(g) { if (g.messageUntil <= g.elapsed) return; const al
 function draw(g) { ctx.imageSmoothingEnabled = false; drawBackground(g); if (!g) return; g.items.forEach(item => drawItem(item,g)); g.obstacles.forEach(drawObstacle); drawPlayer(g.player, g.mode, g); drawHud(g); drawStageMessage(g); }
 function renderLobby() { drawBackground(null); }
 function loop(now) { if (state !== 'PLAYING') return; const dt = Math.min((now - last) / 1000, .035); last = now; update(game,dt); if (state === 'PLAYING') { draw(game); raf = requestAnimationFrame(loop); } }
-function endGame() { if (state !== 'PLAYING') return; state = 'OVER'; cancelAnimationFrame(raf); stopBgm(); sound('SFX_CRASH'); finalScore.textContent = `${game.score} // XC ${game.coins}`; show('over'); }
+function endGame() { if (state !== 'PLAYING') return; state = 'OVER'; cancelAnimationFrame(raf); stopBgm(); sound('SFX_CRASH'); finalScore.textContent = `${game.score} // NEON CORE ${game.cores}`; show('over'); }
 
 document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => newGame(button.dataset.mode)));
 document.querySelector('#retry').addEventListener('click', () => newGame(mode));
