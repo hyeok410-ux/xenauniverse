@@ -43,5 +43,8 @@ var indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 assert(indexHtml.includes('id="deck-slots"'), '15-slot deck container missing');
 assert(client.includes('state.selected.splice(index, 1)'), 'slot-to-collection removal missing');
 assert(client.includes('state.selected.push(c.id)'), 'collection-to-slot equip missing');
+assert(client.includes('function sanitizeDeckSelection'), 'legacy deck selection sanitizer missing');
+assert(client.includes('sanitizeDeckSelection(cards());'), 'deck must be sanitized before battle');
+assert(client.includes('clean.length < 15'), 'deck sanitizer must preserve the 15-card cap');
 
 console.log('PASS: syntax, mana invariants, AI bonuses, AI mana UI, and deck-slot structure');

@@ -188,7 +188,7 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
 .card[data-grade="SSR"]{border-color:rgba(232,196,104,.6);box-shadow:0 0 14px rgba(232,196,104,.22);}
 .card.tcg-pure{border-color:rgba(232,196,104,.55);}
 .card.op{border-style:dashed;opacity:.94;}
-.card.reveal{animation:pop .38s ease-out;}
+.card.reveal{animation:pop .62s cubic-bezier(.2,.82,.25,1) both;}
 @keyframes pop{0%{transform:translateY(-14px) scale(.8);opacity:0;}100%{transform:none;opacity:1;}}
 
 /* [2026-07-24] 손패 카드가 너무 작다는 피드백 — 전 구간에서 2배 가까이 확대.
@@ -400,6 +400,13 @@ main{padding:64px 14px 20px;max-width:1080px;margin:0 auto;}
   .hand .card{width:132px;height:185px;flex:0 0 auto}
   #screen-play>.actions{position:sticky;bottom:6px;z-index:46;margin-top:8px;padding:7px;border:1px solid rgba(63,224,255,.25);border-radius:14px;background:rgba(4,7,17,.92);backdrop-filter:blur(8px)}
   #screen-play>.actions .btn{padding:9px 13px;font-size:.58rem}
+}
+@media(max-width:920px){
+  .battle-zoom-controls{display:flex;position:absolute;right:9px;top:9px;z-index:32;margin:0;padding:4px 6px;border:1px solid rgba(63,224,255,.3);border-radius:12px;background:rgba(2,7,18,.88);backdrop-filter:blur(6px)}
+  html.xena-immersive,html.xena-immersive body{width:100%;height:100%;overflow:hidden}
+  html.xena-immersive .topbar{display:none}
+  html.xena-immersive main{max-width:none;height:100dvh;overflow:auto;padding:8px 10px 12px}
+  html.xena-immersive #screen-play .status{position:sticky;top:0;z-index:45;margin-bottom:6px}
 }
 </style>
 </head>
@@ -1007,6 +1014,18 @@ function triggerElementBurst(z, card, opponent){
   if(!opponent && imageMap[element]) tcgSfx('tcg_card_place_layer_' + element.toLowerCase());
   setTimeout(function(){ if(fx.parentNode) fx.parentNode.removeChild(fx); }, 950);
 }
+/* One card action is intentionally staged: card arrival -> VFX/SFX -> power.
+   This keeps a multi-effect turn readable instead of firing every response in
+   the same frame. `done` runs only after the power animation has begun. */
+function runPlacementSequence(z, card, opponent, beforePower, done){
+  var zone = $('board').querySelector('.zone[data-z="' + z + '"]');
+  var selector = opponent ? '.slots.op .card:last-child' : '.slots:not(.op) .card:last-child';
+  var cardNode = zone && zone.querySelector(selector);
+  if(cardNode) cardNode.classList.add('reveal');
+  setTimeout(function(){ triggerElementBurst(z, card, opponent); }, 620);
+  setTimeout(function(){ animatePowerChanges(z, beforePower); }, 1320);
+  setTimeout(function(){ if(done) done(); }, 2050);
+}
 function animatePowerBadge(node, from, to){
   if(!node || from === to) return;
   var badge = node.querySelector('.c-effpow');
@@ -1192,6 +1211,7 @@ $('board').addEventListener('click', function(e){
   }
 
   var beforePower = zonePowerSnapshot(z);
+  G.locked = true;
   card._playedAt = ++G.playSeq;
   G.zones[z].p.push(card);
   G.pendingP.push({ zone: z, idx: G.zones[z].p.length - 1, card: card });
@@ -1200,8 +1220,10 @@ $('board').addEventListener('click', function(e){
   G.selected = -1;
   hint(t('Placed. Click it again to take it back.', '배치됨. 다시 누르면 회수됩니다.'));
   render();
-  triggerElementBurst(z, card, false);
-  animatePowerChanges(z, beforePower);
+  runPlacementSequence(z, card, false, beforePower, function(){
+    G.locked = false;
+    render();
+  });
 });
 
 function takeBack(z, slotIdx){
@@ -1361,11 +1383,7 @@ $('btn-end').addEventListener('click', function(){
     pl.card._playedAt = ++G.playSeq;
     G.zones[pl.zone].a.push(pl.card);
     render();
-    var el = $('board').querySelector('.zone[data-z="' + pl.zone + '"] .slots.op .card:last-child');
-    if(el) el.classList.add('reveal');
-    triggerElementBurst(pl.zone, pl.card, true);
-    animatePowerChanges(pl.zone, beforePower);
-    setTimeout(revealNext, 380);
+    runPlacementSequence(pl.zone, pl.card, true, beforePower, revealNext);
   })();
 });
 
@@ -1469,6 +1487,7 @@ function show(name){
   if(name !== 'end') $('screen-end').classList.remove('battle-overlay');
   /* 덱 빌더는 인트로 화면에서만 접근 — 배틀 중 클릭해서 게임을 끊어먹지 않도록 */
   $('btn-mycards').classList.toggle('hidden', name !== 'intro');
+  if(name !== 'play' && window.XenaMobileImmersive) window.XenaMobileImmersive.exit();
   window.scrollTo(0, 0);
 }
 function hint(msg){ $('hint').textContent = msg || ''; }
@@ -1705,6 +1724,7 @@ for(var i = 0; i < toggles.length; i++){
 <script src="../shared-wallet.js?v=20260802"></script>
 <script src="../shared-records.js?v=20260802"></script>
 <script src="../shared-battle-view.js?v=20260801tap2"></script>
+<script src="../shared-mobile-immersive.js?v=20260804"></script>
 <script src="../gacha/cards.js?v=20260728b"></script>
 <script src="../../shared/xena-cards.js?v=20260728b"></script>
 <script>
@@ -1723,9 +1743,11 @@ document.querySelectorAll('button').forEach(function(el){
   function beginMatch(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
+    if (window.XenaMobileImmersive) window.XenaMobileImmersive.enter();
     var launch = function () {
       if (!newGame()) {
         hint('Build a 12-card deck in MY CARDS before starting.');
+        if (window.XenaMobileImmersive) window.XenaMobileImmersive.exit();
         return;
       }
       show('play');
@@ -1734,6 +1756,7 @@ document.querySelectorAll('button').forEach(function(el){
     if (!window.XenaWallet || !window.XenaWallet.consumeEnergy) { launch(); return; }
     window.XenaWallet.consumeEnergy('signal_clash').then(launch).catch(function () {
       hint('No energy available. One gem returns every 10 minutes.');
+      if (window.XenaMobileImmersive) window.XenaMobileImmersive.exit();
     });
   }
   ['btn-start', 'btn-again'].forEach(function (id) {
@@ -1741,8 +1764,8 @@ document.querySelectorAll('button').forEach(function(el){
     if (button) button.addEventListener('click', beginMatch, true);
   });
   if (window.XenaBattleView) window.XenaBattleView.attach({
-    viewport:'#clash-battle-viewport', stage:'#clash-battle-stage', target:'#board', min:.58, max:1.28,
-    initial:window.matchMedia('(max-width: 920px) and (orientation: portrait)').matches ? .78 : 1
+    viewport:'#clash-battle-viewport', stage:'#clash-battle-stage', target:'#board', min:.42, max:1.28,
+    initial:window.matchMedia('(max-width: 920px)').matches ? .82 : 1
   });
   if (window.XenaWallet && window.XenaWallet.initEnergyUI) window.XenaWallet.initEnergyUI('signal_clash');
 }());

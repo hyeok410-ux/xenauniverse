@@ -727,3 +727,30 @@ body.online-desync::before {
   18% { box-shadow: inset 0 0 0 9999px rgba(255, 48, 95, .26); }
   44% { box-shadow: inset 0 0 0 9999px rgba(255, 48, 95, .08); }
 }
+
+/* The player skill list was hidden by the compact mobile cockpit rules.
+   Keep it reachable as a thumb-side action rail during every live match. */
+@media (max-width: 900px) {
+  body:has(.game-layout) .game-layout > .side-panel:not(.enemy-panel) .skill-list {
+    position: fixed !important;
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 80;
+    display: grid !important;
+    width: min(46vw, 230px);
+    gap: 6px;
+    padding: 7px;
+    border: 1px solid rgba(50,230,239,.52);
+    border-radius: 13px;
+    background: rgba(4,10,20,.92);
+    box-shadow: 0 10px 28px rgba(0,0,0,.46), 0 0 18px rgba(50,230,239,.2);
+    backdrop-filter: blur(10px);
+  }
+  body:has(.game-layout) .game-layout > .side-panel:not(.enemy-panel) .skill-list .skill-button {
+    min-height: 46px;
+    padding: 8px 10px;
+    font-size: 12px;
+    border-radius: 9px;
+  }
+  body:has(.game-layout) .game-layout > .side-panel:not(.enemy-panel) .skill-list .skill-button span { font-size: 9px; }
+}

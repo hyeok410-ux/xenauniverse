@@ -95,7 +95,10 @@
     return shuffle(chosen.slice(0, 15));
   }
   function player(id, deck, core, advantage) { return { id: id, core: core, mana: 0, maxMana: 0, deck: deck.slice(5), hand: deck.slice(0, 5), field: Array(7).fill(null), nextBuff: null, nextDebuff: 0, advantage: advantage || null }; }
-  function show(view) { ['lobby', 'cards-view', 'battle-view'].forEach(function (id) { $('#' + id).hidden = id !== view; }); }
+  function show(view) {
+    ['lobby', 'cards-view', 'battle-view'].forEach(function (id) { $('#' + id).hidden = id !== view; });
+    if (view !== 'battle-view' && window.XenaMobileImmersive) window.XenaMobileImmersive.exit();
+  }
   function status(msg) { $('#lobby-status').textContent = msg || ''; }
   function esc(v) { return String(v || '').replace(/[&<>'"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]; }); }
   function collectionCardHtml(c) {
@@ -129,8 +132,25 @@
       slots.appendChild(slot);
     }
   }
+  /* A legacy/local deck can contain IDs that are no longer in the current
+     collection. Those invisible IDs used to consume all 15 slots and made a
+     visually four-card deck report as full. Keep only available copies. */
+  function sanitizeDeckSelection(ownedCards) {
+    var byId = {}, used = {}, clean = [];
+    (ownedCards || []).forEach(function (card) { byId[card.id] = card; });
+    state.selected.forEach(function (id) {
+      var card = byId[id];
+      var limit = card ? Math.min(2, Math.max(1, Number(card.count) || 1)) : 0;
+      if (card && (used[id] || 0) < limit && clean.length < 15) {
+        used[id] = (used[id] || 0) + 1;
+        clean.push(id);
+      }
+    });
+    state.selected = clean;
+  }
   function renderCollection() {
     var list = $('#card-list'), ownedCards = cards(), byId = {}; list.innerHTML = '';
+    sanitizeDeckSelection(ownedCards);
     ownedCards.forEach(function (c) { byId[c.id] = c; });
     renderDeckSlots(state.selected.map(function (id) { return byId[id] || null; }));
     ownedCards.forEach(function (c) {
@@ -167,10 +187,12 @@
   }
   async function startBattle() {
     if (state.game) return;
+    sanitizeDeckSelection(cards());
     if (state.selected.length !== 15) { status(tr('먼저 내 카드에서 15장 덱을 완성하세요.', 'Complete your 15-card deck first.')); show('cards-view'); renderCollection(); return; }
     var start = $('#start-pve'); start.disabled = true; status(tr('전투를 준비하고 있습니다…', 'Preparing battle…'));
+    if (window.XenaMobileImmersive) window.XenaMobileImmersive.enter();
     try { if (window.XenaWallet && window.XenaWallet.consumeEnergy) await window.XenaWallet.consumeEnergy('signal_warfare'); }
-    catch (_) { status(tr('보석이 부족합니다. 충전을 기다려 주세요.', 'No gems available. Wait for recharge.')); start.disabled = false; return; }
+    catch (_) { status(tr('보석이 부족합니다. 충전을 기다려 주세요.', 'No gems available. Wait for recharge.')); start.disabled = false; if (window.XenaMobileImmersive) window.XenaMobileImmersive.exit(); return; }
     var conf = DIFFICULTY[state.difficulty], first = Math.random() < .5 ? 'player' : 'ai';
     state.game = { difficulty: state.difficulty, first: first, active: first, round: 1, player: player('player', deckForBattle(), 30), ai: player('ai', aiDeck(state.difficulty), conf.core, conf) };
     await coin(first);
@@ -496,6 +518,7 @@
       var saved = JSON.parse(localStorage.getItem('xena-signal-warfare-deck') || '[]');
       if (Array.isArray(saved)) saved.slice(0, 15).forEach(function (id) { if (state.selected.filter(function (x) { return x === id; }).length < 2) state.selected.push(id); });
     } catch (_) {}
+    sanitizeDeckSelection(cards());
     document.querySelectorAll('[data-difficulty]').forEach(function (b) { b.onclick = function () { state.difficulty = b.dataset.difficulty; document.querySelectorAll('[data-difficulty]').forEach(function (x) { x.classList.toggle('selected', x === b); }); }; });
     $('#my-cards-button').onclick = function () { show('cards-view'); renderCollection(); };
     $('#deck-slots').onclick = function (event) {
@@ -514,8 +537,8 @@
     $('#record-button').onclick = showRecords; $('#record-close').onclick = function () { $('#record-modal').hidden = true; };
     setLanguage(localStorage.getItem('xena-language') || document.documentElement.lang || 'ko'); wireWallet();
     if (window.XenaBattleView) state.battleView = window.XenaBattleView.attach({
-      viewport:'#warfare-battle-viewport', stage:'#warfare-battle-stage', target:'#battlefield', min:.58, max:1.3,
-      initial:window.matchMedia('(max-width: 899px) and (orientation: portrait)').matches ? .78 : 1
+      viewport:'#warfare-battle-viewport', stage:'#warfare-battle-stage', target:'#battlefield', min:.42, max:1.3,
+      initial:window.matchMedia('(max-width: 899px)').matches ? .82 : 1
     });
   }
   document.addEventListener('DOMContentLoaded', init);

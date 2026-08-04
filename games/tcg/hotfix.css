@@ -55,3 +55,21 @@ button.deck-slot:hover{border-color:#ff8cba;box-shadow:0 0 16px rgba(255,47,176,
   .hand .card-unit{width:132px!important;height:188px!important;flex:0 0 auto}
   .phase-controls{position:sticky;bottom:5px;z-index:40;padding:7px;border:1px solid rgba(63,224,255,.24);border-radius:13px;background:rgba(4,7,18,.92);backdrop-filter:blur(8px)}
 }
+
+/* Mobile deck building: preserve a true grid even when the collection contains
+   mixed legacy card assets with different intrinsic dimensions. */
+@media(max-width:899px){
+  #cards-view{display:block;padding:14px 10px 28px}
+  #cards-view .collection-panel{width:100%;min-width:0;overflow:hidden;padding:14px 10px}
+  #card-list.card-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:row;align-items:stretch;gap:10px;max-height:none;overflow:visible;padding:10px 2px;margin:10px 0}
+  #card-list .collection-card{position:relative!important;width:100%;min-width:0;min-height:0;aspect-ratio:2/3;transform:none!important}
+  #card-list .collection-card .collection-art{position:absolute!important;inset:0;width:100%;height:100%;object-fit:contain}
+  .battle-zoom-controls{display:flex}
+}
+@media(max-width:1000px){
+  html.xena-immersive,html.xena-immersive body{width:100%;height:100%;overflow:hidden}
+  html.xena-immersive #xena-tcg-container{width:100%;height:100dvh;min-height:0;overflow:hidden;border:0}
+  html.xena-immersive .game-header{display:none}
+  html.xena-immersive .battle-screen{min-height:100dvh;padding:8px 10px 10px}
+  html.xena-immersive .battle-pan-viewport{height:calc(100dvh - 166px)}
+}
