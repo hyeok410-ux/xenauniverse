@@ -169,6 +169,7 @@ const ASSETS = Object.freeze({
   IMG_DASH_BG: './assets/bg_dash_alley_v2.png',
   IMG_HOVER_BG_STAGE2: './assets/bg_hover_stage2_v1.png',
   IMG_DASH_BG_STAGE2: './assets/bg_dash_stage2_v1.png',
+  IMG_STAYBRIGHT_FEVER_BG: './assets/bg_staybright_fever_v1.png',
   IMG_OBS_WALL: './assets/neon_pillar.png',
   IMG_OBS_DRONE: './assets/drone_enemy.png',
   IMG_OBS_WALL_STAGE2: './assets/obs_hover_stage2_v1.png',
@@ -202,7 +203,7 @@ const screens = { loading:document.querySelector('#loading'), lobby:document.que
 const progress = document.querySelector('#progress'), loadDetail = document.querySelector('#load-detail'), finalScore = document.querySelector('#final-score');
 const hackTrigger = document.querySelector('#hack-trigger');
 const images = Object.create(null), sounds = Object.create(null);
-let state = 'LOADING', mode = 'LOBBY', raf = 0, last = 0, game = null, held = { jump:false, slide:false };
+let state = 'LOADING', mode = 'LOBBY', raf = 0, last = 0, game = null, feverBgm = null, held = { jump:false, slide:false };
 
 // Phase 1 growth profile. It is deliberately local-only until the signed-in XENA account
 // service is ready to own this data; its schema is already separated from a run state.
@@ -346,11 +347,30 @@ function softenDroneBackdrop(source) {
 }
 function prepareArtwork() { images.IMG_OBS_WALL = stripWhiteEdge(images.IMG_OBS_WALL); images.IMG_OBS_DRONE = softenDroneBackdrop(images.IMG_OBS_DRONE); }
 function sound(key) { const source = sounds[key]; if (!source) return; const instance = source.cloneNode(); instance.volume = key === 'BGM' ? .46 : .64; instance.play().catch(() => {}); }
-function startBgm() { const bgm = sounds.BGM; if (!bgm) return; bgm.volume = .46; bgm.currentTime = 0; bgm.play().catch(() => {}); }
-function stopBgm() { if (sounds.BGM) sounds.BGM.pause(); }
+function startBgm() { stopFeverAudio(); const bgm = sounds.BGM; if (!bgm) return; bgm.volume = .46; bgm.currentTime = 0; bgm.play().catch(() => {}); }
+function stopBgm() { if (sounds.BGM) sounds.BGM.pause(); stopFeverAudio(); }
+// Source package currently contains the full Staybright BGM only. This keeps the Fever
+// hook swap isolated so a licensed vocal/stem asset can replace it without engine changes.
+function startFeverAudio() {
+  const bgm = sounds.BGM; if (!bgm || feverBgm) return;
+  const hook = bgm.cloneNode(); hook.loop = true; hook.volume = 0; hook.currentTime = Math.max(0, Math.min(48, (Number.isFinite(bgm.duration) ? bgm.duration - 8.2 : 48)));
+  feverBgm = hook; hook.play().catch(() => {}); const start = performance.now();
+  const crossfade = now => { if (!feverBgm || feverBgm !== hook) return; const t = clamp((now - start) / 100, 0, 1); bgm.volume = .46 * (1 - t); hook.volume = .60 * t; if (t < 1) requestAnimationFrame(crossfade); else bgm.pause(); };
+  requestAnimationFrame(crossfade);
+}
+function stopFeverAudio() { if (!feverBgm) return; feverBgm.pause(); feverBgm = null; const bgm = sounds.BGM; if (bgm && state === 'PLAYING') { bgm.volume = .46; bgm.play().catch(() => {}); } }
+function playHackImpact(quality) {
+  const AudioCtor = window.AudioContext || window.webkitAudioContext; if (!AudioCtor) return;
+  try { const audio = new AudioCtor(), now = audio.currentTime, gain = audio.createGain(), bass = audio.createOscillator(), slash = audio.createOscillator(); bass.type = 'sine'; bass.frequency.setValueAtTime(104, now); bass.frequency.exponentialRampToValueAtTime(46, now + .17); slash.type = 'sawtooth'; slash.frequency.setValueAtTime(quality === 'PERFECT' ? 1260 : 880, now); slash.frequency.exponentialRampToValueAtTime(250, now + .105); gain.gain.setValueAtTime(quality === 'PERFECT' ? .17 : .12, now); gain.gain.exponentialRampToValueAtTime(.001, now + .2); bass.connect(gain); slash.connect(gain); gain.connect(audio.destination); bass.start(now); slash.start(now); bass.stop(now + .21); slash.stop(now + .13); } catch (_) {}
+}
+function playGlitchNoise() {
+  const AudioCtor = window.AudioContext || window.webkitAudioContext; if (!AudioCtor) return;
+  try { const audio = new AudioCtor(), frame = audio.createBuffer(1, Math.floor(audio.sampleRate * .085), audio.sampleRate), data = frame.getChannelData(0); for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length); const noise = audio.createBufferSource(), filter = audio.createBiquadFilter(), gain = audio.createGain(); noise.buffer = frame; filter.type = 'bandpass'; filter.frequency.value = 1750; gain.gain.value = .075; noise.connect(filter).connect(gain).connect(audio.destination); noise.start(); } catch (_) {}
+}
 
 const STAGE_TWO_AFTER = 120;
 const TENSION_INTERVAL = 20, TENSION_SPEED_STEP = .12;
+const STAYBRIGHT_BPM = 118, FEVER_DURATION = 8, FEVER_CORE_CAP = 32;
 const TENSION_PALETTES = Object.freeze([
   { label:'SIGNAL RISE', tint:'#00d9ff', alpha:.00 },
   { label:'MAGENTA BREAK', tint:'#ff007f', alpha:.14 },
@@ -368,6 +388,7 @@ function isDashActive(g) { return g.dashUntil > g.elapsed; }
 function isGiantActive(g) { return g.giantUntil > g.elapsed; }
 function isHyperActive(g) { return g.hyperUntil > g.elapsed; }
 function isJackpotActive(g) { return g.jackpotUntil > g.elapsed; }
+function isFeverActive(g) { return g.fever.active && g.fever.until > g.elapsed; }
 function tensionPalette(g) { return TENSION_PALETTES[g.tensionPhase % TENSION_PALETTES.length]; }
 function updateTension(g) {
   const nextPhase = Math.floor(g.elapsed / TENSION_INTERVAL); if (nextPhase === g.tensionPhase) return;
@@ -376,10 +397,10 @@ function updateTension(g) {
 function newGame(nextMode) {
   cancelAnimationFrame(raf); mode = nextMode; held = { jump:false, slide:false };
   const hover = mode === 'HOVER';
-  game = { mode, stage:1, player:hover ? { x:75, y:181, w:104, h:89, vy:0, sliding:false, frame:0 } : { x:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], items:[], score:0, cores:0, coreFraction:0, elapsed:0, tensionPhase:0, speed:hover ? STAGES[1].hoverSpeed : STAGES[1].dashSpeed, bgX:0, spawn:0, itemSpawn:0, magnetUntil:0, dashUntil:0, giantUntil:0, hyperUntil:0, jackpotUntil:0, jackpotSpawn:0, syncCharge:0, hackFlashUntil:0, messageUntil:0, lastSlideSound:0, modifiers:runModifiers(mode), fever:{ unlocked:false, charge:0, active:false }, settled:false };
+  game = { mode, stage:1, player:hover ? { x:75, anchorX:75, y:181, w:104, h:89, vy:0, sliding:false, frame:0 } : { x:72, anchorX:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], items:[], score:0, cores:0, coreFraction:0, elapsed:0, tensionPhase:0, speed:hover ? STAGES[1].hoverSpeed : STAGES[1].dashSpeed, bgX:0, spawn:0, itemSpawn:0, magnetUntil:0, dashUntil:0, giantUntil:0, hyperUntil:0, jackpotUntil:0, jackpotSpawn:0, syncCharge:0, hackFlashUntil:0, glitchUntil:0, missSlowUntil:0, hackLockUntil:0, messageUntil:0, lastSlideSound:0, modifiers:runModifiers(mode), fever:{ active:false, until:0, spawn:0, spawnedValue:0, earned:0, coreCap:FEVER_CORE_CAP }, settled:false };
   state = 'PLAYING'; show('none'); startBgm(); last = performance.now(); raf = requestAnimationFrame(loop);
 }
-function gameSpeed(g) { const s = stageConfig(g), base = g.mode === 'HOVER' ? s.hoverSpeed : s.dashSpeed, stageTime = Math.max(0, g.elapsed - (g.stage === 2 ? STAGE_TWO_AFTER : 0)), ramp = g.stage === 1 ? Math.min(g.elapsed * .16, 16) : Math.min(stageTime * .65, 92), tensionMultiplier = 1 + g.tensionPhase * TENSION_SPEED_STEP; return (base + ramp) * tensionMultiplier + (isDashActive(g) ? 225 : 0) + (isHyperActive(g) ? 310 : 0); }
+function gameSpeed(g) { const s = stageConfig(g), base = g.mode === 'HOVER' ? s.hoverSpeed : s.dashSpeed, stageTime = Math.max(0, g.elapsed - (g.stage === 2 ? STAGE_TWO_AFTER : 0)), ramp = g.stage === 1 ? Math.min(g.elapsed * .16, 16) : Math.min(stageTime * .65, 92), tensionMultiplier = 1 + g.tensionPhase * TENSION_SPEED_STEP, boost = (isDashActive(g) ? 225 : 0) + (isHyperActive(g) ? 310 : 0) + (isFeverActive(g) ? 170 : 0), missMultiplier = g.missSlowUntil > g.elapsed ? .72 : 1; return ((base + ramp) * tensionMultiplier + boost) * missMultiplier; }
 function playerRect(p) { const h = game.mode === 'HOVER' ? HITBOX.hoverPlayer : (p.sliding ? HITBOX.playerSlide : HITBOX.dashPlayer); return { x:p.x + h.x, y:p.y + h.y, w:h.w, h:h.h }; }
 function obstacleRect(o) { const h = o.kind === 'WALL' ? HITBOX.wall : (o.kind === 'SENTRY' ? HITBOX.sentry : HITBOX.drone); return { x:o.x + h.x, y:o.y + h.y, w:h.w, h:o.kind === 'WALL' ? Math.max(0, o.h - h.y * 2) : h.h }; }
 function itemRect(item) { return { x:item.x + 8, y:item.y + 8, w:item.w - 16, h:item.h - 16 }; }
@@ -419,13 +440,14 @@ function spawnItem(g) {
   const y = g.mode === 'HOVER' ? 88 + Math.random() * 238 : (kind === 'COIN' ? 330 : 282 + Math.random() * 40);
   g.items.push({ kind, x:W + 38, y, w:kind === 'COIN' ? 43 : 58, h:kind === 'COIN' ? 43 : 58, phase:Math.random() * Math.PI * 2 });
 }
-function awardNeonCore(g) {
+function awardNeonCore(g, value = 1) {
   g.coreFraction += g.modifiers.coreBonus;
-  const bonus = Math.floor(g.coreFraction); g.coreFraction -= bonus; const amount = (1 + bonus) * (isJackpotActive(g) ? 2 : 1); g.cores += amount;
+  const bonus = Math.floor(g.coreFraction); g.coreFraction -= bonus; const amount = (value + bonus) * (isJackpotActive(g) && !isFeverActive(g) ? 2 : 1); g.cores += amount;
   window.dispatchEvent(new CustomEvent('xena:neon-core-earned', { detail:{ amount, total:g.cores, stage:g.stage, mode:g.mode } }));
 }
 function collectItem(g, item) {
   if (item.kind === 'COIN') { awardNeonCore(g); sound('SFX_SCORE'); return; }
+  if (item.kind === 'FEVER_CORE') { const grant = Math.min(item.value || 2, Math.max(0, g.fever.coreCap - g.fever.earned)); if (grant) { awardNeonCore(g, grant); g.fever.earned += grant; sound('SFX_SCORE'); } return; }
   if (item.kind === 'MAGNET') { g.magnetUntil = Math.max(g.magnetUntil, g.elapsed) + 5; g.messageUntil = g.elapsed + 1.25; g.message = 'MAGNET // 5 SEC'; sound('SFX_SCORE'); return; }
   if (item.kind === 'DASH') { g.dashUntil = Math.max(g.dashUntil, g.elapsed) + 5; g.messageUntil = g.elapsed + 1.25; g.message = 'OVERRIDE DASH // 5 SEC'; sound('SFX_SCORE'); return; }
   if (item.kind === 'GIANT') { g.giantUntil = Math.max(g.giantUntil, g.elapsed) + 7.5; g.messageUntil = g.elapsed + 1.45; g.message = 'MEGA OVERRIDE // BREAK THE SYSTEM'; sound('SFX_SCORE'); return; }
@@ -440,14 +462,21 @@ function spawnJackpotRain(g) {
     g.items.push({ kind:'COIN', x:W - 18 + i * 30, y, w:43, h:43, phase:Math.random() * Math.PI * 2 });
   }
 }
+function spawnFeverWave(g) {
+  const remaining = g.fever.coreCap - g.fever.spawnedValue, count = Math.min(3, Math.ceil(remaining / 2));
+  for (let i = 0; i < count; i++) {
+    const y = g.mode === 'HOVER' ? 74 + ((i * 91 + Math.random() * 42) % 280) : 246 + i * 49;
+    g.items.push({ kind:'FEVER_CORE', value:2, x:W + 10 + i * 48, y, w:49, h:49, phase:Math.random() * Math.PI * 2 }); g.fever.spawnedValue += 2;
+  }
+}
 function updateItems(g, dt) {
   const p = g.player, pRect = playerRect(p);
   for (let i = g.items.length - 1; i >= 0; i--) {
     const item = g.items[i];
-    const echo = dronePosition(g), echoPull = item.kind === 'COIN' && g.modifiers.droneId === 'cyan_echo' && !isMagnetActive(g) && Math.hypot(echo.x - (item.x + item.w / 2), echo.y - (item.y + item.h / 2)) <= 150;
-    if (item.kind === 'COIN' && (isMagnetActive(g) || echoPull)) {
+    const isCore = item.kind === 'COIN' || item.kind === 'FEVER_CORE', echo = dronePosition(g), echoPull = isCore && g.modifiers.droneId === 'cyan_echo' && !isMagnetActive(g) && Math.hypot(echo.x - (item.x + item.w / 2), echo.y - (item.y + item.h / 2)) <= 150;
+    if (isCore && (isMagnetActive(g) || echoPull || isFeverActive(g))) {
       const tx = p.x + p.w * .52, ty = p.y + p.h * .5, dx = tx - (item.x + item.w / 2), dy = ty - (item.y + item.h / 2), length = Math.max(1, Math.hypot(dx,dy));
-      const pullSpeed = isMagnetActive(g) ? 650 : 520; item.x += dx / length * pullSpeed * dt; item.y += dy / length * pullSpeed * dt;
+      const pullSpeed = isFeverActive(g) ? 780 : (isMagnetActive(g) ? 650 : 520); item.x += dx / length * pullSpeed * dt; item.y += dy / length * pullSpeed * dt;
     } else item.x -= g.speed * dt;
     if (overlaps(pRect, itemRect(item))) { collectItem(g,item); g.items.splice(i,1); continue; }
     if (item.x + item.w < -40) g.items.splice(i,1);
@@ -457,9 +486,11 @@ function findHackTarget(g) {
   const p = g.player, left = p.x + 42, right = p.x + 272;
   return g.obstacles.find(obstacle => obstacle.hackable && obstacle.x + obstacle.w >= left && obstacle.x <= right);
 }
-function hackBeatReady(g) { const beat = (g.elapsed * 2.12) % 1; return beat < .18 || beat > .90; }
+function hackBeatDistance(g) { const beat = (g.elapsed * (STAYBRIGHT_BPM / 60)) % 1; return Math.min(beat, 1 - beat); }
+function hackQuality(g) { const distance = hackBeatDistance(g); return distance <= .055 ? 'PERFECT' : (distance <= .18 ? 'GREAT' : null); }
+function hackBeatReady(g) { return !!hackQuality(g); }
 function syncHackUi(g) {
-  const target = findHackTarget(g), visible = state === 'PLAYING' && !!target;
+  const target = findHackTarget(g), visible = state === 'PLAYING' && !!target && !isFeverActive(g);
   hackTrigger.hidden = !visible;
   hackTrigger.classList.toggle('beat-window', visible && hackBeatReady(g));
   hackTrigger.classList.toggle('charged', g.syncCharge >= 100);
@@ -467,35 +498,42 @@ function syncHackUi(g) {
 }
 function performSyncHack(g) {
   const target = findHackTarget(g);
-  if (!target) return;
-  if (!hackBeatReady(g)) { g.message = 'SYNC LOST // FOLLOW THE CYAN PULSE'; g.messageUntil = g.elapsed + .72; return; }
+  if (!target || isFeverActive(g) || g.hackLockUntil > g.elapsed) return;
+  const quality = hackQuality(g);
+  if (!quality) { g.hackLockUntil = g.elapsed + .22; g.missSlowUntil = g.elapsed + .5; g.glitchUntil = g.elapsed + .5; g.player.x = Math.max(20, g.player.x - 34); g.message = 'MISS // SIGNAL DELAY'; g.messageUntil = g.elapsed + .72; playGlitchNoise(); return; }
   const linked = g.obstacles.filter(obstacle => obstacle.hackId === target.hackId);
   g.obstacles = g.obstacles.filter(obstacle => obstacle.hackId !== target.hackId);
-  const coreYield = Math.max(2, Math.min(3, linked.length + 1));
+  const coreYield = quality === 'PERFECT' ? 3 : Math.max(2, Math.min(3, linked.length + 1));
   for (let i = 0; i < coreYield; i++) awardNeonCore(g);
-  g.score += linked.length; g.syncCharge = clamp(g.syncCharge + 25, 0, 100); g.hackFlashUntil = g.elapsed + .45;
-  g.message = g.syncCharge >= 100 ? 'STAYBRIGHT READY // FEVER SIGNAL LOCKED' : `SYNC HACK // +${coreYield} NEON CORE`;
-  g.messageUntil = g.elapsed + 1.25; sound('SFX_SCORE');
+  g.hackLockUntil = g.elapsed + .16; g.score += linked.length; g.syncCharge = clamp(g.syncCharge + 25, 0, 100); g.hackFlashUntil = g.elapsed + .45;
+  g.message = `${quality} // +${coreYield} NEON CORE`; g.messageUntil = g.elapsed + 1.25; playHackImpact(quality); sound('SFX_SCORE');
+  if (g.syncCharge >= 100 && !isFeverActive(g)) startFever(g);
 }
+function startFever(g) {
+  g.syncCharge = 0; g.fever = { active:true, until:g.elapsed + FEVER_DURATION, spawn:0, spawnedValue:0, earned:0, coreCap:FEVER_CORE_CAP }; g.obstacles.length = 0; g.message = 'STAYBRIGHT FEVER // LIVE OVERRIDE'; g.messageUntil = g.elapsed + 1.75; g.hackFlashUntil = g.elapsed + .85; startFeverAudio(); playHackImpact('PERFECT');
+}
+function endFever(g) { if (!g.fever.active) return; g.fever.active = false; g.items = g.items.filter(item => item.kind !== 'FEVER_CORE'); g.message = 'FEVER END // SIGNAL STABILIZED'; g.messageUntil = g.elapsed + 1.1; stopFeverAudio(); }
 function update(g, dt) {
-  const p = g.player; g.elapsed += dt; updateTension(g); if (g.stage === 1 && g.elapsed >= STAGE_TWO_AFTER) startStageTwo(g); const s = stageConfig(g); g.speed = gameSpeed(g); g.bgX = (g.bgX - g.speed * .42 * dt) % W; p.frame += dt * 9;
+  const p = g.player; g.elapsed += dt; if (g.fever.active && !isFeverActive(g)) endFever(g); updateTension(g); if (g.stage === 1 && g.elapsed >= STAGE_TWO_AFTER) startStageTwo(g); const s = stageConfig(g); g.speed = gameSpeed(g); g.bgX = (g.bgX - g.speed * .42 * dt) % W; p.frame += dt * 9; p.x += (p.anchorX - p.x) * Math.min(1, dt * 8);
   if (g.mode === 'HOVER') { p.vy += g.modifiers.hoverGravity * dt; p.y += p.vy * dt; if (p.y < -10 || p.y + p.h > H + 7) endGame(); }
   else { p.vy += 1320 * dt; p.y += p.vy * dt; if (p.y >= 330) { p.y = 330; p.vy = 0; } }
   g.spawn += dt; const obstacleRate = g.mode === 'HOVER' ? s.hoverSpawn : s.dashSpawn; if (g.spawn > obstacleRate) { g.spawn = 0; spawnObstacle(g); }
   g.itemSpawn += dt; if (g.itemSpawn > (g.stage === 1 ? 1.55 : 1.18)) { g.itemSpawn = 0; spawnItem(g); }
   if (isJackpotActive(g)) { g.jackpotSpawn += dt; if (g.jackpotSpawn > .40) { g.jackpotSpawn = 0; spawnJackpotRain(g); } }
+  if (isFeverActive(g) && g.fever.spawnedValue < g.fever.coreCap) { g.fever.spawn += dt; if (g.fever.spawn > .36) { g.fever.spawn = 0; spawnFeverWave(g); } }
   updateItems(g,dt);
   for (let i = g.obstacles.length - 1; i >= 0; i--) {
     const o = g.obstacles[i]; o.x -= g.speed * dt;
     if (!o.scored && o.x + o.w < p.x + 25) { o.scored = true; g.score += isGiantActive(g) ? 3 : 1; sound('SFX_SCORE'); }
-    if (overlaps(playerRect(p), obstacleRect(o))) { if (isDashActive(g) || isGiantActive(g) || isHyperActive(g)) { g.obstacles.splice(i,1); g.score += isGiantActive(g) ? 3 : 1; sound('SFX_CRASH'); continue; } endGame(); return; }
+    if (overlaps(playerRect(p), obstacleRect(o))) { if (isDashActive(g) || isGiantActive(g) || isHyperActive(g) || isFeverActive(g)) { g.obstacles.splice(i,1); g.score += isGiantActive(g) ? 3 : 1; sound('SFX_CRASH'); continue; } endGame(); return; }
     if (o.x + o.w < -30) g.obstacles.splice(i,1);
   }
   syncHackUi(g);
 }
 function drawBackground(g) {
-  const stage2 = g?.stage === 2, bg = images[g?.mode === 'HOVER' ? (stage2 ? 'IMG_HOVER_BG_STAGE2' : 'IMG_HOVER_BG') : (stage2 ? 'IMG_DASH_BG_STAGE2' : 'IMG_DASH_BG')]; ctx.fillStyle = '#050510'; ctx.fillRect(0,0,W,H);
-  if (bg) { const x = g ? g.bgX : 0; ctx.drawImage(bg, x,0,W,H); ctx.drawImage(bg, x + W,0,W,H); if (x > 0) ctx.drawImage(bg, x - W,0,W,H); }
+  const fever = g && isFeverActive(g), stage2 = g?.stage === 2, bg = images[fever ? 'IMG_STAYBRIGHT_FEVER_BG' : (g?.mode === 'HOVER' ? (stage2 ? 'IMG_HOVER_BG_STAGE2' : 'IMG_HOVER_BG') : (stage2 ? 'IMG_DASH_BG_STAGE2' : 'IMG_DASH_BG'))]; ctx.fillStyle = '#050510'; ctx.fillRect(0,0,W,H);
+  if (bg) { if (fever) ctx.drawImage(bg,0,0,W,H); else { const x = g ? g.bgX : 0; ctx.drawImage(bg, x,0,W,H); ctx.drawImage(bg, x + W,0,W,H); if (x > 0) ctx.drawImage(bg, x - W,0,W,H); } }
+  if (fever) { const beat = 1 - hackBeatDistance(g) * 2, glow = .16 + beat * .34; ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = glow; ctx.fillStyle = beat > .8 ? '#ffe47a' : '#00f2ff'; ctx.fillRect(0,0,W,H); ctx.globalAlpha = .65; for (let i = 0; i < 23; i++) { const h = 7 + ((i * 19 + Math.floor(g.elapsed * STAYBRIGHT_BPM)) % 42) * beat, x = i * 36; ctx.fillStyle = i % 3 ? '#00f2ff' : '#ff00b8'; ctx.fillRect(x,H - h - 10,25,h); } ctx.restore(); }
   if (g?.tensionPhase) { const phase = tensionPalette(g); ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = phase.alpha; ctx.fillStyle = phase.tint; ctx.fillRect(0,0,W,H); ctx.globalAlpha = .26; ctx.fillStyle = phase.tint; for (let x = ((g.bgX * 1.7) % 130) - 130; x < W + 130; x += 130) ctx.fillRect(x, 0, 2, H); ctx.restore(); }
 }
 function drawPlayer(p, activeMode, g) {
@@ -542,8 +580,9 @@ function drawObstacle(o, g) {
 function drawItem(item, g) {
   const pulse = 1 + Math.sin(g.elapsed * 8 + item.phase) * .08, w = item.w * pulse, h = item.h * pulse, x = item.x + (item.w - w) / 2, y = item.y + (item.h - h) / 2;
   const phaseTwo = ['GIANT','HYPER','JACKPOT'].includes(item.kind), accent = item.kind === 'GIANT' ? '#ff00b8' : (item.kind === 'HYPER' ? '#bffcff' : (item.kind === 'JACKPOT' ? '#ffe17a' : (item.kind === 'MAGNET' ? '#42efff' : '#ff00b8')));
-  ctx.save(); ctx.shadowBlur = 14; ctx.shadowColor = item.kind === 'COIN' ? '#00f2ff' : accent;
+  ctx.save(); ctx.shadowBlur = item.kind === 'FEVER_CORE' ? 24 : 14; ctx.shadowColor = item.kind === 'FEVER_CORE' ? '#ffe17a' : (item.kind === 'COIN' ? '#00f2ff' : accent);
   if (item.kind === 'COIN') { const img = images.IMG_ITEM_COIN; if (img) ctx.drawImage(img,0,0,img.width,img.height,x,y,w,h); }
+  else if (item.kind === 'FEVER_CORE') { const img = images.IMG_ITEM_COIN; if (img) ctx.drawImage(img,0,0,img.width,img.height,x,y,w,h); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = .7; ctx.strokeStyle = '#ffe17a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x + w / 2, y + h / 2, w * .37, 0,Math.PI * 2); ctx.stroke(); ctx.fillStyle = '#ffe17a'; ctx.fillRect(x + w * .44,y + h * .44,w * .12,h * .12); }
   else if (phaseTwo) { const img = images.IMG_ITEM_POWERUPS_PHASE2; if (img) { const third = img.width / 3, sourceX = item.kind === 'GIANT' ? 0 : (item.kind === 'HYPER' ? third : third * 2); ctx.drawImage(img,sourceX,0,third,img.height,x,y,w,h); } }
   else { const img = images.IMG_ITEM_POWERUPS; if (img) { const half = img.width / 2, sourceX = item.kind === 'MAGNET' ? 0 : half; ctx.drawImage(img,sourceX,0,half,img.height,x,y,w,h); } }
   ctx.restore();
@@ -553,11 +592,11 @@ function drawHud(g) {
   ctx.shadowBlur = 0; ctx.fillStyle = '#9cfaff'; ctx.font = '700 13px "JetBrains Mono", monospace'; ctx.fillText(`NEON CORE ${g.cores}`, 20, 56); const ratio = g.speed / (g.mode === 'HOVER' ? stageConfig(g).hoverSpeed : stageConfig(g).dashSpeed), countdown = Math.max(0, Math.ceil(STAGE_TWO_AFTER - g.elapsed)), phase = tensionPalette(g); ctx.fillText(`${g.mode} // SPEED x${ratio.toFixed(1)}`, 20, 76); ctx.fillStyle = g.tensionPhase ? phase.tint : '#9cfaff'; ctx.fillText(`RUSH PHASE ${g.tensionPhase + 1} // ${phase.label}`, 20, 96); if (g.stage === 1) ctx.fillText(`STAGE 2 IN ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2,'0')}`, W - 182, 56);
   const boosts = []; if (isMagnetActive(g)) boosts.push(`MAGNET ${Math.ceil(g.magnetUntil - g.elapsed)}s`); if (isDashActive(g)) boosts.push(`DASH ${Math.ceil(g.dashUntil - g.elapsed)}s`); if (isGiantActive(g)) boosts.push(`MEGA ${Math.ceil(g.giantUntil - g.elapsed)}s`); if (isHyperActive(g)) boosts.push(`HYPER ${Math.ceil(g.hyperUntil - g.elapsed)}s`); if (isJackpotActive(g)) boosts.push(`JACKPOT ${Math.ceil(g.jackpotUntil - g.elapsed)}s`);
   if (boosts.length) { ctx.fillStyle = isJackpotActive(g) ? '#ffe17a' : (isHyperActive(g) ? '#bffcff' : '#ff8bdb'); ctx.textAlign = 'right'; ctx.fillText(boosts.slice(0,2).join(' // '), W - 19, 34); ctx.textAlign = 'left'; }
-  const sync = g.syncCharge / 100; ctx.fillStyle = '#a9faff'; ctx.fillText('STAYBRIGHT SYNC', W - 168, 78); ctx.strokeStyle = 'rgba(170,250,255,.5)'; ctx.strokeRect(W - 168, 84, 149, 7); ctx.fillStyle = g.syncCharge >= 100 ? '#ffe17a' : '#00f2ff'; ctx.fillRect(W - 167, 85, 147 * sync, 5);
+  const fever = isFeverActive(g), sync = fever ? Math.max(0,(g.fever.until - g.elapsed) / FEVER_DURATION) : g.syncCharge / 100; ctx.fillStyle = fever ? '#ffe17a' : '#a9faff'; ctx.fillText(fever ? `STAYBRIGHT FEVER ${Math.ceil(g.fever.until - g.elapsed)}s` : 'STAYBRIGHT SYNC', W - 168, 78); ctx.strokeStyle = fever ? 'rgba(255,225,122,.72)' : 'rgba(170,250,255,.5)'; ctx.strokeRect(W - 168, 84, 149, 7); ctx.fillStyle = fever ? '#ffe17a' : (g.syncCharge >= 100 ? '#ffe17a' : '#00f2ff'); ctx.fillRect(W - 167, 85, 147 * sync, 5);
   ctx.restore();
 }
 function drawStageMessage(g) { if (g.messageUntil <= g.elapsed) return; const alpha = clamp((g.messageUntil - g.elapsed) / .45, 0, 1); ctx.save(); ctx.globalAlpha = Math.min(1, alpha); ctx.fillStyle = '#fff'; ctx.shadowColor = '#ff00b8'; ctx.shadowBlur = 20; ctx.font = '800 28px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.fillText(g.message, W / 2, H * .34); ctx.restore(); }
-function draw(g) { ctx.imageSmoothingEnabled = false; drawBackground(g); if (!g) return; if (g.hackFlashUntil > g.elapsed) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = (g.hackFlashUntil - g.elapsed) * 1.2; ctx.fillStyle = '#8dffff'; ctx.fillRect(0,0,W,H); ctx.restore(); } g.items.forEach(item => drawItem(item,g)); g.obstacles.forEach(obstacle => drawObstacle(obstacle,g)); drawDrone(g); drawPlayer(g.player, g.mode, g); drawHud(g); drawStageMessage(g); }
+function draw(g) { ctx.imageSmoothingEnabled = false; drawBackground(g); if (!g) return; if (g.hackFlashUntil > g.elapsed) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = (g.hackFlashUntil - g.elapsed) * 1.2; ctx.fillStyle = '#8dffff'; ctx.fillRect(0,0,W,H); ctx.restore(); } if (g.glitchUntil > g.elapsed) { ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = (g.glitchUntil - g.elapsed) * 1.7; for (let i = 0; i < 15; i++) { ctx.fillStyle = i % 2 ? '#ff007f' : '#00f2ff'; ctx.fillRect((i * 83 + Math.floor(g.elapsed * 500)) % W, 32 + i * 27, 54 + (i % 4) * 18, 3); } ctx.restore(); } g.items.forEach(item => drawItem(item,g)); g.obstacles.forEach(obstacle => drawObstacle(obstacle,g)); drawDrone(g); drawPlayer(g.player, g.mode, g); drawHud(g); drawStageMessage(g); }
 function renderLobby() { drawBackground(null); syncLobbyProfile(); }
 function loop(now) { if (state !== 'PLAYING') return; const dt = Math.min((now - last) / 1000, .035); last = now; update(game,dt); if (state === 'PLAYING') { draw(game); raf = requestAnimationFrame(loop); } }
 function endGame() {
