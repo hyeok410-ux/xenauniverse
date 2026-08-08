@@ -94,6 +94,11 @@
     .loadout-card p { margin-top:6px; color:rgba(224,247,255,.59); font:600 9px/1.45 'JetBrains Mono',monospace; }
     .loadout-status { display:inline-block; margin-top:9px; padding:5px 7px; border:1px solid rgba(0,242,255,.38); border-radius:999px; color:#a6fbff; background:rgba(0,242,255,.08); font:800 8px/1 'JetBrains Mono',monospace; letter-spacing:.06em; }
     .loadout-status.locked { border-color:rgba(255,255,255,.14); color:rgba(235,239,255,.44); background:rgba(0,0,0,.18); }
+    .loadout-buy { display:block; width:100%; margin-top:10px; padding:9px 8px; border:1px solid rgba(149,238,255,.42); border-radius:8px; color:#c6fbff; background:rgba(0,242,255,.07); cursor:pointer; font:800 9px/1 'JetBrains Mono',monospace; letter-spacing:.055em; transition:.17s ease; }
+    .loadout-buy:not(:disabled):hover,.loadout-buy:not(:disabled):focus-visible { outline:0; color:#061015; background:var(--cyan); box-shadow:0 0 17px rgba(0,242,255,.64); }
+    .loadout-buy.module-buy { border-color:rgba(193,145,255,.54); color:#e1c6ff; background:rgba(140,77,255,.11); }
+    .loadout-buy.module-buy:not(:disabled):hover,.loadout-buy.module-buy:not(:disabled):focus-visible { color:#fff; background:#8c4dff; box-shadow:0 0 17px rgba(140,77,255,.68); }
+    .loadout-buy:disabled { opacity:.64; cursor:default; }
     @media (min-width:721px) { .shell { width:100vw; max-width:none; height:100dvh; min-height:0; padding:0; } .topbar { position:absolute; z-index:5; inset:12px 18px auto; min-height:0; margin:0; pointer-events:none; text-shadow:0 1px 8px #050510; } .topbar a { pointer-events:auto; } .game-frame { width:100vw; height:100dvh; aspect-ratio:auto; margin:0; border:0; border-radius:0; } }
     @media (max-width:720px) { .shell { padding-left:8px; padding-right:8px; } .topbar { padding:0 4px; font-size:9px; } .game-frame { width:100%; border-radius:11px; } .game-frame.lobby-active { height:auto; min-height:calc(100dvh - 52px); aspect-ratio:auto; overflow:visible; } .game-frame.lobby-active canvas,.game-frame.lobby-active .scanlines { display:none; } .game-frame.lobby-active .premium-lobby { position:relative; inset:auto; min-height:calc(100dvh - 52px); } .panel { padding:12px; } .modes { gap:9px; margin-top:17px; } .button { min-width:140px; padding:11px 10px; } .controls { margin-top:12px; font-size:8px; } .premium-lobby { padding:13px; } .lobby-split { min-height:0; grid-template-columns:1fr; gap:13px; } .lobby-visual { min-height:355px; padding:16px; } .lobby-xena { width:114%; height:104%; bottom:-31px; } .core-balance { width:62%; padding:12px; } .core-balance strong { font-size:37px; } .profile-foot { max-width:62%; font-size:8px; } .upgrade-deck { padding:19px 15px; } .lobby-actions { margin:17px 0; } .lobby-actions .button { min-width:calc(50% - 6px); } .upgrade-heading { align-items:start; } .upgrade-heading p { text-align:left; } .skill-card { grid-template-columns:41px minmax(0,1fr); gap:10px; padding:11px; } .skill-icon { width:41px; height:41px; font-size:20px; } .upgrade-buy { grid-column:2; justify-self:start; min-width:125px; } .loadout-bay { grid-template-columns:1fr; } }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; } }
@@ -126,8 +131,8 @@
             </div>
             <section class="loadout-bay" aria-label="Future XENA module and support drone loadout">
               <div class="loadout-title">COLLECTION RIG <span>PHASE 1 MOCKUP</span></div>
-              <article class="loadout-card"><div class="skill-type">XENA MODULE SLOT</div><h3 data-module-name>CORE XENA</h3><p>Future forms: Skyline Veil / Answer Breaker. Each form changes the run strategy.</p><span class="loadout-status" data-module-status>EQUIPPED // BASE FORM</span></article>
-              <article class="loadout-card"><div class="skill-type">SUPPORT DRONE SLOT</div><h3 data-drone-name>NO DRONE</h3><p>Future drones: Cyan Echo core collector / Violet Aegis route predictor.</p><span class="loadout-status locked" data-drone-status>EMPTY // UNLOCK IN V1.2</span></article>
+              <article class="loadout-card" data-loadout-card="module"><div class="skill-type">HOVER MODULE SLOT</div><h3 data-module-name>CORE XENA</h3><p>Skyline Veil: HOVER gravity is reduced by an extra 15%.</p><span class="loadout-status" data-module-status>EQUIPPED // BASE FORM</span><button class="loadout-buy module-buy" data-loadout-buy="module:skyline_veil">UNLOCK · 150</button></article>
+              <article class="loadout-card" data-loadout-card="drone"><div class="skill-type">SUPPORT DRONE SLOT</div><h3 data-drone-name>NO DRONE</h3><p>Cyan Echo follows XENA and pulls nearby Neon Cores within 150 PX.</p><span class="loadout-status locked" data-drone-status>EMPTY // UNLOCK</span><button class="loadout-buy" data-loadout-buy="drone:cyan_echo">UNLOCK · 90</button></article>
             </section>
             <div class="future-skills" aria-label="Future special skill previews"><span class="future-chip"><b>V1.2 //</b> HYPER STAGE ENTRY</span><span class="future-chip"><b>V1.2 //</b> STAYBRIGHT AWAKENING</span></div>
             <p class="controls">DESKTOP: SPACE / ↑ / W TO JUMP · ↓ / S TO SLIDE<br>MOBILE: HOLD LEFT TO SLIDE · TAP RIGHT TO JUMP</p>
@@ -165,6 +170,7 @@ const ASSETS = Object.freeze({
   IMG_OBS_SENTRY_STAGE2: './assets/obs_dash_stage2_v1.png',
   IMG_ITEM_COIN: './assets/item_xc_coin_v1.png',
   IMG_ITEM_POWERUPS: './assets/item_powerups_v1.png',
+  IMG_DRONE_CYAN_ECHO: './assets/drone_cyan_echo_v1.png',
   IMG_LOBBY_XENA: './assets/lobby_xena_v1.png'
 });
 
@@ -208,7 +214,7 @@ const MODULE_DEFS = Object.freeze({
 });
 const DRONE_DEFS = Object.freeze({
   none: { name:'NO DRONE', unlockCost:0, description:'Empty support slot.' },
-  cyan_echo: { name:'CYAN ECHO', unlockCost:90, description:'Periodically retrieves a nearby core.' },
+  cyan_echo: { name:'CYAN ECHO', unlockCost:90, description:'Pulls Neon Cores within 150 PX.' },
   violet_aegis: { name:'VIOLET AEGIS', unlockCost:130, description:'Predicts a dangerous route before impact.' }
 });
 function emptyProfile() { return { version:2, neonCores:0, upgrades:{ dash_jump:0, hover_control:0, core_resonance:0 }, unlocks:{ modules:['core_xena'], drones:['none'] }, equipped:{ module:'core_xena', drone:'none' }, lifetime:{ runs:0, cores:0 } }; }
@@ -231,13 +237,16 @@ function loadProfile() {
 let profile = loadProfile();
 function saveProfile() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (_) {} }
 function upgradeCost(id) { const def = UPGRADE_DEFS[id], level = profile.upgrades[id]; return Math.ceil(def.baseCost * Math.pow(def.costScale, level)); }
-function runModifiers() {
+function runModifiers(activeMode) {
   const levels = profile.upgrades;
+  const skylineVeilActive = profile.equipped.module === 'skyline_veil' && activeMode === 'HOVER';
+  const hoverGravity = Math.max(660 * .60, 660 * (1 - levels.hover_control * .055) * (skylineVeilActive ? .85 : 1));
   return {
     moduleId: profile.equipped.module,
     droneId: profile.equipped.drone,
     jumpVelocity: -660 - levels.dash_jump * 24,
-    hoverGravity: 660 * (1 - levels.hover_control * .055),
+    hoverGravity,
+    skylineVeilActive,
     coreBonus: levels.core_resonance * .10,
     dashJumpMax: levels.dash_jump === UPGRADE_DEFS.dash_jump.max,
     hoverControlMax: levels.hover_control === UPGRADE_DEFS.hover_control.max
@@ -251,8 +260,8 @@ function syncLobbyProfile() {
   const balance = document.querySelector('#lobby-core-balance'); if (balance) balance.textContent = profile.neonCores.toLocaleString();
   const module = MODULE_DEFS[profile.equipped.module], drone = DRONE_DEFS[profile.equipped.drone];
   const moduleName = document.querySelector('[data-module-name]'), moduleStatus = document.querySelector('[data-module-status]'), droneName = document.querySelector('[data-drone-name]'), droneStatus = document.querySelector('[data-drone-status]');
-  if (moduleName) moduleName.textContent = module.name; if (moduleStatus) moduleStatus.textContent = module.name === 'CORE XENA' ? 'EQUIPPED // BASE FORM' : 'EQUIPPED // MODULE';
-  if (droneName) droneName.textContent = drone.name; if (droneStatus) { const active = drone.name !== 'NO DRONE'; droneStatus.textContent = active ? 'EQUIPPED // SUPPORT ONLINE' : 'EMPTY // UNLOCK IN V1.2'; droneStatus.classList.toggle('locked', !active); }
+  if (moduleName) moduleName.textContent = module.name; if (moduleStatus) moduleStatus.textContent = module.name === 'CORE XENA' ? 'EQUIPPED // BASE FORM' : 'VEIL ACTIVE // GRAVITY -15%';
+  if (droneName) droneName.textContent = drone.name; if (droneStatus) { const active = drone.name !== 'NO DRONE'; droneStatus.textContent = active ? 'EQUIPPED // ECHO 150 PX' : 'EMPTY // 90 CORE'; droneStatus.classList.toggle('locked', !active); }
   Object.entries(UPGRADE_DEFS).forEach(([id, def]) => {
     const level = profile.upgrades[id], label = document.querySelector(`[data-upgrade-level="${id}"]`), button = document.querySelector(`[data-upgrade-buy="${id}"]`);
     if (label) label.textContent = `LV ${level} / ${def.max}${level === def.max ? ' // MAX PERK' : ''}`;
@@ -260,6 +269,17 @@ function syncLobbyProfile() {
     const maxed = level >= def.max, cost = upgradeCost(id); button.disabled = maxed || profile.neonCores < cost; button.classList.toggle('maxed', maxed); button.textContent = maxed ? 'MAXED' : `UPGRADE · ${cost}`;
     button.setAttribute('aria-label', maxed ? `${id} maximum level` : `Upgrade ${id} for ${cost} Neon Core`);
   });
+  syncLoadoutButton('module', 'skyline_veil'); syncLoadoutButton('drone', 'cyan_echo');
+}
+function syncLoadoutButton(kind, id) {
+  const button = document.querySelector(`[data-loadout-buy="${kind}:${id}"]`), defs = kind === 'module' ? MODULE_DEFS : DRONE_DEFS, collection = kind === 'module' ? 'modules' : 'drones'; if (!button) return;
+  const unlocked = profile.unlocks[collection].includes(id), equipped = profile.equipped[kind] === id, cost = defs[id].unlockCost;
+  button.disabled = equipped || (!unlocked && profile.neonCores < cost); button.textContent = equipped ? 'EQUIPPED' : (unlocked ? 'EQUIP NOW' : `UNLOCK · ${cost}`);
+}
+function unlockOrEquipLoadout(kind, id) {
+  const defs = kind === 'module' ? MODULE_DEFS : DRONE_DEFS, collection = kind === 'module' ? 'modules' : 'drones', def = defs[id]; if (!def) return;
+  const unlocked = profile.unlocks[collection].includes(id); if (!unlocked) { if (profile.neonCores < def.unlockCost) return; profile.neonCores -= def.unlockCost; profile.unlocks[collection].push(id); }
+  profile.equipped[kind] = id; saveProfile(); uiConfirm(); const card = document.querySelector(`[data-loadout-card="${kind}"]`); if (card) { card.classList.remove('pulse'); void card.offsetWidth; card.classList.add('pulse'); } syncLobbyProfile();
 }
 function buyUpgrade(id) {
   const def = UPGRADE_DEFS[id]; if (!def) return;
@@ -346,7 +366,7 @@ function updateTension(g) {
 function newGame(nextMode) {
   cancelAnimationFrame(raf); mode = nextMode; held = { jump:false, slide:false };
   const hover = mode === 'HOVER';
-  game = { mode, stage:1, player:hover ? { x:75, y:181, w:104, h:89, vy:0, sliding:false, frame:0 } : { x:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], items:[], score:0, cores:0, coreFraction:0, elapsed:0, tensionPhase:0, speed:hover ? STAGES[1].hoverSpeed : STAGES[1].dashSpeed, bgX:0, spawn:0, itemSpawn:0, magnetUntil:0, dashUntil:0, messageUntil:0, lastSlideSound:0, modifiers:runModifiers(), fever:{ unlocked:false, charge:0, active:false }, settled:false };
+  game = { mode, stage:1, player:hover ? { x:75, y:181, w:104, h:89, vy:0, sliding:false, frame:0 } : { x:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], items:[], score:0, cores:0, coreFraction:0, elapsed:0, tensionPhase:0, speed:hover ? STAGES[1].hoverSpeed : STAGES[1].dashSpeed, bgX:0, spawn:0, itemSpawn:0, magnetUntil:0, dashUntil:0, messageUntil:0, lastSlideSound:0, modifiers:runModifiers(mode), fever:{ unlocked:false, charge:0, active:false }, settled:false };
   state = 'PLAYING'; show('none'); startBgm(); last = performance.now(); raf = requestAnimationFrame(loop);
 }
 function gameSpeed(g) { const s = stageConfig(g), base = g.mode === 'HOVER' ? s.hoverSpeed : s.dashSpeed, stageTime = Math.max(0, g.elapsed - (g.stage === 2 ? STAGE_TWO_AFTER : 0)), ramp = g.stage === 1 ? Math.min(g.elapsed * .16, 16) : Math.min(stageTime * .65, 92), tensionMultiplier = 1 + g.tensionPhase * TENSION_SPEED_STEP; return (base + ramp) * tensionMultiplier + (isDashActive(g) ? 225 : 0); }
@@ -396,9 +416,10 @@ function updateItems(g, dt) {
   const p = g.player, pRect = playerRect(p);
   for (let i = g.items.length - 1; i >= 0; i--) {
     const item = g.items[i];
-    if (item.kind === 'COIN' && isMagnetActive(g)) {
+    const echo = dronePosition(g), echoPull = item.kind === 'COIN' && g.modifiers.droneId === 'cyan_echo' && !isMagnetActive(g) && Math.hypot(echo.x - (item.x + item.w / 2), echo.y - (item.y + item.h / 2)) <= 150;
+    if (item.kind === 'COIN' && (isMagnetActive(g) || echoPull)) {
       const tx = p.x + p.w * .52, ty = p.y + p.h * .5, dx = tx - (item.x + item.w / 2), dy = ty - (item.y + item.h / 2), length = Math.max(1, Math.hypot(dx,dy));
-      item.x += dx / length * 650 * dt; item.y += dy / length * 650 * dt;
+      const pullSpeed = isMagnetActive(g) ? 650 : 520; item.x += dx / length * pullSpeed * dt; item.y += dy / length * pullSpeed * dt;
     } else item.x -= g.speed * dt;
     if (overlaps(pRect, itemRect(item))) { collectItem(g,item); g.items.splice(i,1); continue; }
     if (item.x + item.w < -40) g.items.splice(i,1);
@@ -447,6 +468,13 @@ function drawPlayer(p, activeMode, g) {
   if (isDashActive(g)) { ctx.save(); ctx.globalAlpha = .45; ctx.fillStyle = '#ff00b8'; ctx.shadowColor = '#00f2ff'; ctx.shadowBlur = 18; ctx.fillRect(p.x - 58, drawY + 38, 105, 23); ctx.restore(); }
   ctx.drawImage(img, sx, sy, sw, sh, p.x, drawY, p.w, drawH);
 }
+function dronePosition(g) { const p = g.player, hover = Math.sin(g.elapsed * 4.4) * 5; return { x:p.x + p.w * .5 - 50, y:p.y + p.h * .5 - 30 + hover }; }
+function drawDrone(g) {
+  if (g.modifiers.droneId !== 'cyan_echo') return; const img = images.IMG_DRONE_CYAN_ECHO; if (!img) return;
+  const pos = dronePosition(g), pulse = 1 + Math.sin(g.elapsed * 5.4) * .045, size = 88 * pulse;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = .23; ctx.fillStyle = '#00f2ff'; ctx.shadowColor = '#00f2ff'; ctx.shadowBlur = 17; ctx.fillRect(pos.x - 8, pos.y + size * .38, 21, 3); ctx.restore();
+  ctx.save(); ctx.shadowColor = '#00f2ff'; ctx.shadowBlur = 13; ctx.drawImage(img, pos.x - size / 2, pos.y - size / 2, size, size); ctx.restore();
+}
 function drawObstacle(o) {
   const img = o.kind === 'WALL' ? (o.variant === 2 ? images.IMG_OBS_WALL_STAGE2 : images.IMG_OBS_WALL) : (o.kind === 'SENTRY' ? images.IMG_OBS_SENTRY_STAGE2 : images.IMG_OBS_DRONE); if (!img) return;
   if (o.kind === 'WALL' || o.kind === 'SENTRY') ctx.drawImage(img,0,0,img.width,img.height,o.x,o.y,o.w,o.h);
@@ -466,7 +494,7 @@ function drawHud(g) {
   ctx.restore();
 }
 function drawStageMessage(g) { if (g.messageUntil <= g.elapsed) return; const alpha = clamp((g.messageUntil - g.elapsed) / .45, 0, 1); ctx.save(); ctx.globalAlpha = Math.min(1, alpha); ctx.fillStyle = '#fff'; ctx.shadowColor = '#ff00b8'; ctx.shadowBlur = 20; ctx.font = '800 28px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.fillText(g.message, W / 2, H * .34); ctx.restore(); }
-function draw(g) { ctx.imageSmoothingEnabled = false; drawBackground(g); if (!g) return; g.items.forEach(item => drawItem(item,g)); g.obstacles.forEach(drawObstacle); drawPlayer(g.player, g.mode, g); drawHud(g); drawStageMessage(g); }
+function draw(g) { ctx.imageSmoothingEnabled = false; drawBackground(g); if (!g) return; g.items.forEach(item => drawItem(item,g)); g.obstacles.forEach(drawObstacle); drawDrone(g); drawPlayer(g.player, g.mode, g); drawHud(g); drawStageMessage(g); }
 function renderLobby() { drawBackground(null); syncLobbyProfile(); }
 function loop(now) { if (state !== 'PLAYING') return; const dt = Math.min((now - last) / 1000, .035); last = now; update(game,dt); if (state === 'PLAYING') { draw(game); raf = requestAnimationFrame(loop); } }
 function endGame() {
@@ -477,6 +505,7 @@ function endGame() {
 
 document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => newGame(button.dataset.mode)));
 document.querySelectorAll('[data-upgrade-buy]').forEach(button => button.addEventListener('click', () => buyUpgrade(button.dataset.upgradeBuy)));
+document.querySelectorAll('[data-loadout-buy]').forEach(button => button.addEventListener('click', () => { const [kind, id] = button.dataset.loadoutBuy.split(':'); unlockOrEquipLoadout(kind, id); }));
 document.querySelector('#retry').addEventListener('click', () => newGame(mode));
 document.querySelector('#return-lobby').addEventListener('click', () => { stopBgm(); state = 'LOBBY'; mode = 'LOBBY'; show('lobby'); renderLobby(); });
 window.addEventListener('keydown', event => { if (['Space','ArrowUp','KeyW','ArrowDown','KeyS'].includes(event.code)) event.preventDefault(); if (event.repeat) return; if (['Space','ArrowUp','KeyW'].includes(event.code)) { held.jump = true; action('JUMP',true); } if (['ArrowDown','KeyS'].includes(event.code)) { held.slide = true; action('SLIDE',true); } });
