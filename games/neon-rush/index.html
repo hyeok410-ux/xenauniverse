@@ -353,7 +353,7 @@ function stopBgm() { if (sounds.BGM) sounds.BGM.pause(); stopFeverAudio(); }
 // hook swap isolated so a licensed vocal/stem asset can replace it without engine changes.
 function startFeverAudio() {
   const bgm = sounds.BGM; if (!bgm || feverBgm) return;
-  const hook = bgm.cloneNode(); hook.loop = true; hook.volume = 0; hook.currentTime = Math.max(0, Math.min(48, (Number.isFinite(bgm.duration) ? bgm.duration - 8.2 : 48)));
+  const hook = bgm.cloneNode(); hook.loop = true; hook.volume = 0; hook.currentTime = Math.max(0, Math.min(124, (Number.isFinite(bgm.duration) ? bgm.duration - 8.2 : 124)));
   feverBgm = hook; hook.play().catch(() => {}); const start = performance.now();
   const crossfade = now => { if (!feverBgm || feverBgm !== hook) return; const t = clamp((now - start) / 100, 0, 1); bgm.volume = .46 * (1 - t); hook.volume = .60 * t; if (t < 1) requestAnimationFrame(crossfade); else bgm.pause(); };
   requestAnimationFrame(crossfade);
@@ -370,7 +370,8 @@ function playGlitchNoise() {
 
 const STAGE_TWO_AFTER = 120;
 const TENSION_INTERVAL = 20, TENSION_SPEED_STEP = .12;
-const STAYBRIGHT_BPM = 118, FEVER_DURATION = 8, FEVER_CORE_CAP = 32;
+// staybright_bgm.mp3 was analysed at ~152 BPM; the first stable beat lands at 0.163s.
+const STAYBRIGHT_BPM = 152, STAYBRIGHT_BEAT_OFFSET = .163, FEVER_DURATION = 8, FEVER_CORE_CAP = 32;
 const TENSION_PALETTES = Object.freeze([
   { label:'SIGNAL RISE', tint:'#00d9ff', alpha:.00 },
   { label:'MAGENTA BREAK', tint:'#ff007f', alpha:.14 },
@@ -486,7 +487,7 @@ function findHackTarget(g) {
   const p = g.player, left = p.x + 42, right = p.x + 272;
   return g.obstacles.find(obstacle => obstacle.hackable && obstacle.x + obstacle.w >= left && obstacle.x <= right);
 }
-function hackBeatDistance(g) { const beat = (g.elapsed * (STAYBRIGHT_BPM / 60)) % 1; return Math.min(beat, 1 - beat); }
+function hackBeatDistance(g) { const beat = ((g.elapsed - STAYBRIGHT_BEAT_OFFSET) * (STAYBRIGHT_BPM / 60) % 1 + 1) % 1; return Math.min(beat, 1 - beat); }
 function hackQuality(g) { const distance = hackBeatDistance(g); return distance <= .055 ? 'PERFECT' : (distance <= .18 ? 'GREAT' : null); }
 function hackBeatReady(g) { return !!hackQuality(g); }
 function syncHackUi(g) {
