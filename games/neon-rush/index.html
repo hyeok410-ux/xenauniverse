@@ -86,8 +86,16 @@
     .future-skills { position:relative; display:flex; gap:9px; flex-wrap:wrap; margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,.1); }
     .future-chip { padding:8px 10px; border:1px solid rgba(255,255,255,.13); border-radius:999px; color:rgba(222,245,255,.54); background:rgba(0,0,0,.18); font:700 9px/1 'JetBrains Mono',monospace; letter-spacing:.055em; }
     .future-chip b { color:#ff9ed6; }
+    .loadout-bay { position:relative; display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,.1); }
+    .loadout-title { grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:12px; color:#a4f9ff; font:800 10px/1 'JetBrains Mono',monospace; letter-spacing:.16em; }
+    .loadout-title span { color:rgba(226,247,255,.48); font-size:9px; }
+    .loadout-card { min-height:104px; padding:13px; border:1px solid rgba(176,225,255,.18); border-radius:14px; background:linear-gradient(145deg,rgba(4,18,31,.7),rgba(23,5,36,.48)); }
+    .loadout-card h3 { margin:6px 0 0; color:#fff; font:800 13px/1.1 'JetBrains Mono',monospace; letter-spacing:-.04em; }
+    .loadout-card p { margin-top:6px; color:rgba(224,247,255,.59); font:600 9px/1.45 'JetBrains Mono',monospace; }
+    .loadout-status { display:inline-block; margin-top:9px; padding:5px 7px; border:1px solid rgba(0,242,255,.38); border-radius:999px; color:#a6fbff; background:rgba(0,242,255,.08); font:800 8px/1 'JetBrains Mono',monospace; letter-spacing:.06em; }
+    .loadout-status.locked { border-color:rgba(255,255,255,.14); color:rgba(235,239,255,.44); background:rgba(0,0,0,.18); }
     @media (min-width:721px) { .shell { width:100vw; max-width:none; height:100dvh; min-height:0; padding:0; } .topbar { position:absolute; z-index:5; inset:12px 18px auto; min-height:0; margin:0; pointer-events:none; text-shadow:0 1px 8px #050510; } .topbar a { pointer-events:auto; } .game-frame { width:100vw; height:100dvh; aspect-ratio:auto; margin:0; border:0; border-radius:0; } }
-    @media (max-width:720px) { .shell { padding-left:8px; padding-right:8px; } .topbar { padding:0 4px; font-size:9px; } .game-frame { width:100%; border-radius:11px; } .game-frame.lobby-active { height:auto; min-height:calc(100dvh - 52px); aspect-ratio:auto; overflow:visible; } .game-frame.lobby-active canvas,.game-frame.lobby-active .scanlines { display:none; } .game-frame.lobby-active .premium-lobby { position:relative; inset:auto; min-height:calc(100dvh - 52px); } .panel { padding:12px; } .modes { gap:9px; margin-top:17px; } .button { min-width:140px; padding:11px 10px; } .controls { margin-top:12px; font-size:8px; } .premium-lobby { padding:13px; } .lobby-split { min-height:0; grid-template-columns:1fr; gap:13px; } .lobby-visual { min-height:355px; padding:16px; } .lobby-xena { width:114%; height:104%; bottom:-31px; } .core-balance { width:62%; padding:12px; } .core-balance strong { font-size:37px; } .profile-foot { max-width:62%; font-size:8px; } .upgrade-deck { padding:19px 15px; } .lobby-actions { margin:17px 0; } .lobby-actions .button { min-width:calc(50% - 6px); } .upgrade-heading { align-items:start; } .upgrade-heading p { text-align:left; } .skill-card { grid-template-columns:41px minmax(0,1fr); gap:10px; padding:11px; } .skill-icon { width:41px; height:41px; font-size:20px; } .upgrade-buy { grid-column:2; justify-self:start; min-width:125px; } }
+    @media (max-width:720px) { .shell { padding-left:8px; padding-right:8px; } .topbar { padding:0 4px; font-size:9px; } .game-frame { width:100%; border-radius:11px; } .game-frame.lobby-active { height:auto; min-height:calc(100dvh - 52px); aspect-ratio:auto; overflow:visible; } .game-frame.lobby-active canvas,.game-frame.lobby-active .scanlines { display:none; } .game-frame.lobby-active .premium-lobby { position:relative; inset:auto; min-height:calc(100dvh - 52px); } .panel { padding:12px; } .modes { gap:9px; margin-top:17px; } .button { min-width:140px; padding:11px 10px; } .controls { margin-top:12px; font-size:8px; } .premium-lobby { padding:13px; } .lobby-split { min-height:0; grid-template-columns:1fr; gap:13px; } .lobby-visual { min-height:355px; padding:16px; } .lobby-xena { width:114%; height:104%; bottom:-31px; } .core-balance { width:62%; padding:12px; } .core-balance strong { font-size:37px; } .profile-foot { max-width:62%; font-size:8px; } .upgrade-deck { padding:19px 15px; } .lobby-actions { margin:17px 0; } .lobby-actions .button { min-width:calc(50% - 6px); } .upgrade-heading { align-items:start; } .upgrade-heading p { text-align:left; } .skill-card { grid-template-columns:41px minmax(0,1fr); gap:10px; padding:11px; } .skill-icon { width:41px; height:41px; font-size:20px; } .upgrade-buy { grid-column:2; justify-self:start; min-width:125px; } .loadout-bay { grid-template-columns:1fr; } }
     @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; } }
   </style>
 </head>
@@ -116,6 +124,11 @@
               <article class="skill-card" data-upgrade="hover_control"><div class="skill-icon" aria-hidden="true">∞</div><div><div class="skill-type">HOVER PASSIVE</div><h3 class="skill-name">Skyline Drift</h3><p class="skill-desc">Reduced gravity for calmer air control.</p><div class="skill-level" data-upgrade-level="hover_control">LV 0 / 5</div></div><button class="upgrade-buy" data-upgrade-buy="hover_control">UPGRADE</button></article>
               <article class="skill-card" data-upgrade="core_resonance"><div class="skill-icon" aria-hidden="true">✦</div><div><div class="skill-type">CORE PASSIVE</div><h3 class="skill-name">Neon Resonance</h3><p class="skill-desc">Occasionally converts a pickup into bonus Neon Core.</p><div class="skill-level" data-upgrade-level="core_resonance">LV 0 / 5</div></div><button class="upgrade-buy" data-upgrade-buy="core_resonance">UPGRADE</button></article>
             </div>
+            <section class="loadout-bay" aria-label="Future XENA module and support drone loadout">
+              <div class="loadout-title">COLLECTION RIG <span>PHASE 1 MOCKUP</span></div>
+              <article class="loadout-card"><div class="skill-type">XENA MODULE SLOT</div><h3 data-module-name>CORE XENA</h3><p>Future forms: Skyline Veil / Answer Breaker. Each form changes the run strategy.</p><span class="loadout-status" data-module-status>EQUIPPED // BASE FORM</span></article>
+              <article class="loadout-card"><div class="skill-type">SUPPORT DRONE SLOT</div><h3 data-drone-name>NO DRONE</h3><p>Future drones: Cyan Echo core collector / Violet Aegis route predictor.</p><span class="loadout-status locked" data-drone-status>EMPTY // UNLOCK IN V1.2</span></article>
+            </section>
             <div class="future-skills" aria-label="Future special skill previews"><span class="future-chip"><b>V1.2 //</b> HYPER STAGE ENTRY</span><span class="future-chip"><b>V1.2 //</b> STAYBRIGHT AWAKENING</span></div>
             <p class="controls">DESKTOP: SPACE / ↑ / W TO JUMP · ↓ / S TO SLIDE<br>MOBILE: HOLD LEFT TO SLIDE · TAP RIGHT TO JUMP</p>
           </section>
@@ -186,13 +199,30 @@ const UPGRADE_DEFS = Object.freeze({
   hover_control: { max:5, baseCost:12, costScale:1.48 },
   core_resonance: { max:5, baseCost:10, costScale:1.42 }
 });
-function emptyProfile() { return { version:1, neonCores:0, upgrades:{ dash_jump:0, hover_control:0, core_resonance:0 }, lifetime:{ runs:0, cores:0 } }; }
+// Collection data is present in the profile now; unlock/payment actions stay deliberately
+// out of Phase 1, so future economy work cannot alter live run-state rules by accident.
+const MODULE_DEFS = Object.freeze({
+  core_xena: { name:'CORE XENA', mode:'ALL', unlockCost:0, description:'The baseline live signal.' },
+  skyline_veil: { name:'SKYLINE VEIL', mode:'HOVER', unlockCost:150, description:'Air-control and core-attraction form.' },
+  answer_breaker: { name:'ANSWER BREAKER', mode:'DASH', unlockCost:180, description:'Obstacle-breaching stage form.' }
+});
+const DRONE_DEFS = Object.freeze({
+  none: { name:'NO DRONE', unlockCost:0, description:'Empty support slot.' },
+  cyan_echo: { name:'CYAN ECHO', unlockCost:90, description:'Periodically retrieves a nearby core.' },
+  violet_aegis: { name:'VIOLET AEGIS', unlockCost:130, description:'Predicts a dangerous route before impact.' }
+});
+function emptyProfile() { return { version:2, neonCores:0, upgrades:{ dash_jump:0, hover_control:0, core_resonance:0 }, unlocks:{ modules:['core_xena'], drones:['none'] }, equipped:{ module:'core_xena', drone:'none' }, lifetime:{ runs:0, cores:0 } }; }
 function loadProfile() {
   try {
     const stored = JSON.parse(localStorage.getItem(PROFILE_KEY)); const profile = emptyProfile();
     if (!stored || typeof stored !== 'object') return profile;
     profile.neonCores = Math.max(0, Math.floor(Number(stored.neonCores) || 0));
     Object.keys(UPGRADE_DEFS).forEach(id => profile.upgrades[id] = clamp(Math.floor(Number(stored.upgrades?.[id]) || 0), 0, UPGRADE_DEFS[id].max));
+    const modules = Array.isArray(stored.unlocks?.modules) ? stored.unlocks.modules.filter(id => MODULE_DEFS[id]) : ['core_xena'];
+    const drones = Array.isArray(stored.unlocks?.drones) ? stored.unlocks.drones.filter(id => DRONE_DEFS[id]) : ['none'];
+    profile.unlocks.modules = [...new Set(['core_xena', ...modules])]; profile.unlocks.drones = [...new Set(['none', ...drones])];
+    profile.equipped.module = profile.unlocks.modules.includes(stored.equipped?.module) ? stored.equipped.module : 'core_xena';
+    profile.equipped.drone = profile.unlocks.drones.includes(stored.equipped?.drone) ? stored.equipped.drone : 'none';
     profile.lifetime.runs = Math.max(0, Math.floor(Number(stored.lifetime?.runs) || 0));
     profile.lifetime.cores = Math.max(0, Math.floor(Number(stored.lifetime?.cores) || 0));
     return profile;
@@ -204,6 +234,8 @@ function upgradeCost(id) { const def = UPGRADE_DEFS[id], level = profile.upgrade
 function runModifiers() {
   const levels = profile.upgrades;
   return {
+    moduleId: profile.equipped.module,
+    droneId: profile.equipped.drone,
     jumpVelocity: -660 - levels.dash_jump * 24,
     hoverGravity: 660 * (1 - levels.hover_control * .055),
     coreBonus: levels.core_resonance * .10,
@@ -217,6 +249,10 @@ function uiConfirm() {
 }
 function syncLobbyProfile() {
   const balance = document.querySelector('#lobby-core-balance'); if (balance) balance.textContent = profile.neonCores.toLocaleString();
+  const module = MODULE_DEFS[profile.equipped.module], drone = DRONE_DEFS[profile.equipped.drone];
+  const moduleName = document.querySelector('[data-module-name]'), moduleStatus = document.querySelector('[data-module-status]'), droneName = document.querySelector('[data-drone-name]'), droneStatus = document.querySelector('[data-drone-status]');
+  if (moduleName) moduleName.textContent = module.name; if (moduleStatus) moduleStatus.textContent = module.name === 'CORE XENA' ? 'EQUIPPED // BASE FORM' : 'EQUIPPED // MODULE';
+  if (droneName) droneName.textContent = drone.name; if (droneStatus) { const active = drone.name !== 'NO DRONE'; droneStatus.textContent = active ? 'EQUIPPED // SUPPORT ONLINE' : 'EMPTY // UNLOCK IN V1.2'; droneStatus.classList.toggle('locked', !active); }
   Object.entries(UPGRADE_DEFS).forEach(([id, def]) => {
     const level = profile.upgrades[id], label = document.querySelector(`[data-upgrade-level="${id}"]`), button = document.querySelector(`[data-upgrade-buy="${id}"]`);
     if (label) label.textContent = `LV ${level} / ${def.max}${level === def.max ? ' // MAX PERK' : ''}`;
@@ -287,6 +323,14 @@ function startBgm() { const bgm = sounds.BGM; if (!bgm) return; bgm.volume = .46
 function stopBgm() { if (sounds.BGM) sounds.BGM.pause(); }
 
 const STAGE_TWO_AFTER = 120;
+const TENSION_INTERVAL = 20, TENSION_SPEED_STEP = .12;
+const TENSION_PALETTES = Object.freeze([
+  { label:'SIGNAL RISE', tint:'#00d9ff', alpha:.00 },
+  { label:'MAGENTA BREAK', tint:'#ff007f', alpha:.14 },
+  { label:'VIOLET OVERDRIVE', tint:'#8c4dff', alpha:.19 },
+  { label:'STAYBRIGHT HEAT', tint:'#ff8a37', alpha:.18 },
+  { label:'CYAN AFTERBURN', tint:'#37ffd1', alpha:.21 }
+]);
 const STAGES = Object.freeze({
   1: { hoverSpeed:150, dashSpeed:218, hoverGap:238, hoverSpawn:2.62, dashSpawn:2.08 },
   2: { hoverSpeed:252, dashSpeed:332, hoverGap:151, hoverSpawn:1.38, dashSpawn:1.10 }
@@ -294,13 +338,18 @@ const STAGES = Object.freeze({
 function stageConfig(g) { return STAGES[g.stage]; }
 function isMagnetActive(g) { return g.magnetUntil > g.elapsed; }
 function isDashActive(g) { return g.dashUntil > g.elapsed; }
+function tensionPalette(g) { return TENSION_PALETTES[g.tensionPhase % TENSION_PALETTES.length]; }
+function updateTension(g) {
+  const nextPhase = Math.floor(g.elapsed / TENSION_INTERVAL); if (nextPhase === g.tensionPhase) return;
+  g.tensionPhase = nextPhase; const phase = tensionPalette(g); g.message = `RUSH PHASE ${nextPhase + 1} // ${phase.label}`; g.messageUntil = g.elapsed + 2.05; sound('SFX_SCORE');
+}
 function newGame(nextMode) {
   cancelAnimationFrame(raf); mode = nextMode; held = { jump:false, slide:false };
   const hover = mode === 'HOVER';
-  game = { mode, stage:1, player:hover ? { x:75, y:181, w:104, h:89, vy:0, sliding:false, frame:0 } : { x:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], items:[], score:0, cores:0, coreFraction:0, elapsed:0, speed:hover ? STAGES[1].hoverSpeed : STAGES[1].dashSpeed, bgX:0, spawn:0, itemSpawn:0, magnetUntil:0, dashUntil:0, messageUntil:0, lastSlideSound:0, modifiers:runModifiers(), settled:false };
+  game = { mode, stage:1, player:hover ? { x:75, y:181, w:104, h:89, vy:0, sliding:false, frame:0 } : { x:72, y:330, w:120, h:100, vy:0, sliding:false, frame:0 }, obstacles:[], items:[], score:0, cores:0, coreFraction:0, elapsed:0, tensionPhase:0, speed:hover ? STAGES[1].hoverSpeed : STAGES[1].dashSpeed, bgX:0, spawn:0, itemSpawn:0, magnetUntil:0, dashUntil:0, messageUntil:0, lastSlideSound:0, modifiers:runModifiers(), fever:{ unlocked:false, charge:0, active:false }, settled:false };
   state = 'PLAYING'; show('none'); startBgm(); last = performance.now(); raf = requestAnimationFrame(loop);
 }
-function gameSpeed(g) { const s = stageConfig(g), base = g.mode === 'HOVER' ? s.hoverSpeed : s.dashSpeed, stageTime = Math.max(0, g.elapsed - (g.stage === 2 ? STAGE_TWO_AFTER : 0)), ramp = g.stage === 1 ? Math.min(g.elapsed * .16, 16) : Math.min(stageTime * .65, 92), hoverStepMultiplier = g.mode === 'HOVER' ? 1 + Math.floor(g.elapsed / 30) * .1 : 1; return (base + ramp) * hoverStepMultiplier + (isDashActive(g) ? 225 : 0); }
+function gameSpeed(g) { const s = stageConfig(g), base = g.mode === 'HOVER' ? s.hoverSpeed : s.dashSpeed, stageTime = Math.max(0, g.elapsed - (g.stage === 2 ? STAGE_TWO_AFTER : 0)), ramp = g.stage === 1 ? Math.min(g.elapsed * .16, 16) : Math.min(stageTime * .65, 92), tensionMultiplier = 1 + g.tensionPhase * TENSION_SPEED_STEP; return (base + ramp) * tensionMultiplier + (isDashActive(g) ? 225 : 0); }
 function playerRect(p) { const h = game.mode === 'HOVER' ? HITBOX.hoverPlayer : (p.sliding ? HITBOX.playerSlide : HITBOX.dashPlayer); return { x:p.x + h.x, y:p.y + h.y, w:h.w, h:h.h }; }
 function obstacleRect(o) { const h = o.kind === 'WALL' ? HITBOX.wall : (o.kind === 'SENTRY' ? HITBOX.sentry : HITBOX.drone); return { x:o.x + h.x, y:o.y + h.y, w:h.w, h:o.kind === 'WALL' ? Math.max(0, o.h - h.y * 2) : h.h }; }
 function itemRect(item) { return { x:item.x + 8, y:item.y + 8, w:item.w - 16, h:item.h - 16 }; }
@@ -356,7 +405,7 @@ function updateItems(g, dt) {
   }
 }
 function update(g, dt) {
-  const p = g.player; g.elapsed += dt; if (g.stage === 1 && g.elapsed >= STAGE_TWO_AFTER) startStageTwo(g); const s = stageConfig(g); g.speed = gameSpeed(g); g.bgX = (g.bgX - g.speed * .42 * dt) % W; p.frame += dt * 9;
+  const p = g.player; g.elapsed += dt; updateTension(g); if (g.stage === 1 && g.elapsed >= STAGE_TWO_AFTER) startStageTwo(g); const s = stageConfig(g); g.speed = gameSpeed(g); g.bgX = (g.bgX - g.speed * .42 * dt) % W; p.frame += dt * 9;
   if (g.mode === 'HOVER') { p.vy += g.modifiers.hoverGravity * dt; p.y += p.vy * dt; if (p.y < -10 || p.y + p.h > H + 7) endGame(); }
   else { p.vy += 1320 * dt; p.y += p.vy * dt; if (p.y >= 330) { p.y = 330; p.vy = 0; } }
   g.spawn += dt; const obstacleRate = g.mode === 'HOVER' ? s.hoverSpawn : s.dashSpawn; if (g.spawn > obstacleRate) { g.spawn = 0; spawnObstacle(g); }
@@ -369,7 +418,11 @@ function update(g, dt) {
     if (o.x + o.w < -30) g.obstacles.splice(i,1);
   }
 }
-function drawBackground(g) { const stage2 = g?.stage === 2, bg = images[g?.mode === 'HOVER' ? (stage2 ? 'IMG_HOVER_BG_STAGE2' : 'IMG_HOVER_BG') : (stage2 ? 'IMG_DASH_BG_STAGE2' : 'IMG_DASH_BG')]; ctx.fillStyle = '#050510'; ctx.fillRect(0,0,W,H); if (bg) { const x = g ? g.bgX : 0; ctx.drawImage(bg, x,0,W,H); ctx.drawImage(bg, x + W,0,W,H); if (x > 0) ctx.drawImage(bg, x - W,0,W,H); } }
+function drawBackground(g) {
+  const stage2 = g?.stage === 2, bg = images[g?.mode === 'HOVER' ? (stage2 ? 'IMG_HOVER_BG_STAGE2' : 'IMG_HOVER_BG') : (stage2 ? 'IMG_DASH_BG_STAGE2' : 'IMG_DASH_BG')]; ctx.fillStyle = '#050510'; ctx.fillRect(0,0,W,H);
+  if (bg) { const x = g ? g.bgX : 0; ctx.drawImage(bg, x,0,W,H); ctx.drawImage(bg, x + W,0,W,H); if (x > 0) ctx.drawImage(bg, x - W,0,W,H); }
+  if (g?.tensionPhase) { const phase = tensionPalette(g); ctx.save(); ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = phase.alpha; ctx.fillStyle = phase.tint; ctx.fillRect(0,0,W,H); ctx.globalAlpha = .26; ctx.fillStyle = phase.tint; for (let x = ((g.bgX * 1.7) % 130) - 130; x < W + 130; x += 130) ctx.fillRect(x, 0, 2, H); ctx.restore(); }
+}
 function drawPlayer(p, activeMode, g) {
   if (activeMode === 'HOVER') {
     const img = images.IMG_HOVER_PLAYER; if (!img) return;
@@ -408,7 +461,7 @@ function drawItem(item, g) {
 }
 function drawHud(g) {
   ctx.save(); ctx.fillStyle = '#e9fdff'; ctx.shadowColor = '#00f2ff'; ctx.shadowBlur = 12; ctx.font = '800 22px "JetBrains Mono", monospace'; ctx.fillText(`STAGE ${g.stage} // SCORE ${g.score}`, 19, 34);
-  ctx.shadowBlur = 0; ctx.fillStyle = '#9cfaff'; ctx.font = '700 13px "JetBrains Mono", monospace'; ctx.fillText(`NEON CORE ${g.cores}`, 20, 56); const ratio = g.speed / (g.mode === 'HOVER' ? stageConfig(g).hoverSpeed : stageConfig(g).dashSpeed), countdown = Math.max(0, Math.ceil(STAGE_TWO_AFTER - g.elapsed)); ctx.fillText(`${g.mode} // SPEED x${ratio.toFixed(1)}`, 20, 76); if (g.stage === 1) ctx.fillText(`STAGE 2 IN ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2,'0')}`, W - 182, 56);
+  ctx.shadowBlur = 0; ctx.fillStyle = '#9cfaff'; ctx.font = '700 13px "JetBrains Mono", monospace'; ctx.fillText(`NEON CORE ${g.cores}`, 20, 56); const ratio = g.speed / (g.mode === 'HOVER' ? stageConfig(g).hoverSpeed : stageConfig(g).dashSpeed), countdown = Math.max(0, Math.ceil(STAGE_TWO_AFTER - g.elapsed)), phase = tensionPalette(g); ctx.fillText(`${g.mode} // SPEED x${ratio.toFixed(1)}`, 20, 76); ctx.fillStyle = g.tensionPhase ? phase.tint : '#9cfaff'; ctx.fillText(`RUSH PHASE ${g.tensionPhase + 1} // ${phase.label}`, 20, 96); if (g.stage === 1) ctx.fillText(`STAGE 2 IN ${Math.floor(countdown / 60)}:${String(countdown % 60).padStart(2,'0')}`, W - 182, 56);
   if (isMagnetActive(g) || isDashActive(g)) { const label = isDashActive(g) ? `DASH ${Math.ceil(g.dashUntil - g.elapsed)}s` : `MAGNET ${Math.ceil(g.magnetUntil - g.elapsed)}s`; ctx.fillStyle = isDashActive(g) ? '#ff8bdb' : '#b6fbff'; ctx.fillText(label, W - 155, 34); }
   ctx.restore();
 }
